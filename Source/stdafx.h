@@ -1,17 +1,7 @@
-/**
-  *  kIEview2 stdafx
-  *
-  *  Include file for standard system include files,
-  *  or project specific include files that are used frequently,
-  *  but are changed infrequently.
-  *
-  *  @filesource
-  *  @copyright    Copyright (c) 2004-2005 Kuba 'nix' Niegowski
-  *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
-  *  @version      $Revision: 69 $
-  *  @modifiedby   $LastChangedBy: sija $
-  *  @lastmodified $Date: 2006-11-14 17:13:27 +0100 (Wt, 14 lis 2006) $
-  */
+// stdafx.h : include file for standard system include files,
+// or project specific include files that are used frequently, but
+// are changed infrequently
+//
 
 #pragma once
 
@@ -71,6 +61,7 @@
 #include <stamina/string.h>
 #include <stamina/time64.h>
 #include <stamina/regex.h>
+#include <stamina/timer.h>
 
 using namespace Stamina;
 using namespace std;
@@ -80,6 +71,7 @@ using namespace std;
 #include <konnekt/plug_func.h>
 #include <konnekt/knotify.h>
 #include <konnekt/ksound.h>
+#include <konnekt/sms.h>
 #include <konnekt/tabletka.h>
 #include <konnekt/ui_message_controls.h>
 #include <konnekt/lib.h>

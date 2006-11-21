@@ -4,7 +4,7 @@
   *  Any modifications or reusing strictly prohibited!
   *
   *  @filesource
-  *  @copyright    Copyright (c) 2004-2005 Kuba 'nix' Niegowski
+  *  @copyright    Copyright (c) 2005-2006 Sijawusz Pur Rahnama
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
   *  @version      $Revision: 66 $
   *  @modifiedby   $LastChangedBy: sija $
