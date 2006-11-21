@@ -7,9 +7,9 @@
   *  @filesource
   *  @copyright    Copyright (c) 2005-2006 Sijawusz Pur Rahnama
   *  @link         svn://konnekt.info/kaway2/ kAway2 plugin SVN Repo
-  *  @version      $Revision: 77 $
-  *  @modifiedby   $LastChangedBy: sija $
-  *  @lastmodified $Date: 2006-11-20 17:42:35 +0100 (Pn, 20 lis 2006) $
+  *  @version      $Revision$
+  *  @modifiedby   $LastChangedBy$
+  *  @lastmodified $Date$
   *  @license      http://creativecommons.org/licenses/LGPL/2.1/
   */
 

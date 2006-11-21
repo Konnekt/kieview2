@@ -6,9 +6,9 @@
   *  @filesource
   *  @copyright    Copyright (c) 2005-2006 Sijawusz Pur Rahnama
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
-  *  @version      $Revision: 73 $
-  *  @modifiedby   $LastChangedBy: sija $
-  *  @lastmodified $Date: 2006-11-18 15:53:42 +0100 (So, 18 lis 2006) $
+  *  @version      $Revision$
+  *  @modifiedby   $LastChangedBy$
+  *  @lastmodified $Date$
   */
 
 #pragma once
