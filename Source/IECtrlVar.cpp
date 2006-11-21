@@ -150,13 +150,16 @@ void IECtrl::Var::operator+=(IECtrl::Var & var) {
     case Type::Integer:
       m_iValue += var.getInteger();
       break;
+
     case Type::Real:
       m_dValue += var.getReal();
       break;
+
     case Type::Array:
     case Type::Unknown:
       clear();
       setValue("");
+
     case Type::String: {
       const char * temp = strdup(var.getString());
       int len1 = 0;
