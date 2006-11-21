@@ -1,7 +1,17 @@
-// stdafx.h : include file for standard system include files,
-// or project specific include files that are used frequently, but
-// are changed infrequently
-//
+/**
+  *  kIEview2 stdafx
+  *
+  *  Include file for standard system include files,
+  *  or project specific include files that are used frequently,
+  *  but are changed infrequently.
+  *
+  *  @filesource
+  *  @copyright    Copyright (c) 2004-2005 Kuba 'nix' Niegowski
+  *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
+  *  @version      $Revision$
+  *  @modifiedby   $LastChangedBy$
+  *  @lastmodified $Date$
+  */
 
 #pragma once
 

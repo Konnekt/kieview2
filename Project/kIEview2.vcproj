@@ -195,6 +195,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\RtfHtml.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -238,6 +242,10 @@
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Source\RtfHtml.h"
 				>
 			</File>
 			<File
