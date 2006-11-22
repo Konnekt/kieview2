@@ -69,13 +69,15 @@ BEGIN
     BEGIN
         BLOCK "041504b0"
         BEGIN
+            VALUE "CompanyName", "Konnekt Team"
             VALUE "FileDescription", "Konnekt IE View 2"
             VALUE "FileVersion", "0, 0, 0, 1"
             VALUE "InternalName", "kIEview2"
-            VALUE "LegalCopyright", "Copyright (C) 2006"
+            VALUE "LegalCopyright", "Copyright © 2006 Konnekt Team"
             VALUE "OriginalFilename", "kIEview2.dll"
             VALUE "ProductName", " kIEview2 Dynamic Link Library"
             VALUE "ProductVersion", "0, 0, 0, 1"
+            VALUE "URL", "http://www.konnekt.info/"
         END
     END
     BLOCK "VarFileInfo"
@@ -84,6 +86,23 @@ BEGIN
     END
 END
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_BOLD                ICON                    "..\\Res\\bold.ico"
+IDI_COLOR               ICON                    "..\\Res\\color.ico"
+IDI_COPY                ICON                    "..\\Res\\copy.ico"
+IDI_EMOTS               ICON                    "..\\Res\\emots.ico"
+IDI_ITALIC              ICON                    "..\\Res\\italic.ico"
+IDI_LINK                ICON                    "..\\Res\\link.ico"
+IDI_LOGO                ICON                    "..\\Res\\logo.ico"
+IDI_SAVE                ICON                    "..\\Res\\save.ico"
+IDI_UNDERLINE           ICON                    "..\\Res\\underline.ico"
 #endif    // Polish resources
 /////////////////////////////////////////////////////////////////////////////
 

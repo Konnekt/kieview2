@@ -34,19 +34,50 @@ namespace kIEview2 {
 
   namespace ico {
     const unsigned int ico = net * 1000 + 100;
+
+    const unsigned int logo = ico + 1;
+    const unsigned int link = ico + 2;
+    const unsigned int copy = ico + 3;
+    const unsigned int save = ico + 4;
+    const unsigned int emots = ico + 5;
+    const unsigned int bold = ico + 6;
+    const unsigned int italic = ico + 7;
+    const unsigned int underline = ico + 8;
+    const unsigned int color = ico + 9;
   }
 
   namespace act {
     const unsigned int act = net * 1000 + 200;
-  }
 
-  // dynamiczne akcje
-  namespace dynAct {
-    const unsigned int dynAct = net * 1000 + 300;
+    namespace popup {
+      const unsigned int popup = act + 100;
+
+      const unsigned int openUrl = popup + 1;
+      const unsigned int copyUrl = popup + 2;
+      const unsigned int saveImage = popup + 3;
+      const unsigned int copySelection = popup + 4;
+      const unsigned int selectAll = popup + 5;
+      const unsigned int history = popup + 6;
+      const unsigned int clear = popup + 7;
+    }
+
+    namespace formatTb {
+      const unsigned int formatTb = act + 120;
+
+      const unsigned int bold = formatTb + 1;
+      const unsigned int italic = formatTb + 2;
+      const unsigned int underline = formatTb + 3;
+      const unsigned int emots = formatTb + 4;
+      const unsigned int color = formatTb + 5;
+    }
   }
 
   namespace cfg {
     const unsigned int cfg = net * 1000 + 500;
+
+    const unsigned int useEmots = cfg + 1;
+    const unsigned int emotsDir = cfg + 2;
+    const unsigned int showFormatTb = cfg + 3;
   }
 }
 

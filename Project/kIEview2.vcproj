@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\Helpers.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\IECtrl.cpp"
 				>
 			</File>
@@ -229,6 +233,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\Helpers.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\IECtrl.h"
 				>
 			</File>
@@ -259,7 +267,43 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath="..\Res\bold.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\color.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\copy.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\emots.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\italic.ico"
+				>
+			</File>
+			<File
 				RelativePath=".\kIEview2.rc"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\link.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\logo.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\save.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\underline.ico"
 				>
 			</File>
 		</Filter>

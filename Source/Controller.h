@@ -18,6 +18,10 @@
 
 #include "kIEview2.h"
 #include "IMController.h"
+#include "Helpers.h"
+#include "IECtrl.h"
+
+using namespace kIEview2;
 
 namespace kIEview2 {
   class Controller : public IMController<Controller>, signals::trackable {
@@ -26,6 +30,17 @@ namespace kIEview2 {
 
   protected:
     Controller();
+    ~Controller();
+
+  protected:
+    void _onPrepare();
+
+    void _msgCtrlView();
+    void _msgCtrlSend();
+    void _msgSend();
+
+  protected:
+    int ctrlSendActionOwner;
   };
 }
 

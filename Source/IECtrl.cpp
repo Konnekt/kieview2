@@ -13,7 +13,6 @@
 
 #include "stdafx.h"
 #include "IECtrl.h"
-#include "..\Project\resource.h"
 
 #define DISPID_BEFORENAVIGATE2 250
 
