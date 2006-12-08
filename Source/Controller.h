@@ -18,19 +18,30 @@
 
 #include "kIEview2.h"
 #include "IMController.h"
+#include "CfgController.h"
 #include "Helpers.h"
 #include "IECtrl.h"
 
 using namespace kIEview2;
 
 namespace kIEview2 {
-  class Controller : public IMController<Controller>, signals::trackable {
+  class Controller : public IMController {
   public:
-    friend class IMController<Controller>;
+    /* Class version */
+	  STAMINA_OBJECT_CLASS_VERSION(Controller, IMController, Version(0,1,0,0));
 
   protected:
     Controller();
+
+  public:
     ~Controller();
+
+    inline static Controller* getInstance() {
+      if (!instance.isValid()) {
+        instance = new Controller;
+      }
+      return instance;
+    }
 
   protected:
     void _onPrepare();
@@ -40,7 +51,8 @@ namespace kIEview2 {
     void _msgSend();
 
   protected:
-    int ctrlSendActionOwner;
+    static SharedPtr<Controller> instance;
+    oCfgCtrl config;
   };
 }
 

@@ -7,23 +7,14 @@
   *  @filesource
   *  @copyright    Copyright (c) 2005-2006 Sijawusz Pur Rahnama
   *  @link         svn://konnekt.info/kaway2/ kAway2 plugin SVN Repo
-  *  @version      $Revision: 61 $
+  *  @version      $Revision: 91 $
   *  @modifiedby   $LastChangedBy: sija $
-  *  @lastmodified $Date: 2006-11-13 07:41:40 +0100 (Pn, 13 lis 2006) $
+  *  @lastmodified $Date: 2006-12-06 16:10:44 +0100 (Śr, 06 gru 2006) $
   *  @license      http://creativecommons.org/licenses/LGPL/2.1/
   */
 
 #include "stdafx.h"
 #include "Helpers.h"
-
-/*
- *  Integer -> String conversion
- */
-
-String itos(int i, int radix) {
-  char buff[64]; _itoa(i, buff, radix);
-  return buff;
-}
 
 /*
  *  Bool -> Human readable string
@@ -79,11 +70,11 @@ void logDebug(const char * format, ...) {
 
 namespace Helpers {
   String icon16(int ico) {
-    return "reg://IML16/" + itos(ico) + ".ico";
+    return "reg://IML16/" + inttostr(ico) + ".ico";
   }
 
   String icon32(int ico) {
-    return "reg://IML32/" + itos(ico) + ".ico";
+    return "reg://IML32/" + inttostr(ico) + ".ico";
   }
 
   String trunc(StringRef txt, int limit, const StringRef& suffix) {
@@ -102,75 +93,6 @@ namespace Helpers {
     buff = buff.Trim();
 
     return buff;
-  }
-
-  /*
-  String timeSince(const Date64& older_date, const Date64& newer_date) {
-    // array of time period chunks
-    $chunks = array(
-      array(60 * 60 * 24 * 365 , 'year'),
-      array(60 * 60 * 24 * 30 , 'month'),
-      array(60 * 60 * 24 * 7, 'week'),
-      array(60 * 60 * 24 , 'day'),
-      array(60 * 60 , 'hour'),
-      array(60 , 'minute'),
-    );
-
-    // $newer_date will equal false if we want to know the time elapsed between a date and the current time
-    // $newer_date will have a value if we want to work out time elapsed between two known dates
-    $newer_date = ($newer_date == false) ? (time()+(60*60*get_settings("gmt_offset"))) : $newer_date;
-
-    // difference in seconds
-    $since = $newer_date - $older_date;
-
-    // we only want to output two chunks of time here, eg:
-    // x years, xx months
-    // x days, xx hours
-    // so there's only two bits of calculation below:
-
-    // step one: the first chunk
-    for ($i = 0, $j = count($chunks); $i < $j; $i++)
-            {
-            $seconds = $chunks[$i][0];
-            $name = $chunks[$i][1];
-
-            // finding the biggest chunk (if the chunk fits, break)
-            if (($count = floor($since / $seconds)) != 0)
-                    {
-                    break;
-                    }
-            }
-
-    // set output var
-    $output = ($count == 1) ? '1 '.$name : "$count {$name}s";
-
-    // step two: the second chunk
-    if ($i + 1 < $j)
-            {
-            $seconds2 = $chunks[$i + 1][0];
-            $name2 = $chunks[$i + 1][1];
-            
-            if (($count2 = floor(($since - ($seconds * $count)) / $seconds2)) != 0)
-                    {
-                    // add to output var
-                    $output .= ($count2 == 1) ? ', 1 '.$name2 : ", $count2 {$name2}s";
-                    }
-            }
-
-    return $output;
-  } */
-
-  int altCfgVal(int cntId, int colId, bool isBool) {
-    if (isBool) {
-      return((GETINT(colId) && (GETCNTI(cntId, colId) < 2) || 
-        (!GETINT(colId) && (GETCNTI(cntId, colId) == 1))) ? true : false);
-    } else {
-      return (GETCNTI(cntId, colId) >= 0) ? GETCNTI(cntId, colId) : GETINT(colId);
-    }
-  }
-
-  const char * altCfgStrVal(int cntId, int colId) {
-    return strlen(GETCNTC(cntId, colId)) ? GETCNTC(cntId, colId) : GETSTRA(colId);
   }
 
   int getPluginsGroup() {
@@ -211,26 +133,6 @@ namespace Helpers {
 
   int findParentAction(int group, int id) {
     return Ctrl->ICMessage(IMI_ACTION_FINDPARENT, (int) &sUIAction(group, id));
-  }
-
-  int subclassAction(int group, int id, int mask) {
-    sUIActionInfo nfo(group, id);
-    int prevOwner;
-
-    nfo.mask = mask;
-    nfo.txt = new char[100];
-    nfo.txtSize = 99;
-
-    UIActionGet(nfo);
-    if (!(prevOwner = Ctrl->ICMessage(IMI_ACTION_GETOWNER, (int)&nfo.act))) {
-      prevOwner = Ctrl->ICMessage(IMC_PLUG_ID, 0);
-    }
-
-    Ctrl->ICMessage(IMI_ACTION_REMOVE, (int)&nfo.act);
-    Ctrl->ICMessage(IMI_ACTION, (int)&nfo);
-    delete [] nfo.txt;
-
-    return prevOwner;
   }
 
   void addItemToHistory(cMessage* msg, int cnt, const char * dir, const StringRef& name, int session) {

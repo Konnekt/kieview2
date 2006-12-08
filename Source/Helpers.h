@@ -7,9 +7,9 @@
   *  @filesource
   *  @copyright    Copyright (c) 2005-2006 Sijawusz Pur Rahnama
   *  @link         svn://konnekt.info/kaway2/ kAway2 plugin SVN Repo
-  *  @version      $Revision: 61 $
+  *  @version      $Revision: 91 $
   *  @modifiedby   $LastChangedBy: sija $
-  *  @lastmodified $Date: 2006-11-13 07:41:40 +0100 (Pn, 13 lis 2006) $
+  *  @lastmodified $Date: 2006-12-06 16:10:44 +0100 (Śr, 06 gru 2006) $
   *  @license      http://creativecommons.org/licenses/LGPL/2.1/
   */
 
@@ -17,12 +17,6 @@
 
 #ifndef __HELPERS_H__
 #define __HELPERS_H__
-
-/*
- *  Integer -> String conversion
- */
-
-String itos(int i, int radix = 10);
 
 /*
  *  Bool -> Human readable string
@@ -57,9 +51,6 @@ namespace Helpers {
   String trunc(StringRef txt, int limit, const StringRef& suffix = "...");
   String trim(const StringRef& txt);
 
-  int altCfgVal(int cntId, int colId, bool isBool = true);
-  const char * altCfgStrVal(int cntId, int colId);
-
   int getPluginsGroup();
   int pluginExists(int net, int type = IMT_ALL);
   const char * getPlugName(int plugID);
@@ -76,7 +67,6 @@ namespace Helpers {
 
   void showKNotify(char * text, int ico);
   int findParentAction(int group, int id);
-  int subclassAction(int group, int id, int mask = UIAIM_ALL);
 
   void addItemToHistory(cMessage* msg, int cnt, const char * dir, const StringRef& name, int session = 0);
 

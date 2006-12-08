@@ -15,19 +15,32 @@
 #include "Controller.h"
 
 namespace kIEview2 {
+  SharedPtr<Controller> Controller::instance = 0;
+
   Controller::Controller() {
+    this->config = new CfgController(this);
+
     /* Static values like net, type or version */
-    this->addStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
-    this->addStaticValue(IM_PLUG_PRIORITY, PLUGP_HIGH + 1);
-    this->addStaticValue(IM_PLUG_NAME, (int) "kIEview2");
-    this->addStaticValue(IM_PLUG_SIG, (int) sig);
-    this->addStaticValue(IM_PLUG_NET, net);
+    this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
+    this->setStaticValue(IM_PLUG_PRIORITY, PLUGP_HIGH + 1);
+    this->setStaticValue(IM_PLUG_NAME, (int) "kIEview2");
+    this->setStaticValue(IM_PLUG_SIG, (int) sig);
+    this->setStaticValue(IM_PLUG_NET, net);
 
     /* Callbacks */
     this->registerObserver(IM_UI_PREPARE, bind(resolve_cast0(&Controller::_onPrepare), this));
-    this->registerObserver(UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
-    this->registerObserver(UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
-    this->registerObserver(IMIA_MSG_SEND, bind(resolve_cast0(&Controller::_msgSend), this));
+    this->registerActionObserver(UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
+    this->registerActionObserver(UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
+    this->registerActionObserver(IMIA_MSG_SEND, bind(resolve_cast0(&Controller::_msgSend), this));
+
+    // podmieniamy kontrolki widoku wiadomosci
+    this->subclassAction(UI::ACT::msg_ctrlview, IMIG_MSGWND);
+    // podmieniamy kontrolki w historii
+    this->subclassAction(UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
+    // podmieniamy kontrolki wpisywania wiadomosci
+    this->subclassAction(UI::ACT::msg_ctrlsend, IMIG_MSGWND);
+    // podmieniamy przycisk "Wyœlij" z okna rozmowy
+    this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
 
     IECtrl::init();
   }
@@ -37,17 +50,6 @@ namespace kIEview2 {
   }
 
   void Controller::_msgCtrlView() {
-    /*
-    pActions = new ActionsHandler(hWnd);
-    viewCtrl = new IECtrl(hWnd, 0, 0, 300, 200);
-
-    viewCtrl->setAnchorClickListener(pActions);
-    viewCtrl->setPopupMenuListener(pActions);
-    viewCtrl->setDropListener(pActions);
-    viewCtrl->setKeyDownListener(pActions);
-    viewCtrl->setExternalListener(pActions);
-    viewCtrl->setScriptMessageListener(pActions);
-    */
   }
 
   void Controller::_msgCtrlSend() {
@@ -79,21 +81,5 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::history, ACTR_INIT, "Poprzednia rozmowa");
     UIActionAdd(act::popup::popup, 0, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
-
-    // podmieniamy kontrolki widoku wiadomosci
-    sUIAction act(IMIG_MSGWND, UI::ACT::msg_ctrlview);
-    Ctrl->ICMessage(IMI_ACTION_REMOVE, (int) &act);
-    UIActionAdd(IMIG_MSGWND, UI::ACT::msg_ctrlview, ACTT_HWND | ACTR_SETCNT);
-
-    // podmieniamy kontrolki w historii
-    act = sUIAction(IMIG_HISTORYWND, UI::ACT::msg_ctrlview);
-    Ctrl->ICMessage(IMI_ACTION_REMOVE, (int) &act);
-    UIActionAdd(IMIG_HISTORYWND, UI::ACT::msg_ctrlview, ACTT_HWND | ACTR_SETCNT);
-
-    // podmieniamy kontrolki wpisywania wiadomosci
-    this->ctrlSendActionOwner = Helpers::subclassAction(IMIG_MSGWND, UI::ACT::msg_ctrlsend);
-
-    // podmieniamy przycisk "Wyœlij" z okna rozmowy
-    Helpers::subclassAction(IMIG_MSGTB, IMIA_MSG_SEND);
   }
 }
