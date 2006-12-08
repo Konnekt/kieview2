@@ -253,6 +253,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\PlugController.h"
+				>
+			</File>
+			<File
 				RelativePath=".\resource.h"
 				>
 			</File>

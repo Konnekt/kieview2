@@ -17,18 +17,20 @@
 #define __CONTROLLER_H__
 
 #include "kIEview2.h"
-#include "IMController.h"
-#include "CfgController.h"
+#include "PlugController.h"
 #include "Helpers.h"
 #include "IECtrl.h"
 
 using namespace kIEview2;
 
 namespace kIEview2 {
-  class Controller : public IMController {
+  class Controller : public PlugController<Controller> {
+  public:
+    friend class PlugController<Controller>;
+
   public:
     /* Class version */
-	  STAMINA_OBJECT_CLASS_VERSION(Controller, IMController, Version(0,1,0,0));
+	  STAMINA_OBJECT_CLASS_VERSION(Controller, PlugController, Version(0,1,0,0));
 
   protected:
     Controller();
@@ -36,23 +38,12 @@ namespace kIEview2 {
   public:
     ~Controller();
 
-    inline static Controller* getInstance() {
-      if (!instance.isValid()) {
-        instance = new Controller;
-      }
-      return instance;
-    }
-
   protected:
     void _onPrepare();
 
     void _msgCtrlView();
     void _msgCtrlSend();
     void _msgSend();
-
-  protected:
-    static SharedPtr<Controller> instance;
-    oCfgCtrl config;
   };
 }
 

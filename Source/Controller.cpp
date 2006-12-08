@@ -15,11 +15,7 @@
 #include "Controller.h"
 
 namespace kIEview2 {
-  SharedPtr<Controller> Controller::instance = 0;
-
   Controller::Controller() {
-    this->config = new CfgController(this);
-
     /* Static values like net, type or version */
     this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
     this->setStaticValue(IM_PLUG_PRIORITY, PLUGP_HIGH + 1);
