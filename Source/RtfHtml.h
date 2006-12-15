@@ -6,9 +6,9 @@
   *  @filesource
   *  @copyright    Copyright (c) 2004-2005 Kuba 'nix' Niegowski
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
-  *  @version      $Revision: 12 $
-  *  @modifiedby   $LastChangedBy: sija $
-  *  @lastmodified $Date: 2006-11-21 10:39:27 +0100 (Wt, 21 lis 2006) $
+  *  @version      $Revision$
+  *  @modifiedby   $LastChangedBy$
+  *  @lastmodified $Date$
   */
 
 #pragma once

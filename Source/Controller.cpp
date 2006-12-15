@@ -39,12 +39,12 @@ namespace kIEview2 {
     //this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
 
     IECtrl::init();
-    this->menuListner = new PopupListner;
+    this->menuListener = new PopupListener;
   }
 
   Controller::~Controller() {
     IECtrl::deinit();
-    delete this->menuListner;
+    delete this->menuListener;
   }
 
   void Controller::_onPrepare() {
@@ -77,10 +77,10 @@ namespace kIEview2 {
     switch (this->getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
-	    IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
-	    an->hwnd = ctrl->getHWND();
+        IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
+        an->hwnd = ctrl->getHWND();
         // TODO: przygotujmy sobie listnerów (menu ju¿ jest)
-        ctrl->setPopupMenuListener(this->menuListner);
+        ctrl->setPopupMenuListener(this->menuListener);
         // TODO: tu powinniœmy dodaæ do okienka podstawê HTML-a
         break;
       }
