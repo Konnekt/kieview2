@@ -106,6 +106,8 @@ public:
   void enableSandbox(bool bSandbox = true);
   void navigate(const char *);
   void clear();
+  void lock();
+  void unlock();
   void write(const WCHAR *text);
   void write(const char *text);
   void close();

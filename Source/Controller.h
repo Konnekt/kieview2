@@ -20,6 +20,7 @@
 #include "PlugController.h"
 #include "Helpers.h"
 #include "IECtrl.h"
+#include "PopupListner.h"
 
 using namespace kIEview2;
 
@@ -44,6 +45,9 @@ namespace kIEview2 {
     void _msgCtrlView();
     void _msgCtrlSend();
     void _msgSend();
+
+  protected:
+    PopupListner* menuListner;
   };
 }
 

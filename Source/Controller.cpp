@@ -33,25 +33,18 @@ namespace kIEview2 {
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_MSGWND);
     // podmieniamy kontrolki w historii
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
-    // podmieniamy kontrolki wpisywania wiadomosci
-    this->subclassAction(UI::ACT::msg_ctrlsend, IMIG_MSGWND);
-    // podmieniamy przycisk "Wyœlij" z okna rozmowy
-    this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
+    // TODO: podmieniamy kontrolki wpisywania wiadomosci
+    //this->subclassAction(UI::ACT::msg_ctrlsend, IMIG_MSGWND);
+    // TODO: podmieniamy przycisk "Wyœlij" z okna rozmowy
+    //this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
 
     IECtrl::init();
+    this->menuListner = new PopupListner;
   }
 
   Controller::~Controller() {
     IECtrl::deinit();
-  }
-
-  void Controller::_msgCtrlView() {
-  }
-
-  void Controller::_msgCtrlSend() {
-  }
-
-  void Controller::_msgSend() {
+    delete this->menuListner;
   }
 
   void Controller::_onPrepare() {
@@ -66,7 +59,8 @@ namespace kIEview2 {
     IconRegister(IML_16, ico::color, Ctrl->hDll(), IDI_COLOR);
 
     // menu akcji pod prawym klawiszem myszy
-    UIGroupAdd(IMIG_MSGWND, act::popup::popup, 0);
+    // TODO: Mo¿na by dodaæ drukowanie i Ÿród³o - IECtrl na to pozwala.
+    UIGroupAdd(IMIG_MSGWND, act::popup::popup);
     UIActionAdd(act::popup::popup, act::popup::openUrl, ACTSMENU_BOLD | ACTR_INIT, "Otwórz", ico::link);
     UIActionAdd(act::popup::popup, act::popup::copyUrl, 0, "Kopiuj adres");
     UIActionAdd(act::popup::popup, 0, ACTT_SEP);
@@ -77,5 +71,119 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::history, ACTR_INIT, "Poprzednia rozmowa");
     UIActionAdd(act::popup::popup, 0, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
+  }
+
+  void Controller::_msgCtrlView() {
+    switch (this->getAN()->code) {
+      case ACTN_CREATEWINDOW: {
+        sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
+	    IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
+	    an->hwnd = ctrl->getHWND();
+        // TODO: przygotujmy sobie listnerów (menu ju¿ jest)
+        ctrl->setPopupMenuListener(this->menuListner);
+        // TODO: tu powinniœmy dodaæ do okienka podstawê HTML-a
+        break;
+      }
+
+      case ACTN_DESTROYWINDOW: {
+        sUIActionNotify_destroyWindow* an = (sUIActionNotify_destroyWindow*)this->getAN();
+        IECtrl* ctrl = IECtrl::get(an->hwnd);
+        delete ctrl;
+        break;
+      }
+
+      case Konnekt::UI::Notify::insertMsg: {
+        Konnekt::UI::Notify::_insertMsg* an = (Konnekt::UI::Notify::_insertMsg*)this->getAN();
+        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        switch (an->_message->type) {
+          case MT_MESSAGE: {
+            int cnt = 0;
+            if (an->_message->flag & MF_SEND)
+              cnt = ICMessage(IMC_CNT_FIND, an->_message->net, (int)an->_message->toUid);
+            else
+              cnt = ICMessage(IMC_CNT_FIND, an->_message->net, (int)an->_message->fromUid);
+
+            string display;
+            if (an->_message->flag & MF_SEND)
+              display = !strlen(GETCNTC(0, CNT_DISPLAY)) ? "Ja" : GETCNTC(0, CNT_DISPLAY);
+            else
+              display = !strlen(GETCNTC(cnt, CNT_DISPLAY)) ? an->_message->fromUid : GETCNTC(cnt, CNT_DISPLAY);
+
+            // TODO: Tu powinniœmy przygotowaæ inne dane - czas, przeparsowaæ body, przygotowaæ wszystko pod HTML-a
+
+            ctrl->write(display.c_str());
+            ctrl->write(": ");
+            ctrl->write(an->_message->body);
+            ctrl->write("<br />");
+            ctrl->scrollToBottom();
+            break;
+          }
+
+          case MT_SMS: {
+            
+          }
+
+          case MT_FILE: {
+
+          }
+
+          case MT_QUICKEVENT: {
+
+          }
+        }
+        break;
+      }
+
+      case Konnekt::UI::Notify::insertStatus: {
+        break;
+      }
+
+      case Konnekt::UI::Notify::lock: {
+        sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
+        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        // TODO: Mo¿emy spodziewaæ siê, ¿e zaraz dodamy du¿o danych, np. przy przegl¹daniu historii
+        break;
+      }
+
+      case Konnekt::UI::Notify::unlock: {
+        sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
+        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        // TODO: Du¿a iloœæ danych zosta³a dodana
+        break;
+      }
+
+      case Konnekt::UI::Notify::clear: {
+        sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
+        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        ctrl->clear();
+        break;
+      }
+
+      case ACTN_SETCNT: {
+        sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
+        an->notify2 = (int)GetDlgItem((HWND)UIActionHandleDirect(sUIAction(0, an->act.parent, an->act.cnt)), Konnekt::UI::ACT::msg_ctrlview);
+        break;
+      }
+    }
+  }
+
+  void Controller::_msgCtrlSend() {
+    switch (this->getAN()->code) {
+      case ACTN_CREATEWINDOW: {
+        sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
+        // TODO: Tu tworzymy RichEdita
+	    an->hwnd = 0;
+        break;
+      }
+
+      case ACTN_DESTROYWINDOW: {
+        sUIActionNotify_destroyWindow* an = (sUIActionNotify_destroyWindow*)this->getAN();
+        DestroyWindow(an->hwnd);
+        break;
+      }
+    }
+  }
+
+  void Controller::_msgSend() {
   }
 }

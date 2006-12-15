@@ -90,6 +90,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Coping to Konnekt folder…"
+				CommandLine="copy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;D:\Program Files\Konnekt\plugins&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -199,6 +201,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\PopupListner.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\RtfHtml.cpp"
 				>
 			</File>
@@ -254,6 +260,10 @@
 			</File>
 			<File
 				RelativePath="..\Source\PlugController.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Source\PopupListner.h"
 				>
 			</File>
 			<File
