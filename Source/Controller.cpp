@@ -79,7 +79,7 @@ namespace kIEview2 {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
         IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
         an->hwnd = ctrl->getHWND();
-        // TODO: przygotujmy sobie listnerów (menu ju¿ jest)
+        // TODO: przygotujmy sobie listenerów (menu ju¿ jest)
         ctrl->setPopupMenuListener(this->menuListener);
         // TODO: tu powinniœmy dodaæ do okienka podstawê HTML-a
         break;
@@ -92,23 +92,26 @@ namespace kIEview2 {
         break;
       }
 
-      case Konnekt::UI::Notify::insertMsg: {
-        Konnekt::UI::Notify::_insertMsg* an = (Konnekt::UI::Notify::_insertMsg*)this->getAN();
+      case UI::Notify::insertMsg: {
+        UI::Notify::_insertMsg* an = (UI::Notify::_insertMsg*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+
+        int cnt = -1;
+        if (an->_message->flag & MF_SEND) {
+          cnt = ICMessage(IMC_CNT_FIND, an->_message->net, (int)an->_message->toUid);
+        } else {
+          cnt = ICMessage(IMC_CNT_FIND, an->_message->net, (int)an->_message->fromUid);
+        }
+
+        String display;
+        if (an->_message->flag & MF_SEND) {
+          display = !strlen(config->getChar(CNT_DISPLAY, 0)) ? "Ja" : config->getChar(CNT_DISPLAY, 0);
+        } else {
+          display = !strlen(config->getChar(CNT_DISPLAY, cnt)) ? an->_message->fromUid : config->getChar(CNT_DISPLAY, cnt);
+        }
+
         switch (an->_message->type) {
           case MT_MESSAGE: {
-            int cnt = 0;
-            if (an->_message->flag & MF_SEND)
-              cnt = ICMessage(IMC_CNT_FIND, an->_message->net, (int)an->_message->toUid);
-            else
-              cnt = ICMessage(IMC_CNT_FIND, an->_message->net, (int)an->_message->fromUid);
-
-            string display;
-            if (an->_message->flag & MF_SEND)
-              display = !strlen(GETCNTC(0, CNT_DISPLAY)) ? "Ja" : GETCNTC(0, CNT_DISPLAY);
-            else
-              display = !strlen(GETCNTC(cnt, CNT_DISPLAY)) ? an->_message->fromUid : GETCNTC(cnt, CNT_DISPLAY);
-
             // TODO: Tu powinniœmy przygotowaæ inne dane - czas, przeparsowaæ body, przygotowaæ wszystko pod HTML-a
 
             ctrl->write(display.c_str());
@@ -134,25 +137,25 @@ namespace kIEview2 {
         break;
       }
 
-      case Konnekt::UI::Notify::insertStatus: {
+      case UI::Notify::insertStatus: {
         break;
       }
 
-      case Konnekt::UI::Notify::lock: {
+      case UI::Notify::lock: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
         // TODO: Mo¿emy spodziewaæ siê, ¿e zaraz dodamy du¿o danych, np. przy przegl¹daniu historii
         break;
       }
 
-      case Konnekt::UI::Notify::unlock: {
+      case UI::Notify::unlock: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
         // TODO: Du¿a iloœæ danych zosta³a dodana
         break;
       }
 
-      case Konnekt::UI::Notify::clear: {
+      case UI::Notify::clear: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
         ctrl->clear();
@@ -161,7 +164,7 @@ namespace kIEview2 {
 
       case ACTN_SETCNT: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
-        an->notify2 = (int)GetDlgItem((HWND)UIActionHandleDirect(sUIAction(0, an->act.parent, an->act.cnt)), Konnekt::UI::ACT::msg_ctrlview);
+        an->notify2 = (int)GetDlgItem((HWND)UIActionHandleDirect(sUIAction(0, an->act.parent, an->act.cnt)), UI::ACT::msg_ctrlview);
         break;
       }
     }
@@ -172,7 +175,7 @@ namespace kIEview2 {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
         // TODO: Tu tworzymy RichEdita
-	    an->hwnd = 0;
+        an->hwnd = 0;
         break;
       }
 
