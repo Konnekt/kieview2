@@ -16,7 +16,7 @@
 
 #define DISPID_BEFORENAVIGATE2 250
 
-IECtrl * IECtrl::m_pList = NULL;
+IECtrl* IECtrl::m_pList = NULL;
 CRITICAL_SECTION IECtrl::m_mutex;
 bool IECtrl::m_bInited = false;
 

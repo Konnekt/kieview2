@@ -201,7 +201,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Source\PopupListner.cpp"
+				RelativePath="..\Source\PopupListener.cpp"
 				>
 			</File>
 			<File
@@ -263,7 +263,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Source\PopupListner.h"
+				RelativePath="..\Source\PopupListener.h"
 				>
 			</File>
 			<File

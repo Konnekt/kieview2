@@ -109,25 +109,23 @@ namespace Konnekt {
      * @see registerObserver
      */
     inline int process(sIMessage_base* msgBase) {
-      sIMessage_2params* msg = static_cast<sIMessage_2params*>(msgBase);
-
       // clear residues
       clear();
 
       // set im
-      setIM(msg);
+      setIM(msgBase);
 
       // looking for static values
-      if (staticValues.find(msg->id) != staticValues.end()) {
-        setReturnCode(staticValues[msg->id]);
+      if (staticValues.find(im->id) != staticValues.end()) {
+        setReturnCode(staticValues[im->id]);
       }
       // notify global observers
-      notifyObservers(msg);
+      notifyObservers();
 
       // ui action message
       if (isAction()) {
         // notify action observers
-        notifyActionObservers(msg);
+        notifyActionObservers();
 
         // auto-forward action
         if (isForwardable()) {
@@ -137,14 +135,14 @@ namespace Konnekt {
 
       // log IMessage
       if (isReturnCodeSet()) {
-        IMLOG("[IMController<%i>::process()]: id = %i, returnCode = %i", this, msg->id, 
+        IMLOG("[IMController<%i>::process()]: id = %i, returnCode = %i", this, im->id, 
           getReturnCode());
       } else {
         // set error if no result
         if (Ctrl) {
           Ctrl->setError(IMERROR_NORESULT);
         }
-        IMLOG("[IMController<%i>::process()]: id = %i", this, msg->id);
+        IMLOG("[IMController<%i>::process()]: id = %i", this, im->id);
       }
       return getReturnCode();
     }
@@ -181,14 +179,6 @@ namespace Konnekt {
       return _registerObserver(id, f, priority, pos, name, overwrite, actionObservers);
     }
 
-    inline void notifyObservers(sIMessage_2params* msg) {
-      return _notifyObservers(im->id, observers);
-    }
-
-    inline void notifyActionObservers(sIMessage_2params* msg) {
-      return _notifyObservers(getAN()->act.id, actionObservers);
-    }
-
     /* Subclassing */
     inline bool isSublassed(int id, int parent) {
       for (tSubclassedActions::iterator it = subclassedActions.begin(); it != subclassedActions.end(); it++) {
@@ -204,7 +194,7 @@ namespace Konnekt {
 
     inline bool isForwardable(int id, int parent) {
       if (isSublassed(id, parent)) {
-        return _getSubclassedAction(id, parent).autoForward;
+        return _getSubclassedAction(id, parent)->autoForward;
       }
       return false;
     }
@@ -216,7 +206,7 @@ namespace Konnekt {
 
     inline int getPrevOwner(int id, int parent) {
       if (isSublassed(id, parent)) {
-        return _getSubclassedAction(id, parent).prevOwner;
+        return _getSubclassedAction(id, parent)->prevOwner;
       }
       return sSubclassedAction::notFound;
     }
@@ -228,7 +218,7 @@ namespace Konnekt {
 
     inline void setForwardable(int id, int parent, bool set) {
       if (isSublassed(id, parent)) {
-        _getSubclassedAction(id, parent).autoForward = set;
+        _getSubclassedAction(id, parent)->autoForward = set;
       }
     }
 
@@ -253,13 +243,6 @@ namespace Konnekt {
         if (_setReturnCode) setReturnCode(retValue);
       }
       return this;
-    }
-
-    // Cleanin' variables
-    inline void clear() {
-      returnCodeSet = false;
-      returnCode = NULL;
-      im = NULL;
     }
 
     inline int getReturnCode() {
@@ -306,11 +289,6 @@ namespace Konnekt {
       return im;
     }
 
-    inline IMController* setIM(sIMessage_2params* im) { 
-      this->im = im;
-      return this;
-    }
-
     inline bool isAction() {
       return getIM()->id == IM_UIACTION;
     }
@@ -333,12 +311,33 @@ namespace Konnekt {
     }
 
   protected:
+    inline void notifyObservers() {
+      return _notifyObservers(im->id, observers);
+    }
+
+    inline void notifyActionObservers() {
+      return _notifyObservers(getAN()->act.id, actionObservers);
+    }
+
+    // little housekeeping
+    inline void clear() {
+      returnCodeSet = false;
+      returnCode = NULL;
+      im = NULL;
+    }
+
+    // dumb setter
+    inline void setIM(sIMessage_base* msgBase) { 
+      im = static_cast<sIMessage_2params*>(msgBase);
+    }
+
     /* Actions subclassing */
-    inline sSubclassedAction& _getSubclassedAction(int id, int parent) {
-      for (tSubclassedActions::iterator it = subclassedActions.begin(); it != subclassedActions.end(); it++) {
-        if (id == it->id && parent == it->parent) return *it;
+    inline sSubclassedAction* _getSubclassedAction(int id, int parent) {
+      int i = 0;
+      for (tSubclassedActions::iterator it = subclassedActions.begin(); it != subclassedActions.end(); it++, i++) {
+        if (id == it->id && parent == it->parent) return &subclassedActions.at(i);
       }
-      return sSubclassedAction();
+      return NULL;
     }
 
     /* Observers related methods */

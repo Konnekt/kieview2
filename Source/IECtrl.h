@@ -200,9 +200,9 @@ private:
     STDMETHOD(GetWindowContext)(IOleInPlaceFrame **ppFrame, IOleInPlaceUIWindow **ppDoc, LPRECT lprcPosRect, LPRECT lprcClipRect, LPOLEINPLACEFRAMEINFO lpFrameInfo);
     STDMETHOD(Scroll)(SIZE scrollExtant);
     STDMETHOD(OnUIDeactivate)(BOOL fUndoable);
-    STDMETHOD(OnInPlaceDeactivate)( void);
-    STDMETHOD(DiscardUndoState)( void);
-    STDMETHOD(DeactivateAndUndo)( void);
+    STDMETHOD(OnInPlaceDeactivate)(void);
+    STDMETHOD(DiscardUndoState)(void);
+    STDMETHOD(DeactivateAndUndo)(void);
     STDMETHOD(OnPosRectChange)(LPCRECT lprcPosRect);
     // IOleClientSite
     STDMETHOD(SaveObject)(void);
@@ -231,15 +231,15 @@ private:
     STDMETHOD(ShowHelp)(HWND hwnd, LPOLESTR pszHelpFile, UINT uCommand, DWORD dwData, POINT ptMouse, IDispatch __RPC_FAR *pDispatchObjectHit);
     STDMETHOD(ShowMessage)(HWND hwnd, LPOLESTR lpstrText, LPOLESTR lpstrCaption, DWORD dwType, LPOLESTR lpstrHelpFile, DWORD dwHelpContext, LRESULT __RPC_FAR *plResult);
     // IServiceProvider
-    STDMETHOD(QueryService)( REFGUID guidService, REFIID riid, void __RPC_FAR *__RPC_FAR *ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void __RPC_FAR *__RPC_FAR *ppvObject);
     // IInternetSecurityManager
     STDMETHOD(SetSecuritySite)(IInternetSecurityMgrSite *pSite);
     STDMETHOD(GetSecuritySite)(IInternetSecurityMgrSite **ppSite);
     STDMETHOD(MapUrlToZone)(LPCWSTR pwszUrl, DWORD *pdwZone, DWORD dwFlags);
     STDMETHOD(GetSecurityId)(LPCWSTR pwszUrl, BYTE *pbSecurityId, DWORD *pcbSecurityId, DWORD_PTR dwReserved);
-    STDMETHOD(ProcessUrlAction)(  LPCWSTR pwszUrl, DWORD dwAction, BYTE *pPolicy, DWORD cbPolicy, BYTE *pContext, DWORD cbContext, DWORD dwFlags, DWORD dwReserved);
+    STDMETHOD(ProcessUrlAction)(LPCWSTR pwszUrl, DWORD dwAction, BYTE *pPolicy, DWORD cbPolicy, BYTE *pContext, DWORD cbContext, DWORD dwFlags, DWORD dwReserved);
     STDMETHOD(QueryCustomPolicy)(LPCWSTR pwszUrl, REFGUID guidKey, BYTE **ppPolicy, DWORD *pcbPolicy, BYTE *pContext, DWORD cbContext, DWORD dwReserved);
-    STDMETHOD(SetZoneMapping)( DWORD dwZone, LPCWSTR lpszPattern, DWORD dwFlags);
+    STDMETHOD(SetZoneMapping)(DWORD dwZone, LPCWSTR lpszPattern, DWORD dwFlags);
     STDMETHOD(GetZoneMappings)(DWORD dwZone, IEnumString **ppenumString, DWORD dwFlags);
 
   private:
@@ -374,6 +374,7 @@ public:
       Array
     };
     Type m_eType;
+
     union {
       int m_iValue;
       double m_dValue;
