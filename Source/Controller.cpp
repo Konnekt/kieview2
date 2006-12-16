@@ -25,6 +25,7 @@ namespace kIEview2 {
 
     /* Callbacks */
     this->registerObserver(IM_UI_PREPARE, bind(resolve_cast0(&Controller::_onPrepare), this));
+    this->registerObserver(IM_UIACTION, bind(resolve_cast0(&Controller::_onAction), this));
     this->registerActionObserver(UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
     this->registerActionObserver(UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
     this->registerActionObserver(IMIA_MSG_SEND, bind(resolve_cast0(&Controller::_msgSend), this));
@@ -63,21 +64,64 @@ namespace kIEview2 {
     UIGroupAdd(IMIG_MSGWND, act::popup::popup);
     UIActionAdd(act::popup::popup, act::popup::openUrl, ACTSMENU_BOLD | ACTR_INIT, "Otwórz", ico::link);
     UIActionAdd(act::popup::popup, act::popup::copyUrl, 0, "Kopiuj adres");
-    UIActionAdd(act::popup::popup, 0, ACTT_SEP);
+    UIActionAdd(act::popup::popup, act::popup::urlSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::saveImage, ACTSMENU_BOLD | ACTR_INIT, "Zapisz obrazek", ico::save);
-    UIActionAdd(act::popup::popup, 0, ACTT_SEP);
+    UIActionAdd(act::popup::popup, act::popup::imageSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::copySelection, ACTR_INIT, "Kopiuj", ico::copy);
     UIActionAdd(act::popup::popup, act::popup::selectAll, 0, "Zaznacz wszystko");
     UIActionAdd(act::popup::popup, act::popup::history, ACTR_INIT, "Poprzednia rozmowa");
-    UIActionAdd(act::popup::popup, 0, ACTT_SEP);
+    UIActionAdd(act::popup::popup, act::popup::clearSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
+  }
+
+  void Controller::_onAction() {
+    sUIActionNotify_2params* an = this->getAN();
+
+    switch(an->act.id)
+    {
+      case act::popup::openUrl:
+      case act::popup::copyUrl:
+      case act::popup::saveImage:
+      case act::popup::copySelection:
+      case act::popup::selectAll:
+      case act::popup::history:
+      case act::popup::clear: {
+        if(an->act.cnt)
+          IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlview, an->act.cnt)));
+        else
+          IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(sUIAction(IMIG_HISTORYWND, UI::ACT::msg_ctrlview)));
+        switch(an->act.id) {
+          case act::popup::openUrl: {
+          
+          }
+          case act::popup::copyUrl: {
+          
+          }
+          case act::popup::saveImage: {
+          
+          }
+          case act::popup::copySelection: {
+          
+          }
+          case act::popup::selectAll: {
+          
+          }
+          case act::popup::history: {
+          
+          }
+          case act::popup::clear: {
+          
+          }
+        }
+      }
+    }
   }
 
   void Controller::_msgCtrlView() {
     switch (this->getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
-        IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
+        IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h, an->act.cnt);
         an->hwnd = ctrl->getHWND();
         // TODO: przygotujmy sobie listenerów (menu ju¿ jest)
         ctrl->setPopupMenuListener(this->menuListener);

@@ -14,23 +14,65 @@
 #include "stdafx.h"
 #include "IECtrl.h"
 #include "PopupListener.h"
-#include "kIEView2.h"
 
 namespace kIEview2 {
   IECtrl::PopupMenuListener::MakeAction PopupListener::PopupMenu(IECtrl::PopupMenuListener::MenuType type, POINT pt, IECtrl* ctrl) {
     switch (type) {
-      // TODO: Menu nie dzia³a. Nie wiem jak pobraæ CNT-a tutaj.
       case IECtrl::PopupMenuListener::MenuType::Unknown: {
-        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, kIEview2::act::popup::popup), TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, ctrl->getHWND()));
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::urlSep), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::saveImage), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::imageSep), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copySelection), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), 0, ACTS_HIDDEN);
+        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, ctrl->getCntId()), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, ctrl->getCntId()))));
+        break;
       }
       case IECtrl::PopupMenuListener::MenuType::Anchor: {
-        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, kIEview2::act::popup::popup), TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, ctrl->getHWND()));
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::urlSep), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::saveImage), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::imageSep), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copySelection), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), 0, ACTS_HIDDEN);
+        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, ctrl->getCntId()), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, ctrl->getCntId()))));
+        break;
       }
       case IECtrl::PopupMenuListener::MenuType::Image: {
-        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, kIEview2::act::popup::popup), TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, ctrl->getHWND()));
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::urlSep), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::saveImage), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::imageSep), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copySelection), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), 0, ACTS_HIDDEN);
+        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, ctrl->getCntId()), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, ctrl->getCntId()))));
+        break;
       }
       case IECtrl::PopupMenuListener::MenuType::Selection: {
-        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, kIEview2::act::popup::popup), TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NONOTIFY | TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, ctrl->getHWND()));
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::urlSep), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::saveImage), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::imageSep), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copySelection), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), 0, ACTS_HIDDEN);
+        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, ctrl->getCntId()), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, ctrl->getCntId()))));
+        break;
       }
     }
     return IECtrl::PopupMenuListener::MakeAction::None;

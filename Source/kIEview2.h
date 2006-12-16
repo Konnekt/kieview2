@@ -54,11 +54,14 @@ namespace kIEview2 {
 
       const unsigned int openUrl = popup + 1;
       const unsigned int copyUrl = popup + 2;
-      const unsigned int saveImage = popup + 3;
-      const unsigned int copySelection = popup + 4;
-      const unsigned int selectAll = popup + 5;
-      const unsigned int history = popup + 6;
-      const unsigned int clear = popup + 7;
+      const unsigned int urlSep = popup + 3;
+      const unsigned int saveImage = popup + 4;
+      const unsigned int imageSep = popup + 5;
+      const unsigned int copySelection = popup + 6;
+      const unsigned int selectAll = popup + 7;
+      const unsigned int history = popup + 8;
+      const unsigned int clearSep = popup + 9;
+      const unsigned int clear = popup + 10;
     }
 
     namespace formatTb {

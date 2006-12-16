@@ -53,14 +53,14 @@ void log(enDebugLevel level, const char * format, va_list ap) {
 void log(const char * format, ...) {
   va_list ap;
   va_start(ap, format);
-	log(DBG_LOG, format, ap);
+  log(DBG_LOG, format, ap);
   va_end(ap);
 }
 
 void logDebug(const char * format, ...) {
   va_list ap;
   va_start(ap, format);
-	log(DBG_DEBUG, format, ap);
+  log(DBG_DEBUG, format, ap);
   va_end(ap);
 }
 

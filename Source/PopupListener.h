@@ -18,6 +18,9 @@
 
 #include "stdafx.h"
 #include "IECtrl.h"
+#include "kIEView2.h"
+
+using namespace kIEview2;
 
 namespace kIEview2 {
   class PopupListener : public IECtrl::PopupMenuListener {

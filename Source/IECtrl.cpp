@@ -39,12 +39,13 @@ void IECtrl::deinit() {
   m_bInited = false;
 }
 
-IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
+IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, int cntId, bool staticEdge) {
   MSG msg;
   IOleObject* pOleObject = NULL;
   IOleInPlaceObject* pOleInPlace = NULL;
 
   m_hParentWnd = parent;
+  m_cntId = cntId;
   m_pPrev = m_pNext = NULL;
   m_hWnd = NULL;
   m_pEventSink = NULL;
@@ -441,6 +442,10 @@ HWND IECtrl::getHWND() {
   return m_hWnd;
 }
 
+int IECtrl::getCntId() {
+  return m_cntId;
+}
+
 void IECtrl::translateAccelerator(UINT uMsg, WPARAM wParam, LPARAM lParam) {
   char chr = (char)LOWORD(MapVirtualKey(wParam, 2));
   if (m_pKeyDownListener != NULL && m_pKeyDownListener->KeyDown(wParam, lParam)
@@ -617,7 +622,7 @@ bool IECtrl::callJScript(const char* szFunc, Var &args, Var *ret) {
     }
     document->Release();
   }
-	return bRet;
+  return bRet;
 }
 
 void IECtrl::selectAll() {
@@ -1146,11 +1151,11 @@ STDMETHODIMP IECtrl::ClientSite::GetSecurityId(LPCWSTR pwszUrl, BYTE *pbSecurity
 
 STDMETHODIMP IECtrl::ClientSite::ProcessUrlAction(LPCWSTR pwszUrl, DWORD dwAction, BYTE *pPolicy, DWORD cbPolicy, BYTE *pContext, DWORD cbContext, DWORD dwFlags, DWORD dwReserved)
 {
-	if (cbPolicy != 4) return INET_E_DEFAULT_ACTION;
-	PBOOL pBool = (PBOOL)pPolicy;
+  if (cbPolicy != 4) return INET_E_DEFAULT_ACTION;
+  PBOOL pBool = (PBOOL)pPolicy;
 
-	if (dwAction == URLACTION_SCRIPT_RUN) {
-		*pBool = URLPOLICY_DISALLOW; // URLPOLICY_ALLOW;
+  if (dwAction == URLACTION_SCRIPT_RUN) {
+    *pBool = URLPOLICY_DISALLOW; // URLPOLICY_ALLOW;
   } else if (dwAction == URLACTION_JAVA_PERMISSIONS) {
     *pBool = URLPOLICY_JAVA_PROHIBIT;
   } else {
@@ -1222,7 +1227,7 @@ STDMETHODIMP IECtrl::External::GetTypeInfo(UINT iTInfo, LCID lcid, LPTYPEINFO* p
 
 STDMETHODIMP IECtrl::External::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) { 
   HRESULT hr;
-  UINT	i;
+  UINT  i;
   hr = NOERROR;
 
   for (i = 0; i < cNames; i++) {
@@ -1345,7 +1350,7 @@ bool IECtrl::DropTarget::QueryDataObject(IDataObject *pDataObject) {
 
 DWORD IECtrl::DropTarget::DropEffect(DWORD grfKeyState, POINTL pt, DWORD dwAllowed) {
   // tu mozna zrobic rozroznienie po roznych parametrach
-	return DROPEFFECT_COPY;
+  return DROPEFFECT_COPY;
 }
 
 void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {

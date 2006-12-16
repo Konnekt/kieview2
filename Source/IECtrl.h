@@ -89,7 +89,7 @@ public:
   };
 
 public:
-  IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge = false);
+  IECtrl(HWND parent, int x, int y, int cx, int cy, int cntId = 0, bool staticEdge = false);
   virtual ~IECtrl();
 
   static void init();
@@ -101,13 +101,12 @@ public:
   static LRESULT CALLBACK IECtrlWindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
   HWND getHWND();
+  int getCntId();
   void setWindowPos(int x, int y, int cx, int cy);
 
   void enableSandbox(bool bSandbox = true);
   void navigate(const char *);
   void clear();
-  void lock();
-  void unlock();
   void write(const WCHAR *text);
   void write(const char *text);
   void close();
@@ -145,6 +144,7 @@ private:
   static bool m_bInited;
   HWND m_hParentWnd;
   HWND m_hWnd;
+  int m_cntId;
 
   static CRITICAL_SECTION m_mutex;
   static IECtrl * m_pList;
