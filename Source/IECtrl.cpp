@@ -391,7 +391,7 @@ void IECtrl::clear() {
 
     HRESULT hr = document->open(SysAllocString(L"text/html"), open_name, open_features, open_replace, &open_window);
     if (hr == S_OK) {
-      // m_pWebBrowser->Refresh();
+      m_pWebBrowser->Refresh();
     }
     if (open_window != NULL) {
       open_window->Release();
@@ -1000,7 +1000,9 @@ STDMETHODIMP IECtrl::ClientSite::ShowContextMenu(DWORD dwID, POINT *ppt, IUnknow
         }
 
         PopupMenuListener::MakeAction action = m_pCtrl->m_pPopupMenuListener->PopupMenu(type, *ppt, m_pCtrl);
-        if (action == PopupMenuListener::MakeAction::CopyLink) {
+        if (action == PopupMenuListener::MakeAction::OpenLink) {
+          m_pCtrl->mouseClick(*ppt);
+        } else if (action == PopupMenuListener::MakeAction::CopyLink) {
           SendMessage(hSPWnd, WM_COMMAND, (WPARAM)2262, (LPARAM) NULL);
         } else if (action == PopupMenuListener::MakeAction::CopySelection) {
           SendMessage(hSPWnd, WM_COMMAND, (WPARAM)15, (LPARAM) NULL);

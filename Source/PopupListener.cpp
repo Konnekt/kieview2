@@ -12,6 +12,7 @@
   */
 
 #include "stdafx.h"
+#include "Controller.h"
 #include "IECtrl.h"
 #include "PopupListener.h"
 
@@ -75,6 +76,29 @@ namespace kIEview2 {
         break;
       }
     }
-    return IECtrl::PopupMenuListener::MakeAction::None;
+    switch (Controller::getInstance()->selectedMenuItem) {
+      case act::popup::openUrl: {
+        return IECtrl::PopupMenuListener::MakeAction::OpenLink;
+      }
+      case act::popup::copyUrl: {
+        return IECtrl::PopupMenuListener::MakeAction::CopyLink;
+      }
+      case act::popup::saveImage: {
+        return IECtrl::PopupMenuListener::MakeAction::SaveImage;
+      }
+      case act::popup::copySelection: {
+        return IECtrl::PopupMenuListener::MakeAction::CopySelection;
+      }
+      case act::popup::selectAll: {
+        return IECtrl::PopupMenuListener::MakeAction::SelectAll;
+      }
+      case act::popup::history: {
+        return IECtrl::PopupMenuListener::MakeAction::None;
+      }
+      case act::popup::clear: {
+        ctrl->clear();
+        return IECtrl::PopupMenuListener::MakeAction::None;
+      }
+    }
   }
 }

@@ -61,7 +61,7 @@ namespace kIEview2 {
 
     // menu akcji pod prawym klawiszem myszy
     // TODO: Mo¿na by dodaæ drukowanie i Ÿród³o - IECtrl na to pozwala.
-    UIGroupAdd(IMIG_MSGWND, act::popup::popup);
+    UIGroupAdd(IMIG_MSGWND, act::popup::popup, ACTR_INIT);
     UIActionAdd(act::popup::popup, act::popup::openUrl, ACTSMENU_BOLD | ACTR_INIT, "Otwórz", ico::link);
     UIActionAdd(act::popup::popup, act::popup::copyUrl, 0, "Kopiuj adres");
     UIActionAdd(act::popup::popup, act::popup::urlSep, ACTT_SEP);
@@ -79,6 +79,10 @@ namespace kIEview2 {
 
     switch(an->act.id)
     {
+      case act::popup::popup: {
+        if(an->code == ACTN_CREATEGROUP)
+          this->selectedMenuItem = 0;
+      }
       case act::popup::openUrl:
       case act::popup::copyUrl:
       case act::popup::saveImage:
@@ -86,33 +90,8 @@ namespace kIEview2 {
       case act::popup::selectAll:
       case act::popup::history:
       case act::popup::clear: {
-        if(an->act.cnt)
-          IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlview, an->act.cnt)));
-        else
-          IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(sUIAction(IMIG_HISTORYWND, UI::ACT::msg_ctrlview)));
-        switch(an->act.id) {
-          case act::popup::openUrl: {
-          
-          }
-          case act::popup::copyUrl: {
-          
-          }
-          case act::popup::saveImage: {
-          
-          }
-          case act::popup::copySelection: {
-          
-          }
-          case act::popup::selectAll: {
-          
-          }
-          case act::popup::history: {
-          
-          }
-          case act::popup::clear: {
-          
-          }
-        }
+        if(an->code == ACTN_ACTION)
+          this->selectedMenuItem = an->act.id;
       }
     }
   }

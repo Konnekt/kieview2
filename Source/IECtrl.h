@@ -59,6 +59,7 @@ public:
       SelectAll = 1,
       CopyLink = 2,
       CopySelection = 3,
+      OpenLink = 4,
       SaveImage = 2270,
       Print = 27,
       ShowSource = 2139
