@@ -32,7 +32,6 @@ namespace kIEview2 {
   public:
     /* Class version */
     STAMINA_OBJECT_CLASS_VERSION(Controller, PlugController, Version(0,1,0,0));
-    int selectedMenuItem;
 
   protected:
     Controller();
@@ -47,6 +46,9 @@ namespace kIEview2 {
     void _msgCtrlView();
     void _msgCtrlSend();
     void _msgSend();
+
+  public:
+    int selectedMenuItem;
 
   protected:
     PopupListener* menuListener;

@@ -1,5 +1,5 @@
 /**
-  *  kIEview2 PopupListener class
+  *  kIEview2 Popup Listener class
   *
   *  Any modifications or reusing strictly prohibited!
   *
@@ -16,7 +16,6 @@
 #ifndef __POPUPLISTENER_H__
 #define __POPUPLISTENER_H__
 
-#include "stdafx.h"
 #include "IECtrl.h"
 #include "kIEView2.h"
 

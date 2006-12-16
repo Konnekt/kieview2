@@ -1,5 +1,5 @@
 /**
-  *  kIEview2 PopupListener class
+  *  kIEview2 Popup Listener class
   *
   *  Any modifications or reusing strictly prohibited!
   *
@@ -93,12 +93,13 @@ namespace kIEview2 {
         return IECtrl::PopupMenuListener::MakeAction::SelectAll;
       }
       case act::popup::history: {
-        return IECtrl::PopupMenuListener::MakeAction::None;
+        break;
       }
       case act::popup::clear: {
         ctrl->clear();
-        return IECtrl::PopupMenuListener::MakeAction::None;
+        break;
       }
     }
+    return IECtrl::PopupMenuListener::MakeAction::None;
   }
 }
