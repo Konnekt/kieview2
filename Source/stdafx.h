@@ -47,6 +47,8 @@
 #include <richedit.h>
 #include <OleIdl.h>
 #include <richole.h>
+#include <shellapi.h>
+#pragma comment(lib, "shell32.lib")
 
 #include <map>
 #include <list>

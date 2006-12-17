@@ -21,6 +21,7 @@
 #include "Helpers.h"
 #include "IECtrl.h"
 #include "PopupListener.h"
+#include "AnchorListener.h"
 
 using namespace kIEview2;
 
@@ -51,7 +52,8 @@ namespace kIEview2 {
     int selectedMenuItem;
 
   protected:
-    PopupListener* menuListener;
+    PopupListener* popupListener;
+    AnchorListener* anchorListener;
   };
 }
 
