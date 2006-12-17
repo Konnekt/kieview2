@@ -26,6 +26,8 @@ namespace kIEview2 {
 
   namespace im {
     const unsigned int im = net * 1000 + IM_USER + 100;
+    
+    const unsigned int fileDrop = im + 1;
   }
 
   namespace ui {
@@ -44,6 +46,8 @@ namespace kIEview2 {
     const unsigned int italic = ico + 7;
     const unsigned int underline = ico + 8;
     const unsigned int color = ico + 9;
+    const unsigned int print = ico + 10;
+    const unsigned int source = ico + 11;
   }
 
   namespace act {
@@ -57,11 +61,13 @@ namespace kIEview2 {
       const unsigned int urlSep = popup + 3;
       const unsigned int saveImage = popup + 4;
       const unsigned int imageSep = popup + 5;
-      const unsigned int copySelection = popup + 6;
-      const unsigned int selectAll = popup + 7;
-      const unsigned int history = popup + 8;
-      const unsigned int clearSep = popup + 9;
-      const unsigned int clear = popup + 10;
+      const unsigned int print = popup + 6;
+      const unsigned int copySelection = popup + 7;
+      const unsigned int selectAll = popup + 8;
+      const unsigned int showSource = popup + 9;
+      const unsigned int history = popup + 10;
+      const unsigned int clearSep = popup + 11;
+      const unsigned int clear = popup + 12;
     }
 
     namespace formatTb {
@@ -77,7 +83,8 @@ namespace kIEview2 {
 
   namespace cfg {
     const unsigned int cfg = net * 1000 + 500;
-
+    
+    const unsigned int cfgGroup = cfg;
     const unsigned int useEmots = cfg + 1;
     const unsigned int emotsDir = cfg + 2;
     const unsigned int showFormatTb = cfg + 3;

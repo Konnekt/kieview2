@@ -103,6 +103,8 @@ IDI_LINK                ICON                    "..\\Res\\link.ico"
 IDI_LOGO                ICON                    "..\\Res\\logo.ico"
 IDI_SAVE                ICON                    "..\\Res\\save.ico"
 IDI_UNDERLINE           ICON                    "..\\Res\\underline.ico"
+IDI_PRINT               ICON                    "..\\Res\\print.ico"
+IDI_SOURCE              ICON                    "..\\Res\\source.ico"
 #endif    // Polish resources
 /////////////////////////////////////////////////////////////////////////////
 

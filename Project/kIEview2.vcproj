@@ -189,6 +189,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\DropListener.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\Helpers.cpp"
 				>
 			</File>
@@ -248,6 +252,10 @@
 			</File>
 			<File
 				RelativePath="..\Source\Controller.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Source\DropListener.h"
 				>
 			</File>
 			<File
@@ -325,7 +333,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Res\printer.ico"
+				>
+			</File>
+			<File
 				RelativePath="..\Res\save.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\source.ico"
 				>
 			</File>
 			<File

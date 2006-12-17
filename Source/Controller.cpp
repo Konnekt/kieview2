@@ -30,9 +30,12 @@ namespace kIEview2 {
     this->registerActionObserver(UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
     this->registerActionObserver(IMIA_MSG_SEND, bind(resolve_cast0(&Controller::_msgSend), this));
 
-    // podmieniamy kontrolki widoku wiadomosci
+    /* Configuration columns */
+    config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEView2/emots/use");
+    config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "", "kIEView2/emots/dir");
+    config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEView2/showFormatTb");
+
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_MSGWND);
-    // podmieniamy kontrolki w historii
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
     // TODO: podmieniamy kontrolki wpisywania wiadomosci
     //this->subclassAction(UI::ACT::msg_ctrlsend, IMIG_MSGWND);
@@ -42,6 +45,7 @@ namespace kIEview2 {
     IECtrl::init();
     this->popupListener = new PopupListener;
     this->anchorListener = new AnchorListener;
+    this->dropListener = new DropListener;
   }
 
   Controller::~Controller() {
@@ -60,20 +64,52 @@ namespace kIEview2 {
     IconRegister(IML_16, ico::italic, Ctrl->hDll(), IDI_ITALIC);
     IconRegister(IML_16, ico::underline, Ctrl->hDll(), IDI_UNDERLINE);
     IconRegister(IML_16, ico::color, Ctrl->hDll(), IDI_COLOR);
+    IconRegister(IML_16, ico::print, Ctrl->hDll(), IDI_PRINT);
+    IconRegister(IML_16, ico::source, Ctrl->hDll(), IDI_SOURCE);
 
     // menu akcji pod prawym klawiszem myszy
-    // TODO: Mo¿na by dodaæ drukowanie i Ÿród³o - IECtrl na to pozwala.
+    // TODO: Potrzebna ikonka przynajmniej do drukowania
     UIGroupAdd(IMIG_MSGWND, act::popup::popup, ACTR_INIT);
-    UIActionAdd(act::popup::popup, act::popup::openUrl, ACTSMENU_BOLD | ACTR_INIT, "Otwórz", ico::link);
+    UIActionAdd(act::popup::popup, act::popup::openUrl, ACTSMENU_BOLD, "Otwórz", ico::link);
     UIActionAdd(act::popup::popup, act::popup::copyUrl, 0, "Kopiuj adres");
     UIActionAdd(act::popup::popup, act::popup::urlSep, ACTT_SEP);
-    UIActionAdd(act::popup::popup, act::popup::saveImage, ACTSMENU_BOLD | ACTR_INIT, "Zapisz obrazek", ico::save);
+    UIActionAdd(act::popup::popup, act::popup::saveImage, ACTSMENU_BOLD, "Zapisz obrazek", ico::save);
     UIActionAdd(act::popup::popup, act::popup::imageSep, ACTT_SEP);
-    UIActionAdd(act::popup::popup, act::popup::copySelection, ACTR_INIT, "Kopiuj", ico::copy);
+    UIActionAdd(act::popup::popup, act::popup::print, 0, "Drukuj", ico::print);
+    UIActionAdd(act::popup::popup, act::popup::copySelection, 0, "Kopiuj", ico::copy);
     UIActionAdd(act::popup::popup, act::popup::selectAll, 0, "Zaznacz wszystko");
-    UIActionAdd(act::popup::popup, act::popup::history, ACTR_INIT, "Poprzednia rozmowa");
+    UIActionAdd(act::popup::popup, act::popup::showSource, 0, "Poka¿ Ÿród³o", ico::source);
+    UIActionAdd(act::popup::popup, act::popup::history, 0, "Poprzednia rozmowa");
     UIActionAdd(act::popup::popup, act::popup::clearSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
+
+    if(config->getInt(cfg::showFormatTb))
+    {
+      UIGroupAdd(IMIG_MSGBAR, act::formatTb::formatTb);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::bold, 0, "Pogrubienie", ico::bold);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::italic, 0, "Kursywa", ico::italic);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::underline, 0, "Podkreœlenie", ico::underline);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::color, 0, "Kolor", ico::color);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::emots, 0, "Emotikony", ico::emots);
+    }
+
+    UIGroupAdd(IMIG_CFG_PLUGS, cfg::cfgGroup, 0, "kIEView2", ico::logo);
+    UIActionCfgAddPluginInfoBox2(cfg::cfgGroup, 
+    "Wtyczka pozwala na stylowanie okna rozmowy i dodaje obs³ugê emotikon. (Tekst do zmiany, nie jestem w tym dobry)", 
+    "<span class='note'>Skompilowano: <b>"__DATE__"</b> [<b>"__TIME__"</b>]</span><br/>"
+    "Informacje o wtyczce na stronie projektu "
+    "<b>KPlugins</b> (http://kplugins.net/)<br/><br/>"
+    "Copyright © 2005-2006 <b>Sijawusz Pur Rahnama</b><br/>"
+    "Copyright © 2005-2006 <b>Micha³ \"Dulek\" Dulko</b><br/>"
+    "Copyright © 2005-2006 <b>KPlugins Team</b>", Helpers::icon16(ico::logo).a_str());
+
+    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
+    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_CHECK|ACTSC_NEEDRESTART, "Wyœwietlaj toolbar w oknie rozmowy", cfg::showFormatTb);
+    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUPEND);
+
+    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUP, "Emotikony");
+    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_CHECK, "U¿ywaj emotikon", cfg::useEmots);
+    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUPEND);
   }
 
   void Controller::_onAction() {
@@ -84,16 +120,50 @@ namespace kIEview2 {
       case act::popup::popup: {
         if(an->code == ACTN_CREATEGROUP)
           this->selectedMenuItem = 0;
+        break;
       }
       case act::popup::openUrl:
       case act::popup::copyUrl:
       case act::popup::saveImage:
       case act::popup::copySelection:
+      case act::popup::print:
       case act::popup::selectAll:
+      case act::popup::showSource:
       case act::popup::history:
       case act::popup::clear: {
         if(an->code == ACTN_ACTION)
           this->selectedMenuItem = an->act.id;
+        break;
+      }
+      case act::formatTb::bold: {
+        if(an->code == ACTN_ACTION) {
+        
+        }
+        break;
+      }
+      case act::formatTb::italic: {
+        if(an->code == ACTN_ACTION) {
+        
+        }
+        break;
+      }
+      case act::formatTb::underline: {
+        if(an->code == ACTN_ACTION) {
+        
+        }
+        break;
+      }
+      case act::formatTb::color: {
+        if(an->code == ACTN_ACTION) {
+        
+        }
+        break;
+      }
+      case act::formatTb::emots: {
+        if(an->code == ACTN_ACTION) {
+        
+        }
+        break;
       }
     }
   }
@@ -104,9 +174,12 @@ namespace kIEview2 {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
         IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h, an->act.cnt);
         an->hwnd = ctrl->getHWND();
+
         // TODO: przygotujmy sobie listenerów
         ctrl->setPopupMenuListener(this->popupListener);
         ctrl->setAnchorClickListener(this->anchorListener);
+        ctrl->setDropListener(this->dropListener);
+
         // TODO: tu powinniœmy dodaæ do okienka podstawê HTML-a
         break;
       }

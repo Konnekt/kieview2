@@ -12,6 +12,8 @@
 #define IDI_ICON9                       109
 #define IDI_SAVE                        109
 #define IDI_UNDERLINE                   110
+#define IDI_PRINT                       111
+#define IDI_SOURCE                      112
 
 // Next default values for new objects
 // 

@@ -22,6 +22,7 @@
 #include "IECtrl.h"
 #include "PopupListener.h"
 #include "AnchorListener.h"
+#include "DropListener.h"
 
 using namespace kIEview2;
 
@@ -54,6 +55,7 @@ namespace kIEview2 {
   protected:
     PopupListener* popupListener;
     AnchorListener* anchorListener;
+    DropListener* dropListener;
   };
 }
 
