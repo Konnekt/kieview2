@@ -29,10 +29,9 @@ namespace kIEview2 {
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), 0, ACTS_HIDDEN);
-        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, ctrl->getCntId()), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, ctrl->getCntId()))));
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
         break;
       }
       case IECtrl::PopupMenuListener::MenuType::Anchor: {
@@ -45,11 +44,9 @@ namespace kIEview2 {
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), 0, ACTS_HIDDEN);
-        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, ctrl->getCntId()), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, ctrl->getCntId()))));
-        break;
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
       }
       case IECtrl::PopupMenuListener::MenuType::Image: {
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
@@ -61,10 +58,9 @@ namespace kIEview2 {
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), 0, ACTS_HIDDEN);
-        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, ctrl->getCntId()), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, ctrl->getCntId()))));
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
         break;
       }
       case IECtrl::PopupMenuListener::MenuType::Selection: {
@@ -77,13 +73,15 @@ namespace kIEview2 {
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), 0, ACTS_HIDDEN);
-        IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, ctrl->getCntId()), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, ctrl->getCntId()))));
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::history), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), ctrl->getCntId() ? 0 : -1, ACTS_HIDDEN);
         break;
       }
     }
+    
+    IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, ctrl->getCntId()), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, pt.x, pt.y, 0, ctrl->getCntId() ? UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, ctrl->getCntId())) : UIActionHandleDirect(sUIAction(0, IMIG_HISTORYWND))));
+
     switch (Controller::getInstance()->selectedMenuItem) {
       case act::popup::openUrl: {
         return IECtrl::PopupMenuListener::MakeAction::OpenLink;
@@ -107,10 +105,14 @@ namespace kIEview2 {
         return IECtrl::PopupMenuListener::MakeAction::ShowSource;
       }
       case act::popup::history: {
+        if (ctrl->getCntId()) {
+          // TODO: Przywracamy ostatni¹ rozmowê.
+        }
         break;
       }
       case act::popup::clear: {
-        ctrl->clear();
+        if (ctrl->getCntId())
+          ctrl->clear();
         break;
       }
     }

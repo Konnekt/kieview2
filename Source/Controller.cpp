@@ -32,15 +32,14 @@ namespace kIEview2 {
 
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEView2/emots/use");
-    config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "", "kIEView2/emots/dir");
+    config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots\\", "kIEView2/emots/dir");
     config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEView2/showFormatTb");
 
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_MSGWND);
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
-    // TODO: podmieniamy kontrolki wpisywania wiadomosci
+    // TODO: Podmieniamy kontrolkê wpisywania wiadomoœci
     //this->subclassAction(UI::ACT::msg_ctrlsend, IMIG_MSGWND);
-    // TODO: podmieniamy przycisk "Wyœlij" z okna rozmowy
-    //this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
+    this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
 
     IECtrl::init();
     this->popupListener = new PopupListener;
@@ -68,7 +67,6 @@ namespace kIEview2 {
     IconRegister(IML_16, ico::source, Ctrl->hDll(), IDI_SOURCE);
 
     // menu akcji pod prawym klawiszem myszy
-    // TODO: Potrzebna ikonka przynajmniej do drukowania
     UIGroupAdd(IMIG_MSGWND, act::popup::popup, ACTR_INIT);
     UIActionAdd(act::popup::popup, act::popup::openUrl, ACTSMENU_BOLD, "Otwórz", ico::link);
     UIActionAdd(act::popup::popup, act::popup::copyUrl, 0, "Kopiuj adres");
@@ -95,7 +93,7 @@ namespace kIEview2 {
 
     UIGroupAdd(IMIG_CFG_PLUGS, cfg::cfgGroup, 0, "kIEView2", ico::logo);
     UIActionCfgAddPluginInfoBox2(cfg::cfgGroup, 
-    "Wtyczka pozwala na stylowanie okna rozmowy i dodaje obs³ugê emotikon. (Tekst do zmiany, nie jestem w tym dobry)", 
+    "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest wyœwietlanie emotikon oraz modyfikacja wygl¹du okna przy pomocy styli CSS i skryptów JS.", 
     "<span class='note'>Skompilowano: <b>"__DATE__"</b> [<b>"__TIME__"</b>]</span><br/>"
     "Informacje o wtyczce na stronie projektu "
     "<b>KPlugins</b> (http://kplugins.net/)<br/><br/>"
@@ -108,7 +106,9 @@ namespace kIEview2 {
     UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUP, "Emotikony");
-    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_CHECK, "U¿ywaj emotikon", cfg::useEmots);
+    UIActionCfgAdd(cfg::cfgGroup, cfg::useEmots, ACTT_CHECK, "U¿ywaj emotikon", cfg::useEmots);
+    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_COMMENT|ACTR_STATUS, "Katalog w którym znajduj¹ siê pakiety emotikon", 0);
+    UIActionCfgAdd(cfg::cfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
     UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUPEND);
   }
 
@@ -165,6 +165,9 @@ namespace kIEview2 {
         }
         break;
       }
+      case cfg::useEmots: {
+				  UIActionSetStatus(sUIAction(cfg::cfgGroup, cfg::emotsDir), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
+      }
     }
   }
 
@@ -175,12 +178,11 @@ namespace kIEview2 {
         IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h, an->act.cnt);
         an->hwnd = ctrl->getHWND();
 
-        // TODO: przygotujmy sobie listenerów
         ctrl->setPopupMenuListener(this->popupListener);
         ctrl->setAnchorClickListener(this->anchorListener);
         ctrl->setDropListener(this->dropListener);
 
-        // TODO: tu powinniœmy dodaæ do okienka podstawê HTML-a
+        // TODO: Tu powinniœmy dodaæ do okienka podstawê HTML-a
         break;
       }
 
@@ -287,5 +289,10 @@ namespace kIEview2 {
   }
 
   void Controller::_msgSend() {
+    switch (this->getAN()->code) {
+      case ACTN_ACTION: {
+        // TODO: Wysy³amy wiadomoœæ (RichEdit powinien wzywaæ t¹ akcjê przy wysy³aniu).
+      }
+    }
   }
 }

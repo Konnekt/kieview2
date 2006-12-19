@@ -537,11 +537,9 @@ bool IECtrl::mouseClick(POINT pt) {
   IHTMLDocument2 *document = getDocument();
   if (document != NULL) {
     IHTMLElement *element;
-    IMLOG("%i, %i", pt.x, pt.y);
     if (SUCCEEDED(document->elementFromPoint(pt.x, pt.y, &element)) && element != NULL) {
       BSTR url = getHrefFromAnchor(element);
       if (url != NULL) {
-        IMLOG("bla3");
         /*
         if ((GetKeyState(VK_SHIFT) & 0x8000) && !(GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_MENU) & 0x8000)) 
           SendMessage(GetParent(m_hWnd), WM_COMMAND, IDCANCEL, 0);
