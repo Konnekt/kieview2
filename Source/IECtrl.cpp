@@ -314,7 +314,7 @@ void IECtrl::write(const WCHAR *text) {
     if (document != NULL)  {
       SAFEARRAY *safe_array = SafeArrayCreateVector(VT_VARIANT, 0, 1);
       if (safe_array != NULL) {
-        VARIANT  *variant;
+        VARIANT *variant;
         BSTR bstr;
         SafeArrayAccessData(safe_array, (LPVOID *)&variant);
         variant->vt = VT_BSTR;
@@ -1159,7 +1159,7 @@ STDMETHODIMP IECtrl::ClientSite::ProcessUrlAction(LPCWSTR pwszUrl, DWORD dwActio
   PBOOL pBool = (PBOOL)pPolicy;
 
   if (dwAction == URLACTION_SCRIPT_RUN) {
-    *pBool = URLPOLICY_DISALLOW; // URLPOLICY_ALLOW;
+    *pBool = URLPOLICY_ALLOW;
   } else if (dwAction == URLACTION_JAVA_PERMISSIONS) {
     *pBool = URLPOLICY_JAVA_PROHIBIT;
   } else {
@@ -1173,7 +1173,7 @@ STDMETHODIMP IECtrl::ClientSite::QueryCustomPolicy(LPCWSTR pwszUrl, REFGUID guid
   return INET_E_DEFAULT_ACTION;
 }
 
-STDMETHODIMP IECtrl::ClientSite::SetZoneMapping( DWORD dwZone, LPCWSTR lpszPattern, DWORD dwFlags) {
+STDMETHODIMP IECtrl::ClientSite::SetZoneMapping(DWORD dwZone, LPCWSTR lpszPattern, DWORD dwFlags) {
   return INET_E_DEFAULT_ACTION;
 }
 

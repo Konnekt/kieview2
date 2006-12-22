@@ -1,0 +1,65 @@
+<html>
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	<title>Operators of Condition</title>
+	<link rel=stylesheet type=text/css href=ctpp.css>
+</head>
+<body bgcolor=white text=black>
+<h3>Operators of Condition</h3><br>
+
+These operators impose condition on your template output, it depends on the result of logical expression placed to the right of the operator’s body.<br><br>
+
+CT++ 1.8.0 defines two operators of condition: <nobr><span class=op>&lt;TMPL_if LOGICAL_EXPR&gt;</span></nobr> and <nobr><span class=op>&lt;TMPL_unless LOGICAL_EXPR&gt;</span></nobr>.<br><br>
+
+Both operators evaluates logical expression to the result and according to it executes or not the further instructions. You can also use variables (local and global) and user defined functions inside of the operator’s body.<br><br>
+
+<span class=c_code><br>
+<nobr><span class=op>&lt;TMPL_if LOGICAL_EXPR&gt;</span></nobr><br>
+&nbsp;&nbsp;&nbsp;&nbsp;Some instructions if result has true value.<br>
+<span class=op>&lt;TMPL_else&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;Some instructions if result has false value.<br>
+<span class=op>&lt;/TMPL_if&gt;</span><br><br>
+
+<nobr><span class=op>&lt;TMPL_unless LOGICAL_EXPR&gt;</span></nobr><br>
+&nbsp;&nbsp;&nbsp;&nbsp;Some instructions if result has false value.<br>
+<span class=op>&lt;TMPL_else&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;Some instructions if result has true value.<br>
+<span class=op>&lt;/TMPL_unless&gt;</span><br>
+</span><br><br>
+
+The branch of <span class=op>&lt;TMPL_else&gt;</span> is  not firmly binds, it means that the following notification is allowed: <span class=c_code><nobr><span class=op>&lt;TMPL_if</span> LOGICAL_EXPR></nobr> Some instructions <span class=op>&lt;/TMPL_if&gt;</span></span>.
+Thus the operator <span class=op>&lt;TMPL_unless</span> differs from the operator <span class=op>&lt;TMPL_if</span> in the executing some instructions if the evaluated value is false.
+
+Example 2.1: <br>
+<span class=c_code><br>
+Template:    "<nobr><TMPL_if username&gt;</span></nobr>Hello, &lt;b&gt;<nobr><span class=op>&lt;TMPL_var username&gt;</span></nobr>&lt;/b&gt;!<span class=op>&lt;TMPL_else&gt;</span>Wrong user name!<span class=op>&lt;/TMPL_if&gt;</span><br>
+Parameter:  username =&gt; "Vasya"<br>
+Output: "Hello, <b>Vasya</b>!"<br>
+</span><br><br>
+
+Example 2.2: <br>
+<span class=c_code><br>
+Template:    "<nobr><span class=op>&lt;TMPL_if username&gt;</span></nobr>Hello, &lt;b&gt;<nobr><span class=op>&lt;TMPL_var username&gt;</span></nobr></b>!<span class=op>&lt;TMPL_else&gt;</span>Wrong user name!<span class=op>&lt;/TMPL_if&gt;</span><br>
+Parameter:  not defined.<br>
+Output: "Wrong user name!"<br>
+</span><br><br>
+
+The sense is different for the second operator:<br><br>
+
+Example 2.3: <br>
+<span class=c_code><br>
+Template:    "<nobr><span class=op>&lt;TMPL_unless username&gt;</span></nobr>Hello, &lt;b&gt;<nobr><span class=op>&lt;TMPL_var username&gt;</span></nobr>&lt;/b&gt;!<span class=op>&lt;TMPL_else&gt;</span>Wrong user name!<span class=op>&lt;/TMPL_unless&gt;</span><br>
+Parameter:  "Vasya"<br>
+Output: "Wrong user name!"<br>
+</span><br><br>
+
+<ul>
+Related links:
+<li><a href=ctpp_tmpl_udf.html>User Defined Functions</a>
+<li><a href=ctpp_tmpl_var.html>Variables</a>
+</ul>
+
+<hr width=90% noshade>
+<small>Copyright &copy; 2003 - 2005 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
+</body>
+</html>

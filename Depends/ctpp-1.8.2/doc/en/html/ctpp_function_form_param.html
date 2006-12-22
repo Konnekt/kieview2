@@ -1,0 +1,27 @@
+<html>
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	<title>FORM_PARAM</title>
+	<link rel=stylesheet type=text/css href=ctpp.css>
+</head>
+<body bgcolor=white text=black>
+<h3>FORM_PARAM</h3><br>
+
+The algorithm of this function is similar to function HREF_PARAM.<br><br>
+
+Replaces with itself a construction like <nobr><span class=op>&lt;TMPL_if a&gt;&lt;input type="hidden" name="param_a" value=&lt;TMPL_var HTMLESCAPE(a)"&gt;&lt;/TMPL_if&gt;</span></nobr> to <nobr><span class=op>&lt;TMPL_udf FORM_PARAM("param_a", a)&gt;</span></nobr><br><br>
+
+Example:<br>
+<span class=op>&lt;TMPL_udf FORM_PARAM("param_name", param, "yes")&gt;</span><br><br>
+<span class=op>&lt;TMPL_udf FORM_PARAM("param_name", param)&gt;</span> (It is equivalent previous)<br><br>
+<span class=op>&lt;TMPL_udf FORM_PARAM("param_name", param, "n")&gt;</span><br><br>
+<ul>
+Related links:
+<li><a href=ctpp_tmpl_udf.html>User Defined Functions</a>
+<li><a href=ctpp_function_href_param.html>HREF_PARAM</a>
+</ul>
+
+<hr width=90% noshade>
+<small>Copyright &copy; 2003 - 2005 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<html>
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	<title>Build Instructions</title>
+	<link rel=stylesheet type=text/css href=ctpp.css>
+</head>
+<body bgcolor=white text=black>
+<h3>Build Instructions</h3><br>
+
+The CT++ source is available in the source distribution. <br>
+
+Download and install the CT++ source distribution ctpp-1.8.0.tar.gz by extracting the files from the compressed archive.<br>
+Change current directory to ctpp-1.8.0 and run "./configure" script.
+<span class=c_code><br>
+wget http://reki.ru/products/ctpp/download/ctpp-1.8.0.tar.gz<br>
+tar -xvzf ctpp-1.8.0.tar.gz<br>
+cd ctpp-1.8.0<br>
+./configure<br>
+make<br>
+make install<br>
+<b>(for BSD-like operating systems - gmake)</b><br>
+</span><br><br>
+Under FreeBSD you can also install CTPP from ports:<br>
+<span class=c_code><br>
+cd /usr/ports/textproc/ctpp<br>
+make install clean<br>
+</span><br><br>
+
+For RPM-based Linux'es (SuSe, RedHat...) you can download RPM and Source RPM.<br>
+Building from Source RPM (example for Linux RedHat 8.0):<br>
+<span class=c_code><br>
+cd /usr/src/redhat/SRPMS<br>
+wget http://reki.ru/products/ctpp/download/ctpp-1.8.0.src.rpm<br>
+rpm -i ctpp-1.8.0.src.rpm<br>
+cd /usr/src/redhat/SPECS<br>
+rpmbuild -bb ctpp.spec<br>
+cd /usr/src/redhat/RPMS/i386<br><br>
+rpm -U ctpp-1.8.0-1.i386.rpm<br>
+</span><br><br>
+
+For Gentoo Linux:<br>
+<span class=c_code><br>
+wget http://reki.ru/products/ctpp/download/Linux/gentoo/ctpp-1.8.0.ebuild<br>
+ebuild ctpp-1.8.0.ebuild digest<br>
+emerge ctpp-1.8.0.ebuild
+</span><br><br>
+
+<hr width=90% noshade>
+<small>Copyright &copy; 2003 - 2005 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
+</body>
+</html>

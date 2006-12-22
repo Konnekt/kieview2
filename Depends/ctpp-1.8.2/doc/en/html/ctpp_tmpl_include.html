@@ -1,0 +1,38 @@
+<html>
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	<title>Including other templates</title>
+	<link rel=stylesheet type=text/css href=ctpp.css>
+</head>
+<body bgcolor=white text=black>
+<h3>Including other templates</h3><br>
+
+In some cases it happens to allocate conveniently identical parts in several templates (for example, heading or the menu on page) and to place them in one file. <br><br>
+
+This is done by operator <nobr><span class=op>&lt;TMPL_include filename.tmpl&gt;</span></nobr>.<br><br>
+
+Example:
+<span class=c_code><br>
+main.tmpl:<br>
+<nobr><span class=op>&lt;TMPL_loop foo&gt;</span></nobr><br>
+<nobr><span class=op>&lt;TMPL_include filename.tmpl&gt;</span></nobr><br>
+<nobr><span class=op>&lt;/TMPL_loop&gt;</span></nobr><br><br>
+filename.tmpl:<br>
+<nobr><span class=op>&lt;TMPL_var bar&gt;</span></nobr><br>
+</span><br>
+
+You should specify allowed include paths.<br><br>
+<span class=info>Attention!</span> You <b>CAN NOT</b> place a part of a loop or condition in separate templates.<br>In other words, this construction will not work:
+<span class=c_code><br>
+main.tmpl:<br>
+<nobr><span class=op>&lt;TMPL_if foo&gt;</span></nobr><br>
+<nobr><span class=op>&lt;TMPL_include abc.tmpl&gt;</span></nobr><br><br>
+
+abc.tmpl:<br>
+<nobr><span class=op>&lt;/TMPL_if&gt;</span></nobr><br>
+</span><br><br>
+
+<hr width=90% noshade>
+<small>Copyright &copy; 2003 - 2005 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
+</body>
+</html>

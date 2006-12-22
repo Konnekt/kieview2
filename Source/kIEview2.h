@@ -32,6 +32,8 @@ namespace kIEview2 {
 
   namespace ui {
     const unsigned int ui = net * 1000;
+
+    const unsigned int cfgGroup = ui + 1;
   }
 
   namespace ico {
@@ -83,11 +85,11 @@ namespace kIEview2 {
 
   namespace cfg {
     const unsigned int cfg = net * 1000 + 500;
-    
-    const unsigned int cfgGroup = cfg;
-    const unsigned int useEmots = cfg + 1;
-    const unsigned int emotsDir = cfg + 2;
-    const unsigned int showFormatTb = cfg + 3;
+
+    const unsigned int showFormatTb = cfg + 1;
+    const unsigned int useEmots = cfg + 2;
+    const unsigned int emotsDir = cfg + 3;
+    const unsigned int emotsPack = cfg + 4;
   }
 }
 

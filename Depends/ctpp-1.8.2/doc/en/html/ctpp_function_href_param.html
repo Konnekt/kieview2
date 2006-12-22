@@ -1,0 +1,27 @@
+<html>
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	<title>HREF_PARAM</title>
+	<link rel=stylesheet type=text/css href=ctpp.css>
+</head>
+<body bgcolor=white text=black>
+<h3>HREF_PARAM</h3><br>
+
+Function serves for simplification of a conclusion of parameters in references. <br>Replaces with itself a construction like
+
+<nobr><span class=op>&lt;a href=/abc?&lt;TMPL_if a>param_a=&lt;TMPL_var URLESCAPE(a)&gt;&lt;/TMPL_if&gt;...</span></nobr> to <nobr><span class=op>&lt;a href=/abc?&lt;TMPL_udf HREF_PARAM("param_a", a)&gt;</span></nobr>
+Function can accept one, two or three parameters.<br>First parameter is name. Second parameter - value. Third (optional) parameter specifies, whether it is necessary to deduce result at absence of the second parameter. Allowed vaues are "y", "yes", "n", "no" (default - "y").<br><br>
+Example:<br>
+<span class=op>&lt;TMPL_udf HREF_PARAM("param_name", param, "yes")&gt;</span><br><br>
+<span class=op>&lt;TMPL_udf HREF_PARAM("param_name", param)&gt;</span> (It is equivalent previous)<br><br>
+<span class=op>&lt;TMPL_udf HREF_PARAM("param_name", param, "n")&gt;</span><br><br>
+<ul>
+Related links:
+<li><a href=ctpp_tmpl_udf.html>User Defined Functions</a>
+<li><a href=ctpp_function_form_param.html>FORM_PARAM</a>
+</ul>
+
+<hr width=90% noshade>
+<small>Copyright &copy; 2003 - 2005 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
+</body>
+</html>

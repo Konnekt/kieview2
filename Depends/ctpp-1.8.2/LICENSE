@@ -1,0 +1,109 @@
+Copyright (c) 2004 - 2006, CTPP Dev. Team
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+  - Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  - Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-- WINDOWS 1251 --------------------------------------------------------
+Ðףססךטי ןונוגמה (ÍÅ ‗ÂË‗ÞÙÈÉÑ‗ ÎÔÈÖÈÀËÜÍÛÌ ÒÅÊÑÒÎÌ ËÈÖÅÍÇÈÈ)
+נאחלושום חהוסü טסךכ‏קטעוכüםמ הכÿ מחםאךמלכוםטÿ.
+
+Àגעמנסךמו ןנאגמ (ס) 2004 - 2006, ךמלאםהא נאחנאבמעקטךמג ראבכמםטחאעמנא CTPP.
+
+Ðאחנוראועסÿ ןמגעמנםמו נאסןנמסענאםוםטו ט טסןמכüחמגאםטו ךאך ג גטהו
+טסץמהםûץ עוךסעמג, עאך ט ג הגמטקםמי פמנלו, ס למהטפטךאצטÿלט טכט בוח,
+ןנט סמבכ‏הוםטט סכוהף‏שטץ ףסכמגטי:
+
+
+  - Ïנט ןמגעמנםמל נאסןנמסענאםוםטט טסץמהםמדמ ךמהא המכזםמ מסעאגאעüסÿ
+    ףךאחאםםמו גûרו ףגוהמלכוםטו מב אגעמנסךמל ןנאגו, ‎עמע סןטסמך
+    ףסכמגטי ט םטזוסכוהף‏שטי מעךאח מע דאנאםעטי.
+
+  - Ïנט ןמגעמנםמל נאסןנמסענאםוםטט הגמטקםמדמ ךמהא המכזםמ
+    גמסןנמטחגמהטעüסÿ ףךאחאםםמו גûרו ףגוהמלכוםטו מב אגעמנסךמל ןנאגו,
+    ‎עמע סןטסמך ףסכמגטי ט םטזוסכוהף‏שטי מעךאח מע דאנאםעטי ג
+    המךףלוםעאצטט ט/טכט ג הנףדטץ לאעונטאכאץ, ןמסעאגכÿולûץ
+    ןנט נאסןנמסענאםוםטט.
+
+
+ÝÒÀ ÏÐÎÃÐÀÌÌÀ ÏÐÅÄÎÑÒÀÂËÅÍÀ ÁÅÑÏËÀÒÍÎ ÄÅÐÆÀÒÅË‗ÌÈ ÀÂÒÎÐÑÊÈÕ ÏÐÀÂ
+È/ÈËÈ ÄÐÓÃÈÌÈ ÑÒÎÐÎÍÀÌÈ "ÊÀÊ ÎÍÀ ÅÑÒÜ" ÁÅÇ ÊÀÊÎÃÎ-ËÈÁÎ ÂÈÄÀ ÃÀÐÀÍÒÈÉ,
+ÂÛÐÀÆÅÍÍÛÕ ‗ÂÍÎ ÈËÈ ÏÎÄÐÀÇÓÌÅÂÀÅÌÛÕ, ÂÊËÞ×À‗, ÍÎ ÍÅ ÎÃÐÀÍÈ×ÈÂÀ‗ÑÜ
+ÈÌÈ, ÏÎÄÐÀÇÓÌÅÂÀÅÌÛÌÈ ÃÀÐÀÍÒÈ‗ÌÈ ÊÎÌÌÅÐ×ÅÑÊÎÉ ÖÅÍÍÎÑÒÈ È ÏÐÈÃÎÄÍÎÑÒÈ
+ÄË‗ ÊÎÍÊÐÅÒÍÎÉ ÖÅËÈ. ÍÈ Â ÊÎÅÌ ÑËÓ×ÀÅ, ÅÑËÈ ÍÅ ÒÐÅÁÓÅÒÑ‗
+ÑÎÎÒÂÅÒÑÒÂÓÞÙÈÌ ÇÀÊÎÍÎÌ, ÈËÈ ÍÅ ÓÑÒÀÍÎÂËÅÍÎ Â ÓÑÒÍÎÉ ÔÎÐÌÅ, ÍÈ ÎÄÈÍ
+ÄÅÐÆÀÒÅËÜ ÀÂÒÎÐÑÊÈÕ ÏÐÀÂ È ÍÈ ÎÄÍÎ ÄÐÓÃÎÅ ËÈÖÎ, ÊÎÒÎÐÎÅ ÌÎÆÅÒ
+ÈÇÌÅÍ‗ÒÜ È/ÈËÈ ÏÎÂÒÎÐÍÎ ÐÀÑÏÐÎÑÒÐÀÍ‗ÒÜ ÏÐÎÃÐÀÌÌÓ, ÊÀÊ ÁÛËÎ ÐÀÇÐÅØÅÍÎ
+ÂÛØÅ, ÍÅ ÎÒÂÅÒÑÒÂÅÍÍÛ ÏÅÐÅÄ ÂÀÌÈ ÇÀ ÓÁÛÒÊÈ, ÂÊËÞ×À‗ ËÞÁÛÅ ÎÁÙÈÅ,
+ÑËÓ×ÀÉÍÛÅ, ÑÏÅÖÈÀËÜÍÛÅ ÈËÈ ÏÎÑËÅÄÎÂÀÂØÈÅ ÓÁÛÒÊÈ, ÏÐÎÈÑÒÅÊÀÞÙÈÅ ÈÇ
+ÈÑÏÎËÜÇÎÂÀÍÈ‗ ÈËÈ ÍÅÂÎÇÌÎÆÍÎÑÒÈ ÈÑÏÎËÜÇÎÂÀÍÈ‗ ÏÐÎÃÐÀÌÌÛ (ÂÊËÞ×À‗,
+ÍÎ ÍÅ ÎÃÐÀÍÈ×ÈÂÀ‗ÑÜ ÏÎÒÅÐÅÉ ÄÀÍÍÛÕ, ÈËÈ ÄÀÍÍÛÌÈ, ÑÒÀÂØÈÌÈ
+ÍÅÏÐÀÂÈËÜÍÛÌÈ, ÈËÈ ÏÎÒÅÐ‗ÌÈ ÏÐÈÍÅÑÅÍÍÛÌÈ ÈÇ-ÇÀ ÂÀÑ ÈËÈ ÒÐÅÒÜÈÕ ËÈÖ,
+ÈËÈ ÎÒÊÀÇÎÌ ÏÐÎÃÐÀÌÌÛ ÐÀÁÎÒÀÒÜ ÑÎÂÌÅÑÒÍÎ Ñ ÄÐÓÃÈÌÈ ÏÐÎÃÐÀÌÌÀÌÈ),
+ÄÀÆÅ ÅÑËÈ ÒÀÊÎÉ ÄÅÐÆÀÒÅËÜ ÈËÈ ÄÐÓÃÎÅ ËÈÖÎ ÁÛËÈ ÈÇÂÅÙÅÍÛ Î ÂÎÇÌÎÆÍÎÑÒÈ
+ÒÀÊÈÕ ÓÁÛÒÊÎÂ.
+
+
+
+-- KOI8 ----------------------------------------------------------------
+עÕÓÓËÉÊ ÐÅÒÅ×ÏÄ (מו סקלסא‎יךףס ןזידיבלרמשם פוכףפןם לידומתיי)
+ÒÁÚÍÅÝÅÎ ÚÄÅÓØ ÉÓËÌÀÞÉÔÅÌØÎÏ ÄÌÑ ÏÚÎÁËÏÍÌÅÎÉÑ.
+
+ב×ÔÏÒÓËÏÅ ÐÒÁ×Ï (Ó) 2004 - 2006, ËÏÍÁÎÄÁ ÒÁÚÒÁÂÏÔÞÉËÏ× ÛÁÂÌÏÎÉÚÁÔÏÒÁ CTPP.
+
+עÁÚÒÅÛÁÅÔÓÑ ÐÏ×ÔÏÒÎÏÅ ÒÁÓÐÒÏÓÔÒÁÎÅÎÉÅ É ÉÓÐÏÌØÚÏ×ÁÎÉÅ ËÁË × ×ÉÄÅ
+ÉÓÈÏÄÎÙÈ ÔÅËÓÔÏ×, ÔÁË É × Ä×ÏÉÞÎÏÊ ÆÏÒÍÅ, Ó ÍÏÄÉÆÉËÁÃÉÑÍÉ ÉÌÉ ÂÅÚ,
+ÐÒÉ ÓÏÂÌÀÄÅÎÉÉ ÓÌÅÄÕÀÝÉÈ ÕÓÌÏ×ÉÊ:
+
+
+  - נÒÉ ÐÏ×ÔÏÒÎÏÍ ÒÁÓÐÒÏÓÔÒÁÎÅÎÉÉ ÉÓÈÏÄÎÏÇÏ ËÏÄÁ ÄÏÌÖÎÏ ÏÓÔÁ×ÁÔØÓÑ
+    ÕËÁÚÁÎÎÏÅ ×ÙÛÅ Õ×ÅÄÏÍÌÅÎÉÅ ÏÂ Á×ÔÏÒÓËÏÍ ÐÒÁ×Å, ÜÔÏÔ ÓÐÉÓÏË
+    ÕÓÌÏ×ÉÊ É ÎÉÖÅÓÌÅÄÕÀÝÉÊ ÏÔËÁÚ ÏÔ ÇÁÒÁÎÔÉÊ.
+
+  - נÒÉ ÐÏ×ÔÏÒÎÏÍ ÒÁÓÐÒÏÓÔÒÁÎÅÎÉÉ Ä×ÏÉÞÎÏÇÏ ËÏÄÁ ÄÏÌÖÎÏ
+    ×ÏÓÐÒÏÉÚ×ÏÄÉÔØÓÑ ÕËÁÚÁÎÎÏÅ ×ÙÛÅ Õ×ÅÄÏÍÌÅÎÉÅ ÏÂ Á×ÔÏÒÓËÏÍ ÐÒÁ×Å,
+    ÜÔÏÔ ÓÐÉÓÏË ÕÓÌÏ×ÉÊ É ÎÉÖÅÓÌÅÄÕÀÝÉÊ ÏÔËÁÚ ÏÔ ÇÁÒÁÎÔÉÊ ×
+    ÄÏËÕÍÅÎÔÁÃÉÉ É/ÉÌÉ × ÄÒÕÇÉÈ ÍÁÔÅÒÉÁÌÁÈ, ÐÏÓÔÁ×ÌÑÅÍÙÈ
+    ÐÒÉ ÒÁÓÐÒÏÓÔÒÁÎÅÎÉÉ.
+
+
+üפב נעןחעבםםב נעוהןףפבקלומב גוףנלבפמן הועצבפולסםי בקפןעףכיט נעבק
+י/ילי העץחיםי ףפןעןמבםי "כבכ ןמב וףפר" גות כבכןחן-ליגן קיהב חבעבמפיך,
+קשעבצוממשט סקמן ילי נןהעבתץםוקבוםשט, קכלא‏בס, מן מו ןחעבמי‏יקבסףר
+יםי, נןהעבתץםוקבוםשםי חבעבמפיסםי כןםםוע‏וףכןך דוממןףפי י נעיחןהמןףפי
+הלס כןמכעופמןך דולי. מי ק כןום ףלץ‏בו, וףלי מו פעוגץופףס
+ףןןפקופףפקץא‎ים תבכןמןם, ילי מו ץףפבמןקלומן ק ץףפמןך זןעםו, מי ןהימ
+הועצבפולר בקפןעףכיט נעבק י מי ןהמן העץחןו לידן, כןפןעןו םןצופ
+יתםומספר י/ילי נןקפןעמן עבףנעןףפעבמספר נעןחעבםםץ, כבכ גשלן עבתעוûומן
+קשûו, מו ןפקופףפקוממש נועוה קבםי תב ץגשפכי, קכלא‏בס לאגשו ןג‎יו,
+ףלץ‏בךמשו, ףנודיבלרמשו ילי נןףלוהןקבקûיו ץגשפכי, נעןיףפוכבא‎יו ית
+יףנןלרתןקבמיס ילי מוקןתםןצמןףפי יףנןלרתןקבמיס נעןחעבםםש (קכלא‏בס,
+מן מו ןחעבמי‏יקבסףר נןפועוך הבממשט, ילי הבממשםי, ףפבקûיםי
+מונעבקילרמשםי, ילי נןפועסםי נעימוףוממשםי ית-תב קבף ילי פעופריט ליד,
+ילי ןפכבתןם נעןחעבםםש עבגןפבפר ףןקםוףפמן ף העץחיםי נעןחעבםםבםי),
+הבצו וףלי פבכןך הועצבפולר ילי העץחןו לידן גשלי יתקו‎ומש ן קןתםןצמןףפי
+פבכיט ץגשפכןק.
+

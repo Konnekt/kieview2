@@ -1,0 +1,25 @@
+<html>
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	<title>Algorithm</title>
+	<link rel=stylesheet type=text/css href=ctpp.css>
+</head>
+<body bgcolor=white text=black>
+<h3>Algorithm</h3><br>
+
+Process of work CT++ template engine contains four parts:<br>
+<ol>
+<li>Initialization
+<li>Parsing template file
+<li>Imposing of parameters (the first pass)
+<li>Imposing of parameters (the second pass) and a conclusion of results
+</ol>
+In the first stage occurs loading of the text of a pattern, automatic loading standard functions set and initialization of necessary variables.<br><br>
+The second stage is a construction of a tree of syntactic analysis of a template file. All syntactic errors are generated at this stage.<br><br>
+During the first pass (the third stage) there is an imposing the parameters which are taking place outside of cycles. It gives a prize for simple patterns in which the simple conclusion of parameters (without conditions and cycles) prevails.<br><br>
+Last stage - imposing of parameters on structures of cycles and conditions and the further conclusion of results.<br><br>
+
+<hr width=90% noshade>
+<small>Copyright &copy; 2003 - 2005 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
+</body>
+</html>

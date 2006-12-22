@@ -1,0 +1,145 @@
+<html>
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	<title>Code Example</title>
+	<link rel=stylesheet type=text/css href=ctpp.css>
+</head>
+<body bgcolor=white text=black>
+<h3>Code Example</h3><br>
+File name: tests/test_3_1.cpp.<br>
+All other examples you can found in catalog tests.<br><br>
+
+<style>
+.c1 {color:red; }
+.c2 {color:blue; }
+.c3 {color:green; }
+.c4 {color:orange; }
+.c5 {color:olive; }
+.c6 {color:gray; }
+</style>
+
+Source code:<br>
+<span class=c_code><br>
+<span class=c5>// C++ Includes</span><br>
+<span class=c2>#include</span> &lt;<span class=c4>iostream</span>&gt;<br>
+
+<span class=c5>// Local Includes</span><br>
+<span class=c2>#include</span> <span class=c3>&lt;ctpp/ctpp.hpp&gt;</span><br><br>
+
+<span class=c2>int</span> main(<span class=c2>void</span>)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>using namespace</span> template_parser_ns;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>using namespace</span> <span class=c4>std</span>;<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// We create structure of the data</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;param_data * pData = <span class=c1>new</span> param_data(param_data::HASH);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Insert global parameter </span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;pData -> hash_insert_new_var(<span class=c6>"global_param"</span>, <span class=c6>"Global Parameter"</span>);<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Insert cycle</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;param_data * pArray = pData -> hash_insert_new_array(<span class=c6>"EMPLOYEE_INFO"</span>);<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Inside a cycle - hash with parameters </span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;param_data * pHash = pArray -> array_insert_new_hash();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Parameter "NAME"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;pHash -> hash_insert_new_var(<span class=c6>"NAME"</span>, <span class=c6>"Ivanov Ivan"</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Parameter "JOB"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;pHash -> hash_insert_new_var(<span class=c6>"JOB"</span>, <span class=c6>"The architect"</span>);<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;pHash = pArray -> array_insert_new_hash();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pHash -> hash_insert_new_var(<span class=c6>"NAME"</span>, <span class=c6>"Petrov Petr"</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pHash -> hash_insert_new_var(<span class=c6>"JOB"</span>, <span class=c6>"The builder"</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// We substitute global parameter</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;pHash -> hash_insert_new_var(<span class=c6>"global_param"</span>, <span class=c6>"Replaced Parameter"</span>);<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>try</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Templae engine</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;template_text oTemplate;<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Includes Loader</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;loader_base * pLoaderBase = new loader_base();<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Allowed list of catalogs to include</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_include_dir vIncludeDir;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vIncludeDir.push_back(<span class=c6>"./tmpl"</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;oTemplate.set_include_dir(vIncludeDir);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Template File</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pLoaderBase -> load_file(<span class=c6>"./tmpl/3_1.tmpl"</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Parse the template</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;oTemplate.parse(pLoaderBase -> get_data());<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// We impose parameters on a pattern</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;oTemplate.param(pData);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c4>string</span> sOutput;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Result</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sOutput.assign(oTemplate.output());<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c4>cout</span> << sOutput << <span class=c4>endl</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>catch</span>(<span class=c4>exception</span> &e) { <span class=c4>cout</span> <span class=c3>&lt;&lt;</span> e.what() <span class=c3>&lt;&lt;</span> <span class=c4>endl</span>; exit(1); }<br>
+<span class=c2>return</span> <span class=c1>0</span>;<br>
+}<br>
+
+</span><br><br><br>
+
+Template:<br><br>
+<span class=c_code>
+<nobr><span class=op>&lt;TMPL_include</span> <span class=c6>header.tmpl</span>&gt;</nobr><br>
+<nobr><span class=op>&lt;TMPL_var</span> global_param&gt;</nobr><br>
+<nobr><span class=op>&lt;TMPL_loop</span> <span class=mod>__CONTEXT_VARS__</span> <span class=mod>__GLOBAL_VARS__</span> EMPLOYEE_INFO&gt;</nobr><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<nobr><span class=op>&lt;TMPL_var</span> NAME&gt; - <span class=op>&lt;TMPL_var</span> JOB&gt;</nobr><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<nobr><span class=op>&lt;TMPL_var</span> global_param&gt;</nobr><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<nobr><span class=op>&lt;TMPL_unless IN_SET(NAME, <span class=c6>"Ivanov Ivan"</span>)&gt;</nobr><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TEST_ANY_PARAM<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<nobr><span class=op>&lt;/TMPL_unless&gt;</span></nobr><br>
+<span class=op>&lt;/TMPL_loop&gt;</span><br>
+<nobr><span class=op>&lt;TMPL_include</span> <span class=c6>footer.tmpl</span>&gt;</nobr><br>
+</span><br><br>
+</span>
+Parameters:<br><br>
+<span class=c_code>
+global_param =&gt; "Global Parameter"<br>
+EMPLOYEE_INFO<br>
+[<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <nobr>NAME =&gt; "Ivanov Ivan"</nobr>, <nobr>JOB =&gt; "The architect" },<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <nobr>NAME =&gt; "Petrov Petr"</nobr>, <nobr>JOB =&gt; "The builder", <nobr>global_param =&gt; "Replaced Parameter"</nobr> }<br>
+]<br><br>
+
+Opuput:<br>
+
+<span class=c5>&lt;!-- Copyright (c) 2004 Andrei V. Shetuhin --&gt;</span><br>
+&lt;<span class=c2>html</span>&gt;<br>
+&lt;<span class=c2>head</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class=c2>title</span>&gt;Sample&lt;/<span class=c2>title</span>&gt;<br>
+&lt;<span class=c2>/head</span>&gt;<br>
+&lt;<span class=c2>body</span>&gt;<br>
+Global Parameter<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;Ivanov Ivan - The architect<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Global Parameter<br><br><br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;Petrov Petr - The builder<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Replaced Parameter<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TEST_ANY_PARAM<br><br><br>
+
+
+&lt;<span class=c2>/body</span>&gt;<br>
+&lt;<span class=c2>/html</span>&gt;<br>
+<span class=c5>&lt;!-- Footer End --&gt;</span><br><br>
+</span>
+Compilation:<br><br>
+<span class=c_code><br>
+gcc -c test_3_1.cpp -I /usr/local/include/ctpp<br><br>
+
+For dynamic linking:<br>
+gcc test_3_1.o -L /usr/local/lib -o test_3_1 -lctpp<br><br>
+
+For static linking:<br>
+gcc -static test_3_1.o -L /usr/local/lib -o test_3_1 -lctpp -lstdc++<br><br>
+</span>
+
+<hr width=90% noshade>
+<small>Copyright &copy; 2003 - 2005 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
+</body>
+</html>

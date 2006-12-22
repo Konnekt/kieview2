@@ -323,6 +323,7 @@ public:
   public:
     Var();
     Var(int value);
+    Var(bool value);
     Var(double value);
     Var(const char * value);
     Var(Var & copy);
@@ -330,11 +331,13 @@ public:
     ~Var();
 
     int getInteger();
+    bool getBool();
     double getReal();
     const char * getString();
     VARIANT * getVariant(VARIANT *v = NULL);
 
     void setValue(int value);
+    void setValue(bool value);
     void setValue(double value);
     void setValue(const char * value);
     void setValue(Var* value[], unsigned int count);
@@ -370,6 +373,7 @@ public:
     enum Type {
       Unknown,
       Integer,
+      Boolean,
       Real,
       String,
       Array

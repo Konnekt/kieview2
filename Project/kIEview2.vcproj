@@ -40,6 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="&quot;..\Depends\ctpp-1.8.2\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;KIEVIEW2_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -119,6 +120,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;..\Depends\ctpp-1.8.2\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;KIEVIEW2_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -137,6 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/FORCE:MULTIPLE"
 				AdditionalDependencies="stamina.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(ProjectDir)Lib"
@@ -181,15 +184,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\Source\AnchorListener.cpp"
+				RelativePath="..\Source\ActionsHandler.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\Source\Controller.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Source\DropListener.cpp"
 				>
 			</File>
 			<File
@@ -206,10 +205,6 @@
 			</File>
 			<File
 				RelativePath="..\Source\kIEview2.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Source\PopupListener.cpp"
 				>
 			</File>
 			<File
@@ -236,6 +231,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath="..\Source\TplHandler.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -243,7 +242,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\Source\AnchorListener.h"
+				RelativePath="..\Source\ActionsHandler.h"
 				>
 			</File>
 			<File
@@ -252,10 +251,6 @@
 			</File>
 			<File
 				RelativePath="..\Source\Controller.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Source\DropListener.h"
 				>
 			</File>
 			<File
@@ -279,10 +274,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Source\PopupListener.h"
-				>
-			</File>
-			<File
 				RelativePath=".\resource.h"
 				>
 			</File>
@@ -292,6 +283,14 @@
 			</File>
 			<File
 				RelativePath="..\Source\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Source\TplHandler.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Source\TplUdf.h"
 				>
 			</File>
 		</Filter>

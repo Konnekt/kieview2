@@ -20,9 +20,9 @@
 #include "PlugController.h"
 #include "Helpers.h"
 #include "IECtrl.h"
-#include "PopupListener.h"
-#include "AnchorListener.h"
-#include "DropListener.h"
+#include "ActionsHandler.h"
+#include "TplHandler.h"
+#include "TplUdf.h"
 
 using namespace kIEview2;
 
@@ -41,6 +41,9 @@ namespace kIEview2 {
   public:
     ~Controller();
 
+    String getStatusLabel(int status);
+    string getMsgLabel(int type);
+
   protected:
     void _onPrepare();
     void _onAction();
@@ -49,13 +52,15 @@ namespace kIEview2 {
     void _msgCtrlSend();
     void _msgSend();
 
+    String _parseStatusTpl(int status, const char* info);
+    String _parseMsgTpl(cMessage* msg);
+
   public:
-    int selectedMenuItem;
+    void clearWnd(IECtrl* ctrl);
 
   protected:
-    PopupListener* popupListener;
-    AnchorListener* anchorListener;
-    DropListener* dropListener;
+    ActionsHandler* actionsHandler;
+    TplHandler* tplHandler;
   };
 }
 

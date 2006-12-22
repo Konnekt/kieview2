@@ -1,0 +1,41 @@
+[OPTIONS]
+Compatibility=1.1 or later
+Compiled file=ctpp.chm
+Contents file=ctpp.hhc
+Default topic=ctpp_cover.html
+Display compile progress=No
+Full-text search=Yes
+Language=0x409 English (United States)
+
+
+[FILES]
+ctpp_cover.html
+ctpp_def.html
+ctpp_intro.html
+ctpp_operators.html
+ctpp_tmpl_var.html
+ctpp_tmpl_if.html
+ctpp_tmpl_loop.html
+ctpp_tmpl_include.html
+ctpp_context_vars.html
+ctpp_tmpl_udf.html
+ctpp_function_urlescape.html
+ctpp_function_htmlescape.html
+ctpp_function_num_format.html
+ctpp_function_in_set.html
+ctpp_function_href_param.html
+ctpp_function_form_param.html
+ctpp_function_is_a.html
+ctpp_function_sprintf.html
+ctpp_function_re.html
+ctpp_errors.html
+ctpp_compile.html
+ctpp_dev_intro.html
+ctpp_dev_algorithm.html
+ctpp_dev_sample.html
+ctpp_dev_api.html
+ctpp_dev_udf.html
+ctpp_thanks.html
+
+[INFOTYPES]
+

@@ -23,6 +23,10 @@ IECtrl::Var::Var(int value) {
   setValue(value);
 }
 
+IECtrl::Var::Var(bool value) {
+  setValue(value);
+}
+
 IECtrl::Var::Var(double value) {
   setValue(value);
 }
@@ -71,45 +75,54 @@ IECtrl::Var & IECtrl::Var::operator=(VARIANT &value) {
 }
 
 int IECtrl::Var::getInteger() {
-  if (m_eType == Type::Unknown)
-    return 0;
-  else if (m_eType == Type::Integer)
+  if (m_eType == Type::Integer || m_eType == Type::Boolean)
     return m_iValue;
   else if (m_eType == Type::Real)
-    return (int)m_dValue;
+    return (int) m_dValue;
   else if (m_eType == Type::String)
     return atoi(m_szValue);
-  else if (m_eType == Type::Array)
-    return 0;
+
   return 0;
 }
 
+bool IECtrl::Var::getBool() {
+  if (m_eType == Type::Integer)
+    return (bool) m_iValue;
+  else if (m_eType == Type::Boolean)
+    return m_iValue;
+  else if (m_eType == Type::Real)
+    return (bool) m_dValue;
+  else if (m_eType == Type::String)
+    return (bool) getInteger();
+
+  return false;
+}
+
 double IECtrl::Var::getReal() {
-  if (m_eType == Type::Unknown)
-    return 0.0;
-  else if (m_eType == Type::Integer)
+  if (m_eType == Type::Integer || m_eType == Type::Boolean)
     return (double)m_iValue;
   else if (m_eType == Type::Real)
     return m_dValue;
   else if (m_eType == Type::String)
     return atof(m_szValue);
-  else if (m_eType == Type::Array)
-    return 0.0;
+
   return 0.0;
 }
 
 const char * IECtrl::Var::getString() {
-  char buf[_CVTBUFSIZE] = "";
-  if (m_eType == Type::Unknown)
-    return "";
-  else if (m_eType == Type::Integer)
-    return itoa(m_iValue, buf, 10);
+  char buff[_CVTBUFSIZE] = "";
+
+  if (m_eType == Type::Integer)
+    return itoa(m_iValue, buff, 10);
+  else if (m_eType == Type::Boolean)
+    return m_iValue ? "true" : "false";
   else if (m_eType == Type::Real)
-    return _gcvt(m_dValue, 12, buf);
+    return _gcvt(m_dValue, 12, buff);
   else if (m_eType == Type::String)
     return m_szValue;
   else if (m_eType == Type::Array)
     return "Array";
+
   return "";
 }
 
@@ -123,6 +136,9 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
   if (m_eType == Type::Integer) {
     v->vt = VT_INT;
     v->intVal = m_iValue;
+  } else if (m_eType == Type::Boolean) {
+    v->vt = VT_BOOL;
+    v->boolVal = (bool) m_iValue;
   } else if (m_eType == Type::Real) {
     v->vt = VT_R8;
     v->dblVal = m_dValue;
@@ -159,6 +175,7 @@ void IECtrl::Var::operator+=(IECtrl::Var & var) {
     case Type::Unknown:
       clear();
       setValue("");
+      break;
 
     case Type::String: {
       const char * temp = strdup(var.getString());
@@ -182,6 +199,7 @@ void IECtrl::Var::operator+=(IECtrl::Var & var) {
     }
   }
 }
+
 void IECtrl::Var::operator+=(int var) {
   *this += IECtrl::Var(var);
 }
@@ -190,8 +208,7 @@ void IECtrl::Var::operator+=(double var) {
   *this += IECtrl::Var(var);
 }
 
-void IECtrl::Var::operator+=(const char* var)
-{
+void IECtrl::Var::operator+=(const char* var) {
   *this += IECtrl::Var(var);
 }
 
@@ -210,11 +227,14 @@ void IECtrl::Var::clear() {
   m_nLength = 0;
 }
 
-void IECtrl::Var::copy(IECtrl::Var & copy) {
+void IECtrl::Var::copy(IECtrl::Var& copy) {
   clear();
   switch (copy.m_eType) {
     case Type::Integer:
       setValue(copy.m_iValue);
+      break;
+    case Type::Boolean:
+      setValue((bool)copy.m_iValue);
       break;
     case Type::Real:
       setValue(copy.m_dValue);
@@ -234,6 +254,12 @@ void IECtrl::Var::copy(IECtrl::Var & copy) {
 void IECtrl::Var::setValue(int value) {
   clear();
   m_eType = Type::Integer;
+  m_iValue = value;
+}
+
+void IECtrl::Var::setValue(bool value) {
+  clear();
+  m_eType = Type::Boolean;
   m_iValue = value;
 }
 
@@ -263,6 +289,7 @@ void IECtrl::Var::setValue(IECtrl::Var* value[], unsigned int count) {
 void IECtrl::Var::setValue(VARIANT &v) {
   switch (v.vt) {
     case VT_INT: setValue((int)v.intVal); break;
+    case VT_BOOL: setValue((bool)v.boolVal); break;
     case VT_I1: setValue((int)v.cVal); break;
     case VT_I2: setValue((int)v.iVal); break;
     case VT_I4: setValue((int)v.lVal); break;

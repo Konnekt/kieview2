@@ -1,0 +1,55 @@
+<html>
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	<title>Functions of ISXXX family.</title>
+	<link rel=stylesheet type=text/css href=ctpp.css>
+</head>
+<body bgcolor=white text=black>
+<h3>Functions of ISXXX family.</h3><br>
+All ISXXX functions are using for check of types of the data. Functions accept unlimited quantity of parameters on an input and returns "1" in case of conformity of all transferred parameters to checked type.
+
+<a id=ISEMAIL name=ISEMAIL>
+<h4>ISEMAIL</h4>
+Checks parameters on conformity to the simplified pattern of the post address.<br><br>
+Example:<br>
+<span class=op>&lt;TMPL_if ISEMAIL("abc@example.com", email)&gt;</span><br><br>
+
+<a id=ISALPHA name=ISALPHA>
+<h4>ISALPHA</h4>
+Checks parameters on presence only alphabetic symbols ([a-zA-Z]).<br><br>
+Example:<br>
+<span class=op>&lt;TMPL_if ISALPHA("example")&gt;</span><br><br>
+
+<a id=ISNUM name=ISNUM>
+<h4>ISNUM</h4>
+Checks parameters on presence only numeric symbols ([0-9]).<br><br>
+Example:<br>
+<span class=op>&lt;TMPL_if ISNUM(some_value, "12345678")&gt;</span><br><br>
+
+<a id=ISALNUM name=ISALNUM>
+<h4>ISALNUM</h4>
+Checks parameters on presence only alphanumeric symbols ([a-zA-Z0-9]).<br><br>
+Example:<br>
+<span class=op>&lt;TMPL_if ISALNUM("mode123")&gt;</span><br><br>
+
+<a id=ISINT name=ISINT>
+<h4>ISINT</h4>
+Checks parameters on conformity to an integer.<br><br>
+Example:<br>
+<span class=op>&lt;TMPL_if ISINT("-890")&gt;</span><br><br>
+
+<a id=ISFLOAT name=ISFLOAT>
+<h4>ISFLOAT</h4>
+Checks parameters on conformity to an float.<br><br>
+Example:<br>
+<span class=op>&lt;TMPL_if ISFLOAT("1.234E+3")&gt;</span><br><br>
+
+<ul>
+Related links:
+<li><a href=ctpp_tmpl_udf.html>User Defined Functions</a>
+</ul>
+
+<hr width=90% noshade>
+<small>Copyright &copy; 2003 - 2005 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
+</body>
+</html>

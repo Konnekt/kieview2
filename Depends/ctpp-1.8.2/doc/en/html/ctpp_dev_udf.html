@@ -1,0 +1,94 @@
+<html>
+<head>
+	<meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+	<title>CT++ user defined functions API</title>
+	<link rel=stylesheet type=text/css href=ctpp.css>
+</head>
+<body bgcolor=white text=black>
+<h3>CT++ user defined functions API </h3><br>
+At the given moment all user functions realize by means of the inheritance from the abstract class <span class=c_code>udf_fn</span> (User Defined FuNction) from the namespace <span class=c_code>template_parser_ns</span>.<br><br>
+
+For the transmission of data in class is provided the overloaded method <span class=c_code>param</span>. Method assume upon the entrance one, two or three parameters of the type <span class=c4>std</span>::<span class=c4>string</span>, or one parameter of the type <span class=c_code><span class=c4>std</span>::<span class=c4>vector</span>&lt;<span class=c4>std</span>::<span class=c4>string</span>&gt;</span></span>.<br><br>
+Class must inform the causing process about a quantity of the necessary variables adopted. For this serves method <span class=c_code>accept_params()</span>. Method must return one of four values: <span class=c_code>ONE_PARAM</span> (one parameter), <span class=c_code>TWO_PARAMS</span> (two parameters), <span class=c_code>THREE_PARAMS</span> (three parameters) or <span class=c_code>ANY_PARAMS</span>  (vector with the unlimited quantity of parameters).<br><br>
+
+The interface of class is given below:
+<style>
+.c1 {color:red; }
+.c2 {color:blue; }
+.c3 {color:green; }
+.c4 {color:orange; }
+.c5 {color:olive; }
+</style>
+<span class=c_code><br>
+<span class=c1>namespace</span> template_parser_ns<br>
+{<br>
+<span class=c5>//</span><br>
+<span class=c5>// Parameters, transferred to the function</span><br>
+<span class=c5>//</span><br>
+<span class=c2>typedef</span> <span class=c4>std</span>::<span class=c4>vector</span><<span class=c4>std</span>::<span class=c4>string</span>> udf_fn_param;<br><br>
+
+<span class=c5>//</span><br>
+<span class=c5>// User defined function</span><br>
+<span class=c5>//</span><br>
+<span class=c1>class</span> udf_fn<br>
+{<br>
+<span class=c1>public</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// A quantity of the parameters </span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c2>enum</span> e_accept_params {ONE_PARAM, TWO_PARAMS, THREE_PARAMS, ANY_PARAMS};<br><br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Give parameters</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Unlimited quantity of parameters</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>virtual</span> <span class=c2>void</span> param(udf_fn_param * pParam);<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// One  parameter</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>virtual</span> <span class=c2>void</span> param(<span class=c2>const</span> <span class=c4>std</span>::<span class=c4>string</span> &sParam);<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Two parameters</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>virtual</span> <span class=c2>void</span> param(<span class=c2>const</span> <span class=c4>std</span>::<span class=c4>string</span> &sParam1, <span class=c2>const</span> <span class=c4>std</span>::<span class=c4>string</span> &sParam2);<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Three parameters</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>virtual</span> <span class=c2>void</span> param(<span class=c2>const</span> <span class=c4>std</span>::<span class=c4>string</span> &sParam1, <span class=c2>const</span> <span class=c4>std</span>::<span class=c4>string</span> &sParam2, <span class=c2>const</span> <span class=c4>std</span>::<span class=c4>string</span> &sParam3);<br><br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Number of the accepted parameters</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>virtual</span> e_accept_params accept_params() = 0;<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Function handler</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>virtual</span> <span class=c2>void</span> handler() = 0;<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Result</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>virtual</span> <span class=c4>std</span>::<span class=c4>string</span> & result() = 0;<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Destructor</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c1>virtual</span> ~udf_fn() { ;; }<br><br>
+};<br><br>
+
+} <span class=c5>// namespace template_parser_ns</span><br><br>
+</span><br><br>
+
+For the connection of new user function it is necessary to introduce the created class into the factory of objects.
+
+There are two methods of using the factory of the objects: creation by new and the use of current from the object of template engine.
+
+For creating the new factory of objects is used class <span class=c_code>udf_fn_factory</span> from namespace <span class=c_code>template_parser_ns</span>:<br><br>
+<span class=c_code>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Create the factory of the objects</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;template_parser_ns::udf_fn_factory * pFactory = <span class=c1>new</span> udf_fn_factory();<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Create the object of user function</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;template_parser_ns::udf_fn * pFunction = <span class=c1>new</span> user_function();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Create function in the factory of the objects</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pFactory -> install_udf_fn("FOOBAR", pFunction);<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Create the object of template engine</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;template_text * pTemplate = <span class=c1>new</span> template_text(pFactory);
+</span><br><br><br>
+In the case of using the current factory of objects the code will be approximately following:
+<br><br>
+<span class=c_code>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Create the factory of the objects</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;template_parser_ns::udf_fn_factory * pFactory = pTemplate -> get_fn_factory();<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Create the object of user function</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;template_parser_ns::udf_fn * pFunction = <span class=c1>new</span> user_function();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=c5>// Create function in the factory of the objects</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pFactory -> install_udf_fn("FOOBAR", pFunction);<br><br>
+</span><br><br><br>
+
+<hr width=90% noshade>
+<small>Copyright &copy; 2003 - 2005 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
+</body>
+</html>

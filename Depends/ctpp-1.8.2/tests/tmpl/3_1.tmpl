@@ -1,0 +1,10 @@
+<TMPL_include header.tmpl>
+<TMPL_var global_param>
+<TMPL_loop __CONTEXT_VARS__ __GLOBAL_VARS__ EMPLOYEE_INFO>
+        <TMPL_var NAME> - <TMPL_var JOB>
+        <TMPL_var global_param>
+        <TMPL_unless IN_SET(NAME, "Иванов Иван")>
+                TEST_ANY_PARAM
+        </TMPL_unless>
+</TMPL_loop>
+<TMPL_include footer.tmpl>

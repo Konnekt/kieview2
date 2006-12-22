@@ -31,26 +31,33 @@ namespace kIEview2 {
     this->registerActionObserver(IMIA_MSG_SEND, bind(resolve_cast0(&Controller::_msgSend), this));
 
     /* Configuration columns */
-    config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEView2/emots/use");
-    config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots\\", "kIEView2/emots/dir");
-    config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEView2/showFormatTb");
+    config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
+
+    config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEview2/emots/use");
+    config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots", "kIEview2/emots/dir");
+    config->setColumn(DTCFG, cfg::emotsPack, DT_CT_STR, "", "kIEview2/emots/pack");
 
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_MSGWND);
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
     // TODO: Podmieniamy kontrolkê wpisywania wiadomoœci
     //this->subclassAction(UI::ACT::msg_ctrlsend, IMIG_MSGWND);
-    this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
+    //this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
 
     IECtrl::init();
-    this->popupListener = new PopupListener;
-    this->anchorListener = new AnchorListener;
-    this->dropListener = new DropListener;
+
+    this->actionsHandler = new ActionsHandler;
+    this->tplHandler = new TplHandler("./tpl/");
+
+    tplHandler->bindStdFunctions();
+    tplHandler->bindUdf("formatTime", new udf_strftime);
+    tplHandler->bindUdf("sprintf", new udf_sprintf);
   }
 
   Controller::~Controller() {
     IECtrl::deinit();
-    delete this->popupListener;
-    delete this->anchorListener;
+
+    delete actionsHandler;
+    delete tplHandler;
   }
 
   void Controller::_onPrepare() {
@@ -81,45 +88,45 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::clearSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
 
-    if(config->getInt(cfg::showFormatTb))
-    {
+    if (config->getInt(cfg::showFormatTb)) {
       UIGroupAdd(IMIG_MSGBAR, act::formatTb::formatTb);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::emots, 0, "Emotikony", ico::emots);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::bold, 0, "Pogrubienie", ico::bold);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::italic, 0, "Kursywa", ico::italic);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::underline, 0, "Podkreœlenie", ico::underline);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::color, 0, "Kolor", ico::color);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::emots, 0, "Emotikony", ico::emots);
     }
 
-    UIGroupAdd(IMIG_CFG_PLUGS, cfg::cfgGroup, 0, "kIEView2", ico::logo);
-    UIActionCfgAddPluginInfoBox2(cfg::cfgGroup, 
-    "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest wyœwietlanie emotikon oraz modyfikacja wygl¹du okna przy pomocy styli CSS i skryptów JS.", 
-    "<span class='note'>Skompilowano: <b>"__DATE__"</b> [<b>"__TIME__"</b>]</span><br/>"
-    "Informacje o wtyczce na stronie projektu "
-    "<b>KPlugins</b> (http://kplugins.net/)<br/><br/>"
-    "Copyright © 2005-2006 <b>Sijawusz Pur Rahnama</b><br/>"
-    "Copyright © 2005-2006 <b>Micha³ \"Dulek\" Dulko</b><br/>"
-    "Copyright © 2005-2006 <b>KPlugins Team</b>", Helpers::icon16(ico::logo).a_str());
+    UIGroupAdd(IMIG_CFG_PLUGS, ui::cfgGroup, 0, "kIEview2", ico::logo);
+    UIActionCfgAddPluginInfoBox2(ui::cfgGroup, 
+      "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest "
+      "wyœwietlanie emotikon oraz modyfikacja wygl¹du okna przy pomocy styli CSS i skryptów JS.",
+      "<span class='note'>Skompilowano: <b>" __DATE__ "</b> [<b>" __TIME__ "</b>]</span><br/>"
+      "Informacje o wtyczce na stronie projektu "
+      "<b>KPlugins</b> (http://kplugins.net/)<br/><br/>"
+      "Copyright © 2006 <b>Sijawusz Pur Rahnama</b><br/>"
+      "Copyright © 2006 <b>Micha³ \"Dulek\" Dulko</b><br/>"
+      "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>", Helpers::icon16(ico::logo).a_str());
 
-    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
-    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_CHECK|ACTSC_NEEDRESTART, "Wyœwietlaj toolbar w oknie rozmowy", cfg::showFormatTb);
-    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUPEND);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_NEEDRESTART, "Wyœwietlaj toolbar w oknie rozmowy", cfg::showFormatTb);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
-    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUP, "Emotikony");
-    UIActionCfgAdd(cfg::cfgGroup, cfg::useEmots, ACTT_CHECK, "U¿ywaj emotikon", cfg::useEmots);
-    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_COMMENT|ACTR_STATUS, "Katalog w którym znajduj¹ siê pakiety emotikon", 0);
-    UIActionCfgAdd(cfg::cfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
-    UIActionCfgAdd(cfg::cfgGroup, 0, ACTT_GROUPEND);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Emotikony");
+    UIActionCfgAdd(ui::cfgGroup, cfg::useEmots, ACTT_CHECK, "U¿ywaj emotikon", cfg::useEmots);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Katalog w którym znajduj¹ siê pakiety emotikon");
+    UIActionCfgAdd(ui::cfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
   }
 
   void Controller::_onAction() {
     sUIActionNotify_2params* an = this->getAN();
 
-    switch(an->act.id)
-    {
+    switch(an->act.id) {
       case act::popup::popup: {
-        if(an->code == ACTN_CREATEGROUP)
-          this->selectedMenuItem = 0;
+        if (an->code == ACTN_CREATEGROUP) {
+          this->actionsHandler->selectedMenuItem = 0;
+        }
         break;
       }
       case act::popup::openUrl:
@@ -131,8 +138,9 @@ namespace kIEview2 {
       case act::popup::showSource:
       case act::popup::history:
       case act::popup::clear: {
-        if(an->code == ACTN_ACTION)
-          this->selectedMenuItem = an->act.id;
+        if (an->code == ACTN_ACTION) {
+          this->actionsHandler->selectedMenuItem = an->act.id;
+        }
         break;
       }
       case act::formatTb::bold: {
@@ -166,7 +174,8 @@ namespace kIEview2 {
         break;
       }
       case cfg::useEmots: {
-				  UIActionSetStatus(sUIAction(cfg::cfgGroup, cfg::emotsDir), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
+        UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::emotsDir), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
+        break;
       }
     }
   }
@@ -178,11 +187,15 @@ namespace kIEview2 {
         IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h, an->act.cnt);
         an->hwnd = ctrl->getHWND();
 
-        ctrl->setPopupMenuListener(this->popupListener);
-        ctrl->setAnchorClickListener(this->anchorListener);
-        ctrl->setDropListener(this->dropListener);
+        ctrl->setPopupMenuListener(this->actionsHandler);
+        ctrl->setAnchorClickListener(this->actionsHandler);
+        ctrl->setDropListener(this->actionsHandler);
+        ctrl->setExternalListener(this->actionsHandler);
+        ctrl->setScriptMessageListener(this->actionsHandler);
+        ctrl->setKeyDownListener(this->actionsHandler);
 
-        // TODO: Tu powinniœmy dodaæ do okienka podstawê HTML-a
+        ctrl->enableSandbox(false);
+        this->clearWnd(ctrl);
         break;
       }
 
@@ -197,48 +210,35 @@ namespace kIEview2 {
         UI::Notify::_insertMsg* an = (UI::Notify::_insertMsg*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
 
-        int cnt = -1;
-        if (an->_message->flag & MF_SEND) {
-          cnt = ICMessage(IMC_CNT_FIND, an->_message->net, (int)an->_message->toUid);
-        } else {
-          cnt = ICMessage(IMC_CNT_FIND, an->_message->net, (int)an->_message->fromUid);
+        IECtrl::Var args;
+        IECtrl::Var ret;
+
+        try {
+          args[0] = _parseMsgTpl(an->_message).a_str();
+        } catch(const exception &e) { 
+          args[0] = tplHandler->parseException(e).a_str();
         }
 
-        String display;
-        if (an->_message->flag & MF_SEND) {
-          display = !strlen(config->getChar(CNT_DISPLAY, 0)) ? "Ja" : config->getChar(CNT_DISPLAY, 0);
-        } else {
-          display = !strlen(config->getChar(CNT_DISPLAY, cnt)) ? an->_message->fromUid : config->getChar(CNT_DISPLAY, cnt);
-        }
-
-        switch (an->_message->type) {
-          case MT_MESSAGE: {
-            // TODO: Tu powinniœmy przygotowaæ inne dane - czas, przeparsowaæ body, przygotowaæ wszystko pod HTML-a
-
-            ctrl->write(display.c_str());
-            ctrl->write(": ");
-            ctrl->write(an->_message->body);
-            ctrl->write("<br />");
-            ctrl->scrollToBottom();
-            break;
-          }
-
-          case MT_SMS: {
-            
-          }
-
-          case MT_FILE: {
-
-          }
-
-          case MT_QUICKEVENT: {
-
-          }
-        }
+        ctrl->callJScript("addMessage", args, &ret);
+        ctrl->scrollToBottom();
         break;
       }
 
       case UI::Notify::insertStatus: {
+        UI::Notify::_insertStatus* an = (UI::Notify::_insertStatus*)this->getAN();
+        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+
+        IECtrl::Var args;
+        IECtrl::Var ret;
+
+        try {
+          args[0] = _parseStatusTpl(an->_status, an->_info).a_str();
+        } catch(const exception &e) { 
+          args[0] = tplHandler->parseException(e).a_str();
+        }
+
+        ctrl->callJScript("addStatus", args, &ret);
+        ctrl->scrollToBottom();
         break;
       }
 
@@ -259,7 +259,7 @@ namespace kIEview2 {
       case UI::Notify::clear: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
-        ctrl->clear();
+        this->clearWnd(ctrl);
         break;
       }
 
@@ -275,8 +275,7 @@ namespace kIEview2 {
     switch (this->getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
-        // TODO: Tu tworzymy RichEdita
-        an->hwnd = 0;
+        this->forwardAction();
         break;
       }
 
@@ -284,6 +283,10 @@ namespace kIEview2 {
         sUIActionNotify_destroyWindow* an = (sUIActionNotify_destroyWindow*)this->getAN();
         DestroyWindow(an->hwnd);
         break;
+      }
+
+      case UI::Notify::supportsFormatting: {
+        return setSuccess();
       }
     }
   }
@@ -294,5 +297,92 @@ namespace kIEview2 {
         // TODO: Wysy³amy wiadomoœæ (RichEdit powinien wzywaæ t¹ akcjê przy wysy³aniu).
       }
     }
+  }
+
+  void Controller::clearWnd(IECtrl* ctrl) {
+    ctrl->clear();
+
+    // We create structure of the data
+    param_data data(param_data::HASH);
+
+    try {
+      ctrl->write(tplHandler->parseTpl(&data, "skeleton").a_str());
+    } catch(const exception &e) {
+      ctrl->write("obsralem sie, przepraszam<br/>");
+      ctrl->write(e.what());
+    }
+  }
+
+  String Controller::getStatusLabel(int status) {
+    String name = "Nieznany (" + inttostr(status) + ")";
+    switch (status) {
+      case ST_ONLINE: name = "Dostêpny"; break;
+      case ST_CHAT: name = "Pogadam"; break;
+      case ST_AWAY: name = "Zaraz wracam"; break;
+      case ST_NA: name = "Nieosi¹galny"; break;
+      case ST_DND: name = "Nie przeszkadzaæ"; break;
+      case ST_HIDDEN: name = "Ukryty"; break;
+      case ST_OFFLINE: name = "Niedostêpny"; break;
+    }
+    return name;
+  }
+
+  string Controller::getMsgLabel(int type) {
+    string name = "unknown";
+    switch (type) {
+      case MT_MESSAGE: name = "message"; break;
+      case MT_SMS: name = "sms"; break;
+      case MT_FILE: name = "file"; break;
+      case MT_QUICKEVENT: name = "quickevent"; break;
+    }
+    return name;
+  }
+
+  String Controller::_parseStatusTpl(int status, const char* info) {
+    Date64 date(true);
+
+    // We create structure of the data
+    param_data data(param_data::HASH);
+    data.hash_insert_new_var("_time", inttostr(date.getInt64()));
+    data.hash_insert_new_var("time", date.strftime("%H:%M"));
+    data.hash_insert_new_var("status", getStatusLabel(status));
+    if (info) {
+      data.hash_insert_new_var("info", info);
+    }
+    return tplHandler->parseTpl(&data, "status");
+  }
+
+  String Controller::_parseMsgTpl(cMessage* msg) {
+    Date64 date(msg->time);
+    string display;
+    int cnt = 0;
+
+    if (msg->flag & MF_SEND) {
+      cnt = ICMessage(IMC_CNT_FIND, msg->net, (int)msg->toUid);
+      display = !strlen(config->getChar(CNT_DISPLAY, 0)) ? "Ja" : config->getChar(CNT_DISPLAY, 0);
+    } else {
+      cnt = ICMessage(IMC_CNT_FIND, msg->net, (int)msg->fromUid);
+      display = !strlen(config->getChar(CNT_DISPLAY, cnt)) ? msg->fromUid : config->getChar(CNT_DISPLAY, cnt);
+    }
+
+    // We create structure of the data
+    param_data data(param_data::HASH);
+    data.hash_insert_new_var("_time", inttostr(date.getInt64()));
+    data.hash_insert_new_var("time", date.strftime("%H:%M"));
+    data.hash_insert_new_var("display", display);
+    data.hash_insert_new_var("id", inttostr(cnt));
+    data.hash_insert_new_var("net", inttostr(msg->net));
+    data.hash_insert_new_var("uid", config->getChar(CNT_UID, cnt));
+    data.hash_insert_new_var("name", config->getChar(CNT_NAME, cnt));
+    data.hash_insert_new_var("surname", config->getChar(CNT_SURNAME, cnt));
+    data.hash_insert_new_var("type", getMsgLabel(msg->type));
+    data.hash_insert_new_var("body", msg->body);
+
+    if (msg->flag & MF_HTML)
+      data.hash_insert_new_var("isHtml", "1");
+    if (msg->flag & MF_SEND)
+      data.hash_insert_new_var("isSent", "1");
+
+    return tplHandler->parseTpl(&data, "message");
   }
 }
