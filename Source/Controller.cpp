@@ -246,6 +246,7 @@ namespace kIEview2 {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
         // TODO: Mo¿emy spodziewaæ siê, ¿e zaraz dodamy du¿o danych, np. przy przegl¹daniu historii
+        Ctrl->Sleep(1000);
         break;
       }
 
