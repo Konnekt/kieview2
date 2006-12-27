@@ -130,6 +130,13 @@ namespace kIEview2 {
 
     switch(an->act.id) {
       case act::popup::popup: {
+        // nie dzia³a, cnt nigdy nie przyjmuje wartosci -1; kurwa.
+        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
+          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
+        ));
+        if (ctrl) {
+          actionHandlers[ctrl]->selectedMenuItem = 0;
+        }
         break;
       }
       case act::popup::openUrl:
@@ -142,13 +149,14 @@ namespace kIEview2 {
       case act::popup::history:
       case act::popup::clear: {
         if (an->code != ACTN_ACTION) break;
-        IMLOG("an->act.id = %i, an->act.parent = %i, an->act.cnt = %i", an->act.id, an->act.parent, an->act.cnt);
-
         // nie dzia³a, cnt nigdy nie przyjmuje wartosci -1; kurwa.
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
           sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
         ));
-        actionHandlers[ctrl]->selectedMenuItem = an->act.id;
+        if (ctrl) {
+          actionHandlers[ctrl]->selectedMenuItem = an->act.id;
+        }
+        IMLOG("an->act.id = %i, an->act.parent = %i, an->act.cnt = %i", an->act.id, an->act.parent, an->act.cnt);
         break;
       }
       case act::formatTb::bold: {
