@@ -4,7 +4,8 @@
   *  Any modifications or reusing strictly prohibited!
   *
   *  @filesource
-  *  @copyright    Copyright (c) 2004-2005 Kuba 'nix' Niegowski
+  *  @copyright    Copyright (c) 2006 Sijawusz Pur Rahnama
+  *  @copyright    Copyright (c) 2006 Micha³ "Dulek" Dulko
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
   *  @version      $Revision$
   *  @modifiedby   $LastChangedBy$
@@ -20,7 +21,7 @@
 #include "PlugController.h"
 #include "Helpers.h"
 #include "IECtrl.h"
-#include "ActionsHandler.h"
+#include "ActionHandler.h"
 #include "TplHandler.h"
 #include "TplUdf.h"
 
@@ -30,6 +31,9 @@ namespace kIEview2 {
   class Controller : public PlugController<Controller> {
   public:
     friend class PlugController<Controller>;
+
+  public:
+    typedef std::map<IECtrl*, ActionHandler*> tActionHandlers;
 
   public:
     /* Class version */
@@ -71,7 +75,7 @@ namespace kIEview2 {
     void clearWnd(IECtrl* ctrl);
 
   protected:
-    ActionsHandler* actionsHandler;
+    tActionHandlers actionHandlers;
     TplHandler* tplHandler;
   };
 }

@@ -4,7 +4,8 @@
   *  Any modifications or reusing strictly prohibited!
   *
   *  @filesource
-  *  @copyright    Copyright (c) 2004-2005 Kuba 'nix' Niegowski
+  *  @copyright    Copyright (c) 2006 Sijawusz Pur Rahnama
+  *  @copyright    Copyright (c) 2006 Micha³ "Dulek" Dulko
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
   *  @version      $Revision$
   *  @modifiedby   $LastChangedBy$
@@ -44,11 +45,11 @@ namespace kIEview2 {
     //this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
 
     IECtrl::init();
-
-    this->actionsHandler = new ActionsHandler;
     this->tplHandler = new TplHandler("./tpl/");
 
+    tplHandler->addIncludeDir("./tpl");
     tplHandler->bindStdFunctions();
+
     tplHandler->bindUdf("getExtParam", new udf_get_ext_param);
     tplHandler->bindUdf("formatTime", new udf_strftime);
     tplHandler->bindUdf("match", new udf_match);
@@ -58,9 +59,11 @@ namespace kIEview2 {
 
   Controller::~Controller() {
     IECtrl::deinit();
-
-    delete actionsHandler;
     delete tplHandler;
+
+    for (tActionHandlers::iterator it = actionHandlers.begin(); it != actionHandlers.end(); it++) {
+      delete it->second;
+    }
   }
 
   void Controller::_onPrepare() {
@@ -127,9 +130,6 @@ namespace kIEview2 {
 
     switch(an->act.id) {
       case act::popup::popup: {
-        if (an->code == ACTN_CREATEGROUP) {
-          this->actionsHandler->selectedMenuItem = 0;
-        }
         break;
       }
       case act::popup::openUrl:
@@ -141,39 +141,34 @@ namespace kIEview2 {
       case act::popup::showSource:
       case act::popup::history:
       case act::popup::clear: {
-        if (an->code == ACTN_ACTION) {
-          this->actionsHandler->selectedMenuItem = an->act.id;
-        }
+        if (an->code != ACTN_ACTION) break;
+        IMLOG("an->act.id = %i, an->act.parent = %i, an->act.cnt = %i", an->act.id, an->act.parent, an->act.cnt);
+
+        // nie dzia³a, cnt nigdy nie przyjmuje wartosci -1; kurwa.
+        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
+          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
+        ));
+        actionHandlers[ctrl]->selectedMenuItem = an->act.id;
         break;
       }
       case act::formatTb::bold: {
-        if(an->code == ACTN_ACTION) {
-        
-        }
+        if (an->code != ACTN_ACTION) break;
         break;
       }
       case act::formatTb::italic: {
-        if(an->code == ACTN_ACTION) {
-        
-        }
+        if (an->code != ACTN_ACTION) break;
         break;
       }
       case act::formatTb::underline: {
-        if(an->code == ACTN_ACTION) {
-        
-        }
+        if (an->code != ACTN_ACTION) break;
         break;
       }
       case act::formatTb::color: {
-        if(an->code == ACTN_ACTION) {
-        
-        }
+        if (an->code != ACTN_ACTION) break;
         break;
       }
       case act::formatTb::emots: {
-        if(an->code == ACTN_ACTION) {
-        
-        }
+        if (an->code != ACTN_ACTION) break;
         break;
       }
       case cfg::useEmots: {
@@ -187,15 +182,18 @@ namespace kIEview2 {
     switch (this->getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
-        IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h, an->act.cnt);
+        IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
         an->hwnd = ctrl->getHWND();
 
-        ctrl->setPopupMenuListener(this->actionsHandler);
-        ctrl->setAnchorClickListener(this->actionsHandler);
-        ctrl->setDropListener(this->actionsHandler);
-        ctrl->setExternalListener(this->actionsHandler);
-        ctrl->setScriptMessageListener(this->actionsHandler);
-        ctrl->setKeyDownListener(this->actionsHandler);
+        actionHandlers[ctrl] = new ActionHandler;
+        actionHandlers[ctrl]->cntId = an->act.cnt;
+
+        ctrl->setPopupMenuListener(actionHandlers[ctrl]);
+        ctrl->setAnchorClickListener(actionHandlers[ctrl]);
+        ctrl->setDropListener(actionHandlers[ctrl]);
+        ctrl->setExternalListener(actionHandlers[ctrl]);
+        ctrl->setScriptMessageListener(actionHandlers[ctrl]);
+        ctrl->setKeyDownListener(actionHandlers[ctrl]);
 
         ctrl->enableSandbox(false);
         this->clearWnd(ctrl);
@@ -205,6 +203,14 @@ namespace kIEview2 {
       case ACTN_DESTROYWINDOW: {
         sUIActionNotify_destroyWindow* an = (sUIActionNotify_destroyWindow*)this->getAN();
         IECtrl* ctrl = IECtrl::get(an->hwnd);
+
+        for (tActionHandlers::iterator it = actionHandlers.begin(); it != actionHandlers.end(); it++) {
+          if (it->first == ctrl) {
+            delete it->second;
+            actionHandlers.erase(it);
+            break;
+          }
+        }
         delete ctrl;
         break;
       }
@@ -319,7 +325,7 @@ namespace kIEview2 {
 
   String Controller::getStatusLabel(int status) {
     String name = "Nieznany (" + inttostr(status) + ")";
-    switch (status) {
+    switch (status & ST_MASK) {
       case ST_ONLINE: name = "Dostêpny"; break;
       case ST_CHAT: name = "Pogadam"; break;
       case ST_AWAY: name = "Zaraz wracam"; break;
@@ -429,6 +435,9 @@ namespace kIEview2 {
     if (an->_info) {
       data.hash_insert_new_var("info", an->_info);
     }
+    if (an->_status & ST_IGNORED) {
+      data.hash_insert_new_var("ignored", "1");
+    }
     return tplHandler->parseTpl(&data, "status");
   }
 
@@ -436,7 +445,6 @@ namespace kIEview2 {
     if (!isMsgFromHistory(an) && (an->_message->flag & MF_HIDE)) {
       return "";
     }
-
     cMessage* msg = an->_message;
     string type = getMsgTypeLabel(msg->type);
     tCntId cnt = getCntFromMsg(msg);
@@ -462,14 +470,7 @@ namespace kIEview2 {
       case MT_FILE: _handleFileTpl(data, an); break;
       case MT_QUICKEVENT: _handleQuickEventTpl(data, an); break;
     }
-
-    String tplString;
-    try {
-      tplString = tplHandler->getTpl(type.c_str());
-    } catch(...) {
-      tplString = tplHandler->getTpl("message");
-    }
-    return tplHandler->parseString(&data, tplString);
+    return tplHandler->parseTpl(&data, type.c_str());
   }
 
   void Controller::_handleQuickEventTpl(param_data& data, UI::Notify::_insertMsg* an) {

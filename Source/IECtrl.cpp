@@ -39,13 +39,12 @@ void IECtrl::deinit() {
   m_bInited = false;
 }
 
-IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, int cntId, bool staticEdge) {
+IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
   MSG msg;
   IOleObject* pOleObject = NULL;
   IOleInPlaceObject* pOleInPlace = NULL;
 
   m_hParentWnd = parent;
-  m_cntId = cntId;
   m_pPrev = m_pNext = NULL;
   m_hWnd = NULL;
   m_pEventSink = NULL;
@@ -404,7 +403,9 @@ void IECtrl::clear() {
 
 void IECtrl::enableSandbox(bool bSandbox) {
   m_bSandbox = bSandbox;
-  if (m_pWebBrowser) m_pWebBrowser->put_Offline(m_bSandbox ? VARIANT_TRUE : VARIANT_FALSE);
+  if (m_pWebBrowser) {
+    m_pWebBrowser->put_Offline(m_bSandbox ? VARIANT_TRUE : VARIANT_FALSE);
+  }
 }
 
 char * IECtrl::getSelection(bool gettext) {
@@ -440,10 +441,6 @@ IECtrl* IECtrl::get(HWND hwnd) {
 
 HWND IECtrl::getHWND() {
   return m_hWnd;
-}
-
-int IECtrl::getCntId() {
-  return m_cntId;
 }
 
 void IECtrl::translateAccelerator(UINT uMsg, WPARAM wParam, LPARAM lParam) {
