@@ -16,8 +16,8 @@
 #ifndef __TPLHANDLER_H__
 #define __TPLHANDLER_H__
 
-#include <ctpp\ctpp.hpp>
-#include <functions\std_fn_list.hpp>
+#include <ctpp/ctpp.hpp>
+#include <functions/std_fn_list.hpp>
 
 #pragma comment(lib, "ctpp.lib")
 

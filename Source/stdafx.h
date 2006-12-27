@@ -92,4 +92,4 @@ using namespace std;
 using namespace Konnekt;
 using namespace boost;
 
-#include "..\Project\resource.h"
+#include "../Project/resource.h"

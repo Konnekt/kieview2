@@ -16,8 +16,8 @@
 #ifndef __TPLUDF_H__
 #define __TPLUDF_H__
 
-#include <ctpp\ctpp.hpp>
-#include <functions\std_fn_list.hpp>
+#include <ctpp/ctpp.hpp>
+#include <functions/std_fn_list.hpp>
 
 #include <boost/format.hpp>
 
@@ -26,29 +26,6 @@
 using namespace template_parser_ns;
 using namespace Stamina;
 using namespace boost;
-
-class udf_strftime: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return TWO_PARAMS;
-  }
-  inline void param(const std::string& param1, const std::string& param2) {
-    _date = (__int64) atoi(param1.c_str());
-    _format = param2;
-  }
-
-  inline void handler() {
-    _result = _date.strftime(_format.c_str());
-  }
-  inline std::string& result() {
-    return _result;
-  }
-
-protected:
-	std::string _result;
-	std::string _format;
-	Date64 _date;
-};
 
 class udf_sprintf: public udf_fn {
 public:
@@ -75,6 +52,98 @@ public:
 protected:
 	udf_fn_param _params;
 	std::string _format;
+	std::string _result;
+};
+
+class udf_strftime: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return TWO_PARAMS;
+  }
+  inline void param(const std::string& param1, const std::string& param2) {
+    _date = (__int64) atoi(param2.c_str());
+    _format = param1;
+  }
+
+  inline void handler() {
+    _result = _date.strftime(_format.c_str());
+  }
+  inline std::string& result() {
+    return _result;
+  }
+
+protected:
+	std::string _result;
+	std::string _format;
+	Date64 _date;
+};
+
+class udf_match: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return TWO_PARAMS;
+  }
+  inline void param(const std::string& param1, const std::string& param2) {
+    reg.match(param1.c_str(), param2.c_str());
+  }
+
+  inline void handler() {
+    _result = reg.isMatched() ? "1" : "";
+  }
+  inline std::string& result() {
+    return _result;
+  }
+
+protected:
+	std::string _result;
+  RegEx reg;
+};
+
+class udf_replace: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return THREE_PARAMS;
+  }
+  inline void param(const std::string& param1, const std::string& param2, const std::string& param3) {
+    reg.setPattern(param1);
+    reg.setSubject(param3);
+
+    _replace = param2;
+  }
+
+  inline void handler() {
+    _result = reg.replace(_replace.c_str());
+  }
+  inline std::string& result() {
+    return _result;
+  }
+
+protected:
+	std::string _replace;
+	std::string _result;
+  RegEx reg;
+};
+
+class udf_get_ext_param: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return TWO_PARAMS;
+  }
+  inline void param(const std::string& param1, const std::string& param2) {
+    _name = param2;
+    _ext = param1;
+  }
+
+  inline void handler() {
+    _result = GetExtParam(_ext, _name);
+  }
+  inline std::string& result() {
+    return _result;
+  }
+
+protected:
+	std::string _name;
+	std::string _ext;
 	std::string _result;
 };
 

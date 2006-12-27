@@ -49,7 +49,10 @@ namespace kIEview2 {
     this->tplHandler = new TplHandler("./tpl/");
 
     tplHandler->bindStdFunctions();
+    tplHandler->bindUdf("getExtParam", new udf_get_ext_param);
     tplHandler->bindUdf("formatTime", new udf_strftime);
+    tplHandler->bindUdf("match", new udf_match);
+    tplHandler->bindUdf("replace", new udf_replace);
     tplHandler->bindUdf("sprintf", new udf_sprintf);
   }
 
@@ -214,7 +217,7 @@ namespace kIEview2 {
         IECtrl::Var ret;
 
         try {
-          args[0] = _parseMsgTpl(an->_message).a_str();
+          args[0] = _parseMsgTpl(an).a_str();
         } catch(const exception &e) { 
           args[0] = tplHandler->parseException(e).a_str();
         }
@@ -232,7 +235,7 @@ namespace kIEview2 {
         IECtrl::Var ret;
 
         try {
-          args[0] = _parseStatusTpl(an->_status, an->_info).a_str();
+          args[0] = _parseStatusTpl(an).a_str();
         } catch(const exception &e) { 
           args[0] = tplHandler->parseException(e).a_str();
         }
@@ -328,7 +331,7 @@ namespace kIEview2 {
     return name;
   }
 
-  string Controller::getMsgLabel(int type) {
+  string Controller::getMsgTypeLabel(int type) {
     string name = "unknown";
     switch (type) {
       case MT_MESSAGE: name = "message"; break;
@@ -339,51 +342,229 @@ namespace kIEview2 {
     return name;
   }
 
-  String Controller::_parseStatusTpl(int status, const char* info) {
+  string Controller::bytesToString(double bytes) {
+    char buff[20];
+
+    if (bytes >= (1024 * 1024 * 1024)) { // GB
+      sprintf(buff, "%.2f GiB", bytes / (1024 * 1024 * 1024));
+    } else if (bytes >= (1024 * 1024)) { // MB
+      sprintf(buff, "%.2f MiB", bytes / (1024 * 1024));
+    } else if (bytes >= 1024) { // KB
+      sprintf(buff, "%.2f KiB", bytes / 1024);
+    } else {
+      sprintf(buff, "%.2f B", bytes);
+    }
+    return buff;
+  }
+
+  string Controller::timeToString(int time) {
+    char buff[20];
+
+    if (time >= (60 * 60 * 24)) {
+      int days = int(time / (60 * 60 * 24));
+      sprintf(buff, "%dd ", days);
+      time -= days * 60 * 60 * 24;
+    }
+    if (time >= (60 * 60)) {
+      int hours = int(time / (60 * 60));
+      sprintf(buff, "%dh ", hours);
+      time -= hours * 60 * 60;
+    }
+    if (time >= 60) {
+      int mins = int(time / 60);
+      sprintf(buff, "%dm ", mins);
+      time -= mins * 60;
+    }
+    if (time > 0) {
+      sprintf(buff, "%ds ", time);
+    }
+    return buff;
+  }
+
+  tCntId Controller::getCntFromMsg(cMessage* msg) {
+    tCntId cnt = 0;
+
+    if (msg->flag & MF_SEND) {
+      cnt = ICMessage(IMC_CNT_FIND, msg->net, (int)msg->toUid);
+    } else {
+      cnt = ICMessage(IMC_CNT_FIND, msg->net, (int)msg->fromUid);
+    }
+    return cnt;
+  }
+
+  String Controller::getDisplayFromMsg(UI::Notify::_insertMsg* an) {
+    cMessage* msg = an->_message;
+    tCntId cnt = getCntFromMsg(msg);
+
+    String mex = GetExtParam(msg->ext, MEX_DISPLAY);
+    String display;
+
+    if (mex.length()) {
+      display = mex;
+    } else if (an->_display && strlen(an->_display)) {
+      display = an->_display;
+    } else {
+      if (msg->flag & MF_SEND) {
+        display = !strlen(config->getChar(CNT_DISPLAY, 0)) ? "Ja" : config->getChar(CNT_DISPLAY, 0);
+      } else {
+        display = !strlen(config->getChar(CNT_DISPLAY, cnt)) ? msg->fromUid : config->getChar(CNT_DISPLAY, cnt);
+      }
+    }
+    return display;
+  }
+
+  bool Controller::isMsgFromHistory(UI::Notify::_insertMsg* an) {
+    return an->act.parent != IMIG_MSGWND;
+  }
+
+  String Controller::_parseStatusTpl(UI::Notify::_insertStatus* an) {
     Date64 date(true);
 
     // We create structure of the data
     param_data data(param_data::HASH);
     data.hash_insert_new_var("_time", inttostr(date.getInt64()));
     data.hash_insert_new_var("time", date.strftime("%H:%M"));
-    data.hash_insert_new_var("status", getStatusLabel(status));
-    if (info) {
-      data.hash_insert_new_var("info", info);
+    data.hash_insert_new_var("status", getStatusLabel(an->_status));
+
+    if (an->_info) {
+      data.hash_insert_new_var("info", an->_info);
     }
     return tplHandler->parseTpl(&data, "status");
   }
 
-  String Controller::_parseMsgTpl(cMessage* msg) {
-    Date64 date(msg->time);
-    string display;
-    int cnt = 0;
-
-    if (msg->flag & MF_SEND) {
-      cnt = ICMessage(IMC_CNT_FIND, msg->net, (int)msg->toUid);
-      display = !strlen(config->getChar(CNT_DISPLAY, 0)) ? "Ja" : config->getChar(CNT_DISPLAY, 0);
-    } else {
-      cnt = ICMessage(IMC_CNT_FIND, msg->net, (int)msg->fromUid);
-      display = !strlen(config->getChar(CNT_DISPLAY, cnt)) ? msg->fromUid : config->getChar(CNT_DISPLAY, cnt);
+  String Controller::_parseMsgTpl(UI::Notify::_insertMsg* an) {
+    if (!isMsgFromHistory(an) && (an->_message->flag & MF_HIDE)) {
+      return "";
     }
+
+    cMessage* msg = an->_message;
+    string type = getMsgTypeLabel(msg->type);
+    tCntId cnt = getCntFromMsg(msg);
+    Date64 date(msg->time);
 
     // We create structure of the data
     param_data data(param_data::HASH);
     data.hash_insert_new_var("_time", inttostr(date.getInt64()));
+    data.hash_insert_new_var("_id", inttostr(msg->id));
+    data.hash_insert_new_var("_cnt", inttostr(cnt));
+    data.hash_insert_new_var("type", type);
+    data.hash_insert_new_var("ext", msg->ext);
     data.hash_insert_new_var("time", date.strftime("%H:%M"));
-    data.hash_insert_new_var("display", display);
-    data.hash_insert_new_var("id", inttostr(cnt));
-    data.hash_insert_new_var("net", inttostr(msg->net));
-    data.hash_insert_new_var("uid", config->getChar(CNT_UID, cnt));
-    data.hash_insert_new_var("name", config->getChar(CNT_NAME, cnt));
-    data.hash_insert_new_var("surname", config->getChar(CNT_SURNAME, cnt));
-    data.hash_insert_new_var("type", getMsgLabel(msg->type));
     data.hash_insert_new_var("body", msg->body);
 
-    if (msg->flag & MF_HTML)
+    if (msg->flag & MF_HTML) {
       data.hash_insert_new_var("isHtml", "1");
-    if (msg->flag & MF_SEND)
-      data.hash_insert_new_var("isSent", "1");
+    }
 
-    return tplHandler->parseTpl(&data, "message");
+    switch (msg->type) {
+      case MT_MESSAGE: _handleStdMsgTpl(data, an); break;
+      case MT_SMS:_handleSmsTpl(data, an); break;
+      case MT_FILE: _handleFileTpl(data, an); break;
+      case MT_QUICKEVENT: _handleQuickEventTpl(data, an); break;
+    }
+
+    String tplString;
+    try {
+      tplString = tplHandler->getTpl(type.c_str());
+    } catch(...) {
+      tplString = tplHandler->getTpl("message");
+    }
+    return tplHandler->parseString(&data, tplString);
+  }
+
+  void Controller::_handleQuickEventTpl(param_data& data, UI::Notify::_insertMsg* an) {
+    if (an->_message->flag & MF_QE_SHOWTIME) {
+      data.hash_insert_new_var("showTime", "1");
+    }
+    if (!(an->_message->flag & MF_QE_NORMAL)) {
+      data.hash_insert_new_var("warning", "1");
+    }
+  }
+
+  void Controller::_handleStdMsgTpl(param_data& data, UI::Notify::_insertMsg* an) {
+    string extInfo = GetExtParam(an->_message->ext, MEX_ADDINFO);
+    String title = GetExtParam(an->_message->ext, MEX_TITLE);
+    tCntId cnt = getCntFromMsg(an->_message);
+
+    data.hash_insert_new_var("_net", inttostr(an->_message->net));
+    data.hash_insert_new_var("display", getDisplayFromMsg(an));
+    data.hash_insert_new_var("uid", config->getChar(CNT_UID, cnt));
+    data.hash_insert_new_var("nick", config->getChar(CNT_NICK, cnt));
+    data.hash_insert_new_var("name", config->getChar(CNT_NAME, cnt));
+    data.hash_insert_new_var("surname", config->getChar(CNT_SURNAME, cnt));
+
+    if (extInfo.length()) {
+      data.hash_insert_new_var("extInfo", extInfo);
+    }
+    if (title.length()) {
+      data.hash_insert_new_var("title", title);
+    }
+    if (isMsgFromHistory(an)) {
+      data.hash_insert_new_var("inHistory", "1");
+    }
+    if (an->_message->flag & MF_SEND) {
+      data.hash_insert_new_var("isSent", "1");
+    }
+  }
+
+  void Controller::_handleSmsTpl(param_data& data, UI::Notify::_insertMsg* an) {
+    String from = GetExtParam(an->_message->ext, Sms::extFrom);
+    string gate = GetExtParam(an->_message->ext, Sms::extGate);
+
+    if (from.length()) {
+      data.hash_insert_new_var("from", from);
+    }
+    data.hash_insert_new_var("to", an->_message->toUid);
+    data.hash_insert_new_var("gate", gate);
+  }
+
+  void Controller::_handleFileTpl(param_data& data, UI::Notify::_insertMsg* an) {
+    int transferTime = atoi(GetExtParam(an->_message->ext, MEX_FILE_TRANSFER_TIME).c_str());
+    double transfered = atoi(GetExtParam(an->_message->ext, MEX_FILE_TRANSFERED).c_str());
+    double size = atoi(GetExtParam(an->_message->ext, MEX_FILE_SIZE).c_str());
+
+    string error = GetExtParam(an->_message->ext, MEX_FILE_ERROR);
+    string filePath = GetExtParam(an->_message->ext, MEX_FILE_PATH);
+    String name = GetExtParam(an->_message->ext, MEX_TITLE);
+
+    if (transferTime > 0) {
+      data.hash_insert_new_var("transferTime", timeToString(transferTime));
+    }
+    if (transfered > 0) {
+      char buff[20];
+      if (transfered == size) {
+        sprintf(buff, "%d%%", 100);
+      } else {
+        sprintf(buff, "%.1f%%", (transfered / size) * 100);
+      }
+      data.hash_insert_new_var("transferedP", buff);
+      data.hash_insert_new_var("transfered", bytesToString(transfered));
+    }
+    if (transferTime && transfered) {
+      data.hash_insert_new_var("avgSpeed", bytesToString(transfered / transferTime) + "/s");
+    }
+    if (size > 0) {
+      data.hash_insert_new_var("size", bytesToString(size));
+    }
+    if (name.length()) {
+      data.hash_insert_new_var("name", name);
+    }
+    if (filePath.length()) {
+      int pos = filePath.find_last_of('\\');
+      if (pos != -1) {
+        data.hash_insert_new_var("fileName", filePath.substr(pos + 1));
+        data.hash_insert_new_var("path", filePath.substr(0, pos + 1));
+      } else {
+        data.hash_insert_new_var("fileName", filePath);
+      }
+      data.hash_insert_new_var("filePath", filePath);
+    }
+    if (error.length()) {
+      data.hash_insert_new_var("error", error);
+    }
+    if (an->_message->flag & MF_SEND) {
+      data.hash_insert_new_var("isSent", "1");
+    }
+    data.hash_insert_new_var("display", getDisplayFromMsg(an));
   }
 }

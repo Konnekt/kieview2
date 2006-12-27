@@ -41,8 +41,11 @@ namespace kIEview2 {
   public:
     ~Controller();
 
+    string getMsgTypeLabel(int type);
     String getStatusLabel(int status);
-    string getMsgLabel(int type);
+
+    string bytesToString(double bytes);
+    string timeToString(int time);
 
   protected:
     void _onPrepare();
@@ -52,8 +55,17 @@ namespace kIEview2 {
     void _msgCtrlSend();
     void _msgSend();
 
-    String _parseStatusTpl(int status, const char* info);
-    String _parseMsgTpl(cMessage* msg);
+    tCntId getCntFromMsg(cMessage* msg);
+    String getDisplayFromMsg(UI::Notify::_insertMsg* an);
+    bool isMsgFromHistory(UI::Notify::_insertMsg* an);
+
+    String _parseStatusTpl(UI::Notify::_insertStatus* an);
+    String _parseMsgTpl(UI::Notify::_insertMsg* an);
+
+    void _handleQuickEventTpl(param_data& data, UI::Notify::_insertMsg* an);
+    void _handleStdMsgTpl(param_data& data, UI::Notify::_insertMsg* an);
+    void _handleSmsTpl(param_data& data, UI::Notify::_insertMsg* an);
+    void _handleFileTpl(param_data& data, UI::Notify::_insertMsg* an);
 
   public:
     void clearWnd(IECtrl* ctrl);
