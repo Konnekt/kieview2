@@ -130,9 +130,8 @@ namespace kIEview2 {
 
     switch(an->act.id) {
       case act::popup::popup: {
-        // nie dzia³a, cnt nigdy nie przyjmuje wartosci -1; kurwa.
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
-          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
+          sUIAction(an->act.parent, UI::ACT::msg_ctrlview, an->act.cnt)
         ));
         if (ctrl) {
           actionHandlers[ctrl]->selectedMenuItem = 0;
@@ -149,9 +148,8 @@ namespace kIEview2 {
       case act::popup::history:
       case act::popup::clear: {
         if (an->code != ACTN_ACTION) break;
-        // nie dzia³a, cnt nigdy nie przyjmuje wartosci -1; kurwa.
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
-          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
+          sUIAction(an->act.parent, UI::ACT::msg_ctrlview, an->act.cnt)
         ));
         if (ctrl) {
           actionHandlers[ctrl]->selectedMenuItem = an->act.id;
@@ -236,6 +234,7 @@ namespace kIEview2 {
           args[0] = tplHandler->parseException(e).a_str();
         }
 
+        Ctrl->Sleep(1000);
         ctrl->callJScript("addMessage", args, &ret);
         ctrl->scrollToBottom();
         break;
@@ -254,6 +253,7 @@ namespace kIEview2 {
           args[0] = tplHandler->parseException(e).a_str();
         }
 
+        Ctrl->Sleep(1000);
         ctrl->callJScript("addStatus", args, &ret);
         ctrl->scrollToBottom();
         break;
@@ -313,6 +313,7 @@ namespace kIEview2 {
     switch (this->getAN()->code) {
       case ACTN_ACTION: {
         // TODO: Wysy³amy wiadomoœæ (RichEdit powinien wzywaæ t¹ akcjê przy wysy³aniu).
+        this->forwardAction();
       }
     }
   }
