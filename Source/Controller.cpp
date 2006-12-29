@@ -131,7 +131,7 @@ namespace kIEview2 {
     switch(an->act.id) {
       case act::popup::popup: {
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
-          sUIAction(an->act.parent, UI::ACT::msg_ctrlview, an->act.cnt)
+          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
         ));
         if (ctrl) {
           actionHandlers[ctrl]->selectedMenuItem = 0;
@@ -149,7 +149,7 @@ namespace kIEview2 {
       case act::popup::clear: {
         if (an->code != ACTN_ACTION) break;
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
-          sUIAction(an->act.parent, UI::ACT::msg_ctrlview, an->act.cnt)
+          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
         ));
         if (ctrl) {
           actionHandlers[ctrl]->selectedMenuItem = an->act.id;
