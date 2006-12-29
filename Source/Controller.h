@@ -24,6 +24,7 @@
 #include "ActionHandler.h"
 #include "TplHandler.h"
 #include "TplUdf.h"
+#include "RtfHtml.h"
 
 using namespace kIEview2;
 
@@ -73,10 +74,12 @@ namespace kIEview2 {
 
   public:
     void clearWnd(IECtrl* ctrl);
+    static DWORD CALLBACK streamOut(DWORD, LPBYTE, LONG, LONG*);
 
   protected:
     tActionHandlers actionHandlers;
     TplHandler* tplHandler;
+    RtfHtmlTag* rtfHtml;
   };
 }
 

@@ -41,11 +41,12 @@ namespace kIEview2 {
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_MSGWND);
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
     // TODO: Podmieniamy kontrolkê wpisywania wiadomoœci
-    //this->subclassAction(UI::ACT::msg_ctrlsend, IMIG_MSGWND);
+    this->subclassAction(UI::ACT::msg_ctrlsend, IMIG_MSGWND);
     //this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
 
     IECtrl::init();
     this->tplHandler = new TplHandler("./tpl/");
+    this->rtfHtml = new RtfHtmlTag();
 
     tplHandler->addIncludeDir("./tpl");
     tplHandler->bindStdFunctions();
@@ -60,6 +61,7 @@ namespace kIEview2 {
   Controller::~Controller() {
     IECtrl::deinit();
     delete tplHandler;
+    delete rtfHtml;
 
     for (tActionHandlers::iterator it = actionHandlers.begin(); it != actionHandlers.end(); it++) {
       delete it->second;
@@ -97,10 +99,10 @@ namespace kIEview2 {
     if (config->getInt(cfg::showFormatTb)) {
       UIGroupAdd(IMIG_MSGBAR, act::formatTb::formatTb);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::emots, 0, "Emotikony", ico::emots);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::bold, 0, "Pogrubienie", ico::bold);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::italic, 0, "Kursywa", ico::italic);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::underline, 0, "Podkreœlenie", ico::underline);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::color, 0, "Kolor", ico::color);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::bold, ACTT_CHECK, "Pogrubienie", ico::bold);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::italic, ACTT_CHECK, "Kursywa", ico::italic);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::underline, ACTT_CHECK, "Podkreœlenie", ico::underline);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::color, ACTT_CHECK, "Kolor", ico::color);
     }
 
     UIGroupAdd(IMIG_CFG_PLUGS, ui::cfgGroup, 0, "kIEview2", ico::logo);
@@ -158,18 +160,66 @@ namespace kIEview2 {
       }
       case act::formatTb::bold: {
         if (an->code != ACTN_ACTION) break;
+        HWND hwnd = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, an->act.cnt));
+        CHARFORMAT cf;
+        ZeroMemory(&cf, sizeof(CHARFORMAT));
+        cf.cbSize = sizeof(CHARFORMAT);
+        cf.dwMask = CFM_BOLD;
+        DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+        if ((cf.dwMask & CFM_BOLD) && (dwSelMask & CFM_BOLD)) {
+          cf.dwEffects ^= CFE_BOLD; 
+        }
+        else {
+          cf.dwEffects |= CFE_BOLD;
+        }
+        cf.dwMask = CFM_BOLD;
+        SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
         break;
       }
       case act::formatTb::italic: {
         if (an->code != ACTN_ACTION) break;
+        HWND hwnd = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, an->act.cnt));
+        CHARFORMAT cf;
+        ZeroMemory(&cf, sizeof(CHARFORMAT));
+        cf.cbSize = sizeof(CHARFORMAT);
+        cf.dwMask = CFM_ITALIC;
+        DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+        if ((cf.dwMask & CFM_ITALIC) && (dwSelMask & CFM_ITALIC)) {
+          cf.dwEffects ^= CFE_ITALIC;
+        }
+        else {
+          cf.dwEffects |= CFE_ITALIC;
+        }
+        cf.dwMask = CFM_ITALIC;
+        SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
         break;
       }
       case act::formatTb::underline: {
         if (an->code != ACTN_ACTION) break;
+        HWND hwnd = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, an->act.cnt));
+        CHARFORMAT cf;
+        ZeroMemory(&cf, sizeof(CHARFORMAT));
+        cf.cbSize = sizeof(CHARFORMAT);
+        cf.dwMask = CFM_UNDERLINE;
+        DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+        if ((cf.dwMask & CFM_UNDERLINE) && (dwSelMask & CFM_UNDERLINE)) {
+          cf.dwEffects ^= CFE_UNDERLINE;
+        }
+        else {
+          cf.dwEffects |= CFE_UNDERLINE;
+        }
+        cf.dwMask = CFM_UNDERLINE;
+        SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
         break;
       }
       case act::formatTb::color: {
         if (an->code != ACTN_ACTION) break;
+        if (UIActionGetStatus(an->act) & ACTS_CHECKED) {
+        
+        }
+        else {
+        
+        }
         break;
       }
       case act::formatTb::emots: {
@@ -303,6 +353,44 @@ namespace kIEview2 {
 
       case UI::Notify::supportsFormatting: {
         return setSuccess();
+      }
+      
+      case UI::Notify::insertMsg: {
+        this->forwardAction();
+        break;
+      }
+      
+      case UI::Notify::getMessageSize: {
+        sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
+
+        EDITSTREAM es;
+	      es.dwError = 0;
+	      es.pfnCallback = Controller::streamOut;
+	      String text;
+	      es.dwCookie = (DWORD)&text;
+	      SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
+
+        this->setReturnCode(this->rtfHtml->rtfParse((char*)text.a_str(), text.size()).size());
+        break;
+      }
+
+      case UI::Notify::getMessage: {
+        UI::Notify::_getMessage* an = (UI::Notify::_getMessage*)this->getAN();
+
+        EDITSTREAM es;
+	      es.dwError = 0;
+	      es.pfnCallback = Controller::streamOut;
+	      String text;
+	      es.dwCookie = (DWORD)&text;
+	      SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
+	      strcpy(an->_message->body, this->rtfHtml->rtfParse((char*)text.a_str(), text.size()).c_str());
+	      an->_message->flag |= MF_HTML;
+        break;
+      }
+
+      case ACTN_SETCNT: {
+        this->forwardAction();
+        break;
       }
     }
   }
@@ -574,5 +662,11 @@ namespace kIEview2 {
       data.hash_insert_new_var("isSent", "1");
     }
     data.hash_insert_new_var("display", getDisplayFromMsg(an));
+  }
+  
+  DWORD CALLBACK Controller::streamOut(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) {
+    String* entry = (String*)dwCookie;
+    *entry += (char*)pbBuff;
+    return 0;
   }
 }
