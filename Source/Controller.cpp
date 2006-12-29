@@ -154,7 +154,6 @@ namespace kIEview2 {
         if (ctrl) {
           actionHandlers[ctrl]->selectedMenuItem = an->act.id;
         }
-        IMLOG("an->act.id = %i, an->act.parent = %i, an->act.cnt = %i", an->act.id, an->act.parent, an->act.cnt);
         break;
       }
       case act::formatTb::bold: {
@@ -236,7 +235,7 @@ namespace kIEview2 {
 
         Ctrl->Sleep(1000);
         ctrl->callJScript("addMessage", args, &ret);
-        ctrl->scrollToBottom();
+        if (an->_scroll) ctrl->scrollToBottom();
         break;
       }
 
@@ -263,7 +262,6 @@ namespace kIEview2 {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
         // TODO: Mo¿emy spodziewaæ siê, ¿e zaraz dodamy du¿o danych, np. przy przegl¹daniu historii
-        Ctrl->Sleep(1000);
         break;
       }
 
@@ -428,7 +426,7 @@ namespace kIEview2 {
     return display;
   }
 
-  bool Controller::isMsgFromHistory(UI::Notify::_insertMsg* an) {
+  bool Controller::isMsgFromHistory(sUIActionNotify_base* an) {
     return an->act.parent != IMIG_MSGWND;
   }
 
