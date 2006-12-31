@@ -497,7 +497,7 @@ namespace kIEview2 {
 
     // We create structure of the data
     param_data data(param_data::HASH);
-    data.hash_insert_new_var("_time", i64tostr(date.getInt64()));
+    data.hash_insert_new_var("@time", i64tostr(date.getInt64()));
     data.hash_insert_new_var("time", date.strftime("%H:%M"));
     data.hash_insert_new_var("status", getStatusLabel(an->_status));
 
@@ -505,7 +505,7 @@ namespace kIEview2 {
       data.hash_insert_new_var("info", an->_info);
     }
     if (an->_status & ST_IGNORED) {
-      data.hash_insert_new_var("isIgnored", "1");
+      data.hash_insert_new_var("ignored?", "1");
     }
     return tplHandler->parseTpl(&data, "status");
   }
@@ -522,16 +522,16 @@ namespace kIEview2 {
 
     // We create structure of the data
     param_data data(param_data::HASH);
-    data.hash_insert_new_var("_time", i64tostr(date.getInt64()));
-    data.hash_insert_new_var("_id", inttostr(msg->id));
-    data.hash_insert_new_var("_cnt", inttostr(cnt));
+    data.hash_insert_new_var("@time", i64tostr(date.getInt64()));
+    data.hash_insert_new_var("@id", inttostr(msg->id));
+    data.hash_insert_new_var("@cnt", inttostr(cnt));
     data.hash_insert_new_var("type", type);
     data.hash_insert_new_var("ext", msg->ext);
     data.hash_insert_new_var("time", date.strftime("%H:%M"));
     data.hash_insert_new_var("body", msg->body);
 
     if (msg->flag & MF_HTML) {
-      data.hash_insert_new_var("isHtml", "1");
+      data.hash_insert_new_var("html?", "1");
     }
 
     switch (msg->type) {
@@ -545,10 +545,10 @@ namespace kIEview2 {
 
   void Controller::_handleQuickEventTpl(param_data& data, UI::Notify::_insertMsg* an) {
     if (an->_message->flag & MF_QE_SHOWTIME) {
-      data.hash_insert_new_var("showTime", "1");
+      data.hash_insert_new_var("showTime?", "1");
     }
     if (!(an->_message->flag & MF_QE_NORMAL)) {
-      data.hash_insert_new_var("warning", "1");
+      data.hash_insert_new_var("warning?", "1");
     }
   }
 
@@ -557,7 +557,7 @@ namespace kIEview2 {
     String title = GetExtParam(an->_message->ext, MEX_TITLE);
     tCntId cnt = getCntFromMsg(an->_message);
 
-    data.hash_insert_new_var("_net", inttostr(an->_message->net));
+    data.hash_insert_new_var("@net", inttostr(an->_message->net));
     data.hash_insert_new_var("display", getDisplayFromMsg(an));
     data.hash_insert_new_var("uid", config->getChar(CNT_UID, cnt));
     data.hash_insert_new_var("nick", config->getChar(CNT_NICK, cnt));
@@ -571,11 +571,9 @@ namespace kIEview2 {
       data.hash_insert_new_var("title", title);
     }
     if (isMsgFromHistory(an)) {
-      data.hash_insert_new_var("inHistory", "1");
+      data.hash_insert_new_var("inHistory?", "1");
     }
-    if (an->_message->flag & MF_SEND) {
-      data.hash_insert_new_var("isSent", "1");
-    }
+    data.hash_insert_new_var(an->_message->flag & MF_SEND ? "sent?" : "received?", "1");
   }
 
   void Controller::_handleSmsTpl(param_data& data, UI::Notify::_insertMsg* an) {
@@ -633,9 +631,7 @@ namespace kIEview2 {
     if (error.length()) {
       data.hash_insert_new_var("error", error);
     }
-    if (an->_message->flag & MF_SEND) {
-      data.hash_insert_new_var("isSent", "1");
-    }
+    data.hash_insert_new_var(an->_message->flag & MF_SEND ? "sent?" : "received?", "1");
     data.hash_insert_new_var("display", getDisplayFromMsg(an));
   }
 }

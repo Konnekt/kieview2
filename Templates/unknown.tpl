@@ -1,9 +1,9 @@
 <div class="message unknown">
-  <div class="warning"><b>Uwaga !</b> nie rozpoznany typ wiadomoúci !</div>
+  <div class="warning"><b>Uwaga !</b> nie rozpoznany typ wiadomo≈õci !</div>
   <span class="display"><b><TMPL_var htmlEscape(display)></b>:</span>
   <span class="time">(<TMPL_var time>)</span>
   <div class="body">
-    <TMPL_if isHtml>
+    <TMPL_if html?>
       <TMPL_var body>
     <TMPL_else>
       <pre><TMPL_var htmlEscape(body)></pre>
