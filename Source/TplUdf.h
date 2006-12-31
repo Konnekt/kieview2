@@ -61,12 +61,18 @@ public:
     return TWO_PARAMS;
   }
   inline void param(const std::string& param1, const std::string& param2) {
-    _date = (__int64) atoi(param2.c_str());
+    _date = _atoi64(param2.c_str());
     _format = param1;
   }
 
   inline void handler() {
-    _result = _date.strftime(_format.c_str());
+    if (!_date) {
+      throw exception("udf_strftime: incorrect date format");
+    }
+    Date64 date;
+    date = _date;
+
+    _result = date.strftime(_format.c_str());
   }
   inline std::string& result() {
     return _result;
@@ -75,7 +81,7 @@ public:
 protected:
 	std::string _result;
 	std::string _format;
-	Date64 _date;
+	__int64 _date;
 };
 
 class udf_match: public udf_fn {

@@ -44,6 +44,8 @@ namespace kIEview2 {
     //this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
 
     IECtrl::init();
+    setlocale(LC_ALL, "polish");
+
     this->tplHandler = new TplHandler("./tpl/");
     this->rtfHtml = new RtfHtmlTag();
 
@@ -506,14 +508,18 @@ namespace kIEview2 {
     if (!isMsgFromHistory(an) && (an->_message->flag & MF_HIDE)) {
       return "";
     }
+
     cMessage* msg = an->_message;
     string type = getMsgTypeLabel(msg->type);
     tCntId cnt = getCntFromMsg(msg);
     Date64 date(msg->time);
 
+    char buf[50];
+    _i64toa(date.getInt64(), (char*) buf, 10);
+
     // We create structure of the data
     param_data data(param_data::HASH);
-    data.hash_insert_new_var("_time", inttostr(date.getInt64()));
+    data.hash_insert_new_var("_time", buf);
     data.hash_insert_new_var("_id", inttostr(msg->id));
     data.hash_insert_new_var("_cnt", inttostr(cnt));
     data.hash_insert_new_var("type", type);
