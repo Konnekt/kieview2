@@ -63,6 +63,7 @@ namespace kIEview2 {
     tCntId getCntFromMsg(cMessage* msg);
     String getDisplayFromMsg(UI::Notify::_insertMsg* an);
     bool isMsgFromHistory(sUIActionNotify_base* an);
+    void handleTextFlag(int flag);
 
     String _parseStatusTpl(UI::Notify::_insertStatus* an);
     String _parseMsgTpl(UI::Notify::_insertMsg* an);

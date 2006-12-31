@@ -40,7 +40,6 @@ namespace kIEview2 {
 
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_MSGWND);
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
-    // TODO: Podmieniamy kontrolkê wpisywania wiadomoœci
     this->subclassAction(UI::ACT::msg_ctrlsend, IMIG_MSGWND);
     //this->subclassAction(IMIA_MSG_SEND, IMIG_MSGTB);
 
@@ -127,6 +126,31 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
   }
 
+  void Controller::handleTextFlag(int flag) {
+    sUIActionNotify_2params* an = this->getAN();
+
+    HWND hwnd = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, an->act.cnt));
+    CHARFORMAT cf;
+    ZeroMemory(&cf, sizeof(CHARFORMAT));
+    cf.cbSize = sizeof(CHARFORMAT);
+    cf.dwMask = flag;
+    DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+    if ((cf.dwMask & flag) && (dwSelMask & CFM_BOLD)) {
+      cf.dwEffects ^= flag;
+    } else {
+      cf.dwEffects |= flag;
+    }
+
+    cf.dwMask = flag;
+    SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+    char buff[1];
+    if (!SendMessage(hwnd, EM_GETSELTEXT, 0, (LPARAM)buff)) {
+      UIActionSetStatus(an->act, UIActionGetStatus(an->act) & ACTS_CHECKED ? 0 : -1, ACTS_CHECKED);
+    }
+  }
+
   void Controller::_onAction() {
     sUIActionNotify_2params* an = this->getAN();
 
@@ -159,74 +183,30 @@ namespace kIEview2 {
         break;
       }
       case act::formatTb::bold: {
-        if (an->code != ACTN_ACTION) break;
-        HWND hwnd = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, an->act.cnt));
-        CHARFORMAT cf;
-        ZeroMemory(&cf, sizeof(CHARFORMAT));
-        cf.cbSize = sizeof(CHARFORMAT);
-        cf.dwMask = CFM_BOLD;
-        DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-        if ((cf.dwMask & CFM_BOLD) && (dwSelMask & CFM_BOLD)) {
-          cf.dwEffects ^= CFM_BOLD;
-        } else {
-          cf.dwEffects |= CFM_BOLD;
-        }
-        cf.dwMask = CFM_BOLD;
-        SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-        char buff[1];
-        if (!SendMessage(hwnd, EM_GETSELTEXT, 0, (LPARAM)buff)) {
-          UIActionSetStatus(an->act, UIActionGetStatus(an->act) & ACTS_CHECKED ? 0 : -1, ACTS_CHECKED);
+        if (an->code == ACTN_ACTION) {
+          handleTextFlag(CFM_BOLD);
         }
         break;
       }
       case act::formatTb::italic: {
-        if (an->code != ACTN_ACTION) break;
-        HWND hwnd = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, an->act.cnt));
-        CHARFORMAT cf;
-        ZeroMemory(&cf, sizeof(CHARFORMAT));
-        cf.cbSize = sizeof(CHARFORMAT);
-        cf.dwMask = CFM_BOLD;
-        DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-        if ((cf.dwMask & CFM_ITALIC) && (dwSelMask & CFM_ITALIC)) {
-          cf.dwEffects ^= CFM_ITALIC;
-        } else {
-          cf.dwEffects |= CFM_ITALIC;
-        }
-        cf.dwMask = CFM_BOLD;
-        SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-        char buff[1];
-        if (!SendMessage(hwnd, EM_GETSELTEXT, 0, (LPARAM)buff)) {
-          UIActionSetStatus(an->act, UIActionGetStatus(an->act) & ACTS_CHECKED ? 0 : -1, ACTS_CHECKED);
+        if (an->code == ACTN_ACTION) {
+          handleTextFlag(CFM_ITALIC);
         }
         break;
       }
       case act::formatTb::underline: {
-        if (an->code != ACTN_ACTION) break;
-        HWND hwnd = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, an->act.cnt));
-        CHARFORMAT cf;
-        ZeroMemory(&cf, sizeof(CHARFORMAT));
-        cf.cbSize = sizeof(CHARFORMAT);
-        cf.dwMask = CFM_UNDERLINE;
-        DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-        if ((cf.dwMask & CFM_UNDERLINE) && (dwSelMask & CFM_UNDERLINE)) {
-          cf.dwEffects ^= CFM_UNDERLINE;
-        } else {
-          cf.dwEffects |= CFM_UNDERLINE;
-        }
-        cf.dwMask = CFM_UNDERLINE;
-        SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-        char buff[1];
-        if (!SendMessage(hwnd, EM_GETSELTEXT, 0, (LPARAM)buff)) {
-          UIActionSetStatus(an->act, UIActionGetStatus(an->act) & ACTS_CHECKED ? 0 : -1, ACTS_CHECKED);
+        if (an->code == ACTN_ACTION) {
+          handleTextFlag(CFM_UNDERLINE);
         }
         break;
       }
       case act::formatTb::color: {
         if (an->code != ACTN_ACTION) break;
+
         if (UIActionGetStatus(an->act) & ACTS_CHECKED) {
-        
+          //
         } else {
-        
+          //
         }
         break;
       }
@@ -346,37 +326,13 @@ namespace kIEview2 {
   }
 
   void Controller::_msgCtrlSend() {
-    switch (this->getAN()->code) {
-      case ACTN_CREATEWINDOW: {
-        sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
-        this->forwardAction();
-        break;
-      }
-
-      case ACTN_DESTROYWINDOW: {
-        sUIActionNotify_destroyWindow* an = (sUIActionNotify_destroyWindow*)this->getAN();
-        DestroyWindow(an->hwnd);
-        break;
-      }
-
+    switch (getAN()->code) {
       case UI::Notify::supportsFormatting: {
         return setSuccess();
       }
-      
-      case UI::Notify::getMessageLine:
-      case UI::Notify::getMessageLines:
-      case UI::Notify::lock:
-      case UI::Notify::unlock:
-      case UI::Notify::setSelection:
-      case UI::Notify::insertMsg: 
-      case ACTN_SETCNT:
-      {
-        this->forwardAction();
-        break;
-      }
-      
+
       case UI::Notify::getMessageSize: {
-        sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
+        sUIActionNotify_2params* an = (sUIActionNotify_2params*) getAN();
 
         EDITSTREAM es;
 	      es.dwError = 0;
@@ -385,12 +341,11 @@ namespace kIEview2 {
 	      es.dwCookie = (DWORD)&text;
 	      SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
 
-        this->setReturnCode(this->rtfHtml->rtfParse((char*)text.a_str(), text.size()).size());
-        break;
+        return setReturnCode(rtfHtml->rtfParse((char*)text.a_str(), text.size()).size());
       }
 
       case UI::Notify::getMessage: {
-        UI::Notify::_getMessage* an = (UI::Notify::_getMessage*)this->getAN();
+        UI::Notify::_getMessage* an = (UI::Notify::_getMessage*) getAN();
 
         EDITSTREAM es;
 	      es.dwError = 0;
@@ -398,11 +353,12 @@ namespace kIEview2 {
 	      String text;
 	      es.dwCookie = (DWORD)&text;
 	      SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
-	      strcpy(an->_message->body, this->rtfHtml->rtfParse((char*)text.a_str(), text.size()).c_str());
+	      strcpy(an->_message->body, rtfHtml->rtfParse((char*)text.a_str(), text.size()).c_str());
 	      an->_message->flag |= MF_HTML;
-        break;
+        return;
       }
     }
+    forwardAction();
   }
 
   void Controller::_msgSend() {
