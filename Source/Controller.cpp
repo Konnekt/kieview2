@@ -505,7 +505,7 @@ namespace kIEview2 {
       data.hash_insert_new_var("info", an->_info);
     }
     if (an->_status & ST_IGNORED) {
-      data.hash_insert_new_var("ignored", "1");
+      data.hash_insert_new_var("isIgnored", "1");
     }
     return tplHandler->parseTpl(&data, "status");
   }

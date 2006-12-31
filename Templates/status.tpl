@@ -2,8 +2,8 @@
   <span class="time">[<b><TMPL_var time></b>]</span>
   <span class="status-desc">
     status <b><TMPL_var status></b>
-    <TMPL_if ignored>
-      - ignoruje Ciê
+    <TMPL_if isIgnored>
+      - ignoruje CiÄ™
     </TMPL_if>
   </span>
   <TMPL_if info>
