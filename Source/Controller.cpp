@@ -128,31 +128,6 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
   }
 
-  void Controller::handleTextFlag(int flag) {
-    sUIActionNotify_2params* an = this->getAN();
-
-    HWND hwnd = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, an->act.cnt));
-    CHARFORMAT cf;
-    ZeroMemory(&cf, sizeof(CHARFORMAT));
-    cf.cbSize = sizeof(CHARFORMAT);
-    cf.dwMask = flag;
-    DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-
-    if ((cf.dwMask & flag) && (dwSelMask & CFM_BOLD)) {
-      cf.dwEffects ^= flag;
-    } else {
-      cf.dwEffects |= flag;
-    }
-
-    cf.dwMask = flag;
-    SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-
-    char buff[1];
-    if (!SendMessage(hwnd, EM_GETSELTEXT, 0, (LPARAM)buff)) {
-      UIActionSetStatus(an->act, UIActionGetStatus(an->act) & ACTS_CHECKED ? 0 : -1, ACTS_CHECKED);
-    }
-  }
-
   void Controller::_onAction() {
     sUIActionNotify_2params* an = this->getAN();
 
@@ -484,6 +459,31 @@ namespace kIEview2 {
 
   bool Controller::isMsgFromHistory(sUIActionNotify_base* an) {
     return an->act.parent != IMIG_MSGWND;
+  }
+
+  void Controller::handleTextFlag(int flag) {
+    sUIActionNotify_2params* an = this->getAN();
+
+    HWND hwnd = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, an->act.cnt));
+    CHARFORMAT cf;
+    ZeroMemory(&cf, sizeof(CHARFORMAT));
+    cf.cbSize = sizeof(CHARFORMAT);
+    cf.dwMask = flag;
+    DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+    if ((cf.dwMask & flag) && (dwSelMask & CFM_BOLD)) {
+      cf.dwEffects ^= flag;
+    } else {
+      cf.dwEffects |= flag;
+    }
+
+    cf.dwMask = flag;
+    SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+    char buff[1];
+    if (!SendMessage(hwnd, EM_GETSELTEXT, 0, (LPARAM)buff)) {
+      UIActionSetStatus(an->act, UIActionGetStatus(an->act) & ACTS_CHECKED ? 0 : -1, ACTS_CHECKED);
+    }
   }
 
   String Controller::_parseStatusTpl(UI::Notify::_insertStatus* an) {
