@@ -9,7 +9,7 @@
 		odebrany od
 	</TMPL_if>
 	<span class="display"><b><TMPL_var display></b></span> o
-	<span class="time"><TMPL_udf formatTime("%H:%M w %A", _time)></span>:
+	<span class="time"><TMPL_udf formatTime("%H:%M (%A)", _time)></span>:
 	<br/><br/>
 
 	<TMPL_if path>
