@@ -356,9 +356,15 @@ namespace kIEview2 {
     try {
       ctrl->write(tplHandler->parseTpl(&data, "skeleton").a_str());
     } catch(const exception &e) {
-      ctrl->write("obsralem sie, przepraszam<br/>");
+      ctrl->write("obsra³em siê, przepraszam<br/>");
       ctrl->write(e.what());
     }
+  }
+
+  DWORD CALLBACK Controller::streamOut(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) {
+    String* entry = (String*)dwCookie;
+    *entry += (char*)pbBuff;
+    return 0;
   }
 
   String Controller::getStatusLabel(int status) {
@@ -634,11 +640,5 @@ namespace kIEview2 {
       data.hash_insert_new_var("isSent", "1");
     }
     data.hash_insert_new_var("display", getDisplayFromMsg(an));
-  }
-  
-  DWORD CALLBACK Controller::streamOut(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) {
-    String* entry = (String*)dwCookie;
-    *entry += (char*)pbBuff;
-    return 0;
   }
 }
