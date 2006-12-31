@@ -99,10 +99,10 @@ namespace kIEview2 {
     if (config->getInt(cfg::showFormatTb)) {
       UIGroupAdd(IMIG_MSGBAR, act::formatTb::formatTb);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::emots, 0, "Emotikony", ico::emots);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::bold, ACTT_CHECK, "Pogrubienie", ico::bold);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::italic, ACTT_CHECK, "Kursywa", ico::italic);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::underline, ACTT_CHECK, "Podkreœlenie", ico::underline);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::color, ACTT_CHECK, "Kolor", ico::color);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::bold, 0, "Pogrubienie", ico::bold);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::italic, 0, "Kursywa", ico::italic);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::underline, 0, "Podkreœlenie", ico::underline);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::color, 0, "Kolor", ico::color);
     }
 
     UIGroupAdd(IMIG_CFG_PLUGS, ui::cfgGroup, 0, "kIEview2", ico::logo);
@@ -167,13 +167,16 @@ namespace kIEview2 {
         cf.dwMask = CFM_BOLD;
         DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
         if ((cf.dwMask & CFM_BOLD) && (dwSelMask & CFM_BOLD)) {
-          cf.dwEffects ^= CFE_BOLD; 
-        }
-        else {
-          cf.dwEffects |= CFE_BOLD;
+          cf.dwEffects ^= CFM_BOLD;
+        } else {
+          cf.dwEffects |= CFM_BOLD;
         }
         cf.dwMask = CFM_BOLD;
         SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+        char buff[1];
+        if (!SendMessage(hwnd, EM_GETSELTEXT, 0, (LPARAM)buff)) {
+          UIActionSetStatus(an->act, UIActionGetStatus(an->act) & ACTS_CHECKED ? 0 : -1, ACTS_CHECKED);
+        }
         break;
       }
       case act::formatTb::italic: {
@@ -182,16 +185,19 @@ namespace kIEview2 {
         CHARFORMAT cf;
         ZeroMemory(&cf, sizeof(CHARFORMAT));
         cf.cbSize = sizeof(CHARFORMAT);
-        cf.dwMask = CFM_ITALIC;
+        cf.dwMask = CFM_BOLD;
         DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
         if ((cf.dwMask & CFM_ITALIC) && (dwSelMask & CFM_ITALIC)) {
-          cf.dwEffects ^= CFE_ITALIC;
+          cf.dwEffects ^= CFM_ITALIC;
+        } else {
+          cf.dwEffects |= CFM_ITALIC;
         }
-        else {
-          cf.dwEffects |= CFE_ITALIC;
-        }
-        cf.dwMask = CFM_ITALIC;
+        cf.dwMask = CFM_BOLD;
         SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+        char buff[1];
+        if (!SendMessage(hwnd, EM_GETSELTEXT, 0, (LPARAM)buff)) {
+          UIActionSetStatus(an->act, UIActionGetStatus(an->act) & ACTS_CHECKED ? 0 : -1, ACTS_CHECKED);
+        }
         break;
       }
       case act::formatTb::underline: {
@@ -203,21 +209,23 @@ namespace kIEview2 {
         cf.dwMask = CFM_UNDERLINE;
         DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
         if ((cf.dwMask & CFM_UNDERLINE) && (dwSelMask & CFM_UNDERLINE)) {
-          cf.dwEffects ^= CFE_UNDERLINE;
-        }
-        else {
-          cf.dwEffects |= CFE_UNDERLINE;
+          cf.dwEffects ^= CFM_UNDERLINE;
+        } else {
+          cf.dwEffects |= CFM_UNDERLINE;
         }
         cf.dwMask = CFM_UNDERLINE;
         SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+        char buff[1];
+        if (!SendMessage(hwnd, EM_GETSELTEXT, 0, (LPARAM)buff)) {
+          UIActionSetStatus(an->act, UIActionGetStatus(an->act) & ACTS_CHECKED ? 0 : -1, ACTS_CHECKED);
+        }
         break;
       }
       case act::formatTb::color: {
         if (an->code != ACTN_ACTION) break;
         if (UIActionGetStatus(an->act) & ACTS_CHECKED) {
         
-        }
-        else {
+        } else {
         
         }
         break;
@@ -355,7 +363,14 @@ namespace kIEview2 {
         return setSuccess();
       }
       
-      case UI::Notify::insertMsg: {
+      case UI::Notify::getMessageLine:
+      case UI::Notify::getMessageLines:
+      case UI::Notify::lock:
+      case UI::Notify::unlock:
+      case UI::Notify::setSelection:
+      case UI::Notify::insertMsg: 
+      case ACTN_SETCNT:
+      {
         this->forwardAction();
         break;
       }
@@ -385,11 +400,6 @@ namespace kIEview2 {
 	      SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
 	      strcpy(an->_message->body, this->rtfHtml->rtfParse((char*)text.a_str(), text.size()).c_str());
 	      an->_message->flag |= MF_HTML;
-        break;
-      }
-
-      case ACTN_SETCNT: {
-        this->forwardAction();
         break;
       }
     }
