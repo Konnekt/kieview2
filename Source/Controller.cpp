@@ -4,8 +4,8 @@
   *  Any modifications or reusing strictly prohibited!
   *
   *  @filesource
-  *  @copyright    Copyright (c) 2006 Sijawusz Pur Rahnama
-  *  @copyright    Copyright (c) 2006 Micha³ "Dulek" Dulko
+  *  @copyright    Copyright (c) 2006-2007 Sijawusz Pur Rahnama
+  *  @copyright    Copyright (c) 2006-2007 Micha³ "Dulek" Dulko
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
   *  @version      $Revision$
   *  @modifiedby   $LastChangedBy$
@@ -113,8 +113,8 @@ namespace kIEview2 {
       "<span class='note'>Skompilowano: <b>" __DATE__ "</b> [<b>" __TIME__ "</b>]</span><br/>"
       "Informacje o wtyczce na stronie projektu "
       "<b>KPlugins</b> (http://kplugins.net/)<br/><br/>"
-      "Copyright © 2006 <b>Sijawusz Pur Rahnama</b><br/>"
-      "Copyright © 2006 <b>Micha³ \"Dulek\" Dulko</b><br/>"
+      "Copyright © 2006-2007 <b>Sijawusz Pur Rahnama</b><br/>"
+      "Copyright © 2006-2007 <b>Micha³ \"Dulek\" Dulko</b><br/>"
       "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>", Helpers::icon16(ico::logo).a_str());
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");

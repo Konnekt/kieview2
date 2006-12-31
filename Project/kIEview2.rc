@@ -73,7 +73,7 @@ BEGIN
             VALUE "FileDescription", "Konnekt IE View 2"
             VALUE "FileVersion", "0, 0, 0, 1"
             VALUE "InternalName", "kIEview2"
-            VALUE "LegalCopyright", "Copyright © 2006 Konnekt Team"
+            VALUE "LegalCopyright", "Copyright © 2006-2007 Konnekt Team"
             VALUE "OriginalFilename", "kIEview2.dll"
             VALUE "ProductName", " kIEview2 Dynamic Link Library"
             VALUE "ProductVersion", "0, 0, 0, 1"

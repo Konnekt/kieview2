@@ -4,8 +4,8 @@
   *  Any modifications or reusing strictly prohibited!
   *
   *  @filesource
-  *  @copyright    Copyright (c) 2006 Sijawusz Pur Rahnama
-  *  @copyright    Copyright (c) 2006 Micha³ "Dulek" Dulko
+  *  @copyright    Copyright (c) 2006-2007 Sijawusz Pur Rahnama
+  *  @copyright    Copyright (c) 2006-2007 Micha³ "Dulek" Dulko
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
   *  @version      $Revision$
   *  @modifiedby   $LastChangedBy$
