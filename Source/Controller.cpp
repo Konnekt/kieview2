@@ -470,14 +470,14 @@ namespace kIEview2 {
   void Controller::handleTextFlag(int flag) {
     sUIActionNotify_2params* an = this->getAN();
 
-    HWND hwnd = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, an->act.cnt));
+    HWND hwnd = (HWND) UIActionHandleDirect(sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlsend, an->act.cnt));
     CHARFORMAT cf;
     ZeroMemory(&cf, sizeof(CHARFORMAT));
     cf.cbSize = sizeof(CHARFORMAT);
     cf.dwMask = flag;
     DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
-    if ((cf.dwMask & flag) && (dwSelMask & CFM_BOLD)) {
+    if ((cf.dwMask & flag) && (dwSelMask & flag)) {
       cf.dwEffects ^= flag;
     } else {
       cf.dwEffects |= flag;
