@@ -497,7 +497,7 @@ namespace kIEview2 {
 
     // We create structure of the data
     param_data data(param_data::HASH);
-    data.hash_insert_new_var("_time", inttostr(date.getInt64()));
+    data.hash_insert_new_var("_time", i64tostr(date.getInt64()));
     data.hash_insert_new_var("time", date.strftime("%H:%M"));
     data.hash_insert_new_var("status", getStatusLabel(an->_status));
 
@@ -520,12 +520,9 @@ namespace kIEview2 {
     tCntId cnt = getCntFromMsg(msg);
     Date64 date(msg->time);
 
-    char buf[50];
-    _i64toa(date.getInt64(), (char*) buf, 10);
-
     // We create structure of the data
     param_data data(param_data::HASH);
-    data.hash_insert_new_var("_time", buf);
+    data.hash_insert_new_var("_time", i64tostr(date.getInt64()));
     data.hash_insert_new_var("_id", inttostr(msg->id));
     data.hash_insert_new_var("_cnt", inttostr(cnt));
     data.hash_insert_new_var("type", type);

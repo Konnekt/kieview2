@@ -17,6 +17,17 @@
 #include "Helpers.h"
 
 /*
+ * Int64 to string conversion
+ */
+
+std::string i64tostr(__int64 value, int radix) {
+  char buf[50];
+  _i64toa(value, (char*) buf, radix);
+
+  return buf;
+}
+
+/*
  *  Bool -> Human readable string
  */
 

@@ -19,6 +19,12 @@
 #define __HELPERS_H__
 
 /*
+ * Int64 to string conversion
+ */
+
+std::string i64tostr(__int64 value, int radix = 10);
+
+/*
  *  Bool -> Human readable string
  */
 
