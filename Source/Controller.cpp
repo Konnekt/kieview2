@@ -54,7 +54,7 @@ namespace kIEview2 {
 
     tplHandler->bindUdf("getExtParam", new udf_get_ext_param);
     tplHandler->bindUdf("formatTime", new udf_strftime);
-    tplHandler->bindUdf("match", new udf_match);
+    tplHandler->bindUdf("match?", new udf_match);
     tplHandler->bindUdf("replace", new udf_replace);
     tplHandler->bindUdf("sprintf", new udf_sprintf);
   }
