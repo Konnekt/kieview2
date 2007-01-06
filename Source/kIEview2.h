@@ -87,9 +87,10 @@ namespace kIEview2 {
     const unsigned int cfg = net * 1000 + 500;
 
     const unsigned int showFormatTb = cfg + 1;
-    const unsigned int useEmots = cfg + 2;
-    const unsigned int emotsDir = cfg + 3;
-    const unsigned int emotsPack = cfg + 4;
+    const unsigned int linkify = cfg + 2;
+    const unsigned int useEmots = cfg + 3;
+    const unsigned int emotsDir = cfg + 4;
+    const unsigned int emotsPack = cfg + 5;
   }
 }
 

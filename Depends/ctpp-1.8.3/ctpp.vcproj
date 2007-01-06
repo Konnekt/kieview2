@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8,00"
 	Name="ctpp"
-	ProjectGUID="{2A91F86E-91EE-426F-8E7B-65D29EEE3CF3}"
+	ProjectGUID="{B69B76AB-CBC1-44CC-A9BA-33E515BE9D6B}"
 	RootNamespace="ctpp"
 	>
 	<Platforms>
@@ -48,10 +48,10 @@
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release\ctpp.pch"
-				AssemblerListingLocation=".\Release\"
-				ObjectFile=".\Release\"
-				ProgramDataBaseFileName=".\Release\"
+				PrecompiledHeaderFile=".\Release/ctpp.pch"
+				AssemblerListingLocation=".\Release/"
+				ObjectFile=".\Release/"
+				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 			/>
@@ -70,7 +70,6 @@
 				Name="VCLibrarianTool"
 				OutputFile=".\Release\ctpp.lib"
 				SuppressStartupBanner="true"
-				IgnoreAllDefaultLibraries="false"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -284,6 +283,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\functions\istrue.cpp"
+				>
+			</File>
+			<File
 				RelativePath="src\functions\num_format.cpp"
 				>
 				<FileConfiguration
@@ -460,6 +463,10 @@
 			</File>
 			<File
 				RelativePath="include\functions\htmlescape.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\include\functions\istrue.hpp"
 				>
 			</File>
 			<File

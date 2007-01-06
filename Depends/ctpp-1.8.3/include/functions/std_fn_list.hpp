@@ -27,6 +27,7 @@
 #include <functions/href_param.hpp>
 #include <functions/form_param.hpp>
 #include <functions/udf_is_a.hpp>
+#include <functions/istrue.hpp>
 
 namespace template_parser_ns
 {

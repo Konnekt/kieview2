@@ -34,6 +34,7 @@
 
 // Local Includes
 #include <ctpp/ctpp.hpp>
+#include <functions/std_fn_list.hpp>
 
 namespace template_parser_ns
 {
@@ -504,22 +505,28 @@ template_ret_type template_text::parse_block(std::string::const_iterator itmData
 	bool bParseFlag   = true;
 	bool bDoRollback  = false;
 	bool bEndToken    = false;
-
+	bool bPrevBracket = false;
 	while (itmData != itmDataEnd && bParseFlag)
 	{
 		// »щем начало последовательности токенов
 		if (*itmData == '<')
 		{
+			bPrevBracket = true;
 			iPosition = 1;
 			// ≈сли находимс€ внутри любого токена и найден символ '<',
 			// то это означает, что предыдуща€ часть текста - обычный текст;
 			// вставл€ем его в строку.
-			if (bInToken || inCloseToken) { sTextSection.append(itmRollBackPos, (itmData - 1)); }
+			if (bInToken || inCloseToken)
+			{
+				if (bPrevBracket) { sTextSection.append(itmRollBackPos, itmData);       }
+				else              { sTextSection.append(itmRollBackPos, (itmData - 1)); }
+			}
 			// ћы не в токене; устанавливаем флаг начала токена
 			else { bInToken = true; }
 			// ѕозици€ отката
 			itmRollBackPos = itmData;
 		}
+		else { bPrevBracket = false; }
 		// ≈сли находимс€ внутри открывающего токена, то ищем полные названи€ токенов
 		// и названи€ переменных (дл€ LOOP, VAR и IF).
 		if (bInToken)
@@ -1893,13 +1900,13 @@ std::string & template_loop::output(bool & bBreak)
 		t_param_array::iterator itpvLastElement = pvArray -> end();
 		// ѕоследний элемент массива
 		Hasher oHasher;
-		UINT_32  i__FIRST__   = oHasher("__FIRST__");
-		UINT_32  i__INNER__   = oHasher("__INNER__");
-		UINT_32  i__LAST__    = oHasher("__LAST__");
-		UINT_32  i__ODD__     = oHasher("__ODD__");
-		UINT_32  i__EVEN__    = oHasher("__EVEN__");
-		UINT_32  i__SIZE__    = oHasher("__SIZE__");
-		UINT_32  i__COUNTER__ = oHasher("__COUNTER__");
+		UINT_64  i__FIRST__   = oHasher("__FIRST__");
+		UINT_64  i__INNER__   = oHasher("__INNER__");
+		UINT_64  i__LAST__    = oHasher("__LAST__");
+		UINT_64  i__ODD__     = oHasher("__ODD__");
+		UINT_64  i__EVEN__    = oHasher("__EVEN__");
+		UINT_64  i__SIZE__    = oHasher("__SIZE__");
+		UINT_64  i__COUNTER__ = oHasher("__COUNTER__");
 
 		param_data * pVarFirstLastInner = new param_data(param_data::VAR);
 		param_data * pVarEvenOdd        = new param_data(param_data::VAR);

@@ -66,6 +66,9 @@ void std_fn_list::set_all(udf_fn_factory * pFactory)
 
 //	pFunction = new udf_re();
 //	pFactory -> install_udf_fn("RE",         pFunction);
+
+	pFunction = new istrue();
+	pFactory -> install_udf_fn("ISTRUE",     pFunction);
 }
 
 //
@@ -82,25 +85,24 @@ void std_fn_list::remove_all(udf_fn_factory * pFactory)
 	pFactory -> remove_udf_fn("HTMLESCAPE");
 
 	pFactory -> remove_udf_fn("IN_SET");
-/*
+
 	pFactory -> remove_udf_fn("HREF_PARAM");
 
 	pFactory -> remove_udf_fn("FORM_PARAM");
 
 	pFactory -> remove_udf_fn("ISEMAIL");
 
-	pFactory -> remove_udf_fn("ISURL");
-
 	pFactory -> remove_udf_fn("ISALPHA");
 
 	pFactory -> remove_udf_fn("ISALNUM");
 
+	pFactory -> remove_udf_fn("ISNUM");
+
 	pFactory -> remove_udf_fn("ISINT");
 
 	pFactory -> remove_udf_fn("ISFLOAT");
-
-	pFactory -> remove_udf_fn("SPRINTF");
-*/
+	
+	pFactory -> remove_udf_fn("ISTRUE");
 }
 
 } // namespace template_parser_ns

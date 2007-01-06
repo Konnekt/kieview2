@@ -9,16 +9,14 @@
 
 The CT++ source is available in the source distribution. <br>
 
-Download and install the CT++ source distribution ctpp-1.8.0.tar.gz by extracting the files from the compressed archive.<br>
-Change current directory to ctpp-1.8.0 and run "./configure" script.
+Download and install the CT++ source distribution ctpp-1.8.3.tar.gz by extracting the files from the compressed archive.<br>
+Change current directory to ctpp-1.8.0 and run "cmake .".
 <span class=c_code><br>
-wget http://reki.ru/products/ctpp/download/ctpp-1.8.0.tar.gz<br>
-tar -xvzf ctpp-1.8.0.tar.gz<br>
-cd ctpp-1.8.0<br>
-./configure<br>
-make<br>
+wget http://reki.ru/products/ctpp/download/ctpp-1.8.3.tar.gz<br>
+tar -xvzf ctpp-1.8.3.tar.gz<br>
+cd ctpp-1.8.3<br>
+cmake .<br>
 make install<br>
-<b>(for BSD-like operating systems - gmake)</b><br>
 </span><br><br>
 Under FreeBSD you can also install CTPP from ports:<br>
 <span class=c_code><br>
@@ -30,22 +28,22 @@ For RPM-based Linux'es (SuSe, RedHat...) you can download RPM and Source RPM.<br
 Building from Source RPM (example for Linux RedHat 8.0):<br>
 <span class=c_code><br>
 cd /usr/src/redhat/SRPMS<br>
-wget http://reki.ru/products/ctpp/download/ctpp-1.8.0.src.rpm<br>
-rpm -i ctpp-1.8.0.src.rpm<br>
+wget http://reki.ru/products/ctpp/download/ctpp-1.8.3.src.rpm<br>
+rpm -i ctpp-1.8.3.src.rpm<br>
 cd /usr/src/redhat/SPECS<br>
 rpmbuild -bb ctpp.spec<br>
 cd /usr/src/redhat/RPMS/i386<br><br>
-rpm -U ctpp-1.8.0-1.i386.rpm<br>
+rpm -U ctpp-1.8.3-1.i386.rpm<br>
 </span><br><br>
 
 For Gentoo Linux:<br>
 <span class=c_code><br>
-wget http://reki.ru/products/ctpp/download/Linux/gentoo/ctpp-1.8.0.ebuild<br>
-ebuild ctpp-1.8.0.ebuild digest<br>
-emerge ctpp-1.8.0.ebuild
+wget http://reki.ru/products/ctpp/download/Linux/gentoo/ctpp-1.8.3.ebuild<br>
+ebuild ctpp-1.8.3.ebuild digest<br>
+emerge ctpp-1.8.3.ebuild
 </span><br><br>
 
 <hr width=90% noshade>
-<small>Copyright &copy; 2003 - 2005 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
+<small>Copyright &copy; 2003 - 2006 CTPP Dev. Team | <a href=http://www.reki.ru/products/ctpp>http://reki.ru/products/ctpp</a></small>
 </body>
 </html>

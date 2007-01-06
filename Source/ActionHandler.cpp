@@ -22,7 +22,7 @@ namespace kIEview2 {
   }
 
   void ActionHandler::FileDropped(const char *url, IECtrl* ctrl) {
-    Ctrl->IMessage(im::fileDrop, NET_BROADCAST, -1, (int)url);
+    Ctrl->IMessage(im::fileDrop, NET_BROADCAST, -1, cntId, (int)url);
   }
 
   int ActionHandler::ShowMessage(HWND hWnd, const char* lpText, DWORD dwType) { 

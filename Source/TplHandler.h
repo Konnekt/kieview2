@@ -31,8 +31,10 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(TplHandler, iSharedObject, Version(0,1,0,0));
 
 public:
-  TplHandler(const std::string& _tplDir, const std::string& _tplExt = "tpl"): 
-    tplDir(_tplDir), tplExt(_tplExt) { }
+  TplHandler(const std::string& tplDir = "", const std::string& tplExt = "tpl") {
+    setTplDir(tplDir);
+    setTplExt(tplExt);
+  }
 
 public:
   inline void addIncludeDir(const std::string& dir) {
@@ -47,6 +49,23 @@ public:
   }
   inline void setTplExt(const std::string& ext) {
     tplExt = ext;
+  }
+
+  inline udf_fn_factory* getUdfFactory() {
+    return &udfFactory;
+  }
+
+  inline String runFunc(string name, ...) {
+    udf_fn* func = getUdfFactory()->get(name);
+    udf_fn::e_accept_params accept = func->accept_params();
+    String result;
+
+    // process va_list and pass it to func
+
+    func->handler();
+    result = func->result();
+
+    return result;
   }
 
   std::string getTplPath(const char* tplName);

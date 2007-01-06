@@ -33,7 +33,7 @@ namespace kIEview2 {
 
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
-
+    config->setColumn(DTCFG, cfg::linkify, DT_CT_INT, 1, "kIEview2/linkify");
     config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEview2/emots/use");
     config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots", "kIEview2/emots/dir");
     config->setColumn(DTCFG, cfg::emotsPack, DT_CT_STR, "", "kIEview2/emots/pack");
@@ -46,12 +46,10 @@ namespace kIEview2 {
     IECtrl::init();
     setlocale(LC_ALL, "polish");
 
-    this->tplHandler = new TplHandler("./tpl/");
-    this->rtfHtml = new RtfHtmlTag();
+    this->tplHandler = new TplHandler;
+    this->rtfHtml = new RtfHtmlTag;
 
-    tplHandler->addIncludeDir("./tpl");
     tplHandler->bindStdFunctions();
-
     tplHandler->bindUdf("getExtParam", new udf_get_ext_param);
     tplHandler->bindUdf("formatTime", new udf_strftime);
     tplHandler->bindUdf("match?", new udf_match);
@@ -70,6 +68,10 @@ namespace kIEview2 {
   }
 
   void Controller::_onPrepare() {
+    // @debug replace with user selected tpl directory
+    tplHandler->addIncludeDir("./tpl");
+    tplHandler->setTplDir("./tpl/");
+
     IconRegister(IML_16, ico::logo, Ctrl->hDll(), IDI_LOGO);
     IconRegister(IML_16, ico::link, Ctrl->hDll(), IDI_LINK);
     IconRegister(IML_16, ico::copy, Ctrl->hDll(), IDI_COPY);
@@ -119,6 +121,7 @@ namespace kIEview2 {
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_NEEDRESTART, "Wyœwietlaj toolbar w oknie rozmowy", cfg::showFormatTb);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Zamieniaj linki na 'klikalne'", cfg::linkify);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Emotikony");
@@ -395,11 +398,11 @@ namespace kIEview2 {
   string Controller::bytesToString(double bytes) {
     char buff[20];
 
-    if (bytes >= (1024 * 1024 * 1024)) { // GB
+    if (bytes >= (1024 * 1024 * 1024)) { // GiB
       sprintf(buff, "%.2f GiB", bytes / (1024 * 1024 * 1024));
-    } else if (bytes >= (1024 * 1024)) { // MB
+    } else if (bytes >= (1024 * 1024)) { // MiB
       sprintf(buff, "%.2f MiB", bytes / (1024 * 1024));
-    } else if (bytes >= 1024) { // KB
+    } else if (bytes >= 1024) { // KiB
       sprintf(buff, "%.2f KiB", bytes / 1024);
     } else {
       sprintf(buff, "%.2f B", bytes);
@@ -440,6 +443,30 @@ namespace kIEview2 {
       cnt = ICMessage(IMC_CNT_FIND, msg->net, (int)msg->fromUid);
     }
     return cnt;
+  }
+
+  String Controller::htmlEscape(StringRef& txt) {
+    template_parser_ns::udf_fn* escape = tplHandler->getUdfFactory()->get("htmlEscape");
+    escape->param(txt);
+    escape->handler();
+    txt = escape->result();
+
+    return PassStringRef(txt);
+  }
+
+  String Controller::linkify(StringRef& txt) {
+    try {
+      // zamiana linkow
+    } catch(const RegEx::CompileException& e) {
+      txt = "RegEx compile error: <b>"; txt += e.error;
+      txt += "</b> at pos <b>" + inttostr(e.pos) + "</b>";
+    }
+    return PassStringRef(txt);
+  }
+
+  String Controller::nl2br(StringRef& txt) {
+    txt = RegEx::doReplace("/\r?\n/m", "<br />\r\n", txt.c_str());
+    return PassStringRef(txt);
   }
 
   String Controller::getDisplayFromMsg(UI::Notify::_insertMsg* an) {
@@ -502,7 +529,13 @@ namespace kIEview2 {
     data.hash_insert_new_var("status", getStatusLabel(an->_status));
 
     if (an->_info) {
-      data.hash_insert_new_var("info", an->_info);
+      String info = an->_info;
+      info = htmlEscape(info);
+      if (config->getInt(cfg::linkify)) {
+        data.hash_insert_new_var("info", linkify(info));
+      } else {
+        data.hash_insert_new_var("info", info);
+      }
     }
     if (an->_status & ST_IGNORED) {
       data.hash_insert_new_var("ignored?", "1");
@@ -517,8 +550,21 @@ namespace kIEview2 {
 
     cMessage* msg = an->_message;
     string type = getMsgTypeLabel(msg->type);
+    String body = msg->body;
     tCntId cnt = getCntFromMsg(msg);
     Date64 date(msg->time);
+
+    // @todo MF_LEAVEASIS
+
+    if (msg->flag & MF_HTML) {
+      // body = makeSafeHtml(body);
+    } else {
+      body = htmlEscape(body);
+      body = nl2br(body);
+      if (config->getInt(cfg::linkify)) {
+        body = linkify(body);
+      }
+    }
 
     // We create structure of the data
     param_data data(param_data::HASH);
@@ -528,11 +574,7 @@ namespace kIEview2 {
     data.hash_insert_new_var("type", type);
     data.hash_insert_new_var("ext", msg->ext);
     data.hash_insert_new_var("time", date.strftime("%H:%M"));
-    data.hash_insert_new_var("body", msg->body);
-
-    if (msg->flag & MF_HTML) {
-      data.hash_insert_new_var("html?", "1");
-    }
+    data.hash_insert_new_var("body", body);
 
     switch (msg->type) {
       case MT_MESSAGE: _handleStdMsgTpl(data, an); break;
@@ -573,7 +615,9 @@ namespace kIEview2 {
     if (isMsgFromHistory(an)) {
       data.hash_insert_new_var("inHistory?", "1");
     }
-    data.hash_insert_new_var(an->_message->flag & MF_SEND ? "sent?" : "received?", "1");
+    if (an->_message->flag & MF_SEND) {
+      data.hash_insert_new_var("sent?", "1");
+    }
   }
 
   void Controller::_handleSmsTpl(param_data& data, UI::Notify::_insertMsg* an) {
@@ -631,7 +675,9 @@ namespace kIEview2 {
     if (error.length()) {
       data.hash_insert_new_var("error", error);
     }
-    data.hash_insert_new_var(an->_message->flag & MF_SEND ? "sent?" : "received?", "1");
+    if (an->_message->flag & MF_SEND) {
+      data.hash_insert_new_var("sent?", "1");
+    }
     data.hash_insert_new_var("display", getDisplayFromMsg(an));
   }
 }

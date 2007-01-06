@@ -34,18 +34,20 @@ String TplHandler::getTpl(const char* tplName) {
 void TplHandler::bindStdFunctions() {
   using namespace template_parser_std_fn_ns;
 
-  bindUdf("urlEscape", new urlescape());
-  bindUdf("numFormat", new num_format());
-  bindUdf("htmlEscape", new htmlescape());
-  bindUdf("inSet", new value_in_set());
-  bindUdf("hrefParam", new href_param());
-  bindUdf("formParam", new form_param());
-  bindUdf("isEmail", new udf_is_email());
-  bindUdf("isAlpha", new udf_is_alpha());
-  bindUdf("isAlNum", new udf_is_alnum());
-  bindUdf("isNum", new udf_is_num());
-  bindUdf("isInt", new udf_is_int());
-  bindUdf("isFloat", new udf_is_float());
+  bindUdf("numFormat", new num_format);
+  bindUdf("urlEscape", new urlescape);
+  bindUdf("htmlEscape", new htmlescape);
+  bindUdf("hrefParam", new href_param);
+  bindUdf("formParam", new form_param);
+
+  bindUdf("inSet?", new value_in_set);
+  bindUdf("isEmail?", new udf_is_email);
+  bindUdf("isAlpha?", new udf_is_alpha);
+  bindUdf("isAlphaNum?", new udf_is_alnum);
+  bindUdf("isNum?", new udf_is_num);
+  bindUdf("isInt?", new udf_is_int);
+  bindUdf("isFloat?", new udf_is_float);
+  bindUdf("isTrue?", new istrue);
 }
 
 String TplHandler::parseException(const exception &e) {

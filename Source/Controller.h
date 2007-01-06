@@ -36,6 +36,11 @@ namespace kIEview2 {
   public:
     typedef std::map<IECtrl*, ActionHandler*> tActionHandlers;
 
+    struct sMsg {
+      Date64 time;
+      tCntId cnt;
+    };
+
   public:
     /* Class version */
     STAMINA_OBJECT_CLASS_VERSION(Controller, PlugController, Version(0,1,0,0));
@@ -51,6 +56,10 @@ namespace kIEview2 {
 
     string bytesToString(double bytes);
     string timeToString(int time);
+
+    String htmlEscape(StringRef& txt);
+    String linkify(StringRef& txt);
+    String nl2br(StringRef& txt);
 
   protected:
     void _onPrepare();

@@ -50,7 +50,6 @@
 #include <util/d2str.hpp>
 #include <ctpp/param_data.hpp>
 #include <ctpp/udf_fn.hpp>
-#include <functions/std_fn_list.hpp>
 
 namespace template_parser_ns
 {

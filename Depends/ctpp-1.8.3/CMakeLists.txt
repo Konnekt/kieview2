@@ -25,16 +25,17 @@ SET(LIBSRCS src/ctpp/ctpp.cpp
             src/functions/udf_is_a.cpp
             src/functions/urlescape.cpp
             src/functions/value_in_set.cpp
+            src/functions/istrue.cpp
             )
 
 ADD_LIBRARY(ctpp-static STATIC ${LIBSRCS})
 SET_TARGET_PROPERTIES(ctpp-static PROPERTIES OUTPUT_NAME ctpp-st)
-SET_TARGET_PROPERTIES(ctpp-static PROPERTIES LINKER_LANGUAGE C)
+SET_TARGET_PROPERTIES(ctpp-static PROPERTIES LINKER_LANGUAGE CXX)
 
 ADD_LIBRARY(ctpp SHARED ${LIBSRCS})
 SET_TARGET_PROPERTIES(ctpp PROPERTIES OUTPUT_NAME ctpp)
-SET_TARGET_PROPERTIES(ctpp PROPERTIES LINKER_LANGUAGE C)
-SET_TARGET_PROPERTIES(ctpp PROPERTIES VERSION 1.8.2 SOVERSION 1)
+SET_TARGET_PROPERTIES(ctpp PROPERTIES LINKER_LANGUAGE CXX)
+SET_TARGET_PROPERTIES(ctpp PROPERTIES VERSION 1.8.3 SOVERSION 1)
 
 # ################################################################################
 # Executable binary
