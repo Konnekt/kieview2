@@ -85,6 +85,11 @@ namespace kIEview2 {
   public:
     void clearWnd(IECtrl* ctrl);
     static DWORD CALLBACK streamOut(DWORD, LPBYTE, LONG, LONG*);
+    static LRESULT CALLBACK msgWndProc(HWND, UINT, WPARAM, LPARAM);
+    
+  public:
+    Tables::oTable historyTable;
+    WNDPROC oldMsgWndProc;
 
   protected:
     tActionHandlers actionHandlers;

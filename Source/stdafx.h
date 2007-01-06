@@ -74,6 +74,7 @@
 #include <stamina/time64.h>
 #include <stamina/regex.h>
 #include <stamina/timer.h>
+#include <stamina/DataTable/Crypt.h>
 
 using namespace Stamina;
 using namespace std;

@@ -16,6 +16,37 @@
 #include "ActionHandler.h"
 #include "Controller.h"
 
+void xor1_encrypt(const unsigned char * key , unsigned char * data , unsigned int size) {
+	unsigned int ki=0;
+	if (!size) size = strlen((char *)data);
+	unsigned int ksize = strlen((char *)key);
+	int j = 0;
+	for (unsigned int p=0;p<size;p++) {
+		*data = (*data ^ key[ki]) + (unsigned char)((j) &  0xFF);// | (j*2);
+		//    *data = *data;
+		data++;
+		ki++;
+		if (ki>=ksize) ki=0;
+		j++;
+	}
+}
+
+void xor1_decrypt(const unsigned char * key , unsigned char * data , unsigned int size) {
+	unsigned int ki=0;
+	unsigned int ksize = strlen((char *)key);
+
+	int j = 0;
+	for (unsigned int p=0;p<size;p++) {
+		*data = (*data - (unsigned char)((j) & 0xFF))  ^ key[ki];// | (j*2);
+		data++;
+		ki++;
+		if (ki>=ksize) ki=0;
+		j++;
+	}
+
+}
+
+
 namespace kIEview2 {
   void ActionHandler::AnchorClicked(const char* url, IECtrl* ctrl) {
     ShellExecute(GetDesktopWindow(), "open", url, 0, 0, SW_SHOWNORMAL);
@@ -93,7 +124,22 @@ namespace kIEview2 {
       }
       case act::popup::history: {
         if (cntId) {
-          // TODO: Przywracamy ostatni¹ rozmowê.
+          Tables::oTable& table = Controller::getInstance()->historyTable;
+          string dir = (LPCTSTR)ICMessage(IMC_PROFILEDIR);
+          dir += "history\\messages\\";
+          string file = "u";
+          file += GETCNTC(this->cntId, CNT_UID);
+          file += '.';
+          file += inttostr(GETCNTI(this->cntId, CNT_NET));
+          file += ".dtb";
+          table->setDirectory(dir.c_str());
+          table->setFilename(file.c_str());
+          table->load(true);
+
+          char* buff = table->getStr(1, table->getColIdByPos(5));
+          xor1_encrypt((unsigned char*)"\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84", (unsigned char*)buff, strlen(buff));
+          xor1_decrypt((unsigned char*)"\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d", (unsigned char*)buff, strlen(buff));
+          IMLOG("%s", buff);
         }
         break;
       }
