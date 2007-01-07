@@ -374,7 +374,6 @@ namespace kIEview2 {
         if (wParam == ICMessage(IMI_ACTION_GETINDEX, (int)&sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend), 0)) {
           switch (((NMHDR*)lParam)->code) {
             case EN_SELCHANGE: {
-              IMLOG("BLa");
               int cntID = (int)GetProp(hWnd, "CntID");
               HWND hEdit = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, cntID));
               CHARFORMAT cf;

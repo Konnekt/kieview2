@@ -43,9 +43,7 @@ void xor1_decrypt(const unsigned char * key , unsigned char * data , unsigned in
 		if (ki>=ksize) ki=0;
 		j++;
 	}
-
 }
-
 
 namespace kIEview2 {
   void ActionHandler::AnchorClicked(const char* url, IECtrl* ctrl) {
@@ -136,10 +134,40 @@ namespace kIEview2 {
           table->setFilename(file.c_str());
           table->load(true);
 
-          char* buff = table->getStr(1, table->getColIdByPos(5));
-          xor1_encrypt((unsigned char*)"\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84", (unsigned char*)buff, strlen(buff));
-          xor1_decrypt((unsigned char*)"\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d", (unsigned char*)buff, strlen(buff));
-          IMLOG("%s", buff);
+          unsigned count = table->getRowCount();
+          for(unsigned i = 0; i < count; i++)
+          {
+            cMessage msg;
+            msg.action = NOACTION;
+            msg.notify = 0;
+            msg.id = table->getInt(table->getRowId(i), table->getColIdByPos(0));
+            msg.net = table->getInt(table->getRowId(i), table->getColIdByPos(1));
+            msg.type = table->getInt(table->getRowId(i), table->getColIdByPos(2));
+            msg.fromUid = strdup(table->getStr(table->getRowId(i), table->getColIdByPos(3)));
+            xor1_encrypt((unsigned char*)"\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84", (unsigned char*)msg.fromUid, strlen(msg.fromUid));
+            xor1_decrypt((unsigned char*)"\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d", (unsigned char*)msg.fromUid, strlen(msg.fromUid));
+            msg.toUid = strdup(table->getStr(table->getRowId(i), table->getColIdByPos(4)));
+            xor1_encrypt((unsigned char*)"\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84", (unsigned char*)msg.toUid, strlen(msg.toUid));
+            xor1_decrypt((unsigned char*)"\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d", (unsigned char*)msg.toUid, strlen(msg.toUid));
+            msg.body = strdup(table->getStr(table->getRowId(i), table->getColIdByPos(5)));
+            xor1_encrypt((unsigned char*)"\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84", (unsigned char*)msg.body, strlen(msg.body));
+            xor1_decrypt((unsigned char*)"\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d", (unsigned char*)msg.body, strlen(msg.body));
+            msg.ext = strdup(table->getStr(table->getRowId(i), table->getColIdByPos(6)));
+            xor1_encrypt((unsigned char*)"\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84", (unsigned char*)msg.ext, strlen(msg.ext));
+            xor1_decrypt((unsigned char*)"\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d", (unsigned char*)msg.ext, strlen(msg.ext));
+            msg.flag = table->getInt(table->getRowId(i), table->getColIdByPos(7));
+            msg.time = table->getInt64(table->getRowId(i), table->getColIdByPos(8));
+            UI::Notify::_insertMsg iMsg(&msg, strdup(table->getStr(table->getRowId(i), table->getColIdByPos(9))), false);
+            xor1_encrypt((unsigned char*)"\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84", (unsigned char*)iMsg._display, strlen(iMsg._display));
+            xor1_decrypt((unsigned char*)"\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d", (unsigned char*)iMsg._display, strlen(iMsg._display));
+            iMsg.act = sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlview, cntId);
+            Controller::getInstance()->process((sIMessage_base*)&iMsg);
+            delete [] msg.fromUid;
+            delete [] msg.toUid;
+            delete [] msg.body;
+            delete [] msg.ext;
+            delete [] iMsg._display;
+          }
         }
         break;
       }
