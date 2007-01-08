@@ -14,6 +14,34 @@
 #include "stdafx.h"
 #include "TplHandler.h"
 
+String TplHandler::runFunc(const string& name, udf_fn_param& params) {
+  udf_fn* func = getUdfFactory()->get(name);
+  func->param(params);
+  func->handler();
+  return func->result();
+}
+
+String TplHandler::runFunc(const string& name, const StringRef& param1) {
+  udf_fn* func = getUdfFactory()->get(name);
+  func->param(param1);
+  func->handler();
+  return func->result();
+}
+
+String TplHandler::runFunc(const string& name, const StringRef& param1, const StringRef& param2) {
+  udf_fn* func = getUdfFactory()->get(name);
+  func->param(param1, param2);
+  func->handler();
+  return func->result();
+}
+
+String TplHandler::runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3) {
+  udf_fn* func = getUdfFactory()->get(name);
+  func->param(param1, param2, param3);
+  func->handler();
+  return func->result();
+}
+
 std::string TplHandler::getTplPath(const char* tplName) {
   std::string fullPath = tplDir;
 

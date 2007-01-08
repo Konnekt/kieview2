@@ -67,7 +67,7 @@ namespace kIEview2 {
       const unsigned int copySelection = popup + 7;
       const unsigned int selectAll = popup + 8;
       const unsigned int showSource = popup + 9;
-      const unsigned int history = popup + 10;
+      const unsigned int lastSession = popup + 10;
       const unsigned int clearSep = popup + 11;
       const unsigned int clear = popup + 12;
     }

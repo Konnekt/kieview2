@@ -68,8 +68,6 @@ namespace kIEview2 {
   }
 
   void Controller::_onPrepare() {
-    this->historyTable = Tables::registerTable(Ctrl, Tables::enTableId::dtCnt);
-
     // @debug replace with user selected tpl directory
     tplHandler->addIncludeDir("./tpl");
     tplHandler->setTplDir("./tpl/");
@@ -97,7 +95,7 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::copySelection, 0, "Kopiuj", ico::copy);
     UIActionAdd(act::popup::popup, act::popup::selectAll, 0, "Zaznacz wszystko");
     UIActionAdd(act::popup::popup, act::popup::showSource, 0, "Poka¿ Ÿród³o", ico::source);
-    UIActionAdd(act::popup::popup, act::popup::history, 0, "Poprzednia rozmowa");
+    UIActionAdd(act::popup::popup, act::popup::lastSession, 0, "Poprzednia rozmowa");
     UIActionAdd(act::popup::popup, act::popup::clearSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
 
@@ -153,7 +151,7 @@ namespace kIEview2 {
       case act::popup::print:
       case act::popup::selectAll:
       case act::popup::showSource:
-      case act::popup::history:
+      case act::popup::lastSession:
       case act::popup::clear: {
         if (an->code != ACTN_ACTION) break;
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
@@ -207,10 +205,11 @@ namespace kIEview2 {
     switch (this->getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
-        this->oldMsgWndProc = (WNDPROC)SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
-        SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
         IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
         an->hwnd = ctrl->getHWND();
+
+        this->oldMsgWndProc = (WNDPROC)SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
+        SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
 
         actionHandlers[ctrl] = new ActionHandler;
         actionHandlers[ctrl]->cntId = an->act.cnt;
@@ -345,6 +344,47 @@ namespace kIEview2 {
     forwardAction();
   }
 
+  // @todo mapa z cnt -> oldMsgWndProc zamiast jednej zmiennej [?]
+  LRESULT CALLBACK Controller::msgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) { 
+      case WM_NOTIFY: {
+        if (wParam == ICMessage(IMI_ACTION_GETINDEX, (int)&sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlsend), 0)) {
+          switch (((NMHDR*)lParam)->code) {
+            case EN_SELCHANGE: {
+              int cntID = (int) GetProp(hWnd, "CntID");
+              HWND hEdit = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlsend, cntID));
+
+              CHARFORMAT cf;
+              ZeroMemory(&cf, sizeof(CHARFORMAT));
+              cf.cbSize = sizeof(CHARFORMAT);
+              cf.dwMask = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_COLOR;
+              SendMessage(hEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+              if((cf.dwEffects & CFE_BOLD) && (cf.dwMask & CFM_BOLD)) {
+                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold, cntID), -1, ACTS_CHECKED);
+              } else {
+                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold, cntID), 0, ACTS_CHECKED);
+              }
+              if((cf.dwEffects & CFE_ITALIC) && (cf.dwMask & CFM_ITALIC)) {
+                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic, cntID), -1, ACTS_CHECKED);
+              } else {
+                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic, cntID), 0, ACTS_CHECKED);
+              }
+              if((cf.dwEffects & CFE_UNDERLINE) && (cf.dwMask & CFM_UNDERLINE)) {
+                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline, cntID), -1, ACTS_CHECKED);
+              } else {
+                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline, cntID), 0, ACTS_CHECKED);
+              }
+              break;
+            }
+          }
+        }
+        break;
+      }
+    }
+    return CallWindowProc(getInstance()->oldMsgWndProc, hWnd, msg, wParam, lParam);
+  }
+
   void Controller::_msgSend() {
     switch (this->getAN()->code) {
       case ACTN_ACTION: {
@@ -352,6 +392,52 @@ namespace kIEview2 {
         this->forwardAction();
       }
     }
+  }
+
+  void Controller::readLastMsgs(tCntId cnt, int howMany) {
+    Tables::oTable& table = Tables::registerTable(Ctrl, "MsgHistory");
+
+    string dir = (const char*) Ctrl->ICMessage(IMC_PROFILEDIR);
+    dir += "history\\messages\\";
+
+    string file = "u";
+    file += config->getChar(CNT_UID, cnt); // @todo urlEncode(uid)
+    file += "." + inttostr(config->getInt(CNT_NET, cnt)) + ".dtb";
+
+    table->setDirectory(dir.c_str());
+    table->setFilename(file.c_str());
+    table->load(true);
+
+    int lastRow = table->getRowCount() - 1;
+    for (int i = lastRow - howMany; i < lastRow; i++) {
+      cMessage msg;
+
+      msg.id = table->getInt(i, table->getColIdByPos(fieldId));
+      msg.net = table->getInt(i, table->getColIdByPos(fieldNet));
+      msg.type = table->getInt(i, table->getColIdByPos(fieldType));
+      msg.fromUid = getStringCol(table, i, fieldFromUid);
+      msg.toUid = getStringCol(table, i, fieldToUid);
+      msg.body = getStringCol(table, i, fieldBody);
+      msg.ext = getStringCol(table, i, fieldExt);
+      msg.flag = table->getInt(i, table->getColIdByPos(fieldFlag));
+      msg.time = table->getInt64(i, table->getColIdByPos(fieldTime));
+
+      UI::Notify::_insertMsg insertMsg(&msg, getStringCol(table, i, fieldDisplay), false); // true przy ostatniej
+      insertMsg.act = sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlview, cnt);
+      UIActionCall(&insertMsg);
+
+      delete [] insertMsg._display;
+      delete [] msg.fromUid;
+      delete [] msg.toUid;
+      delete [] msg.body;
+      delete [] msg.ext;
+    }
+    table->unregisterTable();
+  }
+
+  void Controller::readLastMsgSession(tCntId cnt) {
+    // @todo odczytujemy ile ostatnich wiadomosci przwyrocic (na podst. pola 'session')
+    // readLastMsgs(cnt, howMany);
   }
 
   void Controller::clearWnd(IECtrl* ctrl) {
@@ -366,44 +452,6 @@ namespace kIEview2 {
       ctrl->write("obsra³em siê, przepraszam<br/>");
       ctrl->write(e.what());
     }
-  }
-
-  LRESULT CALLBACK Controller::msgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    switch (msg) { 
-      case WM_NOTIFY: {
-        if (wParam == ICMessage(IMI_ACTION_GETINDEX, (int)&sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend), 0)) {
-          switch (((NMHDR*)lParam)->code) {
-            case EN_SELCHANGE: {
-              int cntID = (int)GetProp(hWnd, "CntID");
-              HWND hEdit = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, cntID));
-              CHARFORMAT cf;
-              ZeroMemory(&cf, sizeof(CHARFORMAT));
-              cf.cbSize = sizeof(CHARFORMAT);
-              cf.dwMask = CFM_BOLD|CFM_ITALIC|CFM_UNDERLINE|CFM_COLOR;
-              SendMessage(hEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-              if((cf.dwEffects & CFE_BOLD) && (cf.dwMask & CFM_BOLD)) {
-                UIActionSetStatus(sUIAction(kIEview2::act::formatTb::formatTb, kIEview2::act::formatTb::bold, cntID), -1, ACTS_CHECKED);
-              } else {
-                UIActionSetStatus(sUIAction(kIEview2::act::formatTb::formatTb, kIEview2::act::formatTb::bold, cntID), 0, ACTS_CHECKED);
-              }
-              if((cf.dwEffects & CFE_ITALIC) && (cf.dwMask & CFM_ITALIC)) {
-                UIActionSetStatus(sUIAction(kIEview2::act::formatTb::formatTb, kIEview2::act::formatTb::italic, cntID), -1, ACTS_CHECKED);
-              } else {
-                UIActionSetStatus(sUIAction(kIEview2::act::formatTb::formatTb, kIEview2::act::formatTb::italic, cntID), 0, ACTS_CHECKED);
-              }
-              if((cf.dwEffects & CFE_UNDERLINE) && (cf.dwMask & CFM_UNDERLINE)) {
-                UIActionSetStatus(sUIAction(kIEview2::act::formatTb::formatTb, kIEview2::act::formatTb::underline, cntID), -1, ACTS_CHECKED);
-              } else {
-                UIActionSetStatus(sUIAction(kIEview2::act::formatTb::formatTb, kIEview2::act::formatTb::underline, cntID), 0, ACTS_CHECKED);
-              }
-              break;
-            }
-          }
-        }
-        break;
-      }
-    }
-    return CallWindowProc(Controller::getInstance()->oldMsgWndProc, hWnd, msg, wParam, lParam);
   }
 
   DWORD CALLBACK Controller::streamOut(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) {
@@ -488,12 +536,7 @@ namespace kIEview2 {
   }
 
   String Controller::htmlEscape(StringRef& txt) {
-    template_parser_ns::udf_fn* escape = tplHandler->getUdfFactory()->get("htmlEscape");
-    escape->param(txt);
-    escape->handler();
-    txt = escape->result();
-
-    return PassStringRef(txt);
+    return tplHandler->runFunc("htmlEscape", txt);
   }
 
   String Controller::linkify(StringRef& txt) {

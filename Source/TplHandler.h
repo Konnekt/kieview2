@@ -31,23 +31,23 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(TplHandler, iSharedObject, Version(0,1,0,0));
 
 public:
-  TplHandler(const std::string& tplDir = "", const std::string& tplExt = "tpl") {
+  TplHandler(const string& tplDir = "", const string& tplExt = "tpl") {
     setTplDir(tplDir);
     setTplExt(tplExt);
   }
 
 public:
-  inline void addIncludeDir(const std::string& dir) {
+  inline void addIncludeDir(const string& dir) {
     includeDir.push_back(dir);
   }
-  inline void bindUdf(const std::string& name, udf_fn* function) {
+  inline void bindUdf(const string& name, udf_fn* function) {
     udfFactory.install_udf_fn(name, function);
   }
 
-  inline void setTplDir(const std::string& dir) {
+  inline void setTplDir(const string& dir) {
     tplDir = dir;
   }
-  inline void setTplExt(const std::string& ext) {
+  inline void setTplExt(const string& ext) {
     tplExt = ext;
   }
 
@@ -55,18 +55,10 @@ public:
     return &udfFactory;
   }
 
-  inline String runFunc(string name, ...) {
-    udf_fn* func = getUdfFactory()->get(name);
-    udf_fn::e_accept_params accept = func->accept_params();
-    String result;
-
-    // process va_list and pass it to func
-
-    func->handler();
-    result = func->result();
-
-    return result;
-  }
+  String runFunc(const string& name, udf_fn_param& params);
+  String runFunc(const string& name, const StringRef& param1);
+  String runFunc(const string& name, const StringRef& param1, const StringRef& param2);
+  String runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3);
 
   std::string getTplPath(const char* tplName);
   String getTpl(const char* tplName);
@@ -80,8 +72,8 @@ protected:
   udf_fn_factory udfFactory;
   v_include_dir includeDir;
 
-  std::string tplDir;
-  std::string tplExt;
+  string tplDir;
+  string tplExt;
 };
 
 typedef SharedPtr<TplHandler> oTplHandler;

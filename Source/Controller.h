@@ -28,6 +28,38 @@
 
 using namespace kIEview2;
 
+void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
+  unsigned int ksize = strlen((char*)key);
+  unsigned int ki = 0;
+
+  if (!size) {
+    size = strlen((char*)data);
+  }
+
+  int j = 0;
+  for (unsigned int p = 0; p < size; p++) {
+    *data = (*data ^ key[ki]) + (unsigned char)((j) & 0xFF); // | (j * 2);
+    data++;
+    ki++;
+    if (ki >= ksize) ki = 0;
+    j++;
+  }
+}
+
+void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
+  unsigned int ksize = strlen((char*)key);
+  unsigned int ki = 0;
+
+  int j = 0;
+  for (unsigned int p = 0; p < size; p++) {
+    *data = (*data - (unsigned char)((j) & 0xFF)) ^ key[ki]; // | (j * 2);
+    data++;
+    ki++;
+    if (ki >= ksize) ki = 0;
+    j++;
+  }
+}
+
 namespace kIEview2 {
   class Controller : public PlugController<Controller> {
   public:
@@ -41,6 +73,11 @@ namespace kIEview2 {
       tCntId cnt;
     };
 
+    enum enMsgFields {
+      fieldId, fieldNet, fieldType, fieldFromUid, fieldToUid, fieldBody, 
+      fieldExt, fieldFlag, fieldTime, fieldSession, fieldDisplay
+    };
+
   public:
     /* Class version */
     STAMINA_OBJECT_CLASS_VERSION(Controller, PlugController, Version(0,1,0,0));
@@ -50,6 +87,9 @@ namespace kIEview2 {
 
   public:
     ~Controller();
+
+    void readLastMsgs(tCntId cnt, int howMany);
+    void readLastMsgSession(tCntId cnt);
 
     string getMsgTypeLabel(int type);
     String getStatusLabel(int status);
@@ -74,6 +114,21 @@ namespace kIEview2 {
     bool isMsgFromHistory(sUIActionNotify_base* an);
     void handleTextFlag(int flag);
 
+    inline char* getStringCol(Tables::oTable& table, tRowId row, int pos) {
+      const char encryptKey[] = "\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84";
+      const char decryptKey[] = "\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d";
+
+      char* resultChar = table->getStr(row, table->getColIdByPos(pos));
+
+      if (table->getColType(table->getColIdByPos(pos)) & cflagXor) {
+        xor1_encrypt((unsigned char*)encryptKey, (unsigned char*)resultChar, strlen(resultChar));
+        xor1_decrypt((unsigned char*)decryptKey, (unsigned char*)resultChar, strlen(resultChar));
+
+        IMLOG("colPos = %i, value = %s", pos, resultChar);
+      }
+      return resultChar;
+    }
+
     String _parseStatusTpl(UI::Notify::_insertStatus* an);
     String _parseMsgTpl(UI::Notify::_insertMsg* an);
 
@@ -88,7 +143,6 @@ namespace kIEview2 {
     static LRESULT CALLBACK msgWndProc(HWND, UINT, WPARAM, LPARAM);
     
   public:
-    Tables::oTable historyTable;
     WNDPROC oldMsgWndProc;
 
   protected:
