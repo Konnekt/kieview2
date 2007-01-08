@@ -68,7 +68,7 @@ namespace kIEview2 {
   }
 
   void Controller::_onPrepare() {
-    historyTable = Tables::registerTable(Ctrl, "MsgHistory");
+    historyTable = Tables::registerTable(Ctrl, tableNotFound, optPrivate);
 
     // @debug replace with user selected tpl directory
     tplHandler->addIncludeDir("./tpl");
@@ -404,7 +404,7 @@ namespace kIEview2 {
       dir += "history\\messages\\";
 
       string file = "u";
-      file += config->getChar(CNT_UID, cnt); // @todo urlEncode(uid)
+      file += urlEncode(config->getChar(CNT_UID, cnt), '#', "");
       file += "." + inttostr(config->getInt(CNT_NET, cnt)) + ".dtb";
 
       table->setDirectory(dir.c_str());
@@ -446,7 +446,7 @@ namespace kIEview2 {
     dir += "history\\messages\\";
 
     string file = "u";
-    file += config->getChar(CNT_UID, cnt); // @todo urlEncode(uid)
+    file += urlEncode(config->getChar(CNT_UID, cnt), '#', "");
     file += "." + inttostr(config->getInt(CNT_NET, cnt)) + ".dtb";
 
     table->setDirectory(dir.c_str());
