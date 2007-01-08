@@ -147,6 +147,7 @@ namespace kIEview2 {
 
   protected:
     tActionHandlers actionHandlers;
+    Tables::oTable historyTable;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
   };

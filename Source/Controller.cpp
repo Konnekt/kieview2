@@ -68,6 +68,8 @@ namespace kIEview2 {
   }
 
   void Controller::_onPrepare() {
+    historyTable = Tables::registerTable(Ctrl, "MsgHistory");
+
     // @debug replace with user selected tpl directory
     tplHandler->addIncludeDir("./tpl");
     tplHandler->setTplDir("./tpl/");
@@ -395,18 +397,20 @@ namespace kIEview2 {
   }
 
   void Controller::readLastMsgs(tCntId cnt, int howMany) {
-    Tables::oTable& table = Tables::registerTable(Ctrl, "MsgHistory");
+    Tables::oTable table = historyTable;
 
-    string dir = (const char*) Ctrl->ICMessage(IMC_PROFILEDIR);
-    dir += "history\\messages\\";
+    if (!table->isLoaded()) {
+      string dir = (const char*) Ctrl->ICMessage(IMC_PROFILEDIR);
+      dir += "history\\messages\\";
 
-    string file = "u";
-    file += config->getChar(CNT_UID, cnt); // @todo urlEncode(uid)
-    file += "." + inttostr(config->getInt(CNT_NET, cnt)) + ".dtb";
+      string file = "u";
+      file += config->getChar(CNT_UID, cnt); // @todo urlEncode(uid)
+      file += "." + inttostr(config->getInt(CNT_NET, cnt)) + ".dtb";
 
-    table->setDirectory(dir.c_str());
-    table->setFilename(file.c_str());
-    table->load(true);
+      table->setDirectory(dir.c_str());
+      table->setFilename(file.c_str());
+      table->load(true);
+    }
 
     int lastRow = table->getRowCount() - 1;
     for (int i = lastRow - howMany; i < lastRow; i++) {
@@ -432,12 +436,34 @@ namespace kIEview2 {
       delete [] msg.body;
       delete [] msg.ext;
     }
-    table->unregisterTable();
+    table->unloadData();
   }
 
   void Controller::readLastMsgSession(tCntId cnt) {
-    // @todo odczytujemy ile ostatnich wiadomosci przwyrocic (na podst. pola 'session')
-    // readLastMsgs(cnt, howMany);
+    Tables::oTable table = historyTable;
+
+    string dir = (const char*) Ctrl->ICMessage(IMC_PROFILEDIR);
+    dir += "history\\messages\\";
+
+    string file = "u";
+    file += config->getChar(CNT_UID, cnt); // @todo urlEncode(uid)
+    file += "." + inttostr(config->getInt(CNT_NET, cnt)) + ".dtb";
+
+    table->setDirectory(dir.c_str());
+    table->setFilename(file.c_str());
+    table->load(true);
+
+    int lastRow = table->getRowCount() - 1;
+    int howMany = 0;
+
+    for (int i = lastRow; i >= 0; i--) {
+      if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
+        howMany = lastRow - i;
+        break;
+      }
+    }
+    table->unloadData();
+    readLastMsgs(cnt, howMany);
   }
 
   void Controller::clearWnd(IECtrl* ctrl) {
