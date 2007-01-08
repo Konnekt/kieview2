@@ -90,6 +90,7 @@ namespace kIEview2 {
 
     void readLastMsgs(tCntId cnt, int howMany);
     void readLastMsgSession(tCntId cnt);
+    void loadMsgTable(tCntId cnt);
 
     string getMsgTypeLabel(int type);
     String getStatusLabel(int status);
