@@ -416,7 +416,7 @@ namespace kIEview2 {
     loadMsgTable(cnt);
 
     int lastRow = table->getRowCount() - 1;
-    for (int i = lastRow - howMany; i < lastRow; i++) {
+    for (int i = (lastRow - howMany); i <= lastRow; i++) {
       cMessage msg;
 
       msg.id = table->getInt(i, table->getColIdByPos(fieldId));
@@ -429,7 +429,7 @@ namespace kIEview2 {
       msg.flag = table->getInt(i, table->getColIdByPos(fieldFlag));
       msg.time = table->getInt64(i, table->getColIdByPos(fieldTime));
 
-      UI::Notify::_insertMsg insertMsg(&msg, getStringCol(table, i, fieldDisplay), false); // true przy ostatniej
+      UI::Notify::_insertMsg insertMsg(&msg, getStringCol(table, i, fieldDisplay), (i == lastRow) ? true : false);
       insertMsg.act = sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlview, cnt);
       UIActionCall(&insertMsg);
 
@@ -456,7 +456,6 @@ namespace kIEview2 {
       }
     }
     readLastMsgs(cnt, howMany);
-    table->unloadData();
   }
 
   void Controller::clearWnd(IECtrl* ctrl) {
