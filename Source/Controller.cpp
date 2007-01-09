@@ -396,24 +396,28 @@ namespace kIEview2 {
     }
   }
 
-  void Controller::loadMsgTable(tCntId cnt) {
-    if (historyTable->isLoaded()) return;
+  bool Controller::loadMsgTable(tCntId cnt) {
+    if (historyTable->isLoaded()) return false;
 
     string dir = (const char*) Ctrl->ICMessage(IMC_PROFILEDIR);
     dir += "history\\messages\\";
 
     string file = "u";
-    file += urlEncode(config->getChar(CNT_UID, cnt), '#');
-    file += "." + inttostr(config->getInt(CNT_NET, cnt)) + ".dtb";
+    file += urlEncode(config->getChar(CNT_UID, cnt), '#') + ".";
+    file += inttostr(config->getInt(CNT_NET, cnt)) + ".dtb";
 
     historyTable->setDirectory(dir.c_str());
     historyTable->setFilename(file.c_str());
     historyTable->load(true);
+
+    return true;
   }
 
   void Controller::readLastMsgs(tCntId cnt, int howMany) {
+    if (!howMany) return;
+
     Tables::oTable table = historyTable;
-    loadMsgTable(cnt);
+    bool dataLoaded = loadMsgTable(cnt);
 
     int lastRow = table->getRowCount() - 1;
     for (int i = (lastRow - howMany); i <= lastRow; i++) {
@@ -439,7 +443,9 @@ namespace kIEview2 {
       delete [] msg.body;
       delete [] msg.ext;
     }
-    table->unloadData();
+    if (dataLoaded) {
+      table->unloadData();
+    }
   }
 
   void Controller::readLastMsgSession(tCntId cnt) {
@@ -456,6 +462,7 @@ namespace kIEview2 {
       }
     }
     readLastMsgs(cnt, howMany);
+    table->unloadData();
   }
 
   void Controller::clearWnd(IECtrl* ctrl) {

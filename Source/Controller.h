@@ -90,7 +90,6 @@ namespace kIEview2 {
 
     void readLastMsgs(tCntId cnt, int howMany);
     void readLastMsgSession(tCntId cnt);
-    void loadMsgTable(tCntId cnt);
 
     string getMsgTypeLabel(int type);
     String getStatusLabel(int status);
@@ -114,6 +113,7 @@ namespace kIEview2 {
     String getDisplayFromMsg(UI::Notify::_insertMsg* an);
     bool isMsgFromHistory(sUIActionNotify_base* an);
     void handleTextFlag(int flag);
+    bool loadMsgTable(tCntId cnt);
 
     inline char* getStringCol(Tables::oTable& table, tRowId row, int pos) {
       const char encryptKey[] = "\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84";
