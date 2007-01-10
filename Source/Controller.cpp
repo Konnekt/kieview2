@@ -419,8 +419,8 @@ namespace kIEview2 {
     Tables::oTable table = historyTable;
     bool dataLoaded = loadMsgTable(cnt);
 
-    int lastRow = table->getRowCount() - 1;
-    for (int i = (lastRow - howMany); i <= lastRow; i++) {
+    int lastRow = table->getRowCount();
+    for (int i = (lastRow - howMany); i < lastRow; i++) {
       cMessage msg;
 
       msg.id = table->getInt(i, table->getColIdByPos(fieldId));
@@ -454,12 +454,11 @@ namespace kIEview2 {
 
     int lastRow = table->getRowCount() - 1;
     int howMany = 0;
+    bool session = 1;
 
-    for (int i = lastRow; i >= 0; i--) {
-      if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
-        howMany = lastRow - i;
-        break;
-      }
+    for (int i = lastRow; i >= 0 && session; i--) {
+      session = table->getInt(i, table->getColIdByPos(fieldSession));
+      howMany++;
     }
     readLastMsgs(cnt, howMany);
     table->unloadData();
