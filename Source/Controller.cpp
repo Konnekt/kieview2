@@ -55,16 +55,55 @@ namespace kIEview2 {
     tplHandler->bindUdf("match?", new udf_match);
     tplHandler->bindUdf("replace", new udf_replace);
     tplHandler->bindUdf("sprintf", new udf_sprintf);
+
+    registerMsgHandler(MT_QUICKEVENT, bind(&Controller::_handleQuickEventTpl, this, _1, _2), "quickevent");
+    registerMsgHandler(MT_MESSAGE, bind(&Controller::_handleStdMsgTpl, this, _1, _2), "message");
+    registerMsgHandler(MT_FILE, bind(&Controller::_handleFileTpl, this, _1, _2), "file");
+    registerMsgHandler(MT_SMS, bind(&Controller::_handleSmsTpl, this, _1, _2), "sms");
   }
 
   Controller::~Controller() {
     IECtrl::deinit();
+
     delete tplHandler;
     delete rtfHtml;
 
     for (tActionHandlers::iterator it = actionHandlers.begin(); it != actionHandlers.end(); it++) {
       delete it->second;
     }
+    for (tMsgHandlers::iterator it = msgHandlers.begin(); it != msgHandlers.end(); it++) {
+      delete it->second;
+    }
+  }
+
+  bool Controller::hasMsgHandler(int type) {
+    // locking
+    LockerCS lock(CS());
+
+    return msgHandlers.find(type) != msgHandlers.end();
+  }
+
+  bool Controller::registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority, 
+    signals::connect_position pos, bool overwrite) 
+  {
+    // locking
+    LockerCS lock(CS());
+
+    if (f.empty()) {
+      return false;
+    }
+    if (!hasMsgHandler(type)) {
+      msgHandlers[type] = new sMessageHandler;
+    }
+    if (msgHandlers[type]->connections.find(label) != msgHandlers[type]->connections.end()) {
+      if (overwrite) {
+        msgHandlers[type]->connections[label].disconnect();
+      } else {
+        return false;
+      }
+    }
+    msgHandlers[type]->label = label;
+    return (msgHandlers[type]->connections[label] = msgHandlers[type]->signal.connect(priority, f, pos)).connected();
   }
 
   void Controller::_onPrepare() {
@@ -134,6 +173,9 @@ namespace kIEview2 {
   }
 
   void Controller::_onAction() {
+    // locking
+    LockerCS lock(CS());
+
     sUIActionNotify_2params* an = this->getAN();
 
     switch(an->act.id) {
@@ -204,6 +246,9 @@ namespace kIEview2 {
   }
 
   void Controller::_msgCtrlView() {
+    // locking
+    LockerCS lock(CS());
+
     switch (this->getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
@@ -311,6 +356,9 @@ namespace kIEview2 {
   }
 
   void Controller::_msgCtrlSend() {
+    // locking
+    LockerCS lock(CS());
+
     switch (getAN()->code) {
       case UI::Notify::supportsFormatting: {
         return setSuccess();
@@ -416,6 +464,9 @@ namespace kIEview2 {
   void Controller::readLastMsgs(tCntId cnt, int howMany) {
     if (!howMany) return;
 
+    // locking
+    LockerCS lock(CS());
+
     Tables::oTable table = historyTable;
     bool dataLoaded = loadMsgTable(cnt);
 
@@ -464,6 +515,9 @@ namespace kIEview2 {
   }
 
   void Controller::clearWnd(IECtrl* ctrl) {
+    // locking
+    LockerCS lock(CS());
+
     ctrl->clear();
 
     // We create structure of the data
@@ -499,11 +553,9 @@ namespace kIEview2 {
 
   string Controller::getMsgTypeLabel(int type) {
     string name = "unknown";
-    switch (type) {
-      case MT_MESSAGE: name = "message"; break;
-      case MT_SMS: name = "sms"; break;
-      case MT_FILE: name = "file"; break;
-      case MT_QUICKEVENT: name = "quickevent"; break;
+
+    if (msgHandlers.find(type) != msgHandlers.end()) {
+      name = msgHandlers[type]->label;
     }
     return name;
   }
@@ -647,6 +699,9 @@ namespace kIEview2 {
   }
 
   String Controller::_parseMsgTpl(UI::Notify::_insertMsg* an) {
+    // locking
+    LockerCS lock(CS());
+
     if (!isMsgFromHistory(an) && (an->_message->flag & MF_HIDE)) {
       return "";
     }
@@ -674,20 +729,22 @@ namespace kIEview2 {
     data.hash_insert_new_var("@time", i64tostr(date.getInt64()));
     data.hash_insert_new_var("@id", inttostr(msg->id));
     data.hash_insert_new_var("@cnt", inttostr(cnt));
+
+    data.hash_insert_new_var("display", getDisplayFromMsg(an));
     data.hash_insert_new_var("type", type);
     data.hash_insert_new_var("ext", msg->ext);
     data.hash_insert_new_var("time", date.strftime("%H:%M"));
     data.hash_insert_new_var("body", body);
 
-    switch (msg->type) {
-      case MT_MESSAGE: _handleStdMsgTpl(data, an); break;
-      case MT_SMS:_handleSmsTpl(data, an); break;
-      case MT_FILE: _handleFileTpl(data, an); break;
-      case MT_QUICKEVENT: _handleQuickEventTpl(data, an); break;
+    if (msgHandlers.find(msg->type) != msgHandlers.end()) {
+      msgHandlers[msg->type]->signal(data, an);
     }
-    return tplHandler->parseTpl(&data, type.c_str());
+    return tplHandler->parseTpl(&data, ("content-types/" + type).c_str());
   }
 
+  /*
+   * Message types specific methods
+   */
   void Controller::_handleQuickEventTpl(param_data& data, UI::Notify::_insertMsg* an) {
     if (an->_message->flag & MF_QE_SHOWTIME) {
       data.hash_insert_new_var("showTime?", "1");
@@ -703,7 +760,6 @@ namespace kIEview2 {
     tCntId cnt = getCntFromMsg(an->_message);
 
     data.hash_insert_new_var("@net", inttostr(an->_message->net));
-    data.hash_insert_new_var("display", getDisplayFromMsg(an));
     data.hash_insert_new_var("uid", config->getChar(CNT_UID, cnt));
     data.hash_insert_new_var("nick", config->getChar(CNT_NICK, cnt));
     data.hash_insert_new_var("name", config->getChar(CNT_NAME, cnt));
@@ -781,6 +837,5 @@ namespace kIEview2 {
     if (an->_message->flag & MF_SEND) {
       data.hash_insert_new_var("sent?", "1");
     }
-    data.hash_insert_new_var("display", getDisplayFromMsg(an));
   }
 }

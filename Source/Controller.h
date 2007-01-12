@@ -66,7 +66,18 @@ namespace kIEview2 {
     friend class PlugController<Controller>;
 
   public:
+    typedef function<void(param_data&, UI::Notify::_insertMsg*)> fMessageHandler;
+    typedef signal<void(param_data&, UI::Notify::_insertMsg*)> MessageHandlerSig;
+
+    struct sMessageHandler {
+      tConnections connections;
+      MessageHandlerSig signal;
+      String label;
+    };
+
+  public:
     typedef std::map<IECtrl*, ActionHandler*> tActionHandlers;
+    typedef std::map<int, sMessageHandler*> tMsgHandlers;
 
     struct sMsg {
       Date64 time;
@@ -87,6 +98,10 @@ namespace kIEview2 {
 
   public:
     ~Controller();
+
+    bool hasMsgHandler(int type);
+    bool registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority = 0, 
+      signals::connect_position pos = signals::at_back, bool overwrite = true);
 
     void readLastMsgs(tCntId cnt, int howMany);
     void readLastMsgSession(tCntId cnt);
@@ -133,6 +148,9 @@ namespace kIEview2 {
     String _parseStatusTpl(UI::Notify::_insertStatus* an);
     String _parseMsgTpl(UI::Notify::_insertMsg* an);
 
+    /*
+     * Message types specific methods
+     */
     void _handleQuickEventTpl(param_data& data, UI::Notify::_insertMsg* an);
     void _handleStdMsgTpl(param_data& data, UI::Notify::_insertMsg* an);
     void _handleSmsTpl(param_data& data, UI::Notify::_insertMsg* an);
@@ -148,6 +166,7 @@ namespace kIEview2 {
 
   protected:
     tActionHandlers actionHandlers;
+    tMsgHandlers msgHandlers;
     Tables::oTable historyTable;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;

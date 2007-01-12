@@ -117,6 +117,9 @@ namespace Konnekt {
     }
 
     inline virtual ~IMController() { 
+      // locking
+      LockerCS lock(CS());
+
       for (tObservers::iterator it = _globalObservers.begin(); it != _globalObservers.end(); it++) {
         delete it->second;
       }
@@ -134,6 +137,9 @@ namespace Konnekt {
      * @see registerObserver
      */
     inline int process(sIMessage_base* msgBase) {
+      // locking
+      LockerCS lock(CS());
+
       // set im
       setIM(msgBase);
 
@@ -157,14 +163,13 @@ namespace Konnekt {
 
       // log IMessage
       if (isReturnCodeSet()) {
-        IMLOG("[IMController<%i>::process()]: id = %i, returnCode = %i", this, getIM()->id, 
-          getReturnCode());
+        IMLOG("[IMController::process()]: id = %i, returnCode = %i", getIM()->id, getReturnCode());
       } else {
         // set error if no result
         if (Ctrl) {
           Ctrl->setError(IMERROR_NORESULT);
         }
-        IMLOG("[IMController<%i>::process()]: id = %i", this, getIM()->id);
+        IMLOG("[IMController::process()]: id = %i", getIM()->id);
       }
 
       int returnCode = getReturnCode();
@@ -213,6 +218,9 @@ namespace Konnekt {
 
     /* Subclassing */
     inline bool isSublassed(int id, int parent) {
+      // locking
+      LockerCS lock(CS());
+
       for (tSubclassedActions::iterator it = _subclassedActions.begin(); it != _subclassedActions.end(); it++) {
         if (it->id == id && it->parent == parent) return true;
       }
@@ -280,10 +288,16 @@ namespace Konnekt {
     }
 
     inline int getReturnCode() {
+      // locking
+      LockerCS lock(CS());
+
       return getIMsgStackItem()->returnCode;
     }
 
     inline void setReturnCode(int code) {
+      // locking
+      LockerCS lock(CS());
+
       getIMsgStackItem()->returnCodeSet = true;
       getIMsgStackItem()->returnCode = code;
     }
@@ -333,6 +347,9 @@ namespace Konnekt {
     }
 
     inline void setStaticValue(int id, int value) {
+      // locking
+      LockerCS lock(CS());
+
       _staticValues[id] = value;
     }
 
@@ -346,18 +363,22 @@ namespace Konnekt {
 
   protected:
     inline sIMsgStackItem* getIMsgStackItem() {
+      // locking
+      LockerCS lock(CS());
+
       return &_imStack.at(_imStack.size() - 1);
     }
 
     inline bool notifyGlobalObservers(sGlobalObserver type) {
       try {
         _notifyObservers(type, _globalObservers);
+        return true;
       } catch (const Exception& e) {
-        IMLOG("[IMController<%i>::notifyGlobalObservers()]: exception caught, reason = %s", this,
-          e.getReason().a_str());
-        return false;
+        IMLOG("[IMController::notifyGlobalObservers()]: exception caught, reason = %s", e.getReason().a_str());
+      } catch (const exception& e) {
+        IMLOG("[IMController::notifyGlobalObservers()]: exception caught, reason = %s", e.what());
       }
-      return true;
+      return false;
     }
 
     inline void notifyIMObservers() {
@@ -376,11 +397,17 @@ namespace Konnekt {
 
     // dumb setter
     inline void setIM(sIMessage_base* msgBase) { 
+      // locking
+      LockerCS lock(CS());
+
       _imStack.push_back(sIMsgStackItem(msgBase));
     }
 
     /* Actions subclassing */
     inline sSubclassedAction* _getSubclassedAction(int id, int parent) {
+      // locking
+      LockerCS lock(CS());
+
       int i = 0;
       for (tSubclassedActions::iterator it = _subclassedActions.begin(); it != _subclassedActions.end(); it++, i++) {
         if (id == it->id && parent == it->parent) return &_subclassedActions.at(i);
@@ -390,6 +417,9 @@ namespace Konnekt {
 
     /* Observers related methods */
     inline bool _isObserved(int id, tObservers& list) {
+      // locking
+      LockerCS lock(CS());
+
       if (list.find(id) != list.end()) {
         return !list[id]->signal.empty();
       }
@@ -410,6 +440,9 @@ namespace Konnekt {
     } */
 
     inline void _notifyObservers(int id, tObservers& list) {
+      // locking
+      LockerCS lock(CS());
+
       if (!_isObserved(id, list)) {
         return;
       }
@@ -419,6 +452,9 @@ namespace Konnekt {
     inline bool _registerObserver(int id, fOnIMessage f, int priority, signals::connect_position pos, 
       StringRef name, bool overwrite, tObservers& list) 
     {
+      // locking
+      LockerCS lock(CS());
+
       if (f.empty()) {
         return false;
       }
@@ -450,6 +486,9 @@ namespace Konnekt {
     }
 
     inline tIMCallback _subclass() {
+      // locking
+      LockerCS lock(CS());
+
       for (tSubclassedActions::iterator it = _subclassedActions.begin(); it != _subclassedActions.end(); it++) {
         sUIActionInfo nfo(it->parent, it->id);
         nfo.mask = UIAIM_ALL;
@@ -461,7 +500,7 @@ namespace Konnekt {
           it->prevOwner = Ctrl->ICMessage(IMC_PLUG_ID, 0);
         }
 
-        IMLOG("[IMController<%i>::subclass()]: name = %s, id = %i, parent = %i, prevOwner = %i", this, nfo.txt, 
+        IMLOG("[IMController::subclass()]: name = %s, id = %i, parent = %i, prevOwner = %i", nfo.txt, 
           it->id, it->parent, it->prevOwner);
 
         Ctrl->ICMessage(IMI_ACTION_REMOVE, (int)&nfo.act);
