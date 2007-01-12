@@ -70,6 +70,7 @@
 #include <stamina/object.h>
 #include <stamina/objectimpl.h>
 #include <stamina/exception.h>
+#include <stamina/criticalsection.h>
 #include <stamina/string.h>
 #include <stamina/time64.h>
 #include <stamina/regex.h>

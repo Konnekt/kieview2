@@ -97,10 +97,7 @@ namespace Konnekt {
     typedef std::map<int, int> tStaticValues;
 
   public:
-    inline IMController() { 
-      // locking
-      LockerCS lock(CS());
-
+    inline IMController() {
       // setting/unsetting Ctrl global pointer
       registerObserver(IM_PLUG_INIT, bind(resolve_cast0(&IMController::_plugInit), this));
       registerObserver(IM_PLUG_DEINIT, bind(resolve_cast0(&IMController::_plugDeInit), this));
@@ -116,10 +113,7 @@ namespace Konnekt {
       setStaticValue(IM_PLUG_UI_V, 0);
     }
 
-    inline virtual ~IMController() { 
-      // locking
-      LockerCS lock(CS());
-
+    inline virtual ~IMController() {
       for (tObservers::iterator it = _globalObservers.begin(); it != _globalObservers.end(); it++) {
         delete it->second;
       }
@@ -138,7 +132,7 @@ namespace Konnekt {
      */
     inline int process(sIMessage_base* msgBase) {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       // set im
       setIM(msgBase);
@@ -219,7 +213,7 @@ namespace Konnekt {
     /* Subclassing */
     inline bool isSublassed(int id, int parent) {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       for (tSubclassedActions::iterator it = _subclassedActions.begin(); it != _subclassedActions.end(); it++) {
         if (it->id == id && it->parent == parent) return true;
@@ -289,14 +283,14 @@ namespace Konnekt {
 
     inline int getReturnCode() {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       return getIMsgStackItem()->returnCode;
     }
 
     inline void setReturnCode(int code) {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       getIMsgStackItem()->returnCodeSet = true;
       getIMsgStackItem()->returnCode = code;
@@ -348,7 +342,7 @@ namespace Konnekt {
 
     inline void setStaticValue(int id, int value) {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       _staticValues[id] = value;
     }
@@ -364,7 +358,7 @@ namespace Konnekt {
   protected:
     inline sIMsgStackItem* getIMsgStackItem() {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       return &_imStack.at(_imStack.size() - 1);
     }
@@ -398,7 +392,7 @@ namespace Konnekt {
     // dumb setter
     inline void setIM(sIMessage_base* msgBase) { 
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       _imStack.push_back(sIMsgStackItem(msgBase));
     }
@@ -406,7 +400,7 @@ namespace Konnekt {
     /* Actions subclassing */
     inline sSubclassedAction* _getSubclassedAction(int id, int parent) {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       int i = 0;
       for (tSubclassedActions::iterator it = _subclassedActions.begin(); it != _subclassedActions.end(); it++, i++) {
@@ -418,7 +412,7 @@ namespace Konnekt {
     /* Observers related methods */
     inline bool _isObserved(int id, tObservers& list) {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       if (list.find(id) != list.end()) {
         return !list[id]->signal.empty();
@@ -441,7 +435,7 @@ namespace Konnekt {
 
     inline void _notifyObservers(int id, tObservers& list) {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       if (!_isObserved(id, list)) {
         return;
@@ -453,7 +447,7 @@ namespace Konnekt {
       StringRef name, bool overwrite, tObservers& list) 
     {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       if (f.empty()) {
         return false;
@@ -487,7 +481,7 @@ namespace Konnekt {
 
     inline tIMCallback _subclass() {
       // locking
-      LockerCS lock(CS());
+      LockerCS lock(_locker);
 
       for (tSubclassedActions::iterator it = _subclassedActions.begin(); it != _subclassedActions.end(); it++) {
         sUIActionInfo nfo(it->parent, it->id);
@@ -510,6 +504,7 @@ namespace Konnekt {
     }
 
   protected:
+    CriticalSection _locker;
     tSubclassedActions _subclassedActions;
     tStaticValues _staticValues;
     tObservers _actionObservers;

@@ -14,6 +14,7 @@
 
 #include "stdafx.h"
 #include "Controller.h"
+#include "Message.h"
 
 namespace kIEview2 {
   Controller::Controller() {
@@ -369,11 +370,11 @@ namespace kIEview2 {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*) getAN();
 
         EDITSTREAM es;
-	      es.dwError = 0;
-	      es.pfnCallback = Controller::streamOut;
-	      String text;
-	      es.dwCookie = (DWORD)&text;
-	      SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
+        es.dwError = 0;
+        es.pfnCallback = Controller::streamOut;
+        String text;
+        es.dwCookie = (DWORD)&text;
+        SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
 
         return setReturnCode(rtfHtml->rtfParse((char*)text.a_str(), text.size()).size());
       }
@@ -382,14 +383,15 @@ namespace kIEview2 {
         UI::Notify::_getMessage* an = (UI::Notify::_getMessage*) getAN();
 
         EDITSTREAM es;
-	      es.dwError = 0;
-	      es.pfnCallback = Controller::streamOut;
-	      String text;
-	      es.dwCookie = (DWORD)&text;
-	      SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
-	      strcpy(an->_message->body, rtfHtml->rtfParse((char*)text.a_str(), text.size()).c_str());
-	      an->_message->flag |= MF_HTML;
-	      SetProp(GetParent((HWND)UIActionHandleDirect(an->act)), "MsgSend", (HANDLE)true);
+        es.dwError = 0;
+        es.pfnCallback = Controller::streamOut;
+        String text;
+        es.dwCookie = (DWORD)&text;
+        SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
+        strcpy(an->_message->body, rtfHtml->rtfParse((char*)text.a_str(), text.size()).c_str());
+        an->_message->flag |= MF_HTML;
+
+        SetProp(GetParent((HWND)UIActionHandleDirect(an->act)), "MsgSend", (HANDLE)true);
         return;
       }
     }
@@ -453,79 +455,87 @@ namespace kIEview2 {
     return true;
   }
 
-  void Controller::readMsgs(tCntId cnt, int howMany, bool beforeLast) {
-    if (!howMany) return;
-    IMLOG("%i, %i", howMany, beforeLast);
+  int Controller::readMsgs(tCntId cnt, int howMany, int sessionOffset) {
+    if (!howMany) return 0;
 
     // locking
     LockerCS lock(CS());
 
     Tables::oTable table = historyTable;
     bool dataLoaded = loadMsgTable(cnt);
-    bool sessionSkipped = !beforeLast;
     list<UI::Notify::_insertMsg> msgs;
-    
-    for (int i = table->getRowCount() - 1, j = 0; i >= 0 && j < howMany; i--) {
-      if(!table->getInt(i, table->getColIdByPos(fieldSession)) && !sessionSkipped) {
-        IMLOG("bla");
-        sessionSkipped = true;
+
+    for (int i = table->getRowCount() - 1, m = 0, s = 0; (i >= 0) && (m < howMany); i--) {
+      if (sessionOffset) {
+        if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
+          s++;
+        }
+        if (s < sessionOffset) {
+          continue;
+        }
       }
-      else if(sessionSkipped) {
-        IMLOG("bla2");
-        cMessage* msg = new cMessage;
-        msg->id = table->getInt(i, table->getColIdByPos(fieldId));
-        msg->net = table->getInt(i, table->getColIdByPos(fieldNet));
-        msg->type = table->getInt(i, table->getColIdByPos(fieldType));
-        msg->fromUid = getStringCol(table, i, fieldFromUid);
-        msg->toUid = getStringCol(table, i, fieldToUid);
-        msg->body = getStringCol(table, i, fieldBody);
-        msg->ext = getStringCol(table, i, fieldExt);
-        msg->flag = table->getInt(i, table->getColIdByPos(fieldFlag));
-        msg->time = table->getInt64(i, table->getColIdByPos(fieldTime));
-        UI::Notify::_insertMsg insertMsg(msg, getStringCol(table, i, fieldDisplay), false);
-        insertMsg.act = sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlview, cnt);
-        msgs.push_back(insertMsg);
-        j++;
-      }
+      cMessage* msg = new cMessage;
+      msg->id = table->getInt(i, table->getColIdByPos(fieldId));
+      msg->net = table->getInt(i, table->getColIdByPos(fieldNet));
+      msg->type = table->getInt(i, table->getColIdByPos(fieldType));
+      msg->fromUid = getStringCol(table, i, fieldFromUid);
+      msg->toUid = getStringCol(table, i, fieldToUid);
+      msg->body = getStringCol(table, i, fieldBody);
+      msg->ext = getStringCol(table, i, fieldExt);
+      msg->flag = table->getInt(i, table->getColIdByPos(fieldFlag));
+      msg->time = table->getInt64(i, table->getColIdByPos(fieldTime));
+
+      UI::Notify::_insertMsg insertMsg(msg, getStringCol(table, i, fieldDisplay), false);
+      insertMsg.act = sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlview, cnt);
+      msgs.push_back(insertMsg);
+      m++;
     }
 
-    for (list<UI::Notify::_insertMsg>::reverse_iterator i = msgs.rbegin(); i != msgs.rend(); i++) {  
-      IMLOG("bla3");
-      UIActionCall((sUIActionNotify_base*)&*i);
+    for (list<UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
+      Message::inject(it->_message, it->act.cnt, it->_display, (it == --msgs.rend()) ? true : false);
       
-      delete [] i->_display;
-      delete [] i->_message->fromUid;
-      delete [] i->_message->toUid;
-      delete [] i->_message->body;
-      delete [] i->_message->ext;
-      delete i->_message;
+      delete [] it->_display;
+      delete [] it->_message->fromUid;
+      delete [] it->_message->toUid;
+      delete [] it->_message->body;
+      delete [] it->_message->ext;
+      delete it->_message;
     }
 
     if (dataLoaded) {
       table->unloadData();
     }
+    return msgs.size();
   }
 
-  void Controller::readLastMsgSession(tCntId cnt, bool beforeLast) {
+  int Controller::readLastMsgSession(tCntId cnt, int sessionOffset) {
     Tables::oTable table = historyTable;
     loadMsgTable(cnt);
 
-    bool session = true;
-    bool sessionSkipped = !beforeLast;
+    bool skippedSession = sessionOffset ? false : true;
     int howMany = 0;
-    int startPos = table->getRowCount() - 1;
 
-    for (int i = table->getRowCount() - 1; i >= 0 && session; i--) {
-      if(!table->getInt(i, table->getColIdByPos(fieldSession)) && !sessionSkipped) {
-        sessionSkipped = true;
+    for (int i = table->getRowCount() - 1, s = 0; i >= 0; i--) {
+      if (sessionOffset) {
+        if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
+          s++;
+        }
+        if (s < sessionOffset) {
+          continue;
+        } else if (s > sessionOffset) {
+          skippedSession = true;
+        }
       }
-      else if(sessionSkipped) {
-         session = table->getInt(i, table->getColIdByPos(fieldSession));
-         howMany++;
+      howMany++;
+      if (skippedSession && !table->getInt(i, table->getColIdByPos(fieldSession))) {
+        break;
       }
     }
-    readMsgs(cnt, startPos, howMany);
+
+    int msgCount = readMsgs(cnt, howMany, sessionOffset);
     table->unloadData();
+
+    return msgCount;
   }
 
   void Controller::clearWnd(IECtrl* ctrl) {
@@ -533,7 +543,6 @@ namespace kIEview2 {
     LockerCS lock(CS());
 
     ctrl->clear();
-    
     SetProp(GetParent(ctrl->getHWND()), "MsgSend", false);
 
     // We create structure of the data
