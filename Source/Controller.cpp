@@ -135,6 +135,7 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::copySelection, 0, "Kopiuj", ico::copy);
     UIActionAdd(act::popup::popup, act::popup::selectAll, 0, "Zaznacz wszystko");
     UIActionAdd(act::popup::popup, act::popup::showSource, 0, "Poka¿ Ÿród³o", ico::source);
+    UIActionAdd(act::popup::popup, act::popup::historySep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::lastMsgs, 0, "Wczytaj z historii");
     UIActionAdd(act::popup::popup, act::popup::lastSession, 0, "Wczytaj ostatni¹ sesjê");
     UIActionAdd(act::popup::popup, act::popup::clearSep, ACTT_SEP);
@@ -465,15 +466,20 @@ namespace kIEview2 {
     bool dataLoaded = loadMsgTable(cnt);
     list<UI::Notify::_insertMsg> msgs;
 
+    IMLOG("[Controller::readMsgs()]: cnt = %i, howMany = %i, sessionOffset = %i",
+      cnt, howMany, sessionOffset);
+
     for (int i = table->getRowCount() - 1, m = 0, s = 0; (i >= 0) && (m < howMany); i--) {
       if (sessionOffset) {
         if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
           s++;
         }
-        if (s < sessionOffset) {
+        if (s <= sessionOffset) {
           continue;
         }
       }
+      IMLOG("[Controller::readMsgs()]: i = %i, m = %i, s = %i", i, m, s);
+
       cMessage* msg = new cMessage;
       msg->id = table->getInt(i, table->getColIdByPos(fieldId));
       msg->net = table->getInt(i, table->getColIdByPos(fieldNet));
@@ -485,14 +491,12 @@ namespace kIEview2 {
       msg->flag = table->getInt(i, table->getColIdByPos(fieldFlag));
       msg->time = table->getInt64(i, table->getColIdByPos(fieldTime));
 
-      UI::Notify::_insertMsg insertMsg(msg, getStringCol(table, i, fieldDisplay), false);
-      insertMsg.act = sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlview, cnt);
-      msgs.push_back(insertMsg);
+      msgs.push_back(UI::Notify::_insertMsg(msg, getStringCol(table, i, fieldDisplay), false));
       m++;
     }
 
     for (list<UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
-      Message::inject(it->_message, it->act.cnt, it->_display, (it == --msgs.rend()) ? true : false);
+      Message::inject(it->_message, cnt, it->_display, (it == --msgs.rend()) ? true : false);
       
       delete [] it->_display;
       delete [] it->_message->fromUid;
@@ -520,9 +524,9 @@ namespace kIEview2 {
         if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
           s++;
         }
-        if (s < sessionOffset) {
+        if (s <= sessionOffset) {
           continue;
-        } else if (s > sessionOffset) {
+        } else {
           skippedSession = true;
         }
       }

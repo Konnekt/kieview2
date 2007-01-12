@@ -67,10 +67,11 @@ namespace kIEview2 {
       const unsigned int copySelection = popup + 7;
       const unsigned int selectAll = popup + 8;
       const unsigned int showSource = popup + 9;
-      const unsigned int lastMsgs = popup + 10;
-      const unsigned int lastSession = popup + 11;
-      const unsigned int clearSep = popup + 12;
-      const unsigned int clear = popup + 13;
+      const unsigned int historySep = popup + 10;
+      const unsigned int lastMsgs = popup + 11;
+      const unsigned int lastSession = popup + 12;
+      const unsigned int clearSep = popup + 13;
+      const unsigned int clear = popup + 14;
     }
 
     namespace formatTb {
