@@ -39,6 +39,7 @@ namespace kIEview2 {
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), 0, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), 0, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastMsgs), cntId ? 0 : -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastSession), cntId ? 0 : -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), cntId ? 0 : -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), cntId ? 0 : -1, ACTS_HIDDEN);
@@ -91,9 +92,15 @@ namespace kIEview2 {
       case act::popup::showSource: {
         return MakeAction::ShowSource;
       }
+      case act::popup::lastMsgs: {
+        if (cntId) {
+          Controller::getInstance()->readMsgs(cntId, 25, GetProp(GetParent(ctrl->getHWND()), "MsgSend"));
+        }
+        break;
+      }
       case act::popup::lastSession: {
         if (cntId) {
-          Controller::getInstance()->readLastMsgSession(cntId);
+          Controller::getInstance()->readLastMsgSession(cntId, GetProp(GetParent(ctrl->getHWND()), "MsgSend"));
         }
         break;
       }

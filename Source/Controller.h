@@ -102,9 +102,8 @@ namespace kIEview2 {
     bool hasMsgHandler(int type);
     bool registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority = 0, 
       signals::connect_position pos = signals::at_back, bool overwrite = true);
-
-    void readLastMsgs(tCntId cnt, int howMany);
-    void readLastMsgSession(tCntId cnt);
+    void readMsgs(tCntId cnt, int howMany, bool beforeLast = false);
+    void readLastMsgSession(tCntId cnt, bool beforeLast = false);
 
     string getMsgTypeLabel(int type);
     String getStatusLabel(int status);
@@ -122,7 +121,6 @@ namespace kIEview2 {
 
     void _msgCtrlView();
     void _msgCtrlSend();
-    void _msgSend();
 
     tCntId getCntFromMsg(cMessage* msg);
     String getDisplayFromMsg(UI::Notify::_insertMsg* an);
