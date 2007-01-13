@@ -494,9 +494,11 @@ namespace kIEview2 {
       msgs.push_back(UI::Notify::_insertMsg(msg, getStringCol(table, i, fieldDisplay), false));
       m++;
     }
+    
+    Message::inject(&Message::prepare(GETCNTC(cnt, CNT_NET), GETCNTC(cnt, CNT_NET), GETCNTI(cnt, CNT_NET), "Wczytujê wiadomoœci z historii.", MT_QUICKEVENT, "", MF_HANDLEDBYUI), cnt);
 
     for (list<UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
-      Message::inject(it->_message, cnt, it->_display, (it == --msgs.rend()) ? true : false);
+      Message::inject(it->_message, cnt, it->_display, false);
       
       delete [] it->_display;
       delete [] it->_message->fromUid;
@@ -505,6 +507,16 @@ namespace kIEview2 {
       delete [] it->_message->ext;
       delete it->_message;
     }
+
+    char* buff;
+    if (howMany == 1) {
+      buff = strdup("Wczytano 1 ostatni¹ wiadomoœæ z historii.");
+    } else {
+      buff = new char[200];
+      sprintf(buff, "Wczytano %i ostatnich wiadomoœci z historii.", howMany);
+    }
+    Message::inject(&Message::prepare(GETCNTC(cnt, CNT_NET), GETCNTC(cnt, CNT_NET), GETCNTI(cnt, CNT_NET), buff, MT_QUICKEVENT, "", MF_HANDLEDBYUI), cnt);
+    delete buff;
 
     if (dataLoaded) {
       table->unloadData();
