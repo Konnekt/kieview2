@@ -192,6 +192,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\EmotParsers.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\Helpers.cpp"
 				>
 			</File>
@@ -255,6 +259,14 @@
 			</File>
 			<File
 				RelativePath="..\Source\Controller.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Source\EmotParsers.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Source\Emots.h"
 				>
 			</File>
 			<File

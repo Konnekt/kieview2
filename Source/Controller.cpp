@@ -251,6 +251,7 @@ namespace kIEview2 {
     // locking
     LockerCS lock(CS());
 
+    
     switch (this->getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
