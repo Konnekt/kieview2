@@ -126,7 +126,7 @@ namespace kIEview2 {
     tCntId getCntFromMsg(cMessage* msg);
     String getDisplayFromMsg(UI::Notify::_insertMsg* an);
     bool isMsgFromHistory(sUIActionNotify_base* an);
-    void handleTextFlag(int flag);
+    void handleTextFlag(int flag, int mask);
     bool loadMsgTable(tCntId cnt);
 
     inline char* getStringCol(Tables::oTable& table, tRowId row, int pos) {
@@ -143,6 +143,9 @@ namespace kIEview2 {
       }
       return resultChar;
     }
+
+    // void registerExternalCallback(const StringRef& name, fExternalCallback);
+    // void fireExternalCallback(const StringRef& name);
 
     String _parseStatusTpl(UI::Notify::_insertStatus* an);
     String _parseMsgTpl(UI::Notify::_insertMsg* an);
@@ -166,6 +169,7 @@ namespace kIEview2 {
   protected:
     tActionHandlers actionHandlers;
     tMsgHandlers msgHandlers;
+    CriticalSection _locker;
     Tables::oTable historyTable;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;

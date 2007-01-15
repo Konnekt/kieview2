@@ -16,12 +16,11 @@
 #include "stdafx.h"
 #include "Message.h"
 
-void Message::reply(cMessage *msg, const StringRef& body, const StringRef& ext, bool html) {
+void Message::reply(cMessage* msg, const StringRef& body, const StringRef& ext, bool html) {
   Message::send(msg->fromUid, "", msg->net, body, msg->type, ext, html);
 }
 
-cMessage Message::prepare(const StringRef& to, const StringRef& from, int net, const StringRef& body, 
-  int type, const StringRef& ext, int flag) {
+cMessage Message::prepare(const StringRef& to, const StringRef& from, int net, const StringRef& body, int type, const StringRef& ext, int flag) {
   cMessage msg;
 
   msg.flag = flag;
@@ -36,7 +35,7 @@ cMessage Message::prepare(const StringRef& to, const StringRef& from, int net, c
   return msg;
 }
 
-void Message::send(cMessage *msg) {
+void Message::send(cMessage* msg) {
   sMESSAGESELECT ms;
   if ((ms.id = Ctrl->ICMessage(IMC_NEWMESSAGE, (int)msg)) > 0) {
     Ctrl->ICMessage(IMC_MESSAGEQUEUE, (int)&ms);
@@ -45,7 +44,7 @@ void Message::send(cMessage *msg) {
     ms.id, msg->net, nullChk(msg->fromUid), nullChk(msg->toUid), msg->body);
 }
 
-void Message::send(int cnt, const StringRef& from, const StringRef& body, int type, const StringRef& ext, bool html, bool inject) {
+void Message::send(tCntId cnt, const StringRef& from, const StringRef& body, int type, const StringRef& ext, bool html, bool inject) {
   String to = GETCNTC(cnt, CNT_UID);
   cMessage msg = Message::prepare(to, from, GETCNTI(cnt, CNT_NET), body, type, ext, MF_SEND | (html ? MF_HTML : 0));
 
@@ -56,8 +55,7 @@ void Message::send(int cnt, const StringRef& from, const StringRef& body, int ty
 }
 
 void Message::send(const StringRef& to, const StringRef& from, int net, const StringRef& body, int type, const StringRef& ext, bool html) {
-  cMessage msg = Message::prepare(to, from, net, body, type, ext, MF_SEND | (html ? MF_HTML : 0));
-  Message::send(&msg);
+  Message::send(&Message::prepare(to, from, net, body, type, ext, MF_SEND | (html ? MF_HTML : 0)));
 }
 
 void Message::sms(const StringRef& to, const StringRef& body, const StringRef& gate, const StringRef& from, StringRef ext) {
@@ -66,13 +64,21 @@ void Message::sms(const StringRef& to, const StringRef& body, const StringRef& g
   // Je¿eli NIE chcemy, ¿eby wtyczka SMS dzieli³a wiadomoœæ, ustawiamy parametr extPart...
   // ext = SetExtParam(ext, Sms::extPart, "0");
 
-  cMessage msg = Message::prepare(to, "", Sms::net, body, MT_SMS, ext, MF_SEND);
-  Message::send(&msg);
+  Message::send(&Message::prepare(to, "", Sms::net, body, MT_SMS, ext, MF_SEND));
 }
 
-void Message::inject(cMessage *msg, int cntID, const char * display, bool scroll) {
+void Message::quickEvent(tCntId cnt, const StringRef& body, bool html, bool showTime, bool warning, StringRef ext) {
+  int flag = MF_SEND;
+  if (showTime) flag |= MF_QE_SHOWTIME;
+  if (!warning) flag |= MF_QE_NORMAL;
+  if (html) flag |= MF_HTML;
+
+  Message::inject(&Message::prepare(GETCNTC(cnt, CNT_UID), "", GETCNTI(cnt, CNT_NET), body, MT_QUICKEVENT, "", flag), cnt, 0, true);
+}
+
+void Message::inject(cMessage* msg, tCntId cnt, const char* display, bool scroll) {
   Konnekt::UI::Notify::_insertMsg ni(msg, display, scroll);
-  ni.act = sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlview, cntID);
+  ni.act = sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlview, cnt);
 
   UIActionCall(&ni);
 }

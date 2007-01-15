@@ -25,18 +25,17 @@ EmotSet JispParser::parse(string str) {
 
   try {
     this->parser.parse_memory(str.c_str());
-  }
-  catch(xmlpp::exception ex) {
+  } catch(xmlpp::exception ex) {
     throw XMLParserException(ex.what());
   }
 
   rootNode = this->parser.get_document()->get_root_node();
-  if (rootNode->get_name() != "icondef") throw JispParser::WrongTagException("Z³a nazwa korzenia dokumentu, podejrzewam z³y format");
+  if (rootNode->get_name() != "icondef") throw JispParser::WrongTagException("Z³a nazwa korzenia dokumentu (z³y format ?)");
 
   nodes = rootNode->get_children("meta");
-  if (nodes.size() != 1) throw WrongTagException("Nie ma dok³adnie jednego taga meta");
+  if (nodes.size() != 1) throw WrongTagException("Nie ma dok³adnie jednego elementu 'meta'");
   metaNode = *nodes.begin();
-  if (!metaNode) throw WrongTagException("Tag meta nie zawiera dzieci");
+  if (!metaNode) throw WrongTagException("Element 'meta' nie zawiera dzieci");
 
   nodes = metaNode->get_children("name");
   if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
@@ -55,8 +54,8 @@ EmotSet JispParser::parse(string str) {
 
   nodes = metaNode->get_children("author");
   for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
-    if(dynamic_cast<xmlpp::Element*>(*it)) {
-      result.authors.push_back(Author(dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str(),
+    if (dynamic_cast<xmlpp::Element*>(*it)) {
+      result.authors.push_back(EmotAuthor(dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str(),
         dynamic_cast<xmlpp::Element*>(*it)->get_attribute("jid") ? dynamic_cast<xmlpp::Element*>(*it)->get_attribute("jid")->get_value().c_str() : ""));
     }
   }
@@ -73,19 +72,18 @@ EmotSet JispParser::parse(string str) {
   
   icons = rootNode->get_children("icon");
   for (xmlpp::Node::NodeList::iterator it = icons.begin(); it != icons.end(); it++) {
+    string mime;
     Emot emot;
-    emot.preg = false;
-    string mime = "";
 
     nodes = (*it)->get_children("object");
     for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
       if (dynamic_cast<xmlpp::Element*>(*it) && dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")) {
         mime = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")->get_value();
-        if(mime == "image/png" || mime == "image/gif" || mime == "image/jpeg") {
+        if (mime == "image/png" || mime == "image/gif" || mime == "image/jpeg") {
           emot.imgPath = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content();
           break;
         }
-        mime = "";
+        mime.clear();
       }
     }
 

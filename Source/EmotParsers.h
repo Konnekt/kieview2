@@ -38,7 +38,7 @@ public:
   }
 
 public:
-  //TODO: w przysz³oœci sam wczytuje plik
+  // TODO: w przysz³oœci sam wczytuje plik
   EmotSet parse(string str);
 
 public:

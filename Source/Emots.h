@@ -19,45 +19,46 @@
 
 class Emot {
 public:
-  Emot(string _text = "", string _imgPath = "", bool _preg = false): 
+  Emot(const StringRef& _text = "", const string& _imgPath = "", bool _preg = false): 
     text(_text), imgPath(_imgPath), preg(_preg) { }
   
-  //TODO: findAndReplace, lub coœ w tym stylu?
+  // TODO: findAndReplace, lub coœ w tym stylu?
 
 public:
-  string text;
+  String text;
   string imgPath;
   bool preg;
 };
 
-class Author {
+class EmotAuthor {
 public:
-  Author(string _name = "", string _jid = ""): name(_name), jid(_jid) { }
+  EmotAuthor(const StringRef& _name = "", const StringRef& _jid = ""): name(_name), jid(_jid) { }
 
 public:
-  string name;
-  string jid;
+  String name;
+  String jid;
 };
 
 class EmotSet {
 public:
+  typedef list<EmotAuthor> tAuthors;
   typedef list<Emot> tEmots;
-  typedef list<Author> tAuthors;
 
 public:
-  EmotSet(string _name = "", string _version = "", string _description = "", tAuthors _authors = tAuthors(), 
-    string _creationTime = "", string _url = ""):
+  EmotSet(const StringRef& _name = "", const string& _version = "", const StringRef& _description = "", 
+    const tAuthors& _authors = tAuthors(), const string& _creationTime = "", const StringRef& _url = ""):
     name(_name), version(_version), description(_description), authors(_authors), creationTime(_creationTime),
     url(_url) { }
   
 public:
-  string name;
-  string version;
-  string description;
   tAuthors authors;
-  string creationTime;
-  string url;
   tEmots emots;
+
+  String name;
+  string version;
+  String description;
+  string creationTime;
+  String url;
 };
 
 #endif // __EMOTS_H__

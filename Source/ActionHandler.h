@@ -22,11 +22,11 @@
 
 namespace kIEview2 {
   class ActionHandler: public IECtrl::AnchorClickListener,
-                        public IECtrl::PopupMenuListener,
-                        public IECtrl::DropListener,
-                        public IECtrl::ExternalListener,
-                        public IECtrl::KeyDownListener,
-                        public IECtrl::ScriptMessageListener {
+                       public IECtrl::PopupMenuListener,
+                       public IECtrl::DropListener,
+                       public IECtrl::ExternalListener,
+                       public IECtrl::KeyDownListener,
+                       public IECtrl::ScriptMessageListener {
   public:
     ActionHandler(tCntId _cntId = 0): selectedMenuItem(0), cntId(_cntId) { }
 

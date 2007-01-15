@@ -77,7 +77,7 @@ namespace kIEview2 {
 
   bool Controller::hasMsgHandler(int type) {
     // locking
-    LockerCS lock(CS());
+    LockerCS lock(_locker);
 
     return msgHandlers.find(type) != msgHandlers.end();
   }
@@ -86,7 +86,7 @@ namespace kIEview2 {
     signals::connect_position pos, bool overwrite) 
   {
     // locking
-    LockerCS lock(CS());
+    LockerCS lock(_locker);
 
     if (f.empty()) {
       return false;
@@ -175,7 +175,7 @@ namespace kIEview2 {
 
   void Controller::_onAction() {
     // locking
-    LockerCS lock(CS());
+    LockerCS lock(_locker);
 
     sUIActionNotify_2params* an = this->getAN();
 
@@ -210,19 +210,19 @@ namespace kIEview2 {
       }
       case act::formatTb::bold: {
         if (an->code == ACTN_ACTION) {
-          handleTextFlag(CFM_BOLD);
+          handleTextFlag(CFE_BOLD, CFM_BOLD);
         }
         break;
       }
       case act::formatTb::italic: {
         if (an->code == ACTN_ACTION) {
-          handleTextFlag(CFM_ITALIC);
+          handleTextFlag(CFE_ITALIC, CFM_ITALIC);
         }
         break;
       }
       case act::formatTb::underline: {
         if (an->code == ACTN_ACTION) {
-          handleTextFlag(CFM_UNDERLINE);
+          handleTextFlag(CFE_UNDERLINE, CFM_UNDERLINE);
         }
         break;
       }
@@ -249,9 +249,8 @@ namespace kIEview2 {
 
   void Controller::_msgCtrlView() {
     // locking
-    LockerCS lock(CS());
+    LockerCS lock(_locker);
 
-    
     switch (this->getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
@@ -361,7 +360,7 @@ namespace kIEview2 {
 
   void Controller::_msgCtrlSend() {
     // locking
-    LockerCS lock(CS());
+    LockerCS lock(_locker);
 
     switch (getAN()->code) {
       case UI::Notify::supportsFormatting: {
@@ -461,16 +460,18 @@ namespace kIEview2 {
     if (!howMany) return 0;
 
     // locking
-    LockerCS lock(CS());
-
-    Tables::oTable table = historyTable;
-    bool dataLoaded = loadMsgTable(cnt);
-    list<UI::Notify::_insertMsg> msgs;
+    LockerCS lock(_locker);
 
     IMLOG("[Controller::readMsgs()]: cnt = %i, howMany = %i, sessionOffset = %i",
       cnt, howMany, sessionOffset);
 
-    for (int i = table->getRowCount() - 1, m = 0, s = 0; (i >= 0) && (m < howMany); i--) {
+    Tables::oTable table = historyTable;
+    bool dataLoaded = loadMsgTable(cnt);
+
+    list<UI::Notify::_insertMsg> msgs;
+    int m = 0;
+
+    for (int i = table->getRowCount() - 1, s = 0; (i >= 0) && (m < howMany); i--) {
       if (sessionOffset) {
         if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
           s++;
@@ -495,12 +496,14 @@ namespace kIEview2 {
       msgs.push_back(UI::Notify::_insertMsg(msg, getStringCol(table, i, fieldDisplay), false));
       m++;
     }
-    
-    Message::inject(&Message::prepare(GETCNTC(cnt, CNT_NET), GETCNTC(cnt, CNT_NET), GETCNTI(cnt, CNT_NET), "Wczytujê wiadomoœci z historii.", MT_QUICKEVENT, "", MF_HANDLEDBYUI), cnt);
+
+    if (m) {
+      Message::quickEvent(cnt, "Wczytujê wiadomoœci z historii.", true);
+    }
 
     for (list<UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
       Message::inject(it->_message, cnt, it->_display, false);
-      
+
       delete [] it->_display;
       delete [] it->_message->fromUid;
       delete [] it->_message->toUid;
@@ -509,20 +512,21 @@ namespace kIEview2 {
       delete it->_message;
     }
 
-    char* buff;
-    if (howMany == 1) {
-      buff = strdup("Wczytano 1 ostatni¹ wiadomoœæ z historii.");
+    String msg;
+    if (!m) {
+      msg = "Nie wczytano ¿adnych wiadomoœci.";
+    } else if (m == 1) {
+      msg = "Wczytano <b>jedn¹</b> wiadomoœæ</b>.";
     } else {
-      buff = new char[200];
-      sprintf(buff, "Wczytano %i ostatnich wiadomoœci z historii.", howMany);
+      msg = "Wczytano <b>" + inttostr(m) + "</b> ostatnich wiadomoœci.";
     }
-    Message::inject(&Message::prepare(GETCNTC(cnt, CNT_NET), GETCNTC(cnt, CNT_NET), GETCNTI(cnt, CNT_NET), buff, MT_QUICKEVENT, "", MF_HANDLEDBYUI), cnt);
-    delete buff;
+
+    Message::quickEvent(cnt, msg, true);
 
     if (dataLoaded) {
       table->unloadData();
     }
-    return msgs.size();
+    return m;
   }
 
   int Controller::readLastMsgSession(tCntId cnt, int sessionOffset) {
@@ -557,7 +561,7 @@ namespace kIEview2 {
 
   void Controller::clearWnd(IECtrl* ctrl) {
     // locking
-    LockerCS lock(CS());
+    LockerCS lock(_locker);
 
     ctrl->clear();
     SetProp(GetParent(ctrl->getHWND()), "MsgSend", false);
@@ -645,9 +649,9 @@ namespace kIEview2 {
     tCntId cnt = 0;
 
     if (msg->flag & MF_SEND) {
-      cnt = ICMessage(IMC_CNT_FIND, msg->net, (int)msg->toUid);
+      cnt = Ctrl->ICMessage(IMC_CNT_FIND, msg->net, (int)msg->toUid);
     } else {
-      cnt = ICMessage(IMC_CNT_FIND, msg->net, (int)msg->fromUid);
+      cnt = Ctrl->ICMessage(IMC_CNT_FIND, msg->net, (int)msg->fromUid);
     }
     return cnt;
   }
@@ -673,14 +677,13 @@ namespace kIEview2 {
 
   String Controller::getDisplayFromMsg(UI::Notify::_insertMsg* an) {
     cMessage* msg = an->_message;
+    String display = GetExtParam(msg->ext, MEX_DISPLAY);
     tCntId cnt = getCntFromMsg(msg);
 
-    String mex = GetExtParam(msg->ext, MEX_DISPLAY);
-    String display;
-
-    if (mex.length()) {
-      display = mex;
-    } else if (an->_display && strlen(an->_display)) {
+    if (display.length()) {
+      return display;
+    }
+    if (an->_display && strlen(an->_display)) {
       display = an->_display;
     } else {
       if (msg->flag & MF_SEND) {
@@ -696,23 +699,20 @@ namespace kIEview2 {
     return an->act.parent != IMIG_MSGWND;
   }
 
-  void Controller::handleTextFlag(int flag) {
-    sUIActionNotify_2params* an = this->getAN();
-
-    HWND hwnd = (HWND) UIActionHandleDirect(sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlsend, an->act.cnt));
+  void Controller::handleTextFlag(int flag, int mask) {
+    HWND hwnd = (HWND) UIActionHandleDirect(sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlsend, getAN()->act.cnt));
     CHARFORMAT cf;
     ZeroMemory(&cf, sizeof(CHARFORMAT));
     cf.cbSize = sizeof(CHARFORMAT);
-    cf.dwMask = flag;
+    cf.dwMask = mask;
     DWORD dwSelMask = SendMessage(hwnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
-    if ((cf.dwMask & flag) && (dwSelMask & flag)) {
+    if ((cf.dwMask & mask) && (dwSelMask & mask)) {
       cf.dwEffects ^= flag;
     } else {
       cf.dwEffects |= flag;
     }
-
-    cf.dwMask = flag;
+    cf.dwMask = mask;
     SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
   }
 
@@ -742,7 +742,7 @@ namespace kIEview2 {
 
   String Controller::_parseMsgTpl(UI::Notify::_insertMsg* an) {
     // locking
-    LockerCS lock(CS());
+    LockerCS lock(_locker);
 
     if (!isMsgFromHistory(an) && (an->_message->flag & MF_HIDE)) {
       return "";
