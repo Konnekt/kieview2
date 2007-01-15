@@ -516,7 +516,7 @@ namespace kIEview2 {
     if (!m) {
       msg = "Nie wczytano ¿adnych wiadomoœci.";
     } else if (m == 1) {
-      msg = "Wczytano <b>jedn¹</b> wiadomoœæ</b>.";
+      msg = "Wczytano <b>jedn¹</b> wiadomoœæ.";
     } else {
       msg = "Wczytano <b>" + inttostr(m) + "</b> ostatnich wiadomoœci.";
     }

@@ -48,7 +48,7 @@ namespace Konnekt {
     typedef signal<tIMCallback(IMController*)> sigOnIMessage;
 
   public:
-    typedef std::map<String, signals::connection> tConnections;
+    typedef std::map<string, signals::connection> tConnections;
 
     struct sObserver {
       tConnections connections;

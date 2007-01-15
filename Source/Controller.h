@@ -66,6 +66,23 @@ namespace kIEview2 {
     friend class PlugController<Controller>;
 
   public:
+    typedef function<IECtrl::Var(const IECtrl::Var& args)> fExternalCallback;
+    typedef signal<IECtrl::Var(const IECtrl::Var& args)> ExternalCallbackSig;
+
+    struct sExternalCallback {
+      ExternalCallbackSig signal;
+      static long id;
+      string name;
+
+      sExternalCallback(const StringRef& _name, fExternalCallback f): name(_name) {
+        if (!f.empty()) signal.connect(f);
+        id++;
+      }
+    };
+
+    typedef std::vector<sExternalCallback*> tExternalCallbacks;
+
+  public:
     typedef function<void(param_data&, UI::Notify::_insertMsg*)> fMessageHandler;
     typedef signal<void(param_data&, UI::Notify::_insertMsg*)> MessageHandlerSig;
 
@@ -116,6 +133,35 @@ namespace kIEview2 {
     String linkify(StringRef& txt);
     String nl2br(StringRef& txt);
 
+    inline sExternalCallback* getExternalCallback(const char* name) {
+      // locking
+      LockerCS lock(_locker);
+
+      for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
+        if ((*it)->name == name) return (*it);
+      }
+      return 0;
+    }
+    inline sExternalCallback* getExternalCallback(long id) {
+      // locking
+      LockerCS lock(_locker);
+
+      for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
+        if ((*it)->id == id) return (*it);
+      }
+      return 0;
+    }
+    inline sExternalCallback* registerExternalCallback(const char* name, fExternalCallback f) {
+      // locking
+      LockerCS lock(_locker);
+
+      if (!getExternalCallback(name)) {
+        externalCallbacks.push_back(new sExternalCallback(name, f));
+        return externalCallbacks[externalCallbacks.size() - 1];
+      }
+      return 0;
+    }
+
   protected:
     void _onPrepare();
     void _onAction();
@@ -144,9 +190,6 @@ namespace kIEview2 {
       return resultChar;
     }
 
-    // void registerExternalCallback(const StringRef& name, fExternalCallback);
-    // void fireExternalCallback(const StringRef& name);
-
     String _parseStatusTpl(UI::Notify::_insertStatus* an);
     String _parseMsgTpl(UI::Notify::_insertMsg* an);
 
@@ -167,6 +210,7 @@ namespace kIEview2 {
     WNDPROC oldMsgWndProc;
 
   protected:
+    tExternalCallbacks externalCallbacks;
     tActionHandlers actionHandlers;
     tMsgHandlers msgHandlers;
     CriticalSection _locker;

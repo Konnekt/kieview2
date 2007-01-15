@@ -29,6 +29,14 @@ namespace kIEview2 {
     return MessageBox(hWnd, lpText, "[kIEview2] Wiadomoœæ od skryptu", dwType); 
   }
 
+  IECtrl::Var ActionHandler::Trigger(long id, IECtrl::Var& args) {
+    return Controller::getInstance()->getExternalCallback(id)->signal(args);
+  }
+
+  long ActionHandler::GetMemberID(const char *name) {
+    return Controller::getInstance()->getExternalCallback(name)->id;
+  }
+
   IECtrl::PopupMenuListener::MakeAction ActionHandler::PopupMenu(IECtrl::PopupMenuListener::MenuType type, POINT pt, IECtrl* ctrl) {
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), -1, ACTS_HIDDEN);

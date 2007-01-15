@@ -17,8 +17,8 @@
 #ifndef __ACTIONHANDLER_H__
 #define __ACTIONHANDLER_H__
 
-#include "IECtrl.h"
 #include "kIEView2.h"
+#include "IECtrl.h"
 
 namespace kIEview2 {
   class ActionHandler: public IECtrl::AnchorClickListener,
@@ -36,10 +36,11 @@ namespace kIEview2 {
     MakeAction PopupMenu(MenuType type, POINT pt, IECtrl* ctrl);
     int ShowMessage(HWND hWnd, const char* lpText, DWORD dwType);
 
+    long GetMemberID(const char *name);
+    IECtrl::Var Trigger(long id, IECtrl::Var& args);
+
     // @todo implement
     inline bool KeyDown(UINT uCode, DWORD dwFlags) { return true; }
-    inline long GetMemberID(const char *name) { return 0; }
-    inline IECtrl::Var Trigger(long id, IECtrl::Var &args) { return IECtrl::Var(); }
 
   public:
     int selectedMenuItem;
