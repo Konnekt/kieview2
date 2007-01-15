@@ -324,6 +324,7 @@ public:
     Var(bool value);
     Var(double value);
     Var(const char * value);
+    Var(const Var & copy);
     Var(Var & copy);
     Var(VARIANT &v);
     ~Var();
@@ -344,6 +345,7 @@ public:
     int length();
     Var & operator[](int i);
 
+    Var & operator=(const Var &copy);
     Var & operator=(Var &copy);
     Var & operator=(int value);
     Var & operator=(double value);

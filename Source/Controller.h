@@ -71,12 +71,11 @@ namespace kIEview2 {
 
     struct sExternalCallback {
       ExternalCallbackSig signal;
-      static long id;
       string name;
+      long id;
 
-      sExternalCallback(const StringRef& _name, fExternalCallback f): name(_name) {
+      sExternalCallback(const StringRef& _name, fExternalCallback f): name(_name), id(getRandomID()) {
         if (!f.empty()) signal.connect(f);
-        id++;
       }
     };
 
@@ -132,6 +131,14 @@ namespace kIEview2 {
     String htmlEscape(StringRef& txt);
     String linkify(StringRef& txt);
     String nl2br(StringRef& txt);
+
+    inline static int getRandomID() {
+      // generacja losowego id
+      LARGE_INTEGER li;
+      QueryPerformanceCounter(&li);
+
+      return (++ref << 16) | (li.LowPart & 0xFFFF);
+    }
 
     inline sExternalCallback* getExternalCallback(const char* name) {
       // locking
@@ -209,6 +216,9 @@ namespace kIEview2 {
   public:
     WNDPROC oldMsgWndProc;
 
+  private:
+    static int ref;
+
   protected:
     tExternalCallbacks externalCallbacks;
     tActionHandlers actionHandlers;
@@ -218,6 +228,9 @@ namespace kIEview2 {
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
   };
+
+  // initialization
+  int Controller::ref = 0;
 }
 
 #endif // __CONTROLLER_H__
