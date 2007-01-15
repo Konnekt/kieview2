@@ -145,7 +145,7 @@ namespace kIEview2 {
       LockerCS lock(_locker);
 
       for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
-        if ((*it)->name == name) return (*it);
+        if ((*it)->name == name) return *it;
       }
       return 0;
     }
@@ -154,7 +154,7 @@ namespace kIEview2 {
       LockerCS lock(_locker);
 
       for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
-        if ((*it)->id == id) return (*it);
+        if ((*it)->id == id) return *it;
       }
       return 0;
     }

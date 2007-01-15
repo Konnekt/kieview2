@@ -30,11 +30,13 @@ namespace kIEview2 {
   }
 
   IECtrl::Var ActionHandler::Trigger(long id, IECtrl::Var& args) {
-    return Controller::getInstance()->getExternalCallback(id)->signal(args);
+    Controller::sExternalCallback* f = Controller::getInstance()->getExternalCallback(id);
+    return !f ? IECtrl::Var() : f->signal(args);
   }
 
   long ActionHandler::GetMemberID(const char *name) {
-    return Controller::getInstance()->getExternalCallback(name)->id;
+    Controller::sExternalCallback* f = Controller::getInstance()->getExternalCallback(name);
+    return !f ? 0 : f->id;
   }
 
   IECtrl::PopupMenuListener::MakeAction ActionHandler::PopupMenu(IECtrl::PopupMenuListener::MenuType type, POINT pt, IECtrl* ctrl) {
