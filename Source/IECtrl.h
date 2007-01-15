@@ -345,7 +345,7 @@ public:
     int length();
     Var & operator[](int i);
 
-    Var & operator=(const Var &copy);
+    const Var & operator=(const Var &copy);
     Var & operator=(Var &copy);
     Var & operator=(int value);
     Var & operator=(double value);

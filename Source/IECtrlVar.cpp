@@ -35,9 +35,9 @@ IECtrl::Var::Var(const char * value) {
   setValue(value);
 }
 
-IECtrl::Var::Var(const IECtrl::Var& _copy) {
+IECtrl::Var::Var(const IECtrl::Var& copy) {
   m_eType = Type::Unknown;
-  this->copy(static_cast<IECtrl::Var>(_copy));
+  this->copy((IECtrl::Var&)copy);
 }
 
 IECtrl::Var::Var(IECtrl::Var & copy) {
@@ -53,9 +53,9 @@ IECtrl::Var::~Var() {
   clear();
 }
 
-IECtrl::Var & IECtrl::Var::operator=(const IECtrl::Var &copy) {
+const IECtrl::Var & IECtrl::Var::operator=(const IECtrl::Var &copy) {
   if (this == &copy) return *this;
-  this->copy(static_cast<IECtrl::Var>(copy));
+  this->copy((IECtrl::Var&)copy);
   return *this;
 }
 
