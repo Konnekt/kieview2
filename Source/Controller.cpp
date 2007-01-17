@@ -16,6 +16,46 @@
 #include "Controller.h"
 #include "Message.h"
 
+/*
+#include <json/value.h>
+#include <json/reader.h>
+#include <json/writer.h>
+
+#pragma comment(lib, "json_vc71_libmt.lib")
+*/
+
+void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
+  unsigned int ksize = strlen((char*)key);
+  unsigned int ki = 0;
+
+  if (!size) {
+    size = strlen((char*)data);
+  }
+
+  int j = 0;
+  for (unsigned int p = 0; p < size; p++) {
+    *data = (*data ^ key[ki]) + (unsigned char)((j) & 0xFF); // | (j * 2);
+    data++;
+    ki++;
+    if (ki >= ksize) ki = 0;
+    j++;
+  }
+}
+
+void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
+  unsigned int ksize = strlen((char*)key);
+  unsigned int ki = 0;
+
+  int j = 0;
+  for (unsigned int p = 0; p < size; p++) {
+    *data = (*data - (unsigned char)((j) & 0xFF)) ^ key[ki]; // | (j * 2);
+    data++;
+    ki++;
+    if (ki >= ksize) ki = 0;
+    j++;
+  }
+}
+
 namespace kIEview2 {
   Controller::Controller() {
     /* Static values like net, type or version */
@@ -67,42 +107,15 @@ namespace kIEview2 {
     delete tplHandler;
     delete rtfHtml;
 
+    for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
+      delete *it;
+    }
     for (tActionHandlers::iterator it = actionHandlers.begin(); it != actionHandlers.end(); it++) {
       delete it->second;
     }
     for (tMsgHandlers::iterator it = msgHandlers.begin(); it != msgHandlers.end(); it++) {
       delete it->second;
     }
-  }
-
-  bool Controller::hasMsgHandler(int type) {
-    // locking
-    LockerCS lock(_locker);
-
-    return msgHandlers.find(type) != msgHandlers.end();
-  }
-
-  bool Controller::registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority, 
-    signals::connect_position pos, bool overwrite) 
-  {
-    // locking
-    LockerCS lock(_locker);
-
-    if (f.empty()) {
-      return false;
-    }
-    if (!hasMsgHandler(type)) {
-      msgHandlers[type] = new sMessageHandler;
-    }
-    if (msgHandlers[type]->connections.find(label) != msgHandlers[type]->connections.end()) {
-      if (overwrite) {
-        msgHandlers[type]->connections[label].disconnect();
-      } else {
-        return false;
-      }
-    }
-    msgHandlers[type]->label = label;
-    return (msgHandlers[type]->connections[label] = msgHandlers[type]->signal.connect(priority, f, pos)).connected();
   }
 
   void Controller::_onPrepare() {
@@ -439,6 +452,67 @@ namespace kIEview2 {
     return CallWindowProc(getInstance()->oldMsgWndProc, hWnd, msg, wParam, lParam);
   }
 
+  bool Controller::hasMsgHandler(int type) {
+    // locking
+    LockerCS lock(_locker);
+
+    return msgHandlers.find(type) != msgHandlers.end();
+  }
+
+  bool Controller::registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority, 
+    signals::connect_position pos, bool overwrite) 
+  {
+    // locking
+    LockerCS lock(_locker);
+
+    if (f.empty()) {
+      return false;
+    }
+    if (!hasMsgHandler(type)) {
+      msgHandlers[type] = new sMessageHandler;
+    }
+    if (msgHandlers[type]->connections.find(label) != msgHandlers[type]->connections.end()) {
+      if (overwrite) {
+        msgHandlers[type]->connections[label].disconnect();
+      } else {
+        return false;
+      }
+    }
+    msgHandlers[type]->label = label;
+    return (msgHandlers[type]->connections[label] = msgHandlers[type]->signal.connect(priority, f, pos)).connected();
+  }
+
+  Controller::sExternalCallback* Controller::getExternalCallback(const char* name) {
+    // locking
+    LockerCS lock(_locker);
+
+    for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
+      if ((*it)->name == name) return *it;
+    }
+    return 0;
+  }
+
+  Controller::sExternalCallback* Controller::getExternalCallback(long id) {
+    // locking
+    LockerCS lock(_locker);
+
+    for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
+      if ((*it)->id == id) return *it;
+    }
+    return 0;
+  }
+
+  Controller::sExternalCallback* Controller::registerExternalCallback(const char* name, fExternalCallback f) {
+    // locking
+    LockerCS lock(_locker);
+
+    if (!getExternalCallback(name)) {
+      externalCallbacks.push_back(new sExternalCallback(name, f));
+      return externalCallbacks[externalCallbacks.size() - 1];
+    }
+    return 0;
+  }
+
   bool Controller::loadMsgTable(tCntId cnt) {
     if (historyTable->isLoaded()) return false;
 
@@ -454,6 +528,21 @@ namespace kIEview2 {
     historyTable->load(true);
 
     return true;
+  }
+
+  char* Controller::getStringCol(Tables::oTable& table, tRowId row, int pos) {
+    const char encryptKey[] = "\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84";
+    const char decryptKey[] = "\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d";
+
+    char* resultChar = table->getStr(row, table->getColIdByPos(pos));
+
+    if (table->getColType(table->getColIdByPos(pos)) & cflagXor) {
+      xor1_encrypt((unsigned char*)encryptKey, (unsigned char*)resultChar, strlen(resultChar));
+      xor1_decrypt((unsigned char*)decryptKey, (unsigned char*)resultChar, strlen(resultChar));
+
+      IMLOG("colPos = %i, value = %s", pos, resultChar);
+    }
+    return resultChar;
   }
 
   int Controller::readMsgs(tCntId cnt, int howMany, int sessionOffset) {

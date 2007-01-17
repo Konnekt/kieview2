@@ -28,46 +28,14 @@
 
 using namespace kIEview2;
 
-void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
-  unsigned int ksize = strlen((char*)key);
-  unsigned int ki = 0;
-
-  if (!size) {
-    size = strlen((char*)data);
-  }
-
-  int j = 0;
-  for (unsigned int p = 0; p < size; p++) {
-    *data = (*data ^ key[ki]) + (unsigned char)((j) & 0xFF); // | (j * 2);
-    data++;
-    ki++;
-    if (ki >= ksize) ki = 0;
-    j++;
-  }
-}
-
-void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
-  unsigned int ksize = strlen((char*)key);
-  unsigned int ki = 0;
-
-  int j = 0;
-  for (unsigned int p = 0; p < size; p++) {
-    *data = (*data - (unsigned char)((j) & 0xFF)) ^ key[ki]; // | (j * 2);
-    data++;
-    ki++;
-    if (ki >= ksize) ki = 0;
-    j++;
-  }
-}
-
 namespace kIEview2 {
   class Controller : public PlugController<Controller> {
   public:
     friend class PlugController<Controller>;
 
   public:
-    typedef function<IECtrl::Var(const IECtrl::Var&)> fExternalCallback;
-    typedef signal<IECtrl::Var(const IECtrl::Var&)> ExternalCallbackSig;
+    typedef function<IECtrl::Var(IECtrl::Var&)> fExternalCallback;
+    typedef signal<IECtrl::Var(IECtrl::Var&)> ExternalCallbackSig;
 
     struct sExternalCallback {
       ExternalCallbackSig signal;
@@ -119,6 +87,10 @@ namespace kIEview2 {
     bool registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority = 0, 
       signals::connect_position pos = signals::at_back, bool overwrite = true);
 
+    sExternalCallback* getExternalCallback(const char* name);
+    sExternalCallback* getExternalCallback(long id);
+    sExternalCallback* registerExternalCallback(const char* name, fExternalCallback f);
+
     int readMsgs(tCntId cnt, int howMany, int sessionOffset = 0);
     int readLastMsgSession(tCntId cnt, int sessionOffset = 0);
 
@@ -137,36 +109,7 @@ namespace kIEview2 {
       LARGE_INTEGER li;
       QueryPerformanceCounter(&li);
 
-      return (++ref << 16) | (li.LowPart & 0xFFFF);
-    }
-
-    inline sExternalCallback* getExternalCallback(const char* name) {
-      // locking
-      LockerCS lock(_locker);
-
-      for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
-        if ((*it)->name == name) return *it;
-      }
-      return 0;
-    }
-    inline sExternalCallback* getExternalCallback(long id) {
-      // locking
-      LockerCS lock(_locker);
-
-      for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
-        if ((*it)->id == id) return *it;
-      }
-      return 0;
-    }
-    inline sExternalCallback* registerExternalCallback(const char* name, fExternalCallback f) {
-      // locking
-      LockerCS lock(_locker);
-
-      if (!getExternalCallback(name)) {
-        externalCallbacks.push_back(new sExternalCallback(name, f));
-        return externalCallbacks[externalCallbacks.size() - 1];
-      }
-      return 0;
+      return (++refID << 16) | (li.LowPart & 0xFFFF);
     }
 
   protected:
@@ -178,24 +121,12 @@ namespace kIEview2 {
 
     tCntId getCntFromMsg(cMessage* msg);
     String getDisplayFromMsg(UI::Notify::_insertMsg* an);
+
     bool isMsgFromHistory(sUIActionNotify_base* an);
-    void handleTextFlag(int flag, int mask);
     bool loadMsgTable(tCntId cnt);
 
-    inline char* getStringCol(Tables::oTable& table, tRowId row, int pos) {
-      const char encryptKey[] = "\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84";
-      const char decryptKey[] = "\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d";
-
-      char* resultChar = table->getStr(row, table->getColIdByPos(pos));
-
-      if (table->getColType(table->getColIdByPos(pos)) & cflagXor) {
-        xor1_encrypt((unsigned char*)encryptKey, (unsigned char*)resultChar, strlen(resultChar));
-        xor1_decrypt((unsigned char*)decryptKey, (unsigned char*)resultChar, strlen(resultChar));
-
-        IMLOG("colPos = %i, value = %s", pos, resultChar);
-      }
-      return resultChar;
-    }
+    void handleTextFlag(int flag, int mask);
+    char* getStringCol(Tables::oTable& table, tRowId row, int pos); // do zmiany
 
     String _parseStatusTpl(UI::Notify::_insertStatus* an);
     String _parseMsgTpl(UI::Notify::_insertMsg* an);
@@ -217,7 +148,7 @@ namespace kIEview2 {
     WNDPROC oldMsgWndProc;
 
   private:
-    static int ref;
+    static UINT refID;
 
   protected:
     tExternalCallbacks externalCallbacks;
@@ -230,7 +161,7 @@ namespace kIEview2 {
   };
 
   // initialization
-  int Controller::ref = 0;
+  UINT Controller::refID = 0;
 }
 
 #endif // __CONTROLLER_H__
