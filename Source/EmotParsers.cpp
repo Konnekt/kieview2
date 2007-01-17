@@ -103,20 +103,20 @@ EmotSet JispParser::parse(string str) {
 
 EmotSet GGEmotParser::parse(string str) {
   EmotSet result;
-  parser.setSubject(str);
-  parser.setPattern("/\\((\".+?\",?)+\\),\".+?\"(,\".+?\")?/");
-  while (parser.match_global()) {
+  tStringVector strings;
+  split(str, "\n", strings);
+  for (tStringVector::iterator it = strings.begin(); it != strings.end(); it++) {
     EmotSet::tEmots emots;
-    subParser.setSubject(parser[0]);
-    subParser.setPattern("/,?\"(.+?)\",?/");
-    while (subParser.match_global()) {
-      emots.push_back(Emot(subParser[1].c_str(), "", "", subParser[1][0] == '/'));
-      if (subParser.getSubject()[subParser.getStart()] == ')') {
+    parser.setSubject(*it);
+    parser.setPattern("/,?\"(.+?)\",?/");
+    while (parser.match_global()) {
+      emots.push_back(Emot(parser[1].c_str(), "", "", parser[1][0] == '/'));
+      if (parser.getSubject()[parser.getStart()] == ')') {
         string img_path;
         string menu_img_path;
-        if (subParser.match_global()) {
-          img_path = subParser[1];
-          menu_img_path = subParser.match_global() ? subParser[1] : img_path;
+        if (parser.match_global()) {
+          img_path = parser[1];
+          menu_img_path = parser.match_global() ? parser[1] : img_path;
           for (EmotSet::tEmots::iterator it = emots.begin(); it != emots.end(); it++) {
             it->img_path = img_path;
             it->menu_img_path = menu_img_path;

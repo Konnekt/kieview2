@@ -53,7 +53,6 @@ public:
   
 public:
   RegEx parser;
-  RegEx subParser;
 };
 
 #endif // __EMOTSPARSERS_H__
