@@ -19,30 +19,41 @@
 
 class EmotParser {
 public:
-  class XMLParserException: public ExceptionString {
+  class WrongFormat: public ExceptionString {
   public:
-    XMLParserException(const StringRef& reason): ExceptionString(reason) { }
-  };
-  class WrongTagException: public ExceptionString {
-  public:
-    WrongTagException(const StringRef& reason): ExceptionString(reason) { }
+    WrongFormat(const StringRef& reason): ExceptionString(reason) { }
   };
   
+public:
   virtual EmotSet parse(string str) = 0;
 };
 
 class JispParser: public EmotParser {
+public:
+  class XMLParserException: public ExceptionString {
+  public:
+    XMLParserException(const StringRef& reason): ExceptionString(reason) { }
+  };
+
 public:
   JispParser() {
     this->parser.set_substitute_entities();
   }
 
 public:
-  // TODO: w przysz³oœci sam wczytuje plik
   EmotSet parse(string str);
 
 public:
   xmlpp::DomParser parser;
+};
+
+class GGEmotParser: public EmotParser {
+public:
+  EmotSet parse(string str);
+  
+public:
+  RegEx parser;
+  RegEx subParser;
 };
 
 #endif // __EMOTSPARSERS_H__
