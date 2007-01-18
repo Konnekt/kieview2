@@ -49,6 +49,14 @@ IECtrl::Var::Var(VARIANT &v) {
   setValue(v);
 }
 
+IECtrl::Var::Var(Date64 &v) {
+  setValue(v);
+}
+
+IECtrl::Var::Var(IECtrl::Var* value[], unsigned int count) {
+  setValue(value, count);
+}
+
 IECtrl::Var::~Var() {
   clear();
 }
@@ -81,6 +89,11 @@ IECtrl::Var & IECtrl::Var::operator=(const char * value) {
 }
 
 IECtrl::Var & IECtrl::Var::operator=(VARIANT &value) {
+  setValue(value);
+  return *this;
+}
+
+IECtrl::Var & IECtrl::Var::operator=(Date64 &value) {
   setValue(value);
   return *this;
 }
@@ -133,6 +146,13 @@ const char * IECtrl::Var::getString() {
     return m_szValue;
   else if (m_eType == Type::Array)
     return "Array";
+  else if (m_eType == Type::Date) {
+    if (m_dtValue != NULL) {
+      return m_dtValue->strftime("%Y-%m-%d %H:%M:%S").c_str();
+    } else {
+      return Date64().strftime("%Y-%m-%d %H:%M:%S").c_str();
+    }
+  }
 
   return "";
 }
@@ -156,9 +176,42 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
   } else if (m_eType == Type::String) {
     v->vt = VT_BSTR;
     v->bstrVal = _com_util::ConvertStringToBSTR(m_szValue);
+  } else if (m_eType == Type::Date) {
+    v->vt = VT_DATE;
+    if (m_dtValue != NULL) {
+      __int64 date = m_dtValue->getTime64();
+      v->date = date / (24 * 60 * 60);
+      v->date+= 25569;
+    } else {
+      v->date= 0;
+    }
+  } else if (m_eType == Type::Array) {
+    v->vt = VT_ARRAY;
+    if (v->parray->rgsabound[0].cElements < m_nLength && m_aValue != NULL) {
+      delete [] v->parray->pvData;
+    }
+    if (v->parray == NULL) {
+      SAFEARRAYBOUND rgsabound;
+      rgsabound.cElements = m_nLength;
+      rgsabound.lLbound = 0;
+      v->parray = SafeArrayCreate(VT_VARIANT, 1, &rgsabound);
+    }
+    int min = (v->parray->rgsabound[0].cElements > m_nLength)? m_nLength : v->parray->rgsabound[0].cElements;
+    VARIANT* var = (VARIANT*)v->parray->pvData;
+    for(DWORD i = 0; i < min; i++) {
+       memcpy(&var[i], m_aValue[i]->getVariant(NULL), sizeof(VARIANT));
+    }
   }
 
   return v;
+}
+
+Date64 IECtrl::Var::getDate() {
+  if (m_eType == Type::Date && m_dtValue != NULL) {
+    return (*m_dtValue);
+  }
+
+  return Date64(true);
 }
 
 int IECtrl::Var::length() {
@@ -182,7 +235,20 @@ void IECtrl::Var::operator+=(IECtrl::Var & var) {
       m_dValue += var.getReal();
       break;
 
-    case Type::Array:
+    case Type::Array: {
+      if (var.m_nLength > 0) {
+        Var** pValue = new IECtrl::Var*[m_nLength + var.m_nLength];
+        CopyMemory(pValue, m_aValue, sizeof(IECtrl::Var*) * m_nLength);
+
+        for (int i = m_nLength; i < m_nLength + var.m_nLength; i++) {
+          pValue[i] = new IECtrl::Var(var.getElement(i - m_nLength));
+        }
+        delete [] m_aValue;
+        m_aValue = pValue;
+        m_nLength += var.m_nLength;
+      }
+      break;
+    }
     case Type::Unknown:
       clear();
       setValue("");
@@ -208,6 +274,15 @@ void IECtrl::Var::operator+=(IECtrl::Var & var) {
       m_szValue = pValue;
       break;
     }
+
+    case Type::Date: {
+      if (m_dtValue) {
+        (*m_dtValue) = (*m_dtValue).getInt64() + var.getDate().getInt64();
+      } else {
+        setValue(var.getDate());
+      }
+      break;
+    }
   }
 }
 
@@ -223,6 +298,10 @@ void IECtrl::Var::operator+=(const char* var) {
   *this += IECtrl::Var(var);
 }
 
+void IECtrl::Var::operator+=(Date64& var) {
+  *this += IECtrl::Var(var);
+}
+
 // private
 void IECtrl::Var::clear() {
   if (m_eType == Type::String && m_szValue != NULL) {
@@ -233,6 +312,8 @@ void IECtrl::Var::clear() {
         delete m_aValue[i];
       }
     delete [] m_aValue;
+  } else if (m_eType == Type::Date) {
+    delete m_dtValue;
   }
   m_eType = Type::Unknown;
   m_nLength = 0;
@@ -255,6 +336,9 @@ void IECtrl::Var::copy(IECtrl::Var& copy) {
       break;
     case Type::Array:
       setValue(copy.m_aValue, copy.m_nLength);
+      break;
+    case Type::Date:
+      setValue(copy.getDate());
       break;
     default:
       m_eType = Type::Unknown;
@@ -316,6 +400,35 @@ void IECtrl::Var::setValue(VARIANT &v) {
       delete [] temp;
       break;
     }
+    case VT_DATE: {
+      DATE date = v.dblVal - 25569;
+      __int64 date64 = date * (24 * 60 * 60);
+      setValue(Date64(date64));
+      break;
+    }
+    case VT_ARRAY: {
+      if (v.parray->cDims != 1 || (SafeArrayLock(v.parray) < 0)) return;
+
+      if (v.parray->fFeatures & FADF_VARIANT) {
+        IECtrl::Var** var = new IECtrl::Var*[v.parray->rgsabound[0].cElements];
+        VARIANT* vArray = (VARIANT *)v.parray->pvData;
+
+        for (DWORD i = 0; i < v.parray->rgsabound[0].cElements; i++) {
+          var[i] = new IECtrl::Var(vArray[i]);
+        }
+        setValue(var, v.parray->rgsabound[0].cElements);
+
+        for (DWORD i = 0; i < v.parray->rgsabound[0].cElements; i++) {
+          delete var[i];
+        }
+        delete [] var;
+      }
+      if (v.parray->fFeatures & FADF_BSTR) {
+      }
+      
+      SafeArrayUnlock(v.parray);
+    }
+
     /*
     case VT_DISPATCH: {
       IDispatch * pDispatch = v.pdispVal;
@@ -351,6 +464,11 @@ void IECtrl::Var::setValue(VARIANT &v) {
     }
     */
   }
+}
+void IECtrl::Var::setValue(Date64 &v) {
+  clear();
+  m_dtValue = new Date64(v.getTime64());
+  m_eType = Type::Date;
 }
 
 IECtrl::Var & IECtrl::Var::getElement(int i) {
@@ -405,6 +523,12 @@ IECtrl::Var IECtrl::Var::operator+(double var) {
 }
 
 IECtrl::Var IECtrl::Var::operator+(const char *var) {
+  IECtrl::Var ret(*this);
+  ret += IECtrl::Var(var);
+  return ret;
+}
+
+IECtrl::Var IECtrl::Var::operator+(Date64 &var) {
   IECtrl::Var ret(*this);
   ret += IECtrl::Var(var);
   return ret;

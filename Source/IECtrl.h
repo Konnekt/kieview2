@@ -327,6 +327,8 @@ public:
     Var(const Var & copy);
     Var(Var & copy);
     Var(VARIANT &v);
+    Var(Date64 &v);
+    Var(IECtrl::Var* value[], unsigned int count); 
     ~Var();
 
     int getInteger();
@@ -334,6 +336,7 @@ public:
     double getReal();
     const char * getString();
     VARIANT * getVariant(VARIANT *v = NULL);
+    Date64 getDate();
 
     void setValue(int value);
     void setValue(bool value);
@@ -341,6 +344,7 @@ public:
     void setValue(const char * value);
     void setValue(Var* value[], unsigned int count);
     void setValue(VARIANT &v);
+    void setValue(Date64 &value);
 
     int length();
     Var & operator[](int i);
@@ -351,16 +355,19 @@ public:
     Var & operator=(double value);
     Var & operator=(const char * value);
     Var & operator=(VARIANT &v);
+    Var & operator=(Date64 &value);
 
     void operator+=(Var & var);
     void operator+=(int var);
     void operator+=(double var);
     void operator+=(const char* var);
+    void operator+=(Date64 &var);
 
     Var operator+(Var & var2);
     Var operator+(int var2);
     Var operator+(double var2);
     Var operator+(const char *var2);
+    Var operator+(Date64 &var);
 
 
   private:
@@ -376,7 +383,8 @@ public:
       Boolean,
       Real,
       String,
-      Array
+      Array,
+      Date
     };
     Type m_eType;
 
@@ -385,6 +393,7 @@ public:
       double m_dValue;
       char * m_szValue;
       Var ** m_aValue;
+      Date64 * m_dtValue;
     };
     int m_nLength;
   };
