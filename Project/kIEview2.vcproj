@@ -139,7 +139,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/FORCE:MULTIPLE"
 				AdditionalDependencies="stamina.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(ProjectDir)Lib"

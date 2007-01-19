@@ -20,8 +20,8 @@
 class Emot {
 public:
   Emot(const StringRef& _text = "", const string& _img_path = "", const string& _menu_img_path = "", bool _preg = false, 
-    bool _is_menu = true): 
-    text(_text), img_path(_img_path), menu_img_path(_menu_img_path), preg(_preg), is_menu(_is_menu) { }
+    bool _in_menu = true): 
+    text(_text), img_path(_img_path), menu_img_path(_menu_img_path), preg(_preg), in_menu(_in_menu) { }
   
   bool operator <(const Emot&) {
     return true;
@@ -34,7 +34,7 @@ public:
   string img_path;
   string menu_img_path;
   bool preg;
-  bool is_menu;
+  bool in_menu;
 };
 
 class EmotAuthor {
