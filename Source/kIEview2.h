@@ -55,6 +55,8 @@ namespace kIEview2 {
   namespace act {
     const unsigned int act = net * 1000 + 200;
 
+    const unsigned int resetLinkifyRegEx = act + 1;
+
     namespace popup {
       const unsigned int popup = act + 100;
 
@@ -90,9 +92,10 @@ namespace kIEview2 {
 
     const unsigned int showFormatTb = cfg + 1;
     const unsigned int linkify = cfg + 2;
-    const unsigned int useEmots = cfg + 3;
-    const unsigned int emotsDir = cfg + 4;
-    const unsigned int emotsPack = cfg + 5;
+    const unsigned int linkifyRegEx = cfg + 3;
+    const unsigned int useEmots = cfg + 4;
+    const unsigned int emotsDir = cfg + 5;
+    const unsigned int emotsPack = cfg + 6;
   }
 }
 

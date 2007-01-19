@@ -401,7 +401,7 @@ void IECtrl::Var::setValue(VARIANT &v) {
       break;
     }
     case VT_DATE: {
-      DATE date = v.dblVal - 25569;
+      DATE date = v.date - 25569;
       __int64 date64 = date * (24 * 60 * 60);
       setValue(Date64(date64));
       break;

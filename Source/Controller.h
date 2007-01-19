@@ -159,9 +159,6 @@ namespace kIEview2 {
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
   };
-
-  // initialization
-  UINT Controller::refID = 0;
 }
 
 #endif // __CONTROLLER_H__

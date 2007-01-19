@@ -19,6 +19,7 @@
 #define __CFGCTRL_H__
 
 #include "IMController.h"
+#include "Helpers.h"
 
 using namespace Konnekt::Tables;
 using namespace Stamina;
@@ -92,13 +93,13 @@ namespace Konnekt {
       }
     }
 
-    inline void resetColumn(tColId id, tCntId cnt = 0) {
+    inline void resetColumn(tColId id, tCntId cnt = 0, sUIAction* an = 0) {
       if (!_cols.size()) return;
 
       tTable table = !cnt ? tableConfig : tableContacts;
       for (tCfgCols::iterator it = _cols.begin(); it != _cols.end(); it++) {
         if ((*it)->_id == id && (*it)->_table == table) {
-          _resetColumn(*it, cnt); break;
+          _resetColumn(*it, cnt, an); break;
         }
       }
     }
@@ -163,13 +164,16 @@ namespace Konnekt {
     }
 
   protected:
-    inline void _resetColumn(sIMessage_setColumn* it, tCntId cnt = 0) {
+    inline void _resetColumn(sIMessage_setColumn* it, tCntId cnt = 0, sUIAction* an = 0) {
       bool isCnt = it->_table == tableContacts && cnt;
       bool isConfig = it->_table == tableConfig;
 
       if (!isCnt && !isConfig) {
         return;
       }
+
+      bool convert = true;
+      String val;
 
       switch (it->_type) {
         case ctypeInt: {
@@ -179,6 +183,8 @@ namespace Konnekt {
           if (isCnt) {
             set(it->_id, cnt, it->_def);
           }
+
+          val = inttostr(it->_def);
           break;
         }
         case ctypeInt64: {
@@ -188,6 +194,8 @@ namespace Konnekt {
           if (isCnt) {
             set(it->_id, cnt, *it->_def_p64);
           }
+
+          val = i64tostr(*it->_def_p64);
           break;
         }
         case ctypeString: {
@@ -197,8 +205,14 @@ namespace Konnekt {
           if (isCnt) {
             set(it->_id, cnt, it->_def_ch);
           }
+
+          val = it->_def_ch;
+          convert = false;
           break;
         }
+      }
+      if (an) {
+        UIActionCfgSetValue(*an, val.c_str(), convert);
       }
     }
 
