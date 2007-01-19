@@ -25,7 +25,7 @@ EmotSet JispParser::parse(string str) {
 
   try {
     this->parser.parse_memory(str.c_str());
-  } catch(xmlpp::exception ex) {
+  } catch (xmlpp::exception ex) {
     throw XMLParserException(ex.what());
   }
 
@@ -103,15 +103,27 @@ EmotSet JispParser::parse(string str) {
 
 EmotSet GGEmotParser::parse(string str) {
   EmotSet result;
+  EmotSet::tEmots emots;
   tStringVector strings;
+  bool isMenu;
+
   split(str, "\n", strings);
+
   for (tStringVector::iterator it = strings.begin(); it != strings.end(); it++) {
-    EmotSet::tEmots emots;
+    if ((*it)[0] == '*') {
+      isMenu = false;
+      (*it).erase(0);
+    } else {
+      isMenu = true;
+    }
+
     parser.setSubject(*it);
     parser.setPattern("/,?\"(.+?)\",?/");
+
     while (parser.match_global()) {
-      emots.push_back(Emot(parser[1].c_str(), "", "", parser[1][0] == '/'));
-      if (parser.getSubject()[parser.getStart()] == ')') {
+      emots.push_back(Emot(parser[1].c_str(), "", "", parser[1][0] == '/', isMenu));
+
+      if (parser.getSubject()[parser.getStart()] == ')' || (*it)[0] != '(') {
         string img_path;
         string menu_img_path;
         if (parser.match_global()) {
