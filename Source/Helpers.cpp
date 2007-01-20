@@ -99,11 +99,28 @@ namespace Helpers {
     return PassStringRef(txt);
   }
 
-  String trim(const StringRef& txt) {
-    CStdString buff(txt.a_str()); 
-    buff = buff.Trim();
+  string trim(string txt, const string& chars) {
+    txt = ltrim(txt, chars);
+    txt = rtrim(txt, chars);
+    return txt;
+  }
 
-    return buff;
+  string rtrim(string txt, const string& chars) {
+    if (!txt.size() || !chars.size()) return "";
+
+    for (string::const_iterator it = chars.begin(); it != chars.end(); it++) {
+      while (txt[txt.size() - 1] == (*it)) txt.erase(--txt.end());
+    }
+    return txt;
+  }
+
+  string ltrim(string txt, const string& chars) {
+    if (!txt.size() || !chars.size()) return "";
+
+    for (string::const_iterator it = chars.begin(); it != chars.end(); it++) {
+      while (txt[0] == (*it)) txt.erase(txt.begin());
+    }
+    return txt;
   }
 
   int getPluginsGroup() {

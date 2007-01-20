@@ -14,6 +14,11 @@
 #include "stdafx.h"
 #include "TplHandler.h"
 
+TplHandler::TplHandler(const string& tplDir, const string& tplExt) {
+  setTplDir(tplDir);
+  setTplExt(tplExt);
+}
+
 String TplHandler::runFunc(const string& name, udf_fn_param& params) {
   udf_fn* func = getUdfFactory()->get(name);
   func->param(params);
@@ -43,7 +48,7 @@ String TplHandler::runFunc(const string& name, const StringRef& param1, const St
 }
 
 std::string TplHandler::getTplPath(const char* tplName) {
-  std::string fullPath = tplDir;
+  string fullPath = tplDir + "/";
 
   fullPath += tplName;
   fullPath += ".";
@@ -122,5 +127,8 @@ String TplHandler::parseString(param_data* data, const StringRef& text) {
 }
 
 String TplHandler::parseTpl(param_data* data, const char* tplName) {
+  if (kPath.size()) {
+    data->hash_insert_new_var("tplPath", kPath + tplDir);
+  }
   return parseString(data, getTpl(tplName));
 }

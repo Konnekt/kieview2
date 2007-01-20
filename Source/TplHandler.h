@@ -18,6 +18,7 @@
 
 #include <ctpp/ctpp.hpp>
 #include <functions/std_fn_list.hpp>
+#include "Helpers.h"
 
 #pragma comment(lib, "ctpp.lib")
 
@@ -31,10 +32,7 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(TplHandler, iSharedObject, Version(0,1,0,0));
 
 public:
-  TplHandler(const string& tplDir = "", const string& tplExt = "tpl") {
-    setTplDir(tplDir);
-    setTplExt(tplExt);
-  }
+  TplHandler(const string& tplDir = "", const string& tplExt = "tpl");
 
 public:
   inline void addIncludeDir(const string& dir) {
@@ -46,9 +44,17 @@ public:
 
   inline void setTplDir(const string& dir) {
     tplDir = dir;
+
+    if (tplDir.size()) {
+      tplDir = unifyPath(tplDir);
+      tplDir = Helpers::ltrim(tplDir, ".\\");
+    }
   }
   inline void setTplExt(const string& ext) {
     tplExt = ext;
+  }
+  inline void setKonnektPath(const string& path) {
+    kPath = path;
   }
 
   inline udf_fn_factory* getUdfFactory() {
@@ -74,6 +80,7 @@ protected:
 
   string tplDir;
   string tplExt;
+  string kPath;
 };
 
 typedef SharedPtr<TplHandler> oTplHandler;

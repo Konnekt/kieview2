@@ -18,6 +18,7 @@
 
 namespace kIEview2 {
   void ActionHandler::AnchorClicked(const char* url, IECtrl* ctrl) {
+    Ctrl->IMessage(im::anchorClick, NET_BROADCAST, -1, cntId, (int)url);
     ShellExecute(GetDesktopWindow(), "open", url, 0, 0, SW_SHOWNORMAL);
   }
 

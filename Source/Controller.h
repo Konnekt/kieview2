@@ -42,7 +42,7 @@ namespace kIEview2 {
       string name;
       long id;
 
-      sExternalCallback(const StringRef& _name, fExternalCallback f): name(_name), id(getRandomID()) {
+      sExternalCallback(const StringRef& _name, fExternalCallback f): name(_name), id(random()) {
         if (!f.empty()) signal.connect(f);
       }
     };
@@ -104,14 +104,6 @@ namespace kIEview2 {
     String linkify(StringRef& txt);
     String nl2br(StringRef& txt);
 
-    inline static int getRandomID() {
-      // generacja losowego id
-      LARGE_INTEGER li;
-      QueryPerformanceCounter(&li);
-
-      return (++refID << 16) | (li.LowPart & 0xFFFF);
-    }
-
   protected:
     void _onPrepare();
     void _onAction();
@@ -146,9 +138,6 @@ namespace kIEview2 {
     
   public:
     WNDPROC oldMsgWndProc;
-
-  private:
-    static UINT refID;
 
   protected:
     tExternalCallbacks externalCallbacks;

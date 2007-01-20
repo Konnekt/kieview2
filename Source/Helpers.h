@@ -55,7 +55,10 @@ namespace Helpers {
   String icon32(int ico);
 
   String trunc(StringRef txt, int limit, const StringRef& suffix = "...");
-  String trim(const StringRef& txt);
+
+  string trim(string txt, const string& chars = " ");
+  string rtrim(string txt, const string& chars = " ");
+  string ltrim(string txt, const string& chars = " ");
 
   int getPluginsGroup();
   int pluginExists(int net, int type = IMT_ALL);

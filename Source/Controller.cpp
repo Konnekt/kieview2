@@ -57,9 +57,6 @@ void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int si
 }
 
 namespace kIEview2 {
-  // initialization
-  UINT Controller::refID = 0;
-
   Controller::Controller() {
     /* Static values like net, type or version */
     this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
@@ -77,7 +74,7 @@ namespace kIEview2 {
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
     config->setColumn(DTCFG, cfg::linkify, DT_CT_INT, 1, "kIEview2/linkify/use");
-    config->setColumn(DTCFG, cfg::linkifyRegEx, DT_CT_STR, "~(?>[a-z+]{2,}://|www\\.)(?:[a-z0-9]+(?:\\.[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?~i", "kIEview2/linkify/regex");
+    config->setColumn(DTCFG, cfg::linkifyRegEx, DT_CT_STR, "~(?>[a-z+]{2,}://|www\\.|ftp\\.)(?:[a-z0-9]+(?:\\.[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?~i", "kIEview2/linkify/regex");
     config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEview2/emots/use");
     config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots", "kIEview2/emots/dir");
     config->setColumn(DTCFG, cfg::emotsPack, DT_CT_STR, "", "kIEview2/emots/pack");
@@ -126,6 +123,7 @@ namespace kIEview2 {
     historyTable = Tables::registerTable(Ctrl, tableNotFound, optPrivate);
 
     // @debug replace with user selected tpl directory
+    tplHandler->setKonnektPath((char*) Ctrl->ICMessage(IMC_KONNEKTDIR));
     tplHandler->addIncludeDir("./tpl");
     tplHandler->setTplDir("./tpl/");
 

@@ -28,6 +28,7 @@ namespace kIEview2 {
     const unsigned int im = net * 1000 + IM_USER + 100;
     
     const unsigned int fileDrop = im + 1;
+    const unsigned int anchorClick = im + 2;
   }
 
   namespace ui {
