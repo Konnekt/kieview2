@@ -53,10 +53,6 @@ IECtrl::Var::Var(Date64 &v) {
   setValue(v);
 }
 
-IECtrl::Var::Var(IECtrl::Var* value[], unsigned int count) {
-  setValue(value, count);
-}
-
 IECtrl::Var::~Var() {
   clear();
 }
@@ -178,29 +174,30 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
     v->bstrVal = _com_util::ConvertStringToBSTR(m_szValue);
   } else if (m_eType == Type::Date) {
     v->vt = VT_DATE;
+    TIME_ZONE_INFORMATION time_zone;
+    GetTimeZoneInformation(&time_zone);
     if (m_dtValue != NULL) {
       __int64 date = m_dtValue->getTime64();
-      v->date = date / (24 * 60 * 60);
+      v->date = date - (time_zone.Bias * 60);
+      v->date/= (24 * 60 * 60);
       v->date+= 25569;
     } else {
       v->date= 0;
     }
   } else if (m_eType == Type::Array) {
-    v->vt = VT_ARRAY;
-    if (v->parray->rgsabound[0].cElements < m_nLength && m_aValue != NULL) {
-      delete [] v->parray->pvData;
+    if (v->parray) {
+      if (v->parray->rgsabound[0].cElements < m_nLength && m_aValue != NULL) {
+        SafeArrayDestroyData(v->parray);
+      }
     }
-    if (v->parray == NULL) {
-      SAFEARRAYBOUND rgsabound;
-      rgsabound.cElements = m_nLength;
-      rgsabound.lLbound = 0;
-      v->parray = SafeArrayCreate(VT_VARIANT, 1, &rgsabound);
+    SAFEARRAYBOUND rgsabound;
+    rgsabound.cElements = length();
+    rgsabound.lLbound = 0;
+    v->parray = SafeArrayCreate(VT_VARIANT, 1, &rgsabound);
+    for(LONG i = 0; i < v->parray->rgsabound[0].cElements; i++) {
+       SafeArrayPutElement(v->parray, &i, m_aValue[i]->getVariant(NULL));
     }
-    int min = (v->parray->rgsabound[0].cElements > m_nLength)? m_nLength : v->parray->rgsabound[0].cElements;
-    VARIANT* var = (VARIANT*)v->parray->pvData;
-    for(DWORD i = 0; i < min; i++) {
-       memcpy(&var[i], m_aValue[i]->getVariant(NULL), sizeof(VARIANT));
-    }
+    v->vt = VT_ARRAY | VT_VARIANT;
   }
 
   return v;
@@ -401,8 +398,10 @@ void IECtrl::Var::setValue(VARIANT &v) {
       break;
     }
     case VT_DATE: {
+      TIME_ZONE_INFORMATION time_zone;
+      GetTimeZoneInformation(&time_zone);
       DATE date = v.date - 25569;
-      __int64 date64 = date * (24 * 60 * 60);
+      __int64 date64 = date * (24 * 60 * 60) + (time_zone.Bias * 60);
       setValue(Date64(date64));
       break;
     }
@@ -428,8 +427,7 @@ void IECtrl::Var::setValue(VARIANT &v) {
       
       SafeArrayUnlock(v.parray);
     }
-
-    /*
+/*
     case VT_DISPATCH: {
       IDispatch * pDispatch = v.pdispVal;
       IDispatchEx * pDispEx = NULL;
@@ -462,7 +460,7 @@ void IECtrl::Var::setValue(VARIANT &v) {
       }
       break;
     }
-    */
+*/
   }
 }
 void IECtrl::Var::setValue(Date64 &v) {

@@ -328,7 +328,6 @@ public:
     Var(Var & copy);
     Var(VARIANT &v);
     Var(Date64 &v);
-    Var(IECtrl::Var* value[], unsigned int count); 
     ~Var();
 
     int getInteger();
