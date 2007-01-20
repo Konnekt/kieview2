@@ -28,40 +28,6 @@ using namespace template_parser_ns;
 using namespace Stamina;
 using namespace boost;
 
-class udf_get_cnt_setting: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return ANY_PARAMS;
-  }
-  inline void param(udf_fn_param& params) {
-    _def = params.size() > 2 ? params[2] : "";
-    _cnt = atoi(params[1].c_str());
-    _name = params[0];
-  }
-
-  inline void handler() {
-    if (_def != "!") {
-      try {
-        _result = Controller::getInstance()->getSettingStr(_name, tableContacts, _cnt);
-      } catch(...) {
-        _result = _def;
-      }
-    } else {
-      _result = Controller::getInstance()->getSettingStr(_name, tableContacts, _cnt);
-    }
-  }
-  inline std::string& result() {
-    return _result;
-  }
-
-protected:
-  std::string _result;
-  std::string _name;
-  std::string _def;
-
-  tCntId _cnt;
-};
-
 class udf_get_cfg_setting: public udf_fn {
 public:
   inline e_accept_params accept_params() {
@@ -93,13 +59,44 @@ protected:
   std::string _def;
 };
 
+class udf_get_cnt_setting: public udf_get_cfg_setting {
+public:
+  inline void param(udf_fn_param& params) {
+    if (params.size() < 2) {
+      throw std::logic_error("udf_get_cnt_setting: you didn't provided required arguments");
+    }
+    _cnt = atoi(params[1].c_str());
+    _def = params.size() > 2 ? params[2] : "";
+    _name = params[0];
+
+    if (!_cnt && (params[1] != "0")) {
+      throw std::logic_error("udf_get_cnt_setting: contact id conversion failed");
+    }
+  }
+
+  inline void handler() {
+    if (_def != "!") {
+      try {
+        _result = Controller::getInstance()->getSettingStr(_name, tableContacts, _cnt);
+      } catch(...) {
+        _result = _def;
+      }
+    } else {
+      _result = Controller::getInstance()->getSettingStr(_name, tableContacts, _cnt);
+    }
+  }
+
+protected:
+  tCntId _cnt;
+};
+
 class udf_stringf: public udf_fn {
 public:
   inline e_accept_params accept_params() {
     return ANY_PARAMS;
   }
   inline void param(udf_fn_param& params) {
-    _format = params.front();
+    _format = params[0];
     _params = params;
     _params.erase(_params.begin());
   }
