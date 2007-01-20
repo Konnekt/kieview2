@@ -15,6 +15,7 @@
 #include "stdafx.h"
 #include "Controller.h"
 #include "Message.h"
+#include "TplUdf.h"
 
 /*
 #include <json/value.h>
@@ -91,6 +92,7 @@ namespace kIEview2 {
 
     tplHandler->bindStdFunctions();
     tplHandler->bindUdf("getExtParam", new udf_get_ext_param);
+    tplHandler->bindUdf("getSetting", new udf_get_setting);
     tplHandler->bindUdf("formatTime", new udf_strftime);
     tplHandler->bindUdf("match?", new udf_match);
     tplHandler->bindUdf("replace", new udf_replace);
@@ -124,8 +126,7 @@ namespace kIEview2 {
 
     // @debug replace with user selected tpl directory
     tplHandler->setKonnektPath((char*) Ctrl->ICMessage(IMC_KONNEKTDIR));
-    tplHandler->addIncludeDir("./tpl");
-    tplHandler->setTplDir("./tpl/");
+    tplHandler->addTplDir("/data/templates/core/");
 
     IconRegister(IML_16, ico::logo, Ctrl->hDll(), IDI_LOGO);
     IconRegister(IML_16, ico::link, Ctrl->hDll(), IDI_LINK);
@@ -561,6 +562,27 @@ namespace kIEview2 {
     return resultChar;
   }
 
+  String Controller::getConfigSetting(const string& name) {
+    tColId colID = Ctrl->DTgetNameID(tableConfig, name.c_str());
+    if (colID == colNotFound) {
+      throw std::logic_error("Cannot find setting '" + name + "'.");
+    }
+
+    int colType = Ctrl->DTgetType(tableConfig, colID);
+    switch (colType & ctypeMask) {
+      case ctypeInt64: return i64tostr(Ctrl->DTgetInt64(tableConfig, 0, colID));
+      case ctypeInt: return inttostr(Ctrl->DTgetInt(tableConfig, 0, colID));
+      case ctypeString: {
+        if ((colType & cflagSecret) || (colType & cflagXor)) {
+          throw std::logic_error("Access forbidden to setting '" + name + "'.");
+        } else {
+          return Ctrl->DTgetStr(tableConfig, 0, colID);
+        }
+      }
+    }
+    throw std::logic_error("Unknown column type in '" + name + "'.");
+  }
+
   int Controller::readMsgs(tCntId cnt, int howMany, int sessionOffset) {
     if (!howMany) {
       Message::quickEvent(cnt, "Brak wiadomoœci do wczytania.", false, false, true);
@@ -612,11 +634,6 @@ namespace kIEview2 {
     for (list<UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
       Message::inject(it->_message, cnt, it->_display, false);
 
-      delete [] it->_display;
-      delete [] it->_message->fromUid;
-      delete [] it->_message->toUid;
-      delete [] it->_message->body;
-      delete [] it->_message->ext;
       delete it->_message;
     }
 

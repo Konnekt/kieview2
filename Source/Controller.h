@@ -23,7 +23,6 @@
 #include "IECtrl.h"
 #include "ActionHandler.h"
 #include "TplHandler.h"
-#include "TplUdf.h"
 #include "RtfHtml.h"
 
 using namespace kIEview2;
@@ -94,6 +93,7 @@ namespace kIEview2 {
     int readMsgs(tCntId cnt, int howMany, int sessionOffset = 0);
     int readLastMsgSession(tCntId cnt, int sessionOffset = 0);
 
+    String getConfigSetting(const string& name);
     string getMsgTypeLabel(int type);
     String getStatusLabel(int status);
 

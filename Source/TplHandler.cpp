@@ -13,10 +13,23 @@
 
 #include "stdafx.h"
 #include "TplHandler.h"
+#include "Helpers.h"
 
-TplHandler::TplHandler(const string& tplDir, const string& tplExt) {
-  setTplDir(tplDir);
+TplHandler::TplHandler(const string& tplExt) {
   setTplExt(tplExt);
+}
+
+void TplHandler::addTplDir(const string& dir, bool asInclude) {
+  if (!dir.size()) return;
+
+  string tplDir = dir;
+  tplDir = unifyPath(tplDir);
+  tplDir = Helpers::ltrim(tplDir, ".\\");
+
+  if (asInclude) {
+    addIncludeDir(tplDir);
+  }
+  tplDirs.push_back(tplDir);
 }
 
 String TplHandler::runFunc(const string& name, udf_fn_param& params) {
@@ -47,8 +60,20 @@ String TplHandler::runFunc(const string& name, const StringRef& param1, const St
   return func->result();
 }
 
+std::string TplHandler::getTplDir(const char* tplName) {
+  if (!tplDirs.size()) return "";
+
+  string fileName = tplName;
+  fileName += "." + tplExt;
+
+  for (tTplDirs::iterator it = tplDirs.begin(); it != tplDirs.end(); it++) {
+    if (fileExists(((*it) + "/" + fileName).c_str())) return *it;
+  }
+  throw std::logic_error("Cannot find file '" + fileName + "'.");
+}
+
 std::string TplHandler::getTplPath(const char* tplName) {
-  string fullPath = tplDir + "/";
+  string fullPath = getTplDir(tplName) + "/";
 
   fullPath += tplName;
   fullPath += ".";
@@ -109,26 +134,21 @@ String TplHandler::parseException(const exception &e) {
 }
 
 String TplHandler::parseString(param_data* data, const StringRef& text) {
-  template_text parser(&udfFactory);
-  String result;
+  template_text parser(getUdfFactory());
 
   // Set allowed list of catalogs to include
-  parser.set_include_dir(includeDir);
+  parser.set_include_dir(includeDirs);
   // Parse the template
   parser.parse(text);
   // We impose parameters on a pattern
   parser.param(data);
-  // Result
-  result = parser.output();
-  // clean
-  // parser.clear_template();
 
-  return result;
+  return parser.output();
 }
 
 String TplHandler::parseTpl(param_data* data, const char* tplName) {
   if (kPath.size()) {
-    data->hash_insert_new_var("tplPath", kPath + tplDir);
+    data->hash_insert_new_var("tplPath", kPath + getTplDir(tplName));
   }
   return parseString(data, getTpl(tplName));
 }

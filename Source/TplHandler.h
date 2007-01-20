@@ -18,7 +18,6 @@
 
 #include <ctpp/ctpp.hpp>
 #include <functions/std_fn_list.hpp>
-#include "Helpers.h"
 
 #pragma comment(lib, "ctpp.lib")
 
@@ -32,31 +31,27 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(TplHandler, iSharedObject, Version(0,1,0,0));
 
 public:
-  TplHandler(const string& tplDir = "", const string& tplExt = "tpl");
+  typedef std::vector<string> tTplDirs;
+
+public:
+  TplHandler(const string& tplExt = "tpl");
 
 public:
   inline void addIncludeDir(const string& dir) {
-    includeDir.push_back(dir);
+    includeDirs.push_back(dir);
   }
-  inline void bindUdf(const string& name, udf_fn* function) {
-    udfFactory.install_udf_fn(name, function);
-  }
+  void addTplDir(const string& dir, bool asInclude = true);
 
-  inline void setTplDir(const string& dir) {
-    tplDir = dir;
-
-    if (tplDir.size()) {
-      tplDir = unifyPath(tplDir);
-      tplDir = Helpers::ltrim(tplDir, ".\\");
-    }
+  inline void setKonnektPath(const string& path) {
+    kPath = path;
   }
   inline void setTplExt(const string& ext) {
     tplExt = ext;
   }
-  inline void setKonnektPath(const string& path) {
-    kPath = path;
-  }
 
+  inline void bindUdf(const string& name, udf_fn* function) {
+    getUdfFactory()->install_udf_fn(name, function);
+  }
   inline udf_fn_factory* getUdfFactory() {
     return &udfFactory;
   }
@@ -66,7 +61,9 @@ public:
   String runFunc(const string& name, const StringRef& param1, const StringRef& param2);
   String runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3);
 
+  std::string getTplDir(const char* tplName);
   std::string getTplPath(const char* tplName);
+
   String getTpl(const char* tplName);
   void bindStdFunctions();
 
@@ -76,9 +73,9 @@ public:
 
 protected:
   udf_fn_factory udfFactory;
-  v_include_dir includeDir;
+  v_include_dir includeDirs;
+  tTplDirs tplDirs;
 
-  string tplDir;
   string tplExt;
   string kPath;
 };

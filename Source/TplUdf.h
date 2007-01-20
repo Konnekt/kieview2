@@ -20,12 +20,44 @@
 #include <functions/std_fn_list.hpp>
 
 #include <boost/format.hpp>
+#include "Controller.h"
 
 #pragma comment(lib, "ctpp.lib")
 
 using namespace template_parser_ns;
 using namespace Stamina;
 using namespace boost;
+
+class udf_get_setting: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return ANY_PARAMS;
+  }
+  inline void param(udf_fn_param& params) {
+    _def = params.size() > 1 ? params[1] : "";
+    _name = params[0];
+  }
+
+  inline void handler() {
+    if (_def != "!") {
+      try {
+        _result = Controller::getInstance()->getConfigSetting(_name);
+      } catch(...) {
+        _result = _def;
+      }
+    } else {
+      _result = Controller::getInstance()->getConfigSetting(_name);
+    }
+  }
+  inline std::string& result() {
+    return _result;
+  }
+
+protected:
+  std::string _result;
+  std::string _name;
+  std::string _def;
+};
 
 class udf_sprintf: public udf_fn {
 public:
@@ -50,9 +82,9 @@ public:
   }
 
 protected:
-	udf_fn_param _params;
-	std::string _format;
-	std::string _result;
+  udf_fn_param _params;
+  std::string _format;
+  std::string _result;
 };
 
 class udf_strftime: public udf_fn {
@@ -79,9 +111,9 @@ public:
   }
 
 protected:
-	std::string _result;
-	std::string _format;
-	__int64 _date;
+  std::string _result;
+  std::string _format;
+  __int64 _date;
 };
 
 class udf_match: public udf_fn {
@@ -101,7 +133,7 @@ public:
   }
 
 protected:
-	std::string _result;
+  std::string _result;
   RegEx reg;
 };
 
@@ -125,8 +157,8 @@ public:
   }
 
 protected:
-	std::string _replace;
-	std::string _result;
+  std::string _replace;
+  std::string _result;
   RegEx reg;
 };
 
@@ -148,9 +180,9 @@ public:
   }
 
 protected:
-	std::string _name;
-	std::string _ext;
-	std::string _result;
+  std::string _name;
+  std::string _ext;
+  std::string _result;
 };
 
 #endif // __TPLUDF_H__
