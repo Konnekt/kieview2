@@ -91,8 +91,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Coping to Konnekt folder…"
-				CommandLine="copy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;D:\Program Files\Konnekt\plugins&quot;"
+				Description=""
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
