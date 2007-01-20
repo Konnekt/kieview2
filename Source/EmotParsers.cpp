@@ -1,4 +1,4 @@
-  /**
+/**
   *  kIEview2 Emot parsers
   *
   *  Any modifications or reusing strictly prohibited!

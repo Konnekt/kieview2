@@ -91,12 +91,15 @@ namespace kIEview2 {
     this->rtfHtml = new RtfHtmlTag;
 
     tplHandler->bindStdFunctions();
-    tplHandler->bindUdf("getExtParam", new udf_get_ext_param);
-    tplHandler->bindUdf("getSetting", new udf_get_setting);
+    tplHandler->bindUdf("getCntSetting", new udf_get_cnt_setting);
+    tplHandler->bindUdf("getSetting", new udf_get_cfg_setting);
+
+    tplHandler->bindUdf("formatString", new udf_stringf);
     tplHandler->bindUdf("formatTime", new udf_strftime);
-    tplHandler->bindUdf("match?", new udf_match);
+
+    tplHandler->bindUdf("getExtParam", new udf_get_ext_param);
     tplHandler->bindUdf("replace", new udf_replace);
-    tplHandler->bindUdf("sprintf", new udf_sprintf);
+    tplHandler->bindUdf("match?", new udf_match);
 
     registerMsgHandler(MT_QUICKEVENT, bind(&Controller::_handleQuickEventTpl, this, _1, _2), "quickevent");
     registerMsgHandler(MT_MESSAGE, bind(&Controller::_handleStdMsgTpl, this, _1, _2), "message");
@@ -562,23 +565,21 @@ namespace kIEview2 {
     return resultChar;
   }
 
-  String Controller::getConfigSetting(const string& name) {
-    tColId colID = Ctrl->DTgetNameID(tableConfig, name.c_str());
-    if (colID == colNotFound) {
+  String Controller::getSettingStr(const string& name, tTable table, tRowId row) {
+    tColId col = Ctrl->DTgetNameID(table, name.c_str());
+    if (col == colNotFound) {
       throw std::logic_error("Cannot find setting '" + name + "'.");
     }
 
-    int colType = Ctrl->DTgetType(tableConfig, colID);
+    int colType = Ctrl->DTgetType(table, col);
+    if ((colType & cflagSecret) || (colType & cflagXor)) {
+      throw std::logic_error("Access to setting '" + name + "' is forbidden.");
+    }
+
     switch (colType & ctypeMask) {
-      case ctypeInt64: return i64tostr(Ctrl->DTgetInt64(tableConfig, 0, colID));
-      case ctypeInt: return inttostr(Ctrl->DTgetInt(tableConfig, 0, colID));
-      case ctypeString: {
-        if ((colType & cflagSecret) || (colType & cflagXor)) {
-          throw std::logic_error("Access forbidden to setting '" + name + "'.");
-        } else {
-          return Ctrl->DTgetStr(tableConfig, 0, colID);
-        }
-      }
+      case ctypeInt64: return i64tostr(Ctrl->DTgetInt64(table, row, col));
+      case ctypeInt: return inttostr(Ctrl->DTgetInt(table, row, col));
+      case ctypeString: return Ctrl->DTgetStr(table, row, col);
     }
     throw std::logic_error("Unknown column type in '" + name + "'.");
   }

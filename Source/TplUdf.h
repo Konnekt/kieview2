@@ -28,7 +28,41 @@ using namespace template_parser_ns;
 using namespace Stamina;
 using namespace boost;
 
-class udf_get_setting: public udf_fn {
+class udf_get_cnt_setting: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return ANY_PARAMS;
+  }
+  inline void param(udf_fn_param& params) {
+    _def = params.size() > 2 ? params[2] : "";
+    _cnt = atoi(params[1].c_str());
+    _name = params[0];
+  }
+
+  inline void handler() {
+    if (_def != "!") {
+      try {
+        _result = Controller::getInstance()->getSettingStr(_name, tableContacts, _cnt);
+      } catch(...) {
+        _result = _def;
+      }
+    } else {
+      _result = Controller::getInstance()->getSettingStr(_name, tableContacts, _cnt);
+    }
+  }
+  inline std::string& result() {
+    return _result;
+  }
+
+protected:
+  std::string _result;
+  std::string _name;
+  std::string _def;
+
+  tCntId _cnt;
+};
+
+class udf_get_cfg_setting: public udf_fn {
 public:
   inline e_accept_params accept_params() {
     return ANY_PARAMS;
@@ -41,12 +75,12 @@ public:
   inline void handler() {
     if (_def != "!") {
       try {
-        _result = Controller::getInstance()->getConfigSetting(_name);
+        _result = Controller::getInstance()->getSettingStr(_name, tableConfig);
       } catch(...) {
         _result = _def;
       }
     } else {
-      _result = Controller::getInstance()->getConfigSetting(_name);
+      _result = Controller::getInstance()->getSettingStr(_name, tableConfig);
     }
   }
   inline std::string& result() {
@@ -59,7 +93,7 @@ protected:
   std::string _def;
 };
 
-class udf_sprintf: public udf_fn {
+class udf_stringf: public udf_fn {
 public:
   inline e_accept_params accept_params() {
     return ANY_PARAMS;
