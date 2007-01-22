@@ -185,7 +185,7 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
       v->date= 0;
     }
   } else if (m_eType == Type::Array) {
-    if (v->parray) {
+    if (v->parray && (v->vt & VT_ARRAY)) {
       if (v->parray->rgsabound[0].cElements < m_nLength && m_aValue != NULL) {
         SafeArrayDestroyData(v->parray);
       }
@@ -193,10 +193,12 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
     SAFEARRAYBOUND rgsabound;
     rgsabound.cElements = length();
     rgsabound.lLbound = 0;
-    v->parray = SafeArrayCreate(VT_VARIANT, 1, &rgsabound);
-    for(LONG i = 0; i < v->parray->rgsabound[0].cElements; i++) {
-       SafeArrayPutElement(v->parray, &i, m_aValue[i]->getVariant(NULL));
+    SAFEARRAY* psa = SafeArrayCreate(VT_VARIANT, 1, &rgsabound);
+
+    for(LONG i = 0; i < psa->rgsabound[0].cElements; i++) {
+       SafeArrayPutElement(psa, &i, m_aValue[i]->getVariant(NULL));
     }
+    v->parray = psa;
     v->vt = VT_ARRAY | VT_VARIANT;
   }
 
@@ -427,7 +429,6 @@ void IECtrl::Var::setValue(VARIANT &v) {
       
       SafeArrayUnlock(v.parray);
     }
-/*
     case VT_DISPATCH: {
       IDispatch * pDispatch = v.pdispVal;
       IDispatchEx * pDispEx = NULL;
@@ -449,18 +450,13 @@ void IECtrl::Var::setValue(VARIANT &v) {
           if (FAILED(hr)) continue;
           Var ret(vRet);
           VariantClear(&vRet);
-        
-          const char * szName = _com_util::ConvertBSTRToString(bstrName);
-          SysFreeString(bstrName);
-          MessageBox(0, ret.getString(), szName, 0); // @@@
-          delete [] szName;
           hr = pDispEx->GetNextDispID(fdexEnumAll, dispid, &dispid);
         }
         pDispEx->Release();
       }
       break;
     }
-*/
+
   }
 }
 void IECtrl::Var::setValue(Date64 &v) {
@@ -530,4 +526,96 @@ IECtrl::Var IECtrl::Var::operator+(Date64 &var) {
   IECtrl::Var ret(*this);
   ret += IECtrl::Var(var);
   return ret;
+}
+
+IECtrl::Object::Object(IDispatch* pdScript, const char* name, Var args) {
+  DISPID dispid;
+
+  pdScript->QueryInterface(IID_IDispatchEx, (void **)&_pdexScript);
+  BSTR bstrName = _com_util::ConvertStringToBSTR(name);
+  _pdexScript->GetDispID(bstrName, 0, &dispid);
+
+  VARIANT vRet;
+  DISPPARAMS dispparams = {0, 0, NULL, NULL};
+  dispparams.rgvarg = new VARIANT[args.length()];
+
+  for(int i= 0;i < args.length(); i++) {
+    args[i].getVariant(&dispparams.rgvarg[i]);
+  }
+
+  dispparams.cArgs = args.length();
+  dispparams.cNamedArgs = 0;
+  _pdexScript->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_CONSTRUCT, &dispparams, &vRet, NULL, NULL);
+  delete [] dispparams.rgvarg;
+
+  _pdispObj = vRet.pdispVal;
+  _pdispObj->QueryInterface(IID_IDispatchEx, (void **)&_pdexObj);
+}
+
+bool IECtrl::Object::bindMethod(const char* name, const char* func) {
+  DISPID dispid;
+  BSTR bstrName = _com_util::ConvertStringToBSTR(func);
+  _pdexScript->GetDispID(bstrName, fdexNameEnsure, &dispid);
+
+  VARIANT vRet;
+  VariantInit(&vRet);
+  DISPPARAMS dispparams, dispparamsNoArgs = {NULL, NULL, 0, 0};
+
+  _pdexScript->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dispparamsNoArgs, &vRet, NULL, NULL);
+
+  addElement(name, dispid);
+
+  DISPID putid = DISPID_PROPERTYPUT;
+  dispparams.rgvarg = &vRet;
+  dispparams.rgdispidNamedArgs = &putid;
+  dispparams.cArgs = 1;
+  dispparams.cNamedArgs = 1;
+  _pdexObj->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUTREF, &dispparams, NULL, NULL, NULL);
+  return true;
+}
+
+void IECtrl::Object::addElement(const char *name, DISPID& dispid) {
+  BSTR bstrName = _com_util::ConvertStringToBSTR(name);
+  _pdexObj->GetDispID(bstrName, fdexNameEnsure, &dispid);
+}
+
+
+void IECtrl::Object::setPropety(const char *name, VARIANT& v) {
+  DISPID dispid;
+  DISPPARAMS dispparams;
+
+  BSTR bstrName = _com_util::ConvertStringToBSTR(name);
+  _pdexObj->GetDispID(bstrName, 0, &dispid);
+
+  DISPID putid = DISPID_PROPERTYPUT;
+  dispparams.rgvarg = &v;
+  dispparams.rgdispidNamedArgs = &putid;
+  dispparams.cArgs = 1;
+  dispparams.cNamedArgs = 1;
+  _pdexObj->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUTREF, &dispparams, NULL, NULL, NULL);
+}
+
+void IECtrl::Object::getPropety(const char *name, VARIANT& v) {
+  DISPID dispid;
+  DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+
+  BSTR bstrName = _com_util::ConvertStringToBSTR(name);
+  _pdexObj->GetDispID(bstrName, 0, &dispid);
+  delete [] bstrName;
+
+  _pdexObj->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dispparamsNoArgs, &v, NULL, NULL);
+}
+
+VARIANT* IECtrl::Object::getObject(VARIANT* v) {
+  if (v == NULL) {
+    v = new VARIANT;
+    VariantInit(v);
+  }
+
+  v->vt = VT_DISPATCH;
+  v->pdispVal = _pdexObj;
+  return v;
+}
+
+IECtrl::Object::~Object() {
 }

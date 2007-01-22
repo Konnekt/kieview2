@@ -124,8 +124,9 @@ public:
   void setExternalListener(ExternalListener * listener) { m_pExternalListener = listener; }
   void setScriptMessageListener(ScriptMessageListener * listener) { m_pScriptMessageListener = listener; }
 
-private:
+
   IHTMLDocument2* getDocument();
+private:
   BSTR getHrefFromAnchor(IHTMLElement* element);
   BSTR getSelectionFunc(bool gettext = true);
 
@@ -397,6 +398,23 @@ public:
     int m_nLength;
   };
 
+  class Object {
+  public:
+    Object();
+    Object(IDispatch* pdScript, const char* name = "Object", Var args = Var());
+    ~Object();
+
+    bool bindMethod(const char* name, const char* func);
+    void addElement(const char *name, DISPID& dispid);
+    void setPropety(const char *name, VARIANT& v);
+    void getPropety(const char *name, VARIANT& v);
+    VARIANT* getObject(VARIANT* v);
+
+  private:
+    IDispatchEx *_pdexScript;
+    IDispatchEx* _pdexObj;
+    IDispatch* _pdispObj;
+  };
 
   class DropTarget : public IDropTarget {
   public:
