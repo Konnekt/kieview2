@@ -613,13 +613,13 @@ bool IECtrl::Object::bindMethod(const char* name, const char* func) {
   dispparams.rgdispidNamedArgs = &putid;
   dispparams.cArgs = 1;
   dispparams.cNamedArgs = 1;
-  _pdexObj->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUTREF, &dispparams, NULL, NULL, NULL);
+  getDispatchEx()->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUTREF, &dispparams, NULL, NULL, NULL);
   return true;
 }
 
 void IECtrl::Object::addElement(const char *name, DISPID& dispid) {
   BSTR bstrName = _com_util::ConvertStringToBSTR(name);
-  _pdexObj->GetDispID(bstrName, fdexNameEnsure, &dispid);
+  getDispatchEx()->GetDispID(bstrName, fdexNameEnsure, &dispid);
 }
 
 void IECtrl::Object::setPropety(const char *name, IECtrl::Var var) {
@@ -630,14 +630,16 @@ void IECtrl::Object::setPropety(const char *name, IECtrl::Var var) {
   var.getVariant(&v);
 
   BSTR bstrName = _com_util::ConvertStringToBSTR(name);
-  _pdexObj->GetDispID(bstrName, 0, &dispid);
+  getDispatchEx()->GetDispID(bstrName, 0, &dispid);
 
   DISPID putid = DISPID_PROPERTYPUT;
-  dispparams.rgvarg = &v;
+  dispparams.rgvarg = new VARIANT[1];
+  memcpy(&dispparams.rgvarg[0], &v, sizeof(VARIANT));
   dispparams.rgdispidNamedArgs = &putid;
   dispparams.cArgs = 1;
   dispparams.cNamedArgs = 1;
-  _pdexObj->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
+  getDispatchEx()->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
+  delete [] dispparams.rgvarg;
 }
 
 IECtrl::Var IECtrl::Object::getPropety(const char *name) {
@@ -647,9 +649,8 @@ IECtrl::Var IECtrl::Object::getPropety(const char *name) {
 
   BSTR bstrName = _com_util::ConvertStringToBSTR(name);
   _pdexObj->GetDispID(bstrName, 0, &dispid);
-  delete [] bstrName;
 
-  _pdexObj->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dispparamsNoArgs, &v, NULL, NULL);
+  getDispatchEx()->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dispparamsNoArgs, &v, NULL, NULL);
 
   return v;
 }
