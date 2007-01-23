@@ -30,9 +30,9 @@ namespace kIEview2 {
     return MessageBox(hWnd, lpText, "[kIEview2] Wiadomoœæ od skryptu", dwType); 
   }
 
-  IECtrl::Var ActionHandler::Trigger(long id, IECtrl::Var& args) {
+  IECtrl::Var ActionHandler::Trigger(long id, IECtrl::Var& args, IECtrl* ctrl) {
     Controller::sExternalCallback* f = Controller::getInstance()->getExternalCallback(id);
-    return !f ? IECtrl::Var() : f->signal(args);
+    return !f ? IECtrl::Var() : f->signal(args, ctrl);
   }
 
   long ActionHandler::GetMemberID(const char *name) {
@@ -40,7 +40,7 @@ namespace kIEview2 {
     return !f ? 0 : f->id;
   }
 
-  IECtrl::PopupMenuListener::MakeAction ActionHandler::PopupMenu(IECtrl::PopupMenuListener::MenuType type, POINT pt, IECtrl* ctrl) {
+  ActionHandler::tMenuAction ActionHandler::PopupMenu(tMenuType type, POINT pt, IECtrl* ctrl) {
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::urlSep), -1, ACTS_HIDDEN);
@@ -57,18 +57,18 @@ namespace kIEview2 {
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), cntId ? 0 : -1, ACTS_HIDDEN);
 
     switch (type) {
-      case IECtrl::PopupMenuListener::MenuType::Anchor: {
+      case tMenuType::Anchor: {
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::urlSep), 0, ACTS_HIDDEN);
         break;
       }
-      case IECtrl::PopupMenuListener::MenuType::Image: {
+      case tMenuType::Image: {
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::saveImage), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::imageSep), 0, ACTS_HIDDEN);
         break;
       }
-      case IECtrl::PopupMenuListener::MenuType::Selection: {
+      case tMenuType::Selection: {
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copySelection), 0, ACTS_HIDDEN);
         break;
       }
@@ -92,25 +92,25 @@ namespace kIEview2 {
 
     switch (this->selectedMenuItem) {
       case act::popup::openUrl: {
-        return MakeAction::OpenLink;
+        return tMenuAction::OpenLink;
       }
       case act::popup::copyUrl: {
-        return MakeAction::CopyLink;
+        return tMenuAction::CopyLink;
       }
       case act::popup::saveImage: {
-        return MakeAction::SaveImage;
+        return tMenuAction::SaveImage;
       }
       case act::popup::copySelection: {
-        return MakeAction::CopySelection;
+        return tMenuAction::CopySelection;
       }
       case act::popup::print: {
-        return MakeAction::Print;
+        return tMenuAction::Print;
       }
       case act::popup::selectAll: {
-        return MakeAction::SelectAll;
+        return tMenuAction::SelectAll;
       }
       case act::popup::showSource: {
-        return MakeAction::ShowSource;
+        return tMenuAction::ShowSource;
       }
       case act::popup::lastMsgs: {
         if (cntId) {
@@ -131,6 +131,6 @@ namespace kIEview2 {
         break;
       }
     }
-    return MakeAction::None;
+    return tMenuAction::None;
   }
 }

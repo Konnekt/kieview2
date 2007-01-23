@@ -28,6 +28,10 @@ namespace kIEview2 {
                        public IECtrl::KeyDownListener,
                        public IECtrl::ScriptMessageListener {
   public:
+    typedef IECtrl::PopupMenuListener::MakeAction tMenuAction;
+    typedef IECtrl::PopupMenuListener::MenuType tMenuType;
+
+  public:
     ActionHandler(tCntId _cntId = 0): selectedMenuItem(0), cntId(_cntId) { }
 
   public:
@@ -37,7 +41,7 @@ namespace kIEview2 {
     int ShowMessage(HWND hWnd, const char* lpText, DWORD dwType);
 
     long GetMemberID(const char *name);
-    IECtrl::Var Trigger(long id, IECtrl::Var& args);
+    IECtrl::Var Trigger(long id, IECtrl::Var& args, IECtrl* ctrl);
 
     // @todo implement
     inline bool KeyDown(UINT uCode, DWORD dwFlags) { return true; }

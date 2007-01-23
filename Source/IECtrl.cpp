@@ -1255,9 +1255,9 @@ STDMETHODIMP IECtrl::External::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
   if (m_pCtrl->m_pExternalListener != NULL) {
     Var args;
     for (UINT i = 0; i < pDispParams->cArgs; i++) {
-      args[-1] = pDispParams->rgvarg[pDispParams->cArgs-i-1];
+      args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
     }
-    Var ret = m_pCtrl->m_pExternalListener->Trigger(dispIdMember, args);
+    Var ret = m_pCtrl->m_pExternalListener->Trigger(dispIdMember, args, m_pCtrl);
     ret.getVariant(pVarResult);
 
     return S_OK;

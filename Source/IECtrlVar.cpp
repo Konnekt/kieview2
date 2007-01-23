@@ -53,6 +53,10 @@ IECtrl::Var::Var(Date64 &v) {
   setValue(v);
 }
 
+IECtrl::Var::Var(IECtrl::Object &v) {
+  setValue(v);
+}
+
 IECtrl::Var::~Var() {
   clear();
 }
@@ -90,6 +94,11 @@ IECtrl::Var & IECtrl::Var::operator=(VARIANT &value) {
 }
 
 IECtrl::Var & IECtrl::Var::operator=(Date64 &value) {
+  setValue(value);
+  return *this;
+}
+
+IECtrl::Var & IECtrl::Var::operator=(IECtrl::Object &value) {
   setValue(value);
   return *this;
 }
@@ -142,6 +151,8 @@ const char * IECtrl::Var::getString() {
     return m_szValue;
   else if (m_eType == Type::Array)
     return "Array";
+  else if (m_eType == Type::Object)
+    return "Object";
   else if (m_eType == Type::Date) {
     if (m_dtValue != NULL) {
       return m_dtValue->strftime("%Y-%m-%d %H:%M:%S").c_str();
@@ -149,7 +160,6 @@ const char * IECtrl::Var::getString() {
       return Date64().strftime("%Y-%m-%d %H:%M:%S").c_str();
     }
   }
-
   return "";
 }
 
@@ -176,14 +186,18 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
     v->vt = VT_DATE;
     TIME_ZONE_INFORMATION time_zone;
     GetTimeZoneInformation(&time_zone);
+
     if (m_dtValue != NULL) {
       __int64 date = m_dtValue->getTime64();
       v->date = date - (time_zone.Bias * 60);
-      v->date/= (24 * 60 * 60);
-      v->date+= 25569;
+      v->date /= (24 * 60 * 60);
+      v->date += 25569;
     } else {
       v->date= 0;
     }
+  } else if (m_eType == Type::Object) {
+    v->vt = VT_DISPATCH;
+    v->pdispVal = m_objValue->getDispatchEx();
   } else if (m_eType == Type::Array) {
     if (v->parray && (v->vt & VT_ARRAY)) {
       if (v->parray->rgsabound[0].cElements < m_nLength && m_aValue != NULL) {
@@ -209,8 +223,14 @@ Date64 IECtrl::Var::getDate() {
   if (m_eType == Type::Date && m_dtValue != NULL) {
     return (*m_dtValue);
   }
-
   return Date64(true);
+}
+
+IECtrl::Object IECtrl::Var::getObject() {
+  if (m_eType == Type::Object && m_objValue != NULL) {
+    return (*m_objValue);
+  }
+  return IECtrl::Object();
 }
 
 int IECtrl::Var::length() {
@@ -276,7 +296,7 @@ void IECtrl::Var::operator+=(IECtrl::Var & var) {
 
     case Type::Date: {
       if (m_dtValue) {
-        (*m_dtValue) = (*m_dtValue).getInt64() + var.getDate().getInt64();
+        (*m_dtValue) = m_dtValue->getInt64() + var.getDate().getInt64();
       } else {
         setValue(var.getDate());
       }
@@ -301,6 +321,10 @@ void IECtrl::Var::operator+=(Date64& var) {
   *this += IECtrl::Var(var);
 }
 
+void IECtrl::Var::operator+=(IECtrl::Object& var) {
+  *this += IECtrl::Var(var);
+}
+
 // private
 void IECtrl::Var::clear() {
   if (m_eType == Type::String && m_szValue != NULL) {
@@ -313,6 +337,8 @@ void IECtrl::Var::clear() {
     delete [] m_aValue;
   } else if (m_eType == Type::Date) {
     delete m_dtValue;
+  } else if (m_eType == Type::Object) {
+    delete m_objValue;
   }
   m_eType = Type::Unknown;
   m_nLength = 0;
@@ -338,6 +364,9 @@ void IECtrl::Var::copy(IECtrl::Var& copy) {
       break;
     case Type::Date:
       setValue(copy.getDate());
+      break;
+    case Type::Object:
+      setValue(copy.getObject());
       break;
     default:
       m_eType = Type::Unknown;
@@ -425,9 +454,10 @@ void IECtrl::Var::setValue(VARIANT &v) {
         delete [] var;
       }
       if (v.parray->fFeatures & FADF_BSTR) {
+        //
       }
-      
       SafeArrayUnlock(v.parray);
+      break;
     }
     case VT_DISPATCH: {
       IDispatch * pDispatch = v.pdispVal;
@@ -456,13 +486,19 @@ void IECtrl::Var::setValue(VARIANT &v) {
       }
       break;
     }
-
   }
 }
+
 void IECtrl::Var::setValue(Date64 &v) {
   clear();
   m_dtValue = new Date64(v.getTime64());
   m_eType = Type::Date;
+}
+
+void IECtrl::Var::setValue(IECtrl::Object &v) {
+  clear();
+  m_objValue = new IECtrl::Object(v);
+  m_eType = Type::Object;
 }
 
 IECtrl::Var & IECtrl::Var::getElement(int i) {
@@ -528,7 +564,14 @@ IECtrl::Var IECtrl::Var::operator+(Date64 &var) {
   return ret;
 }
 
-IECtrl::Object::Object(IDispatch* pdScript, const char* name, Var args) {
+IECtrl::Var IECtrl::Var::operator+(IECtrl::Object &var) {
+  IECtrl::Var ret(*this);
+  ret += IECtrl::Var(var);
+  return ret;
+}
+
+IECtrl::Object::Object(IECtrl* ctrl, const char* name, Var args) {
+  IDispatch* pdScript = ctrl->getDispatch();
   DISPID dispid;
 
   pdScript->QueryInterface(IID_IDispatchEx, (void **)&_pdexScript);
@@ -539,8 +582,8 @@ IECtrl::Object::Object(IDispatch* pdScript, const char* name, Var args) {
   DISPPARAMS dispparams = {0, 0, NULL, NULL};
   dispparams.rgvarg = new VARIANT[args.length()];
 
-  for(int i= 0;i < args.length(); i++) {
-    args[i].getVariant(&dispparams.rgvarg[i]);
+  for (UINT i = 0, l = args.length(); i < l; i++) {
+    args[l - i - 1].getVariant(&dispparams.rgvarg[i]);
   }
 
   dispparams.cArgs = args.length();
@@ -579,10 +622,12 @@ void IECtrl::Object::addElement(const char *name, DISPID& dispid) {
   _pdexObj->GetDispID(bstrName, fdexNameEnsure, &dispid);
 }
 
-
-void IECtrl::Object::setPropety(const char *name, VARIANT& v) {
+void IECtrl::Object::setPropety(const char *name, IECtrl::Var var) {
   DISPID dispid;
   DISPPARAMS dispparams;
+  VARIANT v;
+
+  var.getVariant(&v);
 
   BSTR bstrName = _com_util::ConvertStringToBSTR(name);
   _pdexObj->GetDispID(bstrName, 0, &dispid);
@@ -592,30 +637,29 @@ void IECtrl::Object::setPropety(const char *name, VARIANT& v) {
   dispparams.rgdispidNamedArgs = &putid;
   dispparams.cArgs = 1;
   dispparams.cNamedArgs = 1;
-  _pdexObj->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUTREF, &dispparams, NULL, NULL, NULL);
+  _pdexObj->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
 }
 
-void IECtrl::Object::getPropety(const char *name, VARIANT& v) {
+IECtrl::Var IECtrl::Object::getPropety(const char *name) {
   DISPID dispid;
   DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+  VARIANT v;
 
   BSTR bstrName = _com_util::ConvertStringToBSTR(name);
   _pdexObj->GetDispID(bstrName, 0, &dispid);
   delete [] bstrName;
 
   _pdexObj->InvokeEx(dispid, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dispparamsNoArgs, &v, NULL, NULL);
+
+  return v;
 }
 
-VARIANT* IECtrl::Object::getObject(VARIANT* v) {
+VARIANT* IECtrl::Object::getVariant(VARIANT* v) {
   if (v == NULL) {
     v = new VARIANT;
     VariantInit(v);
   }
-
   v->vt = VT_DISPATCH;
-  v->pdispVal = _pdexObj;
+  v->pdispVal = getDispatchEx();
   return v;
-}
-
-IECtrl::Object::~Object() {
 }

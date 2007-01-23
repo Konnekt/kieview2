@@ -80,7 +80,7 @@ public:
   class ExternalListener {
   public:
     virtual long GetMemberID(const char *name) = 0;
-    virtual Var Trigger(long id, Var &args) = 0;
+    virtual Var Trigger(long id, Var &args, IECtrl* ctrl) = 0;
   };
 
   class ScriptMessageListener {
@@ -124,8 +124,16 @@ public:
   void setExternalListener(ExternalListener * listener) { m_pExternalListener = listener; }
   void setScriptMessageListener(ScriptMessageListener * listener) { m_pScriptMessageListener = listener; }
 
-
   IHTMLDocument2* getDocument();
+
+  IDispatch* getDispatch() {
+    IHTMLDocument2* document = getDocument();
+    IDispatch* dispatch;
+    document->get_Script(&dispatch);
+
+    return dispatch;
+  }
+
 private:
   BSTR getHrefFromAnchor(IHTMLElement* element);
   BSTR getSelectionFunc(bool gettext = true);
@@ -318,6 +326,7 @@ private:
   };
 
 public:
+  class Object;
   class Var {
   public:
     Var();
@@ -329,6 +338,7 @@ public:
     Var(Var & copy);
     Var(VARIANT &v);
     Var(Date64 &v);
+    Var(Object &v);
     ~Var();
 
     int getInteger();
@@ -337,6 +347,7 @@ public:
     const char * getString();
     VARIANT * getVariant(VARIANT *v = NULL);
     Date64 getDate();
+    Object getObject();
 
     void setValue(int value);
     void setValue(bool value);
@@ -345,6 +356,7 @@ public:
     void setValue(Var* value[], unsigned int count);
     void setValue(VARIANT &v);
     void setValue(Date64 &value);
+    void setValue(Object &value);
 
     int length();
     Var & operator[](int i);
@@ -356,19 +368,21 @@ public:
     Var & operator=(const char * value);
     Var & operator=(VARIANT &v);
     Var & operator=(Date64 &value);
+    Var & operator=(Object &value);
 
     void operator+=(Var & var);
     void operator+=(int var);
     void operator+=(double var);
     void operator+=(const char* var);
     void operator+=(Date64 &var);
+    void operator+=(Object &var);
 
     Var operator+(Var & var2);
     Var operator+(int var2);
     Var operator+(double var2);
     Var operator+(const char *var2);
     Var operator+(Date64 &var);
-
+    Var operator+(Object &var);
 
   private:
     void clear();
@@ -384,7 +398,8 @@ public:
       Real,
       String,
       Array,
-      Date
+      Date,
+      Object
     };
     Type m_eType;
 
@@ -394,24 +409,31 @@ public:
       char * m_szValue;
       Var ** m_aValue;
       Date64 * m_dtValue;
+      IECtrl::Object * m_objValue;
     };
     int m_nLength;
   };
 
   class Object {
   public:
-    Object();
-    Object(IDispatch* pdScript, const char* name = "Object", Var args = Var());
-    ~Object();
+    Object() { }
+    Object(IECtrl* ctrl, const char* name = "Object", Var args = Var());
+    virtual ~Object() { }
 
     bool bindMethod(const char* name, const char* func);
     void addElement(const char *name, DISPID& dispid);
-    void setPropety(const char *name, VARIANT& v);
-    void getPropety(const char *name, VARIANT& v);
-    VARIANT* getObject(VARIANT* v);
+
+    void setPropety(const char *name, IECtrl::Var var);
+    IECtrl::Var getPropety(const char *name);
+
+    VARIANT* getVariant(VARIANT* v);
+
+    IDispatchEx* getDispatchEx() {
+      return _pdexObj;
+    }
 
   private:
-    IDispatchEx *_pdexScript;
+    IDispatchEx* _pdexScript;
     IDispatchEx* _pdexObj;
     IDispatch* _pdispObj;
   };
