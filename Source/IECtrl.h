@@ -347,7 +347,7 @@ public:
     const char * getString();
     VARIANT * getVariant(VARIANT *v = NULL);
     Date64 getDate();
-    Object getObject();
+    Object getObject(IECtrl* ctrl);
 
     void setValue(int value);
     void setValue(bool value);
@@ -418,6 +418,7 @@ public:
   public:
     Object() { }
     Object(IECtrl* ctrl, const char* name = "Object", Var args = Var());
+    Object(IECtrl* ctrl, IDispatch* dispatch);
     virtual ~Object() { }
 
     void bindMethod(const char* name, const char* func);
@@ -432,6 +433,10 @@ public:
       return _pdexObj;
     }
 
+    inline bool ownObject() {
+      return _ownObject;
+    }
+
   protected:
     void addElement(const char *name, DISPID& dispID);
 
@@ -439,6 +444,7 @@ public:
     IDispatchEx* _pdexScript;
     IDispatchEx* _pdexObj;
     IDispatch* _pdispObj;
+    bool _ownObject;
   };
 
   class DropTarget : public IDropTarget {

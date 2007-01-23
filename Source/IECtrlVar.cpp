@@ -226,9 +226,20 @@ Date64 IECtrl::Var::getDate() {
   return Date64(true);
 }
 
-IECtrl::Object IECtrl::Var::getObject() {
+IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
   if (m_eType == Type::Object && m_objValue != NULL) {
     return (*m_objValue);
+  }
+  Var args;
+  args[-1] = Var(*this);
+  if (m_eType == Type::Date) {
+    return IECtrl::Object(ctrl, "Date", args);
+  } else if (m_eType == Type::String) {
+    return IECtrl::Object(ctrl, "String", args);
+  } else if (m_eType == Type::Array) {
+    return IECtrl::Object(ctrl, "Array", args);
+  } else if (m_eType == Type::Boolean) {
+    return IECtrl::Object(ctrl, "Boolean", args);
   }
   return IECtrl::Object();
 }
@@ -366,7 +377,7 @@ void IECtrl::Var::copy(IECtrl::Var& copy) {
       setValue(copy.getDate());
       break;
     case Type::Object:
-      setValue(copy.getObject());
+      setValue(copy.getObject(NULL));
       break;
     default:
       m_eType = Type::Unknown;
@@ -460,6 +471,7 @@ void IECtrl::Var::setValue(VARIANT &v) {
       break;
     }
     case VT_DISPATCH: {
+      /*
       IDispatch * pDispatch = v.pdispVal;
       IDispatchEx * pDispEx = NULL;
       if (SUCCEEDED(pDispatch->QueryInterface(IID_IDispatchEx, (void**)&pDispEx))) {
@@ -484,6 +496,8 @@ void IECtrl::Var::setValue(VARIANT &v) {
         }
         pDispEx->Release();
       }
+      */
+
       break;
     }
   }
@@ -570,7 +584,7 @@ IECtrl::Var IECtrl::Var::operator+(IECtrl::Object &var) {
   return ret;
 }
 
-IECtrl::Object::Object(IECtrl* ctrl, const char* name, Var args) {
+IECtrl::Object::Object(IECtrl* ctrl, const char* name, Var args): _ownObject(true) {
   IDispatch* pdScript = ctrl->getDispatch();
   DISPID dispID;
 
@@ -593,6 +607,16 @@ IECtrl::Object::Object(IECtrl* ctrl, const char* name, Var args) {
 
   _pdispObj = vRet.pdispVal;
   _pdispObj->QueryInterface(IID_IDispatchEx, (void **)&_pdexObj);
+}
+
+IECtrl::Object::Object(IECtrl* ctrl, IDispatch* dispatch): _ownObject(false) {
+  ASSERT(dispatch != NULL);
+  IDispatch* pdScript = ctrl->getDispatch();
+  DISPID dispID;
+
+  pdScript->QueryInterface(IID_IDispatchEx, (void **)&_pdexScript);
+  dispatch->QueryInterface(IID_IDispatchEx, (void **)&_pdexObj);
+  ASSERT(_pdexObj != NULL);
 }
 
 void IECtrl::Object::bindMethod(const char* name, const char* func) {
