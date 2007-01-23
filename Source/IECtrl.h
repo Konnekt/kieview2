@@ -420,19 +420,22 @@ public:
     Object(IECtrl* ctrl, const char* name = "Object", Var args = Var());
     virtual ~Object() { }
 
-    bool bindMethod(const char* name, const char* func);
-    void addElement(const char *name, DISPID& dispid);
+    void bindMethod(const char* name, const char* func);
 
-    void setPropety(const char *name, IECtrl::Var var);
-    IECtrl::Var getPropety(const char *name);
+    void addProperty(const char *name, IECtrl::Var var);
+    void setProperty(const char *name, IECtrl::Var var);
 
+    IECtrl::Var getProperty(const char *name);
     VARIANT* getVariant(VARIANT* v);
 
     IDispatchEx* getDispatchEx() {
       return _pdexObj;
     }
 
-  private:
+  protected:
+    void addElement(const char *name, DISPID& dispID);
+
+  protected:
     IDispatchEx* _pdexScript;
     IDispatchEx* _pdexObj;
     IDispatch* _pdispObj;
