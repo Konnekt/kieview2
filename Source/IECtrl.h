@@ -347,7 +347,7 @@ public:
     const char * getString();
     VARIANT * getVariant(VARIANT *v = NULL);
     Date64 getDate();
-    Object getObject(IECtrl* ctrl);
+    Object getObject(IECtrl* ctrl = NULL);
 
     void setValue(int value);
     void setValue(bool value);
@@ -438,7 +438,15 @@ public:
     }
 
   protected:
-    void addElement(const char *name, DISPID& dispID);
+    DISPID getDispID(IDispatchEx* dispatch, const char* name, DWORD flags = 0) {
+      BSTR bStrName = _com_util::ConvertStringToBSTR(name);
+      DISPID dispID = 0;
+
+      dispatch->GetDispID(bStrName, flags, &dispID);
+      SysFreeString(bStrName);
+
+      return dispID;
+    }
 
   protected:
     IDispatchEx* _pdexScript;

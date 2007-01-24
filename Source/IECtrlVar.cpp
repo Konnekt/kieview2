@@ -232,6 +232,7 @@ IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
   }
   Var args;
   args[-1] = Var(*this);
+
   if (m_eType == Type::Date) {
     return IECtrl::Object(ctrl, "Date", args);
   } else if (m_eType == Type::String) {
@@ -241,7 +242,7 @@ IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
   } else if (m_eType == Type::Boolean) {
     return IECtrl::Object(ctrl, "Boolean", args);
   }
-  return IECtrl::Object();
+  return IECtrl::Object(ctrl);
 }
 
 int IECtrl::Var::length() {
@@ -377,7 +378,7 @@ void IECtrl::Var::copy(IECtrl::Var& copy) {
       setValue(copy.getDate());
       break;
     case Type::Object:
-      setValue(copy.getObject(NULL));
+      setValue(copy.getObject());
       break;
     default:
       m_eType = Type::Unknown;
@@ -497,7 +498,6 @@ void IECtrl::Var::setValue(VARIANT &v) {
         pDispEx->Release();
       }
       */
-
       break;
     }
   }
@@ -586,11 +586,8 @@ IECtrl::Var IECtrl::Var::operator+(IECtrl::Object &var) {
 
 IECtrl::Object::Object(IECtrl* ctrl, const char* name, Var args): _ownObject(true) {
   IDispatch* pdScript = ctrl->getDispatch();
-  DISPID dispID;
-
   pdScript->QueryInterface(IID_IDispatchEx, (void **)&_pdexScript);
-  BSTR bstrName = _com_util::ConvertStringToBSTR(name);
-  _pdexScript->GetDispID(bstrName, 0, &dispID);
+  DISPID dispID = getDispID(_pdexScript, name);
 
   VARIANT vRet;
   DISPPARAMS dispparams = {0, 0, NULL, NULL};
@@ -611,29 +608,26 @@ IECtrl::Object::Object(IECtrl* ctrl, const char* name, Var args): _ownObject(tru
 
 IECtrl::Object::Object(IECtrl* ctrl, IDispatch* dispatch): _ownObject(false) {
   ASSERT(dispatch != NULL);
+
   IDispatch* pdScript = ctrl->getDispatch();
-  DISPID dispID;
 
   pdScript->QueryInterface(IID_IDispatchEx, (void **)&_pdexScript);
   dispatch->QueryInterface(IID_IDispatchEx, (void **)&_pdexObj);
+
   ASSERT(_pdexObj != NULL);
 }
 
 void IECtrl::Object::bindMethod(const char* name, const char* func) {
-  DISPID dispID;
-  BSTR bstrName = _com_util::ConvertStringToBSTR(func);
-
-  _pdexScript->GetDispID(bstrName, fdexNameEnsure, &dispID);
-
+  DISPID fnDispID = getDispID(_pdexScript, func, fdexNameEnsure);
+  DISPPARAMS dispparams, dispparamsNoArgs = {NULL, NULL, 0, 0};
   VARIANT vRet;
   VariantInit(&vRet);
-  DISPPARAMS dispparams, dispparamsNoArgs = {NULL, NULL, 0, 0};
 
-  _pdexScript->InvokeEx(dispID, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dispparamsNoArgs, &vRet, NULL, NULL);
+  _pdexScript->InvokeEx(fnDispID, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dispparamsNoArgs, &vRet, NULL, NULL);
 
-  addElement(name, dispID);
-
+  DISPID dispID = getDispID(_pdexObj, name, fdexNameEnsure);
   DISPID putID = DISPID_PROPERTYPUT;
+
   dispparams.rgvarg = &vRet;
   dispparams.rgdispidNamedArgs = &putID;
   dispparams.cArgs = 1;
@@ -642,29 +636,20 @@ void IECtrl::Object::bindMethod(const char* name, const char* func) {
   _pdexObj->InvokeEx(dispID, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUTREF, &dispparams, NULL, NULL, NULL);
 }
 
-void IECtrl::Object::addElement(const char *name, DISPID& dispID) {
-  BSTR bstrName = _com_util::ConvertStringToBSTR(name);
-  _pdexObj->GetDispID(bstrName, fdexNameEnsure, &dispID);
-}
-
 void IECtrl::Object::addProperty(const char *name, IECtrl::Var var) {
-  DISPID dispID = 0;
-
-  this->addElement(name, dispID);
-  this->setProperty(name, var);
+  getDispID(_pdexObj, name, fdexNameEnsure);
+  setProperty(name, var);
 }
 
 void IECtrl::Object::setProperty(const char *name, IECtrl::Var var) {
   DISPPARAMS dispparams;
-  DISPID dispID;
   VARIANT v;
 
   var.getVariant(&v);
 
-  BSTR bstrName = _com_util::ConvertStringToBSTR(name);
-  _pdexObj->GetDispID(bstrName, 0, &dispID);
-
+  DISPID dispID = getDispID(_pdexObj, name);
   DISPID putID = DISPID_PROPERTYPUT;
+
   dispparams.rgvarg = &v;
   dispparams.rgdispidNamedArgs = &putID;
   dispparams.cArgs = 1;
@@ -675,13 +660,10 @@ void IECtrl::Object::setProperty(const char *name, IECtrl::Var var) {
 
 IECtrl::Var IECtrl::Object::getProperty(const char *name) {
   DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
-  DISPID dispID;
+  DISPID dispID = getDispID(_pdexObj, name);
   VARIANT v;
 
-  BSTR bstrName = _com_util::ConvertStringToBSTR(name);
-  _pdexObj->GetDispID(bstrName, 0, &dispID);
   _pdexObj->InvokeEx(dispID, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &dispparamsNoArgs, &v, NULL, NULL);
-
   return v;
 }
 
