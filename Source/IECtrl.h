@@ -429,7 +429,7 @@ public:
 
     void bindMethod(const char* name, const char* func);
 
-    void addProperty(const char *name, IECtrl::Var var);
+    void addProperty(const char *name, IECtrl::Var var, bool ref = false);
     void setProperty(const char *name, IECtrl::Var var, bool ref = false);
 
     IECtrl::Var getProperty(const char *name);
@@ -444,15 +444,7 @@ public:
     }
 
   protected:
-    DISPID getDispID(IDispatchEx* dispatch, const char* name, DWORD flags = 0) {
-      BSTR bStrName = _com_util::ConvertStringToBSTR(name);
-      DISPID dispID = 0;
-
-      dispatch->GetDispID(bStrName, flags, &dispID);
-      SysFreeString(bStrName);
-
-      return dispID;
-    }
+    DISPID getDispID(IDispatchEx* dispatch, const char* name, DWORD flags = 0);
 
   protected:
     IDispatchEx* _pdexScript;

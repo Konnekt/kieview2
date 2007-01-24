@@ -119,8 +119,6 @@ int IECtrl::Var::getInteger() {
     return (int) m_dValue;
   else if (m_eType == Type::String)
     return atoi(m_szValue);
-  else if (m_eType == Type::Dispatch)
-    return (int) m_dispValue;
 
   return 0;
 }
@@ -134,8 +132,6 @@ bool IECtrl::Var::getBool() {
     return (bool) m_dValue;
   else if (m_eType == Type::String)
     return (bool) getInteger();
-  else if (m_eType == Type::Dispatch)
-    return (bool) m_dispValue;
 
   return false;
 }
@@ -166,14 +162,14 @@ const char * IECtrl::Var::getString() {
     return "Array";
   else if (m_eType == Type::Object)
     return "Object";
+  else if (m_eType == Type::Dispatch)
+    return "Dispatch";
   else if (m_eType == Type::Date) {
     if (m_dtValue != NULL) {
       return m_dtValue->strftime("%Y-%m-%d %H:%M:%S").c_str();
     } else {
       return Date64().strftime("%Y-%m-%d %H:%M:%S").c_str();
     }
-  } else if (m_eType == Type::Dispatch) {
-    return "IDispatch";
   }
   return "";
 }
@@ -267,9 +263,9 @@ IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
 }
 
 IDispatch* IECtrl::Var::getDispatch() {
-  if (m_eType == Type::Dispatch)
+  if (m_eType == Type::Dispatch) {
     return m_dispValue;
-
+  }
   return NULL;
 }
 
@@ -475,8 +471,10 @@ void IECtrl::Var::setValue(VARIANT &v) {
     case VT_DATE: {
       TIME_ZONE_INFORMATION time_zone;
       GetTimeZoneInformation(&time_zone);
+
       DATE date = v.date - 25569;
       __int64 date64 = date * (24 * 60 * 60) + (time_zone.Bias * 60);
+
       setValue(Date64(date64));
       break;
     }
@@ -504,7 +502,6 @@ void IECtrl::Var::setValue(VARIANT &v) {
       break;
     }
     case VT_DISPATCH: {
-      setValue(v.pdispVal);
       /*
       IDispatch * pDispatch = v.pdispVal;
       IDispatchEx * pDispEx = NULL;
@@ -531,6 +528,7 @@ void IECtrl::Var::setValue(VARIANT &v) {
         pDispEx->Release();
       }
       */
+      setValue(v.pdispVal);
       break;
     }
   }
@@ -557,8 +555,8 @@ void IECtrl::Var::setValue(IDispatch* dispatch) {
 IECtrl::Var & IECtrl::Var::getElement(int i) {
   if (i < 0) i = m_nLength;
 
-  if (m_eType == Type::Array && i < m_nLength)
-  {
+  if (m_eType == Type::Array && i < m_nLength) {
+    //
   } else if (m_eType == Type::Array) {
     IECtrl::Var** pValue = new IECtrl::Var*[i+1];
     for (int j = 0; j < i + 1; j++) {
@@ -675,9 +673,9 @@ void IECtrl::Object::bindMethod(const char* name, const char* func) {
   _pdexObj->InvokeEx(dispID, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUTREF, &dispparams, NULL, NULL, NULL);
 }
 
-void IECtrl::Object::addProperty(const char *name, IECtrl::Var var) {
+void IECtrl::Object::addProperty(const char *name, IECtrl::Var var, bool ref) {
   getDispID(_pdexObj, name, fdexNameEnsure);
-  setProperty(name, var);
+  setProperty(name, var, ref);
 }
 
 void IECtrl::Object::setProperty(const char *name, IECtrl::Var var, bool ref) {
@@ -715,4 +713,14 @@ VARIANT* IECtrl::Object::getVariant(VARIANT* v) {
   v->pdispVal = _pdexObj;
 
   return v;
+}
+
+DISPID IECtrl::Object::getDispID(IDispatchEx* dispatch, const char* name, DWORD flags) {
+  BSTR bStrName = _com_util::ConvertStringToBSTR(name);
+  DISPID dispID = 0;
+
+  dispatch->GetDispID(bStrName, flags, &dispID);
+  SysFreeString(bStrName);
+
+  return dispID;
 }
