@@ -429,8 +429,8 @@ public:
 
     void bindMethod(const char* name, const char* func);
 
-    void addProperty(const char *name, IECtrl::Var var, bool ref = false);
-    void setProperty(const char *name, IECtrl::Var var, bool ref = false);
+    void addProperty(const char *name, IECtrl::Var var, bool ref = true);
+    void setProperty(const char *name, IECtrl::Var var, bool ref = true);
 
     IECtrl::Var getProperty(const char *name);
     VARIANT* getVariant(VARIANT* v);

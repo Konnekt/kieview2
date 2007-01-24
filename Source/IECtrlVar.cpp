@@ -243,22 +243,19 @@ IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
   } else if (m_eType == Type::Dispatch && m_dispValue) {
     return IECtrl::Object(ctrl, m_dispValue);
   } else if (m_eType == Type::Array) {
-    Var args;
-
-    for (UINT i = 0; i < m_nLength; i++) {
-      args[-1] = *m_aValue[i];
-    }
-    return IECtrl::Object(ctrl, "Array", args);
+    return IECtrl::Object(ctrl, "Array", *this);
   }
 
   Var args;
   args[-1] = Var(*this);
 
-  if (m_eType == Type::Date) {
+  if (m_eType == Type::Integer || m_eType == Type::Real) {
+    return IECtrl::Object(ctrl, "Number", args);
+  } else if (m_eType == Type::Date) {
     return IECtrl::Object(ctrl, "Date", args);
   } else if (m_eType == Type::String) {
     return IECtrl::Object(ctrl, "String", args);
-  }else if (m_eType == Type::Boolean) {
+  } else if (m_eType == Type::Boolean) {
     return IECtrl::Object(ctrl, "Boolean", args);
   }
   return IECtrl::Object(ctrl);
