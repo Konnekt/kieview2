@@ -67,6 +67,7 @@ namespace kIEview2 {
     this->setStaticValue(IM_PLUG_NET, net);
 
     /* Callbacks */
+    this->registerObserver(IM_ALLPLUGINSINITIALIZED, bind(resolve_cast0(&Controller::_onPluginsLoaded), this));
     this->registerObserver(IM_UI_PREPARE, bind(resolve_cast0(&Controller::_onPrepare), this));
     this->registerObserver(IM_UIACTION, bind(resolve_cast0(&Controller::_onAction), this));
     this->registerActionObserver(UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
@@ -122,6 +123,15 @@ namespace kIEview2 {
     for (tMsgHandlers::iterator it = msgHandlers.begin(); it != msgHandlers.end(); it++) {
       delete it->second;
     }
+  }
+
+  void Controller::_onPluginsLoaded() {
+    if (getIEVersion() < 6) {
+      Ctrl->IMessage(&sIMessage_plugOut(Ctrl->ID(), "kIEview2 potrzebuje do dzia³ania conajmniej IE6.",
+        sIMessage_plugOut::erNo, sIMessage_plugOut::euNowAndOnNextStart));
+      return setFailure();
+    }
+    setSuccess();
   }
 
   void Controller::_onPrepare() {
@@ -531,6 +541,29 @@ namespace kIEview2 {
       return externalCallbacks[externalCallbacks.size() - 1];
     }
     return 0;
+  }
+
+  int Controller::getIEVersion() {
+    // HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ -> User Agent
+    // Mozilla/4.0 (compatible; MSIE 6.0; Win32)
+
+    int ver = 0;
+    HKEY hKey;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+      char userAgent[256] = {0};
+      DWORD length = 256;
+      RegQueryValueEx(hKey, "User Agent", 0, NULL, (BYTE*)&userAgent, &length);
+
+      RegEx preg;
+      preg.match("/MSIE +(\\d+)/", userAgent);
+
+      if (preg.isMatched()) {
+        ver = atoi(preg[1].c_str());
+      }
+      RegCloseKey(hKey);
+    }
+    return ver;
   }
 
   bool Controller::loadMsgTable(tCntId cnt) {

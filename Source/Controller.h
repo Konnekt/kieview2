@@ -104,7 +104,10 @@ namespace kIEview2 {
     String linkify(StringRef& txt);
     String nl2br(StringRef& txt);
 
+    int getIEVersion();
+
   protected:
+    void _onPluginsLoaded();
     void _onPrepare();
     void _onAction();
 

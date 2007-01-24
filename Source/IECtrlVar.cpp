@@ -356,10 +356,6 @@ void IECtrl::Var::operator+=(Date64& var) {
   *this += IECtrl::Var(var);
 }
 
-void IECtrl::Var::operator+=(IECtrl::Object& var) {
-  *this += IECtrl::Var(var);
-}
-
 // private
 void IECtrl::Var::clear() {
   if (m_eType == Type::String && m_szValue != NULL) {
@@ -609,12 +605,6 @@ IECtrl::Var IECtrl::Var::operator+(const char *var) {
 }
 
 IECtrl::Var IECtrl::Var::operator+(Date64 &var) {
-  IECtrl::Var ret(*this);
-  ret += IECtrl::Var(var);
-  return ret;
-}
-
-IECtrl::Var IECtrl::Var::operator+(IECtrl::Object &var) {
   IECtrl::Var ret(*this);
   ret += IECtrl::Var(var);
   return ret;

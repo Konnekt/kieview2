@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <crtdbg.h>
 
+// na wszelki wypadek ;>
+static const CLSID CLSID_MozillaBrowser = { 0x1339B54C, 0x3453, 0x11D2, { 0x93, 0xB9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
+
 class IECtrl {
 private:
   class ClientSite;
@@ -379,14 +382,12 @@ public:
     void operator+=(double var);
     void operator+=(const char* var);
     void operator+=(Date64 &var);
-    void operator+=(Object &var);
 
     Var operator+(Var & var2);
     Var operator+(int var2);
     Var operator+(double var2);
     Var operator+(const char *var2);
     Var operator+(Date64 &var);
-    Var operator+(Object &var);
 
   private:
     void clear();
