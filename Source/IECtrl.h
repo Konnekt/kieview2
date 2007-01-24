@@ -339,6 +339,7 @@ public:
     Var(VARIANT &v);
     Var(Date64 &v);
     Var(Object &v);
+    Var(IDispatch *v);
     ~Var();
 
     int getInteger();
@@ -348,6 +349,7 @@ public:
     VARIANT * getVariant(VARIANT *v = NULL);
     Date64 getDate();
     Object getObject(IECtrl* ctrl = NULL);
+    IDispatch* getDispatch();
 
     void setValue(int value);
     void setValue(bool value);
@@ -357,6 +359,7 @@ public:
     void setValue(VARIANT &v);
     void setValue(Date64 &value);
     void setValue(Object &value);
+    void setValue(IDispatch* value);
 
     int length();
     Var & operator[](int i);
@@ -369,6 +372,7 @@ public:
     Var & operator=(VARIANT &v);
     Var & operator=(Date64 &value);
     Var & operator=(Object &value);
+    Var & operator=(IDispatch* value);
 
     void operator+=(Var & var);
     void operator+=(int var);
@@ -399,7 +403,8 @@ public:
       String,
       Array,
       Date,
-      Object
+      Object,
+      Dispatch
     };
     Type m_eType;
 
@@ -410,6 +415,7 @@ public:
       Var ** m_aValue;
       Date64 * m_dtValue;
       IECtrl::Object * m_objValue;
+      IDispatch * m_dispValue;
     };
     int m_nLength;
   };
@@ -424,7 +430,7 @@ public:
     void bindMethod(const char* name, const char* func);
 
     void addProperty(const char *name, IECtrl::Var var);
-    void setProperty(const char *name, IECtrl::Var var);
+    void setProperty(const char *name, IECtrl::Var var, bool ref = false);
 
     IECtrl::Var getProperty(const char *name);
     VARIANT* getVariant(VARIANT* v);

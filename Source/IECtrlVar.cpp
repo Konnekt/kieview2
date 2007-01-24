@@ -57,6 +57,10 @@ IECtrl::Var::Var(IECtrl::Object &v) {
   setValue(v);
 }
 
+IECtrl::Var::Var(IDispatch *v) {
+  setValue(v);
+}
+
 IECtrl::Var::~Var() {
   clear();
 }
@@ -103,6 +107,11 @@ IECtrl::Var & IECtrl::Var::operator=(IECtrl::Object &value) {
   return *this;
 }
 
+IECtrl::Var & IECtrl::Var::operator=(IDispatch* value) {
+  setValue(value);
+  return *this;
+}
+
 int IECtrl::Var::getInteger() {
   if (m_eType == Type::Integer || m_eType == Type::Boolean)
     return m_iValue;
@@ -110,6 +119,8 @@ int IECtrl::Var::getInteger() {
     return (int) m_dValue;
   else if (m_eType == Type::String)
     return atoi(m_szValue);
+  else if (m_eType == Type::Dispatch)
+    return (int) m_dispValue;
 
   return 0;
 }
@@ -123,6 +134,8 @@ bool IECtrl::Var::getBool() {
     return (bool) m_dValue;
   else if (m_eType == Type::String)
     return (bool) getInteger();
+  else if (m_eType == Type::Dispatch)
+    return (bool) m_dispValue;
 
   return false;
 }
@@ -159,6 +172,8 @@ const char * IECtrl::Var::getString() {
     } else {
       return Date64().strftime("%Y-%m-%d %H:%M:%S").c_str();
     }
+  } else if (m_eType == Type::Dispatch) {
+    return "IDispatch";
   }
   return "";
 }
@@ -214,6 +229,9 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
     }
     v->parray = psa;
     v->vt = VT_ARRAY | VT_VARIANT;
+  } else if (m_eType == Type::Dispatch) {
+    v->vt = VT_DISPATCH;
+    v->pdispVal = m_dispValue;
   }
 
   return v;
@@ -229,7 +247,10 @@ Date64 IECtrl::Var::getDate() {
 IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
   if (m_eType == Type::Object && m_objValue != NULL) {
     return (*m_objValue);
+  } else if (m_eType == Type::Dispatch && m_dispValue != NULL) {
+    return IECtrl::Object(ctrl, m_dispValue);
   }
+
   Var args;
   args[-1] = Var(*this);
 
@@ -243,6 +264,13 @@ IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
     return IECtrl::Object(ctrl, "Boolean", args);
   }
   return IECtrl::Object(ctrl);
+}
+
+IDispatch* IECtrl::Var::getDispatch() {
+  if (m_eType == Type::Dispatch)
+    return m_dispValue;
+
+  return NULL;
 }
 
 int IECtrl::Var::length() {
@@ -380,6 +408,10 @@ void IECtrl::Var::copy(IECtrl::Var& copy) {
     case Type::Object:
       setValue(copy.getObject());
       break;
+    case Type::Dispatch:
+      setValue(copy.getDispatch());
+      break;
+
     default:
       m_eType = Type::Unknown;
       m_nLength = 0;
@@ -472,6 +504,7 @@ void IECtrl::Var::setValue(VARIANT &v) {
       break;
     }
     case VT_DISPATCH: {
+      setValue(v.pdispVal);
       /*
       IDispatch * pDispatch = v.pdispVal;
       IDispatchEx * pDispEx = NULL;
@@ -513,6 +546,12 @@ void IECtrl::Var::setValue(IECtrl::Object &v) {
   clear();
   m_objValue = new IECtrl::Object(v);
   m_eType = Type::Object;
+}
+
+void IECtrl::Var::setValue(IDispatch* dispatch) {
+  clear();
+  m_dispValue = dispatch;
+  m_eType = Type::Dispatch;
 }
 
 IECtrl::Var & IECtrl::Var::getElement(int i) {
@@ -641,7 +680,7 @@ void IECtrl::Object::addProperty(const char *name, IECtrl::Var var) {
   setProperty(name, var);
 }
 
-void IECtrl::Object::setProperty(const char *name, IECtrl::Var var) {
+void IECtrl::Object::setProperty(const char *name, IECtrl::Var var, bool ref) {
   DISPPARAMS dispparams;
   VARIANT v;
 
@@ -655,7 +694,7 @@ void IECtrl::Object::setProperty(const char *name, IECtrl::Var var) {
   dispparams.cArgs = 1;
   dispparams.cNamedArgs = 1;
 
-  _pdexObj->InvokeEx(dispID, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
+  _pdexObj->InvokeEx(dispID, LOCALE_USER_DEFAULT, ref ? DISPATCH_PROPERTYPUTREF : DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
 }
 
 IECtrl::Var IECtrl::Object::getProperty(const char *name) {
