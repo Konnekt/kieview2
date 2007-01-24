@@ -204,32 +204,29 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
       v->date /= (24 * 60 * 60);
       v->date += 25569;
     } else {
-      v->date= 0;
+      v->date = 0;
     }
   } else if (m_eType == Type::Object) {
+    m_objValue->getVariant(v);
+  } else if (m_eType == Type::Dispatch) {
     v->vt = VT_DISPATCH;
-    v->pdispVal = m_objValue->getDispatchEx();
+    v->pdispVal = m_dispValue;
   } else if (m_eType == Type::Array) {
+    /*
     if (v->parray && (v->vt & VT_ARRAY)) {
       if (v->parray->rgsabound[0].cElements < m_nLength && m_aValue != NULL) {
         SafeArrayDestroyData(v->parray);
       }
     }
-    SAFEARRAYBOUND rgsabound;
-    rgsabound.cElements = length();
-    rgsabound.lLbound = 0;
-    SAFEARRAY* psa = SafeArrayCreate(VT_VARIANT, 1, &rgsabound);
+    SAFEARRAY* psa = SafeArrayCreateVector(VT_VARIANT, 0, m_nLength);
 
-    for(LONG i = 0; i < psa->rgsabound[0].cElements; i++) {
-       SafeArrayPutElement(psa, &i, m_aValue[i]->getVariant(NULL));
+    for (LONG i = 0; i < m_nLength; i++) {
+       SafeArrayPutElement(psa, &i, m_aValue[i]->getVariant());
     }
     v->parray = psa;
     v->vt = VT_ARRAY | VT_VARIANT;
-  } else if (m_eType == Type::Dispatch) {
-    v->vt = VT_DISPATCH;
-    v->pdispVal = m_dispValue;
+    */
   }
-
   return v;
 }
 
@@ -241,10 +238,17 @@ Date64 IECtrl::Var::getDate() {
 }
 
 IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
-  if (m_eType == Type::Object && m_objValue != NULL) {
+  if (m_eType == Type::Object && m_objValue) {
     return (*m_objValue);
-  } else if (m_eType == Type::Dispatch && m_dispValue != NULL) {
+  } else if (m_eType == Type::Dispatch && m_dispValue) {
     return IECtrl::Object(ctrl, m_dispValue);
+  } else if (m_eType == Type::Array) {
+    Var args;
+
+    for (UINT i = 0; i < m_nLength; i++) {
+      args[-1] = *m_aValue[i];
+    }
+    return IECtrl::Object(ctrl, "Array", args);
   }
 
   Var args;
@@ -254,9 +258,7 @@ IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
     return IECtrl::Object(ctrl, "Date", args);
   } else if (m_eType == Type::String) {
     return IECtrl::Object(ctrl, "String", args);
-  } else if (m_eType == Type::Array) {
-    return IECtrl::Object(ctrl, "Array", args);
-  } else if (m_eType == Type::Boolean) {
+  }else if (m_eType == Type::Boolean) {
     return IECtrl::Object(ctrl, "Boolean", args);
   }
   return IECtrl::Object(ctrl);
