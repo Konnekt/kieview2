@@ -76,7 +76,6 @@ namespace kIEview2 {
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
     config->setColumn(DTCFG, cfg::linkify, DT_CT_INT, 1, "kIEview2/linkify/use");
-    config->setColumn(DTCFG, cfg::linkifyRegEx, DT_CT_STR, "~(?>[a-z+]{2,}://|www\\.|ftp\\.)(?:[a-z0-9]+(?:\\.[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?~i", "kIEview2/linkify/regex");
     config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEview2/emots/use");
     config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots", "kIEview2/emots/dir");
     config->setColumn(DTCFG, cfg::emotsPack, DT_CT_STR, "", "kIEview2/emots/pack");
@@ -193,10 +192,6 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_NEEDRESTART, "Wyœwietlaj toolbar w oknie rozmowy", cfg::showFormatTb);
     UIActionCfgAdd(ui::cfgGroup, cfg::linkify, ACTT_CHECK, "Zamieniaj linki na 'klikalne'", cfg::linkify);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SEPARATOR);
-    UIActionCfgAdd(ui::cfgGroup, cfg::linkifyRegEx, ACTT_TEXT, "", cfg::linkifyRegEx);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_TIPBUTTON | ACTSC_INLINE, AP_TIPRICH "powy¿sze wyra¿enie musi byæ poprawnym wyra¿eniem regularnym dla silnika <b>PCRE</b> !" AP_ICO "12", 0, 0, 0, 0, 25);
-    UIActionCfgAdd(ui::cfgGroup, act::resetLinkifyRegEx, ACTT_BUTTON, "domyœlnie" AP_ICO "27", 0, 0, 0, 90, 25);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Emotikony");
@@ -213,12 +208,6 @@ namespace kIEview2 {
     sUIActionNotify* an = this->getAN();
 
     switch(an->act.id) {
-      case act::resetLinkifyRegEx: {
-        if (an->code == ACTN_ACTION) {
-          config->resetColumn(cfg::linkifyRegEx, 0, &sUIAction(ui::cfgGroup, cfg::linkifyRegEx));
-        }
-        break;
-      }
       case act::popup::popup: {
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
           sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
@@ -281,10 +270,6 @@ namespace kIEview2 {
       }
       case cfg::useEmots: {
         UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::emotsDir), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
-        break;
-      }
-      case cfg::linkify: {
-        UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::linkifyRegEx), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
         break;
       }
     }
@@ -819,13 +804,29 @@ namespace kIEview2 {
     return tplHandler->runFunc("htmlEscape", txt);
   }
 
-  String Controller::linkify(StringRef& txt) {
-    try {
-      txt = RegEx::doReplace(config->getChar(cfg::linkifyRegEx), "<a href=\"\\0\" class=\"autolink\" target=\"_blank\">\\0</a>", txt.c_str());
-    } catch(const RegEx::CompileException& e) {
-      txt = "RegEx (<b>linkify</b>) compile error: <b>"; txt += e.error;
-      txt += "</b> at pos <b>" + inttostr(e.pos) + "</b>";
+  string __stdcall Controller::linkifyDo(RegEx* reg) {
+    RegEx& r = *reg;
+
+    if (r.hasSub(1) && r.hasSub(4)) {
+      return r[0];
     }
+    return r[1] + "<a href=\"" + ((r[3].find(":") == r[3].npos) ? "http://" : "") + 
+      r[2] + "\" class=\"autolink\" target=\"_blank\">" + r[2] + "</a>" + r[4];
+  }
+
+  string __stdcall Controller::mailifyDo(RegEx* reg) {
+    RegEx& r = *reg;
+
+    if (r.hasSub(1)) {
+      return r[0];
+    }
+    return "<a href=\"mailto:" + r[2] + "\" class=\"autolink\">" + r[2] + "</a>";
+  }
+
+  String Controller::linkify(StringRef& txt) {
+    txt = RegEx::doReplace("~([\"|']mailto:)?(([a-z0-9_'+*$%\\^&!\\.-])+@(([a-z0-9-])+\\.)+([a-z]{2,6})+)~i", &Controller::mailifyDo, txt.c_str());
+    txt = RegEx::doReplace("~([\"|'])?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", &Controller::linkifyDo, txt.c_str());
+
     return PassStringRef(txt);
   }
 

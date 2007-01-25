@@ -100,6 +100,9 @@ namespace kIEview2 {
     string bytesToString(double bytes);
     string timeToString(int time);
 
+    static string __stdcall linkifyDo(RegEx* reg);
+    static string __stdcall mailifyDo(RegEx* reg);
+
     String htmlEscape(StringRef& txt);
     String linkify(StringRef& txt);
     String nl2br(StringRef& txt);
