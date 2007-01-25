@@ -113,6 +113,7 @@ public:
   void write(const WCHAR *text);
   void write(const char *text);
   void close();
+  bool isScrollOnBottom();
   void scrollToTop();
   void scrollToBottom();
   void saveDocument();

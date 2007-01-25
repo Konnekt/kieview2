@@ -268,6 +268,34 @@ void IECtrl::scrollToTop() {
   }
 }
 
+bool IECtrl::isScrollOnBottom() {
+  bool isScroll = false;
+
+  IHTMLDocument2 *document = getDocument();
+  if (document != NULL) {
+    IHTMLDocument2 *pDocument = NULL;
+    if (SUCCEEDED(document->QueryInterface( IID_IHTMLDocument2, (void**)&pDocument)) && pDocument != NULL) {
+      IHTMLElement *pBody = NULL;
+      if (SUCCEEDED(pDocument->get_body(&pBody)) && pBody != NULL) {
+        IHTMLElement2 *pElement = NULL;
+        if (SUCCEEDED(pBody->QueryInterface(IID_IHTMLElement2,(void**)&pElement)) && pElement != NULL) {
+            long sh, ch, st;
+            pElement->get_scrollHeight(&sh);
+            pElement->get_clientHeight(&ch);
+            pElement->get_scrollTop(&st);
+
+            isScroll = (sh <= ch + st);
+            pElement->Release();
+        }
+        pBody->Release();
+      }
+      pDocument->Release();
+    }
+    document->Release();
+  }
+  return isScroll;
+}
+
 void IECtrl::scrollToBottom() {
   IHTMLDocument2 *document = getDocument();
   if (document != NULL) {
