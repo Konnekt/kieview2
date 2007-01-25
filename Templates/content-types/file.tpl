@@ -4,7 +4,7 @@
     <span class="filename">"<b><TMPL_var name></b>"</span>
   </TMPL_if>
   <TMPL_if sent?>
-    wysÅ‚any do
+    wys³any do
   <TMPL_else>
     odebrany od
   </TMPL_if>
@@ -13,7 +13,7 @@
   <br/><br/>
 
   <TMPL_if path>
-    <span class="path">ÅšcieÅ¼ka: 
+    <span class="path">Œcie¿ka: 
       <TMPL_if path>
         <a href="file:///<TMPL_var path>" target="_blank"><TMPL_var path></a> -
       </TMPL_if>
@@ -26,7 +26,7 @@
   <TMPL_if transfered>
     <span class="transfered">
       <TMPL_if isSent>
-        PrzesÅ‚ano:
+        Przes³ano:
       <TMPL_else>
         Odebrano:
       </TMPL_if>
@@ -37,11 +37,11 @@
     <span class="transfer-time">Czas: <b><TMPL_var transferTime></b></span><br/>
   </TMPL_if>
   <TMPL_if avgSpeed>
-    <span class="transfer-speed">Åšrednia prÄ™dkoÅ›Ä‡: <b><TMPL_var avgSpeed></b></span><br/>
+    <span class="transfer-speed">Œrednia prêdkoœæ: <b><TMPL_var avgSpeed></b></span><br/>
   </TMPL_if>
   <TMPL_if error>
     <br/>
-    <div class="transfer-error">BÅ‚Ä…d: <pre><TMPL_var error></pre></div>
+    <div class="transfer-error">B³¹d: <pre><TMPL_var error></pre></div>
   </TMPL_if>
 
   <br/>

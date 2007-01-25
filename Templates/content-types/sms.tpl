@@ -5,7 +5,5 @@
   <span class="to">do <b><TMPL_var htmlEscape(to)></b></span>
   <span class="time">(<TMPL_var time>)</span>,
   <span class="gate">bramka: <b><TMPL_var gate></b></span>
-  <div class="body">
-    <pre><TMPL_var htmlEscape(body)></pre>
-  </div>
+  <div class="body"><TMPL_var body></div>
 </div>

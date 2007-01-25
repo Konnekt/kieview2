@@ -3,10 +3,10 @@
   <span class="status-desc">
     status <b><TMPL_var status></b>
     <TMPL_if ignored?>
-      - ignoruje CiÄ™
+      - ignoruje Ciê
     </TMPL_if>
   </span>
   <TMPL_if info>
-    <span class="info">"<TMPL_var htmlEscape(info)>"</span>
+    <span class="info">"<TMPL_var info>"</span>
   </TMPL_if>
 </div>

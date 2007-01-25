@@ -3,13 +3,7 @@
     <span class="time">[<b><TMPL_var time></b>]</span>
   </TMPL_if>
   <div class="body">
-    <TMPL_if html?>
-      <TMPL_var body>
-    <TMPL_else>
-      <pre><TMPL_var htmlEscape(body)></pre>
-    </TMPL_if>
-    <TMPL_if warning?>
-      ! <b>warning</b> !
-    </TMPL_if>
+    <TMPL_if warning?>! <b>warning</b> !</TMPL_if>
+    <TMPL_var body>
   </div>
 </div>

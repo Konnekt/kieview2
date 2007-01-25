@@ -824,7 +824,7 @@ namespace kIEview2 {
   }
 
   String Controller::linkify(StringRef& txt) {
-    txt = RegEx::doReplace("~([\"|']mailto:)?(([a-z0-9_'+*$%\\^&!\\.-])+@(([a-z0-9-])+\\.)+([a-z]{2,6})+)~i", &Controller::mailifyDo, txt.c_str());
+    txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-])+@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6})+)~i", &Controller::mailifyDo, txt.c_str());
     txt = RegEx::doReplace("~([\"|'])?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", &Controller::linkifyDo, txt.c_str());
 
     return PassStringRef(txt);
