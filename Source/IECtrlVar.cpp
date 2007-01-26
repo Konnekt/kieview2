@@ -723,7 +723,7 @@ DISPID IECtrl::Object::getDispID(IDispatchEx* dispatch, const char* name, DWORD 
 }
 
 IECtrl::Object::~Object() {
-  if(!++(*_refs)) {
+  if(!--(*_refs)) {
     delete _refs;
     _pdexObj->Release();
     if (this->ownObject() && this->_defDestruct) {
