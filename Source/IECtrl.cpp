@@ -19,6 +19,7 @@
 IECtrl* IECtrl::m_pList = NULL;
 CRITICAL_SECTION IECtrl::m_mutex;
 bool IECtrl::m_bInited = false;
+bool IECtrl::m_bAutoCopySel = false;
 
 void IECtrl::init() {
   if (m_bInited) return;
@@ -51,6 +52,7 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
   m_pClientSite = NULL;
   m_bClosed = false;
   m_bSandbox = true;
+  m_bGetSelection = false;
   m_pExternal = new External(this);
   m_pDropTarget = new DropTarget(this);
 
@@ -200,6 +202,9 @@ LRESULT CALLBACK IECtrl::IECtrlServerWindowProcedure (HWND hwnd, UINT message, W
         if (ctrl->mouseClick(pt)) {
           return true;
         }
+        break;
+      case WM_LBUTTONUP:
+        ctrl->onMouseButtonUp(pt);
         break;
     }
     return CallWindowProc(ctrl->getUserWndProc(), hwnd, message, wParam, lParam);
@@ -436,6 +441,14 @@ void IECtrl::enableSandbox(bool bSandbox) {
   }
 }
 
+void IECtrl::setAutoCopySel(bool autoCopy) {
+  m_bAutoCopySel = autoCopy;
+}
+
+bool IECtrl::getAutoCopySel() {
+  return m_bAutoCopySel;
+}
+
 char * IECtrl::getSelection(bool gettext) {
   if (m_szSelectedText != NULL) {
     delete m_szSelectedText;
@@ -553,10 +566,30 @@ BSTR IECtrl::getHrefFromAnchor(IHTMLElement *element) {
   return NULL;
 }
 
+void IECtrl::onMouseButtonUp(POINT pt) {
+  if (m_bGetSelection && getSelection(false)) {
+    char* text = getSelection();
+    HGLOBAL hGlobal = GlobalAlloc(GHND, strlen(text));
+    char* p = (char *)GlobalLock(hGlobal);
+    strncpy(p, text, strlen(text));
+    GlobalUnlock(hGlobal);
+
+    OpenClipboard(getHWND());
+    EmptyClipboard();
+    SetClipboardData(CF_TEXT, hGlobal);
+    CloseClipboard();
+  }
+  m_bGetSelection = false;
+}
+
 bool IECtrl::mouseClick(POINT pt) {
   bool result = false;
   if (GetFocus() != m_hWnd) {
     m_bGetFocus = true;
+  }
+
+  if (getAutoCopySel()) {
+    m_bGetSelection = true;
   }
 
   IHTMLDocument2 *document = getDocument();

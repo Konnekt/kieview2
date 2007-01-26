@@ -118,6 +118,8 @@ public:
   void scrollToBottom();
   void saveDocument();
   void selectAll();
+  static void setAutoCopySel(bool autoCopy = false);
+  static bool getAutoCopySel();
   char* getSelection(bool gettext = true);
   bool callJScript(const char* szFunc, Var &args, Var *ret);
 
@@ -144,6 +146,7 @@ private:
 
   void translateAccelerator(UINT uMsg, WPARAM wParam, LPARAM lParam);
   bool mouseClick(POINT pt);
+  void onMouseButtonUp(POINT pt);
   bool setFocus(HWND prevFocus);
 
   void setUserWndProc(WNDPROC);
@@ -175,9 +178,12 @@ private:
 
   WNDPROC m_fUserWndProc;
   bool m_bGetFocus;
+  bool m_bGetSelection;
   char * m_szSelectedText;
   bool m_bClosed;
   bool m_bSandbox;
+
+  static bool m_bAutoCopySel;
 
   AnchorClickListener * m_pAnchorClickListener;
   PopupMenuListener * m_pPopupMenuListener;
@@ -425,9 +431,10 @@ public:
   class Object {
   public:
     Object() { }
-    Object(IECtrl* ctrl, const char* name = "Object", Var args = Var());
+    Object(IECtrl* ctrl, bool defaultDestruct = true, const char* name = "Object", Var args = Var());
     Object(IECtrl* ctrl, IDispatch* dispatch);
-    virtual ~Object() { }
+    Object(const Object &object);
+    virtual ~Object();
 
     void bindMethod(const char* name, const char* func);
 
@@ -453,6 +460,8 @@ public:
     IDispatchEx* _pdexObj;
     IDispatch* _pdispObj;
     bool _ownObject;
+    bool _defDestruct;
+    UINT *_refs;
   };
 
   class DropTarget : public IDropTarget {

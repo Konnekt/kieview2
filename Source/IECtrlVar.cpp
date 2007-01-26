@@ -243,22 +243,22 @@ IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
   } else if (m_eType == Type::Dispatch && m_dispValue) {
     return IECtrl::Object(ctrl, m_dispValue);
   } else if (m_eType == Type::Array) {
-    return IECtrl::Object(ctrl, "Array", *this);
+    return IECtrl::Object(ctrl, false, "Array", *this);
   }
 
   Var args;
   args[-1] = Var(*this);
 
   if (m_eType == Type::Integer || m_eType == Type::Real) {
-    return IECtrl::Object(ctrl, "Number", args);
+    return IECtrl::Object(ctrl, false, "Number", args);
   } else if (m_eType == Type::Date) {
-    return IECtrl::Object(ctrl, "Date", args);
+    return IECtrl::Object(ctrl, false, "Date", args);
   } else if (m_eType == Type::String) {
-    return IECtrl::Object(ctrl, "String", args);
+    return IECtrl::Object(ctrl, false, "String", args);
   } else if (m_eType == Type::Boolean) {
-    return IECtrl::Object(ctrl, "Boolean", args);
+    return IECtrl::Object(ctrl, false, "Boolean", args);
   }
-  return IECtrl::Object(ctrl);
+  return IECtrl::Object(ctrl, false);
 }
 
 IDispatch* IECtrl::Var::getDispatch() {
@@ -610,7 +610,9 @@ IECtrl::Var IECtrl::Var::operator+(Date64 &var) {
   return ret;
 }
 
-IECtrl::Object::Object(IECtrl* ctrl, const char* name, Var args): _ownObject(true) {
+IECtrl::Object::Object(IECtrl* ctrl, bool defaultDestruct, const char* name, Var args): _ownObject(true), _defDestruct(defaultDestruct) {
+  _refs = new UINT(1);
+
   IDispatch* pdScript = ctrl->getDispatch();
   pdScript->QueryInterface(IID_IDispatchEx, (void **)&_pdexScript);
   DISPID dispID = getDispID(_pdexScript, name);
@@ -633,6 +635,7 @@ IECtrl::Object::Object(IECtrl* ctrl, const char* name, Var args): _ownObject(tru
 }
 
 IECtrl::Object::Object(IECtrl* ctrl, IDispatch* dispatch): _ownObject(false) {
+  _refs = new UINT(1);
   ASSERT(dispatch != NULL);
 
   IDispatch* pdScript = ctrl->getDispatch();
@@ -642,6 +645,11 @@ IECtrl::Object::Object(IECtrl* ctrl, IDispatch* dispatch): _ownObject(false) {
 
   ASSERT(_pdexObj != NULL);
 }
+IECtrl::Object::Object(const Object &object) {
+  CopyMemory(this, &object, sizeof(Object));
+  (*_refs)++;
+}
+
 
 void IECtrl::Object::bindMethod(const char* name, const char* func) {
   DISPID fnDispID = getDispID(_pdexScript, func, fdexNameEnsure);
@@ -712,4 +720,15 @@ DISPID IECtrl::Object::getDispID(IDispatchEx* dispatch, const char* name, DWORD 
   SysFreeString(bStrName);
 
   return dispID;
+}
+
+IECtrl::Object::~Object() {
+  if(!++(*_refs)) {
+    delete _refs;
+    _pdexObj->Release();
+    if (this->ownObject() && this->_defDestruct) {
+      _pdispObj->Release();
+    }
+    _pdexScript->Release();
+  }
 }

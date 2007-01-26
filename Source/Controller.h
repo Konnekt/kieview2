@@ -81,7 +81,6 @@ namespace kIEview2 {
 
   public:
     ~Controller();
-
     bool hasMsgHandler(int type);
     bool registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority = 0, 
       signals::connect_position pos = signals::at_back, bool overwrite = true);
@@ -113,6 +112,7 @@ namespace kIEview2 {
     void _onPluginsLoaded();
     void _onPrepare();
     void _onAction();
+    void _onCfgChanged();
 
     void _msgCtrlView();
     void _msgCtrlSend();

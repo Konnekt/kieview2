@@ -58,6 +58,8 @@ void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int si
 }
 
 namespace kIEview2 {
+  // initialization
+
   Controller::Controller() {
     /* Static values like net, type or version */
     this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
@@ -70,8 +72,10 @@ namespace kIEview2 {
     this->registerObserver(IM_ALLPLUGINSINITIALIZED, bind(resolve_cast0(&Controller::_onPluginsLoaded), this));
     this->registerObserver(IM_UI_PREPARE, bind(resolve_cast0(&Controller::_onPrepare), this));
     this->registerObserver(IM_UIACTION, bind(resolve_cast0(&Controller::_onAction), this));
+    this->registerObserver(IM_CFG_CHANGED, bind(resolve_cast0(&Controller::_onCfgChanged), this));
     this->registerActionObserver(UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
     this->registerActionObserver(UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
+      
 
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
@@ -106,6 +110,7 @@ namespace kIEview2 {
     registerMsgHandler(MT_MESSAGE, bind(&Controller::_handleStdMsgTpl, this, _1, _2), "message");
     registerMsgHandler(MT_FILE, bind(&Controller::_handleFileTpl, this, _1, _2), "file");
     registerMsgHandler(MT_SMS, bind(&Controller::_handleSmsTpl, this, _1, _2), "sms");
+
   }
 
   Controller::~Controller() {
@@ -287,6 +292,10 @@ namespace kIEview2 {
     }
   }
 
+  void Controller::_onCfgChanged() {
+    IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
+  }
+
   void Controller::_msgCtrlView() {
     // locking
     LockerCS lock(_locker);
@@ -332,6 +341,7 @@ namespace kIEview2 {
       }
 
       case UI::Notify::insertMsg: {
+
         UI::Notify::_insertMsg* an = (UI::Notify::_insertMsg*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
 
