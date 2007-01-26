@@ -105,6 +105,7 @@ IDI_SAVE                ICON                    "..\\Res\\save.ico"
 IDI_UNDERLINE           ICON                    "..\\Res\\underline.ico"
 IDI_PRINT               ICON                    "..\\Res\\print.ico"
 IDI_SOURCE              ICON                    "..\\Res\\source.ico"
+IDI_AUTOSCROLL          ICON                    "..\\Res\\autoScroll.ico"
 #endif    // Polish resources
 /////////////////////////////////////////////////////////////////////////////
 

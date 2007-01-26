@@ -51,6 +51,7 @@ namespace kIEview2 {
     const unsigned int color = ico + 9;
     const unsigned int print = ico + 10;
     const unsigned int source = ico + 11;
+    const unsigned int autoScroll = ico + 12;
   }
 
   namespace act {
@@ -83,6 +84,7 @@ namespace kIEview2 {
       const unsigned int underline = formatTb + 3;
       const unsigned int emots = formatTb + 4;
       const unsigned int color = formatTb + 5;
+      const unsigned int autoScroll = formatTb + 6;
     }
   }
 
@@ -94,6 +96,7 @@ namespace kIEview2 {
     const unsigned int useEmots = cfg + 3;
     const unsigned int emotsDir = cfg + 4;
     const unsigned int emotsPack = cfg + 5;
+    const unsigned int autoScroll = cfg + 6;
   }
 }
 

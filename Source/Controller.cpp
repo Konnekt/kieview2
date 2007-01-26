@@ -79,6 +79,7 @@ namespace kIEview2 {
     config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEview2/emots/use");
     config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots", "kIEview2/emots/dir");
     config->setColumn(DTCFG, cfg::emotsPack, DT_CT_STR, "", "kIEview2/emots/pack");
+    config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 1, "kIEview2/autoScroll");
 
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_MSGWND);
     this->subclassAction(UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
@@ -151,6 +152,7 @@ namespace kIEview2 {
     IconRegister(IML_16, ico::color, Ctrl->hDll(), IDI_COLOR);
     IconRegister(IML_16, ico::print, Ctrl->hDll(), IDI_PRINT);
     IconRegister(IML_16, ico::source, Ctrl->hDll(), IDI_SOURCE);
+    IconRegister(IML_16, ico::autoScroll, Ctrl->hDll(), IDI_AUTOSCROLL);
 
     // menu akcji pod prawym klawiszem myszy
     UIGroupAdd(IMIG_MSGWND, act::popup::popup, ACTR_INIT);
@@ -176,6 +178,7 @@ namespace kIEview2 {
       UIActionAdd(act::formatTb::formatTb, act::formatTb::italic, ACTT_CHECK, "Kursywa", ico::italic);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::underline, ACTT_CHECK, "Podkreœlenie", ico::underline);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::color, ACTT_CHECK, "Kolor", ico::color);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::autoScroll, ACTR_INIT, "Przewijaj", ico::autoScroll);
     }
 
     UIGroupAdd(IMIG_CFG_PLUGS, ui::cfgGroup, 0, "kIEview2", ico::logo);
@@ -187,11 +190,12 @@ namespace kIEview2 {
       "<b>KPlugins</b> (http://kplugins.net/)<br/><br/>"
       "Copyright © 2006-2007 <b>Sijawusz Pur Rahnama</b><br/>"
       "Copyright © 2006-2007 <b>Micha³ \"Dulek\" Dulko</b><br/>"
-      "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>", Helpers::icon16(ico::logo).a_str());
+      "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>", Helpers::icon16(ico::logo).a_str(), -3);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Automatycznie przewijaj okno rozmowy", cfg::autoScroll);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_NEEDRESTART, "Wyœwietlaj toolbar w oknie rozmowy", cfg::showFormatTb);
-    UIActionCfgAdd(ui::cfgGroup, cfg::linkify, ACTT_CHECK, "Zamieniaj linki na 'klikalne'", cfg::linkify);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Zamieniaj linki na 'klikalne'", cfg::linkify);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Emotikony");
@@ -268,6 +272,14 @@ namespace kIEview2 {
         if (an->code != ACTN_ACTION) break;
         break;
       }
+      case act::formatTb::autoScroll: {
+        if (an->code == ACTN_ACTION) {
+          UIActionSetStatus(an->act, (UIActionGetStatus(an->act) & ACTS_CHECKED) ? 0 : -1, ACTS_CHECKED);
+        } else if (an->code == ACTN_CREATE) {
+          UIActionSetStatus(an->act, config->getInt(cfg::autoScroll) ? -1 : 0, ACTS_CHECKED);
+        }
+        break;
+      }
       case cfg::useEmots: {
         UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::emotsDir), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
         break;
@@ -326,6 +338,8 @@ namespace kIEview2 {
         IECtrl::Var args;
         IECtrl::Var ret;
 
+        // ctrl->isScrollOnBottom()
+        bool autoScroll = UIActionGetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::autoScroll, an->act.cnt)) & ACTS_CHECKED;
         try {
           args[0] = _parseMsgTpl(an).a_str();
         } catch(const exception &e) { 
@@ -334,7 +348,7 @@ namespace kIEview2 {
 
         Ctrl->Sleep(1000);
         ctrl->callJScript("addMessage", args, &ret);
-        if (an->_scroll) ctrl->scrollToBottom();
+        if (an->_scroll && autoScroll) ctrl->scrollToBottom();
         break;
       }
 
@@ -345,6 +359,7 @@ namespace kIEview2 {
         IECtrl::Var args;
         IECtrl::Var ret;
 
+        bool autoScroll = UIActionGetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::autoScroll, an->act.cnt)) & ACTS_CHECKED;
         try {
           args[0] = _parseStatusTpl(an).a_str();
         } catch(const exception &e) { 
@@ -353,7 +368,7 @@ namespace kIEview2 {
 
         Ctrl->Sleep(1000);
         ctrl->callJScript("addStatus", args, &ret);
-        ctrl->scrollToBottom();
+        if (autoScroll) ctrl->scrollToBottom();
         break;
       }
 
@@ -825,7 +840,7 @@ namespace kIEview2 {
 
   String Controller::linkify(StringRef& txt) {
     txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-])+@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6})+)~i", &Controller::mailifyDo, txt.c_str());
-    txt = RegEx::doReplace("~([\"|'])?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", &Controller::linkifyDo, txt.c_str());
+    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", &Controller::linkifyDo, txt.c_str());
 
     return PassStringRef(txt);
   }
@@ -888,6 +903,7 @@ namespace kIEview2 {
     if (an->_info) {
       String info = an->_info;
       info = htmlEscape(info);
+
       if (config->getInt(cfg::linkify)) {
         data.hash_insert_new_var("info", linkify(info));
       } else {
