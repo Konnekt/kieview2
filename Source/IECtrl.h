@@ -46,7 +46,7 @@ public:
 
   class AnchorClickListener {
   public:
-    virtual void AnchorClicked(const char* url, IECtrl* ctrl) = 0;
+    virtual void anchorClicked(const char* url, IECtrl* ctrl) = 0;
   };
 
   class PopupMenuListener {
@@ -67,7 +67,7 @@ public:
       Print = 27,
       ShowSource = 2139
     };
-    virtual MakeAction PopupMenu(MenuType type, POINT pt, IECtrl* ctrl) = 0;
+    virtual MakeAction popupMenu(MenuType type, POINT pt, IECtrl* ctrl) = 0;
   };
 
   class DropListener {
@@ -75,29 +75,29 @@ public:
     typedef std::vector<const char*> tFiles;
 
   public:
-    virtual void FileDropped(const char *url, IECtrl* ctrl) = 0;
-    virtual void FileDropped(const tFiles& urls, IECtrl* ctrl) {
+    virtual void fileDropped(const char *url, IECtrl* ctrl) = 0;
+    virtual void fileDropped(const tFiles& urls, IECtrl* ctrl) {
       for (tFiles::const_iterator it = urls.begin(); it != urls.end(); it++) {
-        FileDropped(*it, ctrl);
+        fileDropped(*it, ctrl);
       }
     }
   };
 
   class KeyDownListener {
   public:
-    virtual bool KeyDown(UINT uCode, DWORD dwFlags) = 0; // zwraca true jesli pozwala przepuscic klawisz
+    virtual bool keyDown(UINT uCode, DWORD dwFlags) = 0; // zwraca true jesli pozwala przepuscic klawisz
   };
 
   class ExternalListener {
   public:
-    virtual long GetMemberID(const char *name) = 0;
-    virtual Var Trigger(long id, Var &args, IECtrl* ctrl) = 0;
+    virtual long getMemberID(const char *name) = 0;
+    virtual Var trigger(long id, Var &args, IECtrl* ctrl) = 0;
   };
 
   class ScriptMessageListener {
   public:
     // dwType tak jak MessageBox, zwraca to co MessageBox
-    virtual int ShowMessage(HWND hWnd, const char * lpText, DWORD dwType) = 0;
+    virtual int showMessage(HWND hWnd, const char * lpText, DWORD dwType) = 0;
   };
 
 public:

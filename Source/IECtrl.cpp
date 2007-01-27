@@ -516,7 +516,7 @@ HWND IECtrl::getHWND() {
 
 void IECtrl::translateAccelerator(UINT uMsg, WPARAM wParam, LPARAM lParam) {
   char chr = (char)LOWORD(MapVirtualKey(wParam, 2));
-  if (m_pKeyDownListener != NULL && m_pKeyDownListener->KeyDown(wParam, lParam)
+  if (m_pKeyDownListener != NULL && m_pKeyDownListener->keyDown(wParam, lParam)
     || m_pKeyDownListener == NULL && GetKeyState(VK_CONTROL) < 0 && (chr == 'C' || chr == 'c' || chr == 'A' || chr == 'a'))
   {
     IOleInPlaceActiveObject* pIOIPAO;
@@ -619,7 +619,7 @@ bool IECtrl::mouseClick(POINT pt) {
         char *tTemp = new char[i + 1];
         WideCharToMultiByte(CP_ACP, 0, url, -1, tTemp, i + 1, NULL, NULL);
         if (m_pAnchorClickListener != NULL) {
-          m_pAnchorClickListener->AnchorClicked(tTemp, this);
+          m_pAnchorClickListener->anchorClicked(tTemp, this);
         }
         delete tTemp;
         delete url;
@@ -841,7 +841,7 @@ void IECtrl::EventSink::BeforeNavigate2(IDispatch* pDisp, VARIANT* url, VARIANT*
   if (strcmp(tTemp, "about:blank")) {
     // sytuacja bezpieczenstwa gdy mouseClick nie przechwyci odnosnika
     if (m_pCtrl->m_pAnchorClickListener != NULL) {
-      m_pCtrl->m_pAnchorClickListener->AnchorClicked(tTemp, m_pCtrl);
+      m_pCtrl->m_pAnchorClickListener->anchorClicked(tTemp, m_pCtrl);
     }
     *cancel = VARIANT_TRUE;
   }
@@ -1070,7 +1070,7 @@ STDMETHODIMP IECtrl::ClientSite::ShowContextMenu(DWORD dwID, POINT *ppt, IUnknow
           type = PopupMenuListener::MenuType::Image;
         }
 
-        PopupMenuListener::MakeAction action = m_pCtrl->m_pPopupMenuListener->PopupMenu(type, *ppt, m_pCtrl);
+        PopupMenuListener::MakeAction action = m_pCtrl->m_pPopupMenuListener->popupMenu(type, *ppt, m_pCtrl);
         if (action == PopupMenuListener::MakeAction::OpenLink) {
           // Dalej ppt nie jest u¿ywane - nie robiê kopii przed konwersj¹. Jakby co to tu szukaæ b³êdu.
           ScreenToClient(hSPWnd, ppt);
@@ -1187,7 +1187,7 @@ HRESULT IECtrl::ClientSite::ShowMessage(HWND hWnd, LPOLESTR lpstrText, LPOLESTR 
 {
   const char * text = _com_util::ConvertBSTRToString(lpstrText);
   if (m_pCtrl->m_pScriptMessageListener != NULL) {
-    *plResult = m_pCtrl->m_pScriptMessageListener->ShowMessage(hWnd, text, dwType);
+    *plResult = m_pCtrl->m_pScriptMessageListener->showMessage(hWnd, text, dwType);
   } else {
     *plResult = MessageBox(hWnd, text, "JScript Message", dwType);
   }
@@ -1309,7 +1309,7 @@ STDMETHODIMP IECtrl::External::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, U
     const char * szName = _com_util::ConvertBSTRToString(rgszNames[i]);
     long id = 0;
     if (m_pCtrl->m_pExternalListener != NULL) {
-      id = m_pCtrl->m_pExternalListener->GetMemberID(szName);
+      id = m_pCtrl->m_pExternalListener->getMemberID(szName);
     }
     delete [] szName;
     if (id > 0) {
@@ -1331,7 +1331,7 @@ STDMETHODIMP IECtrl::External::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
     for (UINT i = 0; i < pDispParams->cArgs; i++) {
       args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
     }
-    Var ret = m_pCtrl->m_pExternalListener->Trigger(dispIdMember, args, m_pCtrl);
+    Var ret = m_pCtrl->m_pExternalListener->trigger(dispIdMember, args, m_pCtrl);
     ret.getVariant(pVarResult);
 
     return S_OK;
@@ -1450,7 +1450,7 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
       }
 
       if (m_pCtrl->m_pDropListener != NULL) {
-        m_pCtrl->m_pDropListener->FileDropped(file, m_pCtrl);
+        m_pCtrl->m_pDropListener->fileDropped(file, m_pCtrl);
       }
 
       delete [] file;

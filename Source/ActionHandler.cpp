@@ -17,30 +17,30 @@
 #include "Controller.h"
 
 namespace kIEview2 {
-  void ActionHandler::AnchorClicked(const char* url, IECtrl* ctrl) {
+  void ActionHandler::anchorClicked(const char* url, IECtrl* ctrl) {
     Ctrl->IMessage(im::anchorClick, NET_BROADCAST, -1, cntId, (int)url);
     ShellExecute(GetDesktopWindow(), "open", url, 0, 0, SW_SHOWNORMAL);
   }
 
-  void ActionHandler::FileDropped(const char *url, IECtrl* ctrl) {
+  void ActionHandler::fileDropped(const char *url, IECtrl* ctrl) {
     Ctrl->IMessage(im::fileDrop, NET_BROADCAST, -1, cntId, (int)url);
   }
 
-  int ActionHandler::ShowMessage(HWND hWnd, const char* lpText, DWORD dwType) { 
+  int ActionHandler::showMessage(HWND hWnd, const char* lpText, DWORD dwType) { 
     return MessageBox(hWnd, lpText, "[kIEview2] Wiadomoœæ od skryptu", dwType); 
   }
 
-  IECtrl::Var ActionHandler::Trigger(long id, IECtrl::Var& args, IECtrl* ctrl) {
+  IECtrl::Var ActionHandler::trigger(long id, IECtrl::Var& args, IECtrl* ctrl) {
     Controller::sExternalCallback* f = Controller::getInstance()->getExternalCallback(id);
     return !f ? IECtrl::Var() : f->signal(args, ctrl);
   }
 
-  long ActionHandler::GetMemberID(const char *name) {
+  long ActionHandler::getMemberID(const char *name) {
     Controller::sExternalCallback* f = Controller::getInstance()->getExternalCallback(name);
     return !f ? 0 : f->id;
   }
 
-  ActionHandler::tMenuAction ActionHandler::PopupMenu(tMenuType type, POINT pt, IECtrl* ctrl) {
+  ActionHandler::tMenuAction ActionHandler::popupMenu(tMenuType type, POINT pt, IECtrl* ctrl) {
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::urlSep), -1, ACTS_HIDDEN);

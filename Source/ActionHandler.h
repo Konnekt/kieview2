@@ -35,16 +35,16 @@ namespace kIEview2 {
     ActionHandler(tCntId _cntId = 0): selectedMenuItem(0), cntId(_cntId) { }
 
   public:
-    void AnchorClicked(const char* url, IECtrl* ctrl);
-    void FileDropped(const char *url, IECtrl* ctrl);
-    MakeAction PopupMenu(MenuType type, POINT pt, IECtrl* ctrl);
-    int ShowMessage(HWND hWnd, const char* lpText, DWORD dwType);
+    void anchorClicked(const char* url, IECtrl* ctrl);
+    void fileDropped(const char *url, IECtrl* ctrl);
+    MakeAction popupMenu(MenuType type, POINT pt, IECtrl* ctrl);
+    int showMessage(HWND hWnd, const char* lpText, DWORD dwType);
 
-    long GetMemberID(const char *name);
-    IECtrl::Var Trigger(long id, IECtrl::Var& args, IECtrl* ctrl);
+    long getMemberID(const char *name);
+    IECtrl::Var trigger(long id, IECtrl::Var& args, IECtrl* ctrl);
 
     // @todo implement
-    inline bool KeyDown(UINT uCode, DWORD dwFlags) { return true; }
+    inline bool keyDown(UINT uCode, DWORD dwFlags) { return true; }
 
   public:
     int selectedMenuItem;
