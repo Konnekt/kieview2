@@ -80,6 +80,16 @@ protected:
   string kPath;
 };
 
+class tplParser : public template_text {
+public:
+  tplParser(udf_fn_factory * pIFactory = NULL, const int iILine = 1, const int iIPos = 1, const int iITabLength = 9, const bool bIDebug = false, const bool bIStrict = true, const bool bILoopContextVars = false, const bool bIGlobalVars = false): 
+    template_text(pIFactory, iILine, iIPos, iITabLength, bIDebug, bIStrict, bILoopContextVars, bIGlobalVars) { }
+
+public:
+  template_ret_type parse_block(string::const_iterator itmData, string::const_iterator itmDataEnd);
+  void parse_param_string(unsigned int &iPosition, const e_token_type &eFoundToken, string::const_iterator & itmData, string::const_iterator itmDataEnd, string::const_iterator itmRollBackPos);
+};
+
 typedef SharedPtr<TplHandler> oTplHandler;
 
 #endif // __TPLHANDLER_H__
