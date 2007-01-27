@@ -211,6 +211,14 @@ LRESULT CALLBACK IECtrl::IECtrlServerWindowProcedure (HWND hwnd, UINT message, W
           ctrl->copySelection();
         }
         break;
+      case WM_LBUTTONDBLCLK:
+        HRESULT hr = CallWindowProc(ctrl->getUserWndProc(), hwnd, message, wParam, lParam);
+        if (getAutoCopySel()) {
+          ctrl->m_bGetSelection = true;
+          ctrl->copySelection();
+        }
+        return hr;
+        break;
     }
     return CallWindowProc(ctrl->getUserWndProc(), hwnd, message, wParam, lParam);
   }
@@ -457,6 +465,7 @@ bool IECtrl::getAutoCopySel() {
 char * IECtrl::getSelection(bool gettext) {
   if (m_szSelectedText != NULL) {
     delete m_szSelectedText;
+    m_szSelectedText = NULL;
   }
   BSTR selectedTextW = getSelectionFunc(gettext);
   if (selectedTextW == NULL || wcslen(selectedTextW) == 0) {
@@ -466,7 +475,7 @@ char * IECtrl::getSelection(bool gettext) {
   char *str = new char[len];
 
   WideCharToMultiByte(CP_ACP, 0, selectedTextW, len, str, len, NULL, FALSE);
-  delete selectedTextW; // @warning krytyk
+  delete selectedTextW;
   m_szSelectedText = str;
 
   return m_szSelectedText;
@@ -481,6 +490,7 @@ bool IECtrl::copySelection() {
       if (hMem) {
         char* buf = (char*) GlobalLock(hMem);
         strncpy(buf, text, strlen(text));
+        buf[strlen(text)] = '\0';
         GlobalUnlock(hMem);
 
         if (OpenClipboard(getHWND())) {
@@ -1438,22 +1448,36 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
       SIZE_T lBufferSize = GlobalSize(medium.hGlobal);
 
       char * file = NULL;
-      if (df->fWide) { 
-        // @todo zrobic obsluge wielu plikow
-        wchar_t * str = (wchar_t*)((BYTE*)df+df->pFiles);
-        int len = wcslen(str)+1;
-        file = new char[len];
-        WideCharToMultiByte(CP_ACP, 0, str, len, file, len, NULL, FALSE);
+      void * pFile = (BYTE*)df+df->pFiles;
+      IECtrl::DropListener::tFiles files;
+      if (df->fWide) {
+        wchar_t* p_wFile = (wchar_t*)pFile;
+        do {
+          int len = wcslen(p_wFile)+1;
+          file = new char[len];
+          WideCharToMultiByte(CP_ACP, 0, p_wFile, len, file, len, NULL, FALSE);
+          files.push_back((const char*)file);
+          p_wFile+=len;
+        } while (p_wFile[0] != L'\0');
       } else {
-        file = new char[lBufferSize - df->pFiles];
-        CopyMemory(file, (BYTE*)df + df->pFiles, lBufferSize - df->pFiles);
+        char* p_aFile = (char*)pFile;
+        do {
+          char* p_aFile = (char*)pFile;
+          int len = strlen(p_aFile)+1;
+          file = new char[len];
+          files.push_back((const char*)file);
+          p_aFile+=len;
+        } while (p_aFile[0] != '\0');
       }
 
       if (m_pCtrl->m_pDropListener != NULL) {
-        m_pCtrl->m_pDropListener->fileDropped(file, m_pCtrl);
+        m_pCtrl->m_pDropListener->fileDropped(files, m_pCtrl);
       }
 
-      delete [] file;
+      for(IECtrl::DropListener::tFiles::iterator it = files.begin(); it != files.end(); it++) {
+        delete [] (*it);
+      }
+
       GlobalUnlock(medium.hGlobal);
     }
     ReleaseStgMedium(&medium);
