@@ -563,6 +563,9 @@ BSTR IECtrl::getSelectionFunc(bool gettext) {
         }
         pDisp->Release();
       }
+      if (text != NULL) {
+        pSelection->empty();
+      }
       pSelection->Release();
     }
     document->Release();
