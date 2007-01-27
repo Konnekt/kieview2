@@ -18,7 +18,9 @@
 
 IECtrl* IECtrl::m_pList = NULL;
 CRITICAL_SECTION IECtrl::m_mutex;
+
 bool IECtrl::m_bInited = false;
+bool IECtrl::m_bOnCopyEmptySel = true;
 bool IECtrl::m_bAutoCopySel = false;
 
 void IECtrl::init() {
@@ -479,7 +481,7 @@ char * IECtrl::getSelection(bool gettext) {
   if (!gettext) {
     std::string temp = humanize(str);
     ZeroMemory(str, len);
-    strncpy(str,(char*)temp.c_str(), len - 1);
+    strncpy(str, (char*)temp.c_str(), len - 1);
   }
   return m_szSelectedText = str;
 }
@@ -497,7 +499,7 @@ std::string IECtrl::humanize(const char* text) {
   reg.replaceItself("#</(p|blockquote|li|[uo]l)>#i", "\r\n");
 
   // usuwamy wielokrotne znaki nowej linii
-  reg.replaceItself("/(\r?\n){3,}/", "\r\n\r\n");
+  reg.replaceItself("/(\r?\n)\\1{2,}/", "\r\n\r\n");
 
   // formatujemy listy
   reg.replaceItself("/<li>/i", "* ");
@@ -513,7 +515,7 @@ std::string IECtrl::humanize(const char* text) {
   reg.replaceItself("/&quot;/", "\"");
   reg.replaceItself("/&nbsp;/", " ");
   reg.replaceItself("/&amp;/", "&");
-  
+
   return reg.getSubject();
 }
 
@@ -609,7 +611,7 @@ BSTR IECtrl::getSelectionFunc(bool gettext) {
         }
         pDisp->Release();
       }
-      if (text != NULL) {
+      if (text != NULL && getOnCopyEmptySel()) {
         pSelection->empty();
       }
       pSelection->Release();
@@ -1125,14 +1127,16 @@ STDMETHODIMP IECtrl::ClientSite::ShowContextMenu(DWORD dwID, POINT *ppt, IUnknow
           SendMessage(hSPWnd, WM_COMMAND, (WPARAM)2262, (LPARAM) NULL);
         } else if (action == PopupMenuListener::MakeAction::CopySelection) {
           SendMessage(hSPWnd, WM_COMMAND, (WPARAM)15, (LPARAM) NULL);
-          IHTMLDocument2 *document = m_pCtrl->getDocument();
-          if (document != NULL) {
-            IHTMLSelectionObject *pSelection = NULL;
-            if (SUCCEEDED(document->get_selection(&pSelection)) && pSelection != NULL) {
-              pSelection->empty();
-              pSelection->Release();
+          if (m_pCtrl->getOnCopyEmptySel()) {
+            IHTMLDocument2 *document = m_pCtrl->getDocument();
+            if (document != NULL) {
+              IHTMLSelectionObject *pSelection = NULL;
+              if (SUCCEEDED(document->get_selection(&pSelection)) && pSelection != NULL) {
+                pSelection->empty();
+                pSelection->Release();
+              }
+              document->Release();
             }
-            document->Release();
           }
         } else if (action == PopupMenuListener::MakeAction::Print) {
           // SendMessage(hSPWnd, WM_COMMAND, (WPARAM)27, (LPARAM) NULL); // print...

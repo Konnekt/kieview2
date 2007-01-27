@@ -1,14 +1,14 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
 <html xml:lang="pl" lang="pl" xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <base href="<TMPL_var tplPath>/" />
+  <base href="{{$tplPath}}/" />
   <!-- 
   <link rel="stylesheet" type="text/css" href="css/default.css" />
   <script type="text/javascript" src="js/prototype.js"></script>
   <script type="text/javascript" src="js/scriptaculous/scriptaculous.js"></script>
   -->
   <script type="text/javascript">
-    <TMPL_include js/prototype.js>
+    {{include js/prototype.js}}
   </script>
   <script type="text/javascript">
     function insertString(string) {

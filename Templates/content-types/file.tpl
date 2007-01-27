@@ -1,49 +1,49 @@
 <div class="file">
   Plik
-  <TMPL_if name>
-    <span class="filename">"<b><TMPL_var name></b>"</span>
-  </TMPL_if>
-  <TMPL_if sent?>
+  {{if name}}
+    <span class="filename">"<b>{{$name}}</b>"</span>
+  {{/if}}
+  {{if sent?}}
     wys³any do
-  <TMPL_else>
+  {{else}}
     odebrany od
-  </TMPL_if>
-  <span class="display"><b><TMPL_var display></b></span> o
-  <span class="time"><TMPL_udf formatTime("%H:%M (%A)", @time)></span>:
+  {{/if}}
+  <span class="display"><b>{{$display}}</b></span> o
+  <span class="time">{{func formatTime("%H:%M (%A)", @time)}}</span>:
   <br/><br/>
 
-  <TMPL_if path>
+  {{if filePath}}
     <span class="path">Œcie¿ka: 
-      <TMPL_if path>
-        <a href="file:///<TMPL_var path>" target="_blank"><TMPL_var path></a> -
-      </TMPL_if>
-      <b><a href="file:///<TMPL_var filePath>" target="_blank"><TMPL_var fileName></a></b>
+      {{if path}}
+        <a href="file:///{{$path}}" target="_blank">{{$path}}</a> -
+      {{/if}}
+      <b><a href="file:///{{$filePath}}" target="_blank">{{$fileName}}</a></b>
     </span><br/>
-  </TMPL_if>
-  <TMPL_if size>
-    <span class="size">Rozmiar: <b><TMPL_var size></b></span><br/>
-  </TMPL_if>
-  <TMPL_if transfered>
+  {{/if}}
+  {{if size}}
+    <span class="size">Rozmiar: <b>{{$size}}</b></span><br/>
+  {{/if}}
+  {{if transfered}}
     <span class="transfered">
-      <TMPL_if isSent>
+      {{if isSent}}
         Przes³ano:
-      <TMPL_else>
+      {{else}}
         Odebrano:
-      </TMPL_if>
-      <b><TMPL_var transferedP></b> (<TMPL_var transfered> / <TMPL_var size>)
+      {{/if}}
+      <b>{{$transferedP}}</b> ({{$transfered}} / {{$size}})
     </span><br/>
-  </TMPL_if>
-  <TMPL_if transferTime>
-    <span class="transfer-time">Czas: <b><TMPL_var transferTime></b></span><br/>
-  </TMPL_if>
-  <TMPL_if avgSpeed>
-    <span class="transfer-speed">Œrednia prêdkoœæ: <b><TMPL_var avgSpeed></b></span><br/>
-  </TMPL_if>
-  <TMPL_if error>
+  {{/if}}
+  {{if transferTime}}
+    <span class="transfer-time">Czas: <b>{{$transferTime}}</b></span><br/>
+  {{/if}}
+  {{f avgSpeed}}
+    <span class="transfer-speed">Œrednia prêdkoœæ: <b>{{$avgSpeed}}</b></span><br/>
+  {{/if}}
+  {{if error}}
     <br/>
-    <div class="transfer-error">B³¹d: <pre><TMPL_var error></pre></div>
-  </TMPL_if>
+    <div class="transfer-error">B³¹d: <pre>{{$error}}</pre></div>
+  {{/if}}
 
   <br/>
-  <div class="body"><TMPL_var body></div>
+  <div class="body">{{$body}}</div>
 </div>

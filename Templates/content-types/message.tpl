@@ -1,5 +1,5 @@
 <div class="message">
-  <span class="display"><b><TMPL_var htmlEscape(display)></b>:</span>
-  <span class="time">(<TMPL_var time>)</span>
-  <div class="body"><TMPL_var body></div>
+  <span class="display"><b>{{$htmlEscape(display)}}</b>:</span>
+  <span class="time">({{$time}})</span>
+  <div class="body">{{$body}}</div>
 </div>

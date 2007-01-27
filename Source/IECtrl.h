@@ -133,6 +133,13 @@ public:
   static void setAutoCopySel(bool autoCopy);
   static bool getAutoCopySel();
 
+  static void setOnCopyEmptySel(bool emptySel) {
+    m_bOnCopyEmptySel = emptySel;
+  }
+  static bool getOnCopyEmptySel() {
+    return m_bOnCopyEmptySel;
+  }
+
   char* getSelection(bool gettext = false);
   bool copySelection(bool gettext = false);
 
@@ -195,6 +202,7 @@ private:
   bool m_bClosed;
   bool m_bSandbox;
 
+  static bool m_bOnCopyEmptySel;
   static bool m_bAutoCopySel;
 
   AnchorClickListener * m_pAnchorClickListener;

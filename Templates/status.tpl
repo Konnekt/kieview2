@@ -1,12 +1,9 @@
 <div class="status">
-  <span class="time">[<b><TMPL_var time></b>]</span>
+  <span class="time">[<b>{{$time}}</b>]</span>
   <span class="status-desc">
-    status <b><TMPL_var status></b>
-    <TMPL_if ignored?>
-      - ignoruje Ciê
-    </TMPL_if>
+    status <b>{{$status}}</b> {{if ignored?}}- ignoruje Ciê{{/if}}
   </span>
-  <TMPL_if info>
-    <span class="info">"<TMPL_var info>"</span>
-  </TMPL_if>
+  {{if info}}
+    <span class="info">"{{$info}}"</span>
+  {{/if}}
 </div>

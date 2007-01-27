@@ -1,9 +1,9 @@
 <div class="message quickevent">
-  <TMPL_if showTime?>
-    <span class="time">[<b><TMPL_var time></b>]</span>
-  </TMPL_if>
+  {{if showTime?}}
+    <span class="time">[<b>{{$time}}</b>]</span>
+  {{/if}}
   <div class="body">
-    <TMPL_if warning?>! <b>warning</b> !</TMPL_if>
-    <TMPL_var body>
+    {{if warning?}}! <b>warning</b> !{{/if}}
+    {{$body}}
   </div>
 </div>
