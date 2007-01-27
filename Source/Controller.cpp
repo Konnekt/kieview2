@@ -59,7 +59,6 @@ void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int si
 
 namespace kIEview2 {
   // initialization
-
   Controller::Controller() {
     /* Static values like net, type or version */
     this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
@@ -75,7 +74,6 @@ namespace kIEview2 {
     this->registerObserver(IM_CFG_CHANGED, bind(resolve_cast0(&Controller::_onCfgChanged), this));
     this->registerActionObserver(UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
     this->registerActionObserver(UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
-      
 
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
@@ -110,7 +108,6 @@ namespace kIEview2 {
     registerMsgHandler(MT_MESSAGE, bind(&Controller::_handleStdMsgTpl, this, _1, _2), "message");
     registerMsgHandler(MT_FILE, bind(&Controller::_handleFileTpl, this, _1, _2), "file");
     registerMsgHandler(MT_SMS, bind(&Controller::_handleSmsTpl, this, _1, _2), "sms");
-
   }
 
   Controller::~Controller() {
@@ -141,6 +138,7 @@ namespace kIEview2 {
 
   void Controller::_onPrepare() {
     historyTable = Tables::registerTable(Ctrl, tableNotFound, optPrivate);
+    IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
 
     // @debug replace with user selected tpl directory
     tplHandler->setKonnektPath((char*) Ctrl->ICMessage(IMC_KONNEKTDIR));
@@ -341,7 +339,6 @@ namespace kIEview2 {
       }
 
       case UI::Notify::insertMsg: {
-
         UI::Notify::_insertMsg* an = (UI::Notify::_insertMsg*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
 
@@ -855,6 +852,12 @@ namespace kIEview2 {
     return PassStringRef(txt);
   }
 
+  String Controller::normalizeSpaces(StringRef& txt) {
+    txt = RegEx::doReplace("/(  )+/U", "&nbsp;", txt.c_str());
+    txt = RegEx::doReplace("/\t/", "&nbsp;&nbsp;", txt.c_str());
+    return PassStringRef(txt);
+  }
+
   String Controller::nl2br(StringRef& txt) {
     txt = RegEx::doReplace("/\r?\n/m", "<br />\r\n", txt.c_str());
     return PassStringRef(txt);
@@ -915,10 +918,10 @@ namespace kIEview2 {
       info = htmlEscape(info);
 
       if (config->getInt(cfg::linkify)) {
-        data.hash_insert_new_var("info", linkify(info));
-      } else {
-        data.hash_insert_new_var("info", info);
+        info = linkify(info);
       }
+      info = normalizeSpaces(info);
+      data.hash_insert_new_var("info", info);
     }
     if (an->_status & ST_IGNORED) {
       data.hash_insert_new_var("ignored?", "1");
@@ -951,6 +954,7 @@ namespace kIEview2 {
     if (config->getInt(cfg::linkify)) {
       body = linkify(body);
     }
+    body = normalizeSpaces(body);
 
     // We create structure of the data
     param_data data(param_data::HASH);

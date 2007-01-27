@@ -143,10 +143,10 @@ public:
 private:
   BSTR getHrefFromAnchor(IHTMLElement* element);
   BSTR getSelectionFunc(bool gettext = true);
+  bool copySelection();
 
   void translateAccelerator(UINT uMsg, WPARAM wParam, LPARAM lParam);
   bool mouseClick(POINT pt);
-  void onMouseButtonUp(POINT pt);
   bool setFocus(HWND prevFocus);
 
   void setUserWndProc(WNDPROC);

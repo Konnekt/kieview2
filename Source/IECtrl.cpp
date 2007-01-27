@@ -199,12 +199,17 @@ LRESULT CALLBACK IECtrl::IECtrlServerWindowProcedure (HWND hwnd, UINT message, W
         pt.x = LOWORD(lParam);
         pt.y = HIWORD(lParam);
 
+        if (getAutoCopySel()) {
+          ctrl->m_bGetSelection = true;
+        }
         if (ctrl->mouseClick(pt)) {
           return true;
         }
         break;
       case WM_LBUTTONUP:
-        ctrl->onMouseButtonUp(pt);
+        if (getAutoCopySel()) {
+          ctrl->copySelection();
+        }
         break;
     }
     return CallWindowProc(ctrl->getUserWndProc(), hwnd, message, wParam, lParam);
@@ -461,10 +466,35 @@ char * IECtrl::getSelection(bool gettext) {
   char *str = new char[len];
 
   WideCharToMultiByte(CP_ACP, 0, selectedTextW, len, str, len, NULL, FALSE);
-  delete selectedTextW;
+  delete selectedTextW; // @warning krytyk
   m_szSelectedText = str;
 
   return m_szSelectedText;
+}
+
+bool IECtrl::copySelection() {
+  bool result = false;
+  if (m_bGetSelection) {
+    char* text = getSelection();
+    if (text) {
+      HGLOBAL hMem = GlobalAlloc(GHND | GMEM_DDESHARE, strlen(text) + 1);
+      if (hMem) {
+        char* buf = (char*) GlobalLock(hMem);
+        strncpy(buf, text, strlen(text));
+        GlobalUnlock(hMem);
+
+        if (OpenClipboard(getHWND())) {
+          EmptyClipboard();
+          SetClipboardData(CF_TEXT, hMem);
+          CloseClipboard();
+
+          result = true;
+        }
+      }
+    }
+  }
+  m_bGetSelection = false;
+  return result;
 }
 
 IECtrl* IECtrl::get(HWND hwnd) {
@@ -566,30 +596,10 @@ BSTR IECtrl::getHrefFromAnchor(IHTMLElement *element) {
   return NULL;
 }
 
-void IECtrl::onMouseButtonUp(POINT pt) {
-  if (m_bGetSelection && getSelection(false)) {
-    char* text = getSelection();
-    HGLOBAL hGlobal = GlobalAlloc(GHND, strlen(text));
-    char* p = (char *)GlobalLock(hGlobal);
-    strncpy(p, text, strlen(text));
-    GlobalUnlock(hGlobal);
-
-    OpenClipboard(getHWND());
-    EmptyClipboard();
-    SetClipboardData(CF_TEXT, hGlobal);
-    CloseClipboard();
-  }
-  m_bGetSelection = false;
-}
-
 bool IECtrl::mouseClick(POINT pt) {
   bool result = false;
   if (GetFocus() != m_hWnd) {
     m_bGetFocus = true;
-  }
-
-  if (getAutoCopySel()) {
-    m_bGetSelection = true;
   }
 
   IHTMLDocument2 *document = getDocument();

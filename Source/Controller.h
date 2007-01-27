@@ -81,6 +81,7 @@ namespace kIEview2 {
 
   public:
     ~Controller();
+
     bool hasMsgHandler(int type);
     bool registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority = 0, 
       signals::connect_position pos = signals::at_back, bool overwrite = true);
@@ -104,6 +105,7 @@ namespace kIEview2 {
 
     String htmlEscape(StringRef& txt);
     String linkify(StringRef& txt);
+    String normalizeSpaces(StringRef& txt);
     String nl2br(StringRef& txt);
 
     int getIEVersion();
