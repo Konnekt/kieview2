@@ -577,11 +577,6 @@ template_ret_type template_text::parse_block(std::string::const_iterator itmData
       {
         if (iPosition == 5)
         {
-          if (*itmData == 'l') { iPosition++; }
-          else                 { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 6)
-        {
           if (*itmData == 's') { iPosition++; }
           else                 { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }

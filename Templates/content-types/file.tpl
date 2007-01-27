@@ -36,7 +36,7 @@
   {{if transferTime}}
     <span class="transfer-time">Czas: <b>{{$transferTime}}</b></span><br/>
   {{/if}}
-  {{f avgSpeed}}
+  {{if avgSpeed}}
     <span class="transfer-speed">Œrednia prêdkoœæ: <b>{{$avgSpeed}}</b></span><br/>
   {{/if}}
   {{if error}}
