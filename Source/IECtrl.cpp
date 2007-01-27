@@ -1439,7 +1439,7 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
 
       char * file = NULL;
       if (df->fWide) { 
-        // pobieramy tylko pierwszy plik, reszta nas nie interesuje
+        // @todo zrobic obsluge wielu plikow
         wchar_t * str = (wchar_t*)((BYTE*)df+df->pFiles);
         int len = wcslen(str)+1;
         file = new char[len];

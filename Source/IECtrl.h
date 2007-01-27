@@ -72,7 +72,15 @@ public:
 
   class DropListener {
   public:
+    typedef std::vector<const char*> tFiles;
+
+  public:
     virtual void FileDropped(const char *url, IECtrl* ctrl) = 0;
+    virtual void FileDropped(const tFiles& urls, IECtrl* ctrl) {
+      for (tFiles::const_iterator it = urls.begin(); it != urls.end(); it++) {
+        FileDropped(*it, ctrl);
+      }
+    }
   };
 
   class KeyDownListener {
