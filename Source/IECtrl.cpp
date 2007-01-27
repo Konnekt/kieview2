@@ -1089,6 +1089,15 @@ STDMETHODIMP IECtrl::ClientSite::ShowContextMenu(DWORD dwID, POINT *ppt, IUnknow
           SendMessage(hSPWnd, WM_COMMAND, (WPARAM)2262, (LPARAM) NULL);
         } else if (action == PopupMenuListener::MakeAction::CopySelection) {
           SendMessage(hSPWnd, WM_COMMAND, (WPARAM)15, (LPARAM) NULL);
+          IHTMLDocument2 *document = m_pCtrl->getDocument();
+          if (document != NULL) {
+            IHTMLSelectionObject *pSelection = NULL;
+            if (SUCCEEDED(document->get_selection(&pSelection)) && pSelection != NULL) {
+              pSelection->empty();
+              pSelection->Release();
+            }
+            document->Release();
+          }
         } else if (action == PopupMenuListener::MakeAction::Print) {
           // SendMessage(hSPWnd, WM_COMMAND, (WPARAM)27, (LPARAM) NULL); // print...
           SendMessage(hSPWnd, WM_COMMAND, (WPARAM)2003, (LPARAM) NULL); // print preview...
