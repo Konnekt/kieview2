@@ -126,10 +126,15 @@ public:
   void scrollToBottom();
   void saveDocument();
   void selectAll();
-  static void setAutoCopySel(bool autoCopy = false);
-  static bool getAutoCopySel();
-  char* getSelection(bool gettext = true);
   bool callJScript(const char* szFunc, Var &args, Var *ret);
+
+  static std::string humanize(const char* text);
+
+  static void setAutoCopySel(bool autoCopy);
+  static bool getAutoCopySel();
+
+  char* getSelection(bool gettext = false);
+  bool copySelection(bool gettext = false);
 
   void setAnchorClickListener(AnchorClickListener * listener) { m_pAnchorClickListener = listener; }
   void setPopupMenuListener(PopupMenuListener * listener) { m_pPopupMenuListener = listener; }
@@ -150,8 +155,7 @@ public:
 
 private:
   BSTR getHrefFromAnchor(IHTMLElement* element);
-  BSTR getSelectionFunc(bool gettext = true);
-  bool copySelection();
+  BSTR getSelectionFunc(bool gettext = false);
 
   void translateAccelerator(UINT uMsg, WPARAM wParam, LPARAM lParam);
   bool mouseClick(POINT pt);
@@ -469,7 +473,7 @@ public:
     IDispatch* _pdispObj;
     bool _ownObject;
     bool _defDestruct;
-    UINT *_refs;
+    UINT* _refs;
   };
 
   class DropTarget : public IDropTarget {

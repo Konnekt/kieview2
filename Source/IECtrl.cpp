@@ -218,7 +218,6 @@ LRESULT CALLBACK IECtrl::IECtrlServerWindowProcedure (HWND hwnd, UINT message, W
           ctrl->copySelection();
         }
         return hr;
-        break;
     }
     return CallWindowProc(ctrl->getUserWndProc(), hwnd, message, wParam, lParam);
   }
@@ -476,15 +475,51 @@ char * IECtrl::getSelection(bool gettext) {
 
   WideCharToMultiByte(CP_ACP, 0, selectedTextW, len, str, len, NULL, FALSE);
   delete selectedTextW;
-  m_szSelectedText = str;
 
+  if (!gettext) {
+    // str = (char*) humanize(str).c_str(); // @warning cos tu jest nie tak
+  }
+  m_szSelectedText = str;
   return m_szSelectedText;
 }
 
-bool IECtrl::copySelection() {
+std::string IECtrl::humanize(const char* text) {
+  RegEx reg;
+  reg.setSubject(text);
+
+  // usuwamy znaki nowej linii
+  reg.replaceItself("/[\r\n]/m", "");
+
+  // wstawiamy w odpowiednich miejscach znaki nowej linii
+  reg.replaceItself("#(?<!</div>)</div>#im", "\r\n");
+  reg.replaceItself("#<br ?/?>#i", "\r\n");
+  reg.replaceItself("#</(p|blockquote|li|[uo]l)>#i", "\r\n");
+
+  // usuwamy wielokrotne znaki nowej linii
+  reg.replaceItself("/(\r?\n){3,}/", "\r\n\r\n");
+
+  // formatujemy listy
+  reg.replaceItself("/<li>/i", "* ");
+
+  // usuwamy znaczniki html
+  reg.replaceItself("/<[^!>][^>]*>/m", "");
+  reg.replaceItself("/<\\/[^>]*>/m", "");
+
+  // zamieniamy znaki kodowane przez & na prawidlowe
+  reg.replaceItself("/&#([\\d]{1,3});/", "\\x\\1");
+  reg.replaceItself("/&lt;/", "<");
+  reg.replaceItself("/&gt;/", ">");
+  reg.replaceItself("/&quot;/", "\"");
+  reg.replaceItself("/&nbsp;/", " ");
+  reg.replaceItself("/&amp;/", "&");
+
+  return reg.getSubject();
+}
+
+bool IECtrl::copySelection(bool gettext) {
   bool result = false;
   if (m_bGetSelection) {
-    char* text = getSelection();
+    char* text = getSelection(gettext);
     if (text) {
       HGLOBAL hMem = GlobalAlloc(GHND | GMEM_DDESHARE, strlen(text) + 1);
       if (hMem) {
