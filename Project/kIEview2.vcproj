@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="stamina_d.lib"
+				AdditionalDependencies="stamina_d.lib Advapi32.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(ProjectDir)Lib"
 				GenerateDebugInformation="true"
@@ -138,7 +138,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="stamina.lib"
+				AdditionalDependencies="stamina.lib Advapi32.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(ProjectDir)Lib"
 				GenerateDebugInformation="true"
