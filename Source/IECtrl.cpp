@@ -1563,9 +1563,14 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid
   for (UINT i = 0; i < pDispParams->cArgs; i++) {
     args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
   }
-  Var ret = trigger(dispIdMember, args, m_pCtrl);
+  Var ret;
+  if (getCallback(dispIdMember)) {
+    ret = trigger(dispIdMember, args, m_pCtrl);
+  } else if (hasProperty(dispIdMember)) {
+    setProperty(getPropertyName(dispIdMember), args[0]);
+    ret = getProperty(dispIdMember);
+  }
   ret.getVariant(pVarResult);
-
   return S_OK;
 }
 
@@ -1592,13 +1597,15 @@ STDMETHODIMP IECtrl::iObject::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UI
   for (i = 0; i < cNames; i++) {
     const char * szName = _com_util::ConvertBSTRToString(rgszNames[i]);
     long id = getMemberID(szName);
-    delete [] szName;
     if (id > 0) {
       rgDispId[i] = id;
+    } else if (hasProperty(szName)) {
+      rgDispId[i] = getPropertyId(szName);
     } else {
       hr = ResultFromScode(DISP_E_UNKNOWNNAME);
       rgDispId[i] = DISPID_UNKNOWN;
     }
+    delete [] szName;
   }
   return hr;
 }
@@ -1644,4 +1651,54 @@ bool IECtrl::iObject::deleteCallback(const char* name) {
     }
   }
   return false;
+}
+
+bool IECtrl::iObject::hasProperty(const string& name) {
+  return (_values.find(name) != _values.end()) ? true : false;
+}
+
+bool IECtrl::iObject::hasProperty(long id) {
+  for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
+    if (it->second->id == id) return true;
+  }
+  return false;
+}
+
+IECtrl::Var IECtrl::iObject::getProperty(const string& name) {
+  if (_values.find(name) != _values.end()) {
+    return _values[name]->var;
+  }
+  return IECtrl::Var();
+}
+
+IECtrl::Var IECtrl::iObject::getProperty(long id) {
+  for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
+    if (it->second->id = id) {
+      return it->second->var;
+    }
+  }
+  return IECtrl::Var();
+}
+
+string IECtrl::iObject::getPropertyName(long id) {
+  for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
+    if (it->second->id = id) {
+      return it->first;
+    }
+  }
+  return "";
+}
+
+void IECtrl::iObject::setProperty(const string& name, Var& v) {
+  if (_values.find(name) == _values.end()) {
+    _values[name] = new sValue();
+  }
+  _values[name]->var = v;
+}
+
+long IECtrl::iObject::getPropertyId(const string& name) {
+  if (_values.find(name) != _values.end()) {
+    return _values[name]->id;
+  }
+  return -1;
 }

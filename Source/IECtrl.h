@@ -520,7 +520,14 @@ public:
       }
     };
 
+    struct sValue {
+      IECtrl::Var var;
+      long id;
+      sValue(): id(random()) {}
+    };
+
     typedef std::vector<sCallback*> tCallbacks;
+    typedef std::map <string, sValue*> tValues;
 
   public:
     iObject(IECtrl* pCtrl);
@@ -543,11 +550,20 @@ public:
     virtual bool deleteCallback(const char* name);
     virtual long getMemberID(const char *name);
 
+    virtual bool hasProperty(const string& name);
+    virtual bool hasProperty(long id);
+    virtual IECtrl::Var getProperty(const string& name);
+    virtual IECtrl::Var getProperty(long id);
+    virtual string getPropertyName(long id);
+    virtual void setProperty(const string& name, IECtrl::Var& v);
+    long getPropertyId(const string& name);
+
   protected:
     virtual IECtrl::Var trigger(long id, IECtrl::Var& args, IECtrl* ctrl);
 
   protected:
     tCallbacks _callbacks;
+    tValues _values;
 
   private:
     LONG m_cRef;
