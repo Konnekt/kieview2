@@ -477,10 +477,11 @@ char * IECtrl::getSelection(bool gettext) {
   delete selectedTextW;
 
   if (!gettext) {
-    // str = (char*) humanize(str).c_str(); // @warning cos tu jest nie tak
+    std::string temp = humanize(str);
+    ZeroMemory(str, len);
+    strncpy(str,(char*)temp.c_str(), len - 1);
   }
-  m_szSelectedText = str;
-  return m_szSelectedText;
+  return m_szSelectedText = str;
 }
 
 std::string IECtrl::humanize(const char* text) {
@@ -512,7 +513,7 @@ std::string IECtrl::humanize(const char* text) {
   reg.replaceItself("/&quot;/", "\"");
   reg.replaceItself("/&nbsp;/", " ");
   reg.replaceItself("/&amp;/", "&");
-
+  
   return reg.getSubject();
 }
 
@@ -1526,4 +1527,121 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
     }
     ReleaseStgMedium(&medium);
   }
+}
+
+IECtrl::iObject::iObject(IECtrl* pCtrl) {
+  m_pCtrl = pCtrl;
+  m_cRef = 0;
+}
+
+IECtrl::iObject::~iObject() {
+  ASSERT(m_cRef == 0);
+}
+
+STDMETHODIMP_(ULONG) IECtrl::iObject::AddRef(void) {
+  ++m_cRef;
+  return m_cRef;
+}
+
+STDMETHODIMP_(ULONG) IECtrl::iObject::Release(void) {
+  --m_cRef;
+  return m_cRef;
+}
+
+STDMETHODIMP IECtrl::iObject::GetTypeInfoCount(UINT *ptr) { 
+  return E_NOTIMPL; 
+}
+
+STDMETHODIMP IECtrl::iObject::GetTypeInfo(UINT iTInfo, LCID lcid, LPTYPEINFO* ppTInfo) { 
+  return S_OK; 
+}
+
+STDMETHODIMP IECtrl::iObject::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr) {
+  if (!pDispParams) return E_INVALIDARG;
+
+  Var args;
+  for (UINT i = 0; i < pDispParams->cArgs; i++) {
+    args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
+  }
+  Var ret = trigger(dispIdMember, args, m_pCtrl);
+  ret.getVariant(pVarResult);
+
+  return S_OK;
+}
+
+STDMETHODIMP IECtrl::iObject::QueryInterface(REFIID riid, PVOID *ppv) {
+  *ppv = NULL;
+  if (IID_IUnknown == riid) {
+    *ppv = this;
+  }
+  if (IID_IDispatch == riid) {
+    *ppv = (IDispatch*) this;
+  }
+  if (NULL != *ppv) {
+    ((LPUNKNOWN)*ppv)->AddRef();
+    return NOERROR;
+  }
+  return E_NOINTERFACE;
+}
+
+STDMETHODIMP IECtrl::iObject::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) { 
+  HRESULT hr;
+  UINT  i;
+  hr = NOERROR;
+
+  for (i = 0; i < cNames; i++) {
+    const char * szName = _com_util::ConvertBSTRToString(rgszNames[i]);
+    long id = getMemberID(szName);
+    delete [] szName;
+    if (id > 0) {
+      rgDispId[i] = id;
+    } else {
+      hr = ResultFromScode(DISP_E_UNKNOWNNAME);
+      rgDispId[i] = DISPID_UNKNOWN;
+    }
+  }
+  return hr;
+}
+
+IECtrl::Var IECtrl::iObject::trigger(long id, IECtrl::Var& args, IECtrl* ctrl) {
+  sCallback* f = getCallback(id);
+  return !f ? IECtrl::Var() : f->signal(args, ctrl);
+}
+
+long IECtrl::iObject::getMemberID(const char *name) {
+  sCallback* f = getCallback(name);
+  return !f ? 0 : f->id;
+}
+
+IECtrl::iObject::sCallback* IECtrl::iObject::registerCallback(const char* name, IECtrl::iObject::fCallback f) {
+  if (!getCallback(name)) {
+    _callbacks.push_back(new sCallback(name, f));
+    return _callbacks[_callbacks.size() - 1];
+  }
+  return 0;
+}
+
+IECtrl::iObject::sCallback* IECtrl::iObject::getCallback(const char* name) {
+  for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
+    if ((*it)->name == name) return *it;
+  }
+  return 0;
+}
+
+IECtrl::iObject::sCallback* IECtrl::iObject::getCallback(long id) {
+  for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
+    if ((*it)->id == id) return *it;
+  }
+  return 0;
+}
+
+bool IECtrl::iObject::deleteCallback(const char* name) {
+  for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
+    if ((*it)->name == name) {
+      delete (*it);
+      _callbacks.erase(it);
+      return true;
+    }
+  }
+  return false;
 }

@@ -504,6 +504,55 @@ public:
 
     IECtrl* m_pCtrl;
   };
+
+  class iObject : public IDispatch {
+  public:
+    typedef function<IECtrl::Var(IECtrl::Var&, IECtrl*)> fCallback;
+    typedef signal<IECtrl::Var(IECtrl::Var&, IECtrl*)> CallbackSig;
+
+    struct sCallback {
+      CallbackSig signal;
+      string name;
+      long id;
+
+      sCallback(const StringRef& _name, fCallback f): name(_name), id(random()) {
+        if (!f.empty()) signal.connect(f);
+      }
+    };
+
+    typedef std::vector<sCallback*> tCallbacks;
+
+  public:
+    iObject(IECtrl* pCtrl);
+    virtual ~iObject();
+
+    // IUnknown
+    virtual STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
+    virtual STDMETHODIMP_(ULONG) AddRef(void);
+    virtual STDMETHODIMP_(ULONG) Release(void);
+
+    // IDispatch
+    virtual STDMETHOD(GetTypeInfoCount)(UINT*);
+    virtual STDMETHOD(GetTypeInfo)(UINT, LCID, LPTYPEINFO*);
+    virtual STDMETHOD(GetIDsOfNames)(REFIID,LPOLESTR*,UINT,LCID,DISPID*);
+    virtual STDMETHOD(Invoke)(DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+    
+    virtual sCallback* registerCallback(const char* name, fCallback f);
+    virtual sCallback* getCallback(const char* name);
+    virtual sCallback* getCallback(long id);
+    virtual bool deleteCallback(const char* name);
+    virtual long getMemberID(const char *name);
+
+  protected:
+    virtual IECtrl::Var trigger(long id, IECtrl::Var& args, IECtrl* ctrl);
+
+  protected:
+    tCallbacks _callbacks;
+
+  private:
+    LONG m_cRef;
+    IECtrl * m_pCtrl;
+  };
 };
 
 #endif // __IECTRL_H__
