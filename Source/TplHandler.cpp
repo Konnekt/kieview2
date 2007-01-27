@@ -202,6 +202,7 @@ template_ret_type tplParser::parse_block(string::const_iterator itmData, string:
           else if (*itmData == 'b') { eTokenType = TMPL_BREAK;   iPosition++; }
           else if (*itmData == 'c') { eTokenType = TMPL_COMMENT; iPosition++; }
           else if (*itmData == 'f') { eTokenType = TMPL_UDF;     iPosition++; }
+          else if (*itmData == '/') { inCloseToken = true; bInToken = false; }
           else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
           break;
         case 4:
@@ -225,7 +226,7 @@ template_ret_type tplParser::parse_block(string::const_iterator itmData, string:
         bEndToken = true; bInToken = false; iPosition = 0;
       }
       // TMPL_IF
-      else if (eTokenType == TMPL_IF && iPosition > 4)
+      else if (eTokenType == TMPL_IF && iPosition > 5)
       {
         insert_text_block(sTextSection);
         parse_param_string(iPosition, TMPL_IF, itmData, itmDataEnd, itmRollBackPos);
@@ -413,7 +414,7 @@ template_ret_type tplParser::parse_block(string::const_iterator itmData, string:
         }
       }
       // TMPL_COMMENT
-      else if (eTokenType == TMPL_BREAK && iPosition > 4)
+      else if (eTokenType == TMPL_COMMENT && iPosition > 4)
       {
         if (iPosition == 5)
         {
@@ -451,6 +452,7 @@ template_ret_type tplParser::parse_block(string::const_iterator itmData, string:
 
     if (inCloseToken)
     {
+      IMLOG("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
       switch (iPosition)
       {
         case 1:
@@ -466,7 +468,7 @@ template_ret_type tplParser::parse_block(string::const_iterator itmData, string:
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
           break;
         case 5:
-          if      ((*itmData == 'a') && eTokenType == TMPL_IF)        { iPosition++; }
+          if      ((*itmData == 'a') && eTokenType == TMPL_LOOP)      { iPosition++; }
           else if ((*itmData == 'f') && eTokenType == TMPL_IF)        { iPosition++; }
           else if ((*itmData == 'n') && eTokenType == TMPL_UNLESS)    { iPosition++; }
           else if ((*itmData == 'o') && eTokenType == TMPL_COMMENT)   { iPosition++; }
@@ -478,10 +480,15 @@ template_ret_type tplParser::parse_block(string::const_iterator itmData, string:
       {
         if (iPosition == 6)
         {
-          if (*itmData == '}') { iPosition++; }
+          if (*itmData == 'f') { iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
         else if (iPosition == 7)
+        {
+          if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 8)
         {
           if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
@@ -492,20 +499,25 @@ template_ret_type tplParser::parse_block(string::const_iterator itmData, string:
       {
         if (iPosition == 6)
         {
-          if (*itmData == 'c') { iPosition++; }
+          if (*itmData == 'a') { iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
         else if (iPosition == 7)
         {
-          if (*itmData == 'h') { iPosition++; }
+          if (*itmData == 'c') { iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
         else if (iPosition == 8)
         {
-          if (*itmData == '}') { iPosition++; }
+          if (*itmData == 'h') { iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
         else if (iPosition == 9)
+        {
+          if (*itmData == '}') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 10)
         {
           if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
@@ -516,30 +528,30 @@ template_ret_type tplParser::parse_block(string::const_iterator itmData, string:
       {
         if (iPosition == 6)
         {
-          if (*itmData == 'l') { iPosition++; }
+          if (*itmData == 'n') { iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
         else if (iPosition == 7)
         {
-          if (*itmData == 'e') { iPosition++; }
+          if (*itmData == 'l') { iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
         else if (iPosition == 8)
         {
-          if (*itmData == 's') { iPosition++; }
+          if (*itmData == 'e') { iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
-        else if (iPosition == 9)
+        else if (iPosition == 9 || iPosition == 10)
         {
           if (*itmData == 's') { iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
-        else if (iPosition == 10)
+        else if (iPosition == 11)
         {
           if (*itmData == '}') { iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
-        else if (iPosition == 11)
+        else if (iPosition == 12)
         {
           if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
@@ -659,7 +671,6 @@ void tplParser::parse_param_string(unsigned int &iPosition, const e_token_type &
 
           bIsEOP = true;
           sParam.assign(itsParamBegin, itmData);
-          itmData++;
         }
         else if (*itmData == '(')
         {
@@ -668,7 +679,7 @@ void tplParser::parse_param_string(unsigned int &iPosition, const e_token_type &
         }
         else if (*itmData == ')')
         {
-          if (!bRightBracketFound && bLeftBracketFound) { bRightBracketFound = true; bIsEOP = true; sParam.assign(itsParamBegin, itmData); }
+          if (!bRightBracketFound && bLeftBracketFound) { bRightBracketFound = true; bIsEOP = true; sParam.assign(itsParamBegin, itmData);}
           else { throw std::logic_error("Unbalanced right bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
         }
         else if (*itmData == '\'' || *itmData == '"') { throw std::logic_error("Syntax error in parameter name at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
@@ -754,6 +765,7 @@ void tplParser::parse_param_string(unsigned int &iPosition, const e_token_type &
     if ((bIsVariable || !bInParam)  && *itmData == '}')
     {
       if (bLeftBracketFound && !bRightBracketFound) { throw std::logic_error("Unbalanced left bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+      *itmData++;
       break;
     }
 
