@@ -487,663 +487,463 @@ void template_text::parse(std::string::const_iterator itmData, std::string::cons
 //
 template_ret_type template_text::parse_block(std::string::const_iterator itmData, std::string::const_iterator itmDataEnd)
 {
-	using std::string;
-	// Возвращаемое значение из шаблона
-	template_ret_type sReturnType;
-	// Максимальная длина токена
-	unsigned int iPosition = 0;
-	// Позиция отката, если предполагаемая последовательность не является управляющей
-	string::const_iterator itmRollBackPos = itmData;
-	// Итерируем либо до завершения шаблона,
-	// либо до нахождения завершающей последовательности.
-	// Если тип завершающей последовательности не совпадает с ожидаемым типом, падаем
-	e_token_type eTokenType = TMPL_TEXT;
-	string sTextSection;
+  template_ret_type sReturnType;
+  unsigned int iPosition = 0;
+  std::string::const_iterator itmRollBackPos = itmData;
+  e_token_type eTokenType = TMPL_TEXT;
+  std::string sTextSection;
 
-	bool bInToken     = false;
-	bool inCloseToken = false;
-	bool bParseFlag   = true;
-	bool bDoRollback  = false;
-	bool bEndToken    = false;
-	bool bPrevBracket = false;
-	while (itmData != itmDataEnd && bParseFlag)
-	{
-		// Ищем начало последовательности токенов
-		if (*itmData == '<')
-		{
-			bPrevBracket = true;
-			iPosition = 1;
-			// Если находимся внутри любого токена и найден символ '<',
-			// то это означает, что предыдущая часть текста - обычный текст;
-			// вставляем его в строку.
-			if (bInToken || inCloseToken)
-			{
-				if (bPrevBracket) { sTextSection.append(itmRollBackPos, itmData);       }
-				else              { sTextSection.append(itmRollBackPos, (itmData - 1)); }
-			}
-			// Мы не в токене; устанавливаем флаг начала токена
-			else { bInToken = true; }
-			// Позиция отката
-			itmRollBackPos = itmData;
-		}
-		else { bPrevBracket = false; }
-		// Если находимся внутри открывающего токена, то ищем полные названия токенов
-		// и названия переменных (для LOOP, VAR и IF).
-		if (bInToken)
-		{
-			switch (iPosition)
-			{
-				// '<'
-				case 1:
-					++iPosition;
-					break;
-				// 'T' или 't'
-				case 2:
-					if (*itmData == 'T' || *itmData == 't') { iPosition++; }
-					// Если это признак закрывающего тега, то выставляем флаг
-					// о том, что это - закрывающий тег
-					else if (*itmData == '/') { inCloseToken = true; bInToken = false; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else { bInToken = false; bDoRollback = true; }
-					break;
-				// 'M' или 'm'
-				case 3:
-					if (*itmData == 'M' || *itmData == 'm') { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else { bInToken = false; bDoRollback = true; }
-					break;
-				// 'P' или 'p'
-				case 4:
-					if (*itmData == 'P' || *itmData == 'p') { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else { bInToken = false; bDoRollback = true; }
-					break;
-				// 'L' или 'L'
-				case 5:
-					if (*itmData == 'L' || *itmData == 'l') { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else { bInToken = false; bDoRollback = true; }
-					break;
-				// '_'
-				case 6:
-					if (*itmData == '_') { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else { bInToken = false; bDoRollback = true; }
-					break;
-				// Позиция == 7
-				// Для VAR     - первая буква - 'V' или 'v'
-				// Для LOOP    - первая буква - 'L' или 'l'
-				// Для IF      - первая буква - 'I' или 'i'
-				// Для ELSE    - первая буква - 'E' или 'e'
-				// Для UNLESS  - первая буква - 'U' или 'u'
-				// Для UDF     - первая буква - 'U' или 'u' (считаем, что это UNLESS и проверяем для следующей буквы)
-				// Для DECLARE - первая буква - 'D' или 'd'
-				// Для BREAK   - первая буква - 'B' или 'b'
-				// Для COMMENT - первая буква - 'C' или 'c'
-				case 7:
-					if      (*itmData == 'V' || *itmData == 'v') { eTokenType = TMPL_VAR;     iPosition++; }
-					else if (*itmData == 'L' || *itmData == 'l') { eTokenType = TMPL_LOOP;    iPosition++; }
-					else if (*itmData == 'I' || *itmData == 'i') { eTokenType = TMPL_IF;      iPosition++; }
-					else if (*itmData == 'E' || *itmData == 'e') { eTokenType = TMPL_ELSE;    iPosition++; }
-					else if (*itmData == 'U' || *itmData == 'u') { eTokenType = TMPL_UNLESS;  iPosition++; }
-					else if (*itmData == 'D' || *itmData == 'd') { eTokenType = TMPL_DECLARE; iPosition++; }
-					else if (*itmData == 'B' || *itmData == 'b') { eTokenType = TMPL_BREAK;   iPosition++; }
-					else if (*itmData == 'C' || *itmData == 'c') { eTokenType = TMPL_COMMENT; iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-					break;
-				// Для VAR     - вторая буква - 'A' или 'a'
-				// Для LOOP    - вторая буква - 'O' или 'o'
-				// Для IF      - вторая буква - 'F' или 'F'
-				// Для ELSE    - вторая буква - 'L' или 'l'
-				// Для UNLESS  - вторая буква - 'N' или 'n'
-				// Для UDF     - вторая буква - 'D' или 'd'
-				// Для DECLARE - вторая буква - 'E' или 'e'
-				// Для BREAK   - вторая буква - 'R' или 'r'
-				// Для COMMENT - вторая буква - 'O' или 'o'
-				case 8:
-					if      ((*itmData == 'A' || *itmData == 'a') && eTokenType == TMPL_VAR)       { iPosition++; }
-					else if ((*itmData == 'O' || *itmData == 'o') && (eTokenType == TMPL_LOOP ||
-					                                                  eTokenType == TMPL_COMMENT)) { iPosition++; }
-					else if ((*itmData == 'F' || *itmData == 'f') && eTokenType == TMPL_IF)        { iPosition++; }
-					else if ((*itmData == 'L' || *itmData == 'l') && eTokenType == TMPL_ELSE)      { iPosition++; }
-					else if ((*itmData == 'N' || *itmData == 'n') && eTokenType == TMPL_UNLESS)    { iPosition++; }
-					else if ((*itmData == 'D' || *itmData == 'd') && eTokenType == TMPL_UNLESS)    { eTokenType = TMPL_UDF;     iPosition++; }
-					else if ((*itmData == 'N' || *itmData == 'n') && eTokenType == TMPL_IF)        { eTokenType = TMPL_INCLUDE; iPosition++; }
-					else if ((*itmData == 'E' || *itmData == 'e') && eTokenType == TMPL_DECLARE)   { iPosition++; }
-					else if ((*itmData == 'R' || *itmData == 'r') && eTokenType == TMPL_BREAK)     { iPosition++; }
-					else if ((*itmData == 'O' || *itmData == 'o') && eTokenType == TMPL_COMMENT)   { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-					break;
-				// Для VAR     - третья буква - 'R' или 'r'
-				// Для LOOP    - третья буква - 'O' или 'o'
-				// Для IF      - третая буква - пробел
-				// Для ELSE    - третая буква - 'S' или 's'
-				// Для UNLESS  - третья буква - 'L' или 'l'
-				// Для UDF     - третья буква - 'F' или 'f'
-				// Для DECLARE - третья буква - 'C' или 'c'
-				// Для BREAK   - третья буква - 'E' или 'e'
-				// Для COMMENT - третья буква - 'M' или 'm'
-				case 9:
-					if      ((*itmData == 'R' || *itmData == 'r') && eTokenType == TMPL_VAR)       { iPosition++; }
-					else if ((*itmData == 'O' || *itmData == 'o') && eTokenType == TMPL_LOOP)      { iPosition++; }
-					else if ( *itmData == ' '                     && eTokenType == TMPL_IF)        { iPosition++; }
-					else if ((*itmData == 'S' || *itmData == 's') && eTokenType == TMPL_ELSE)      { iPosition++; }
-					else if ((*itmData == 'L' || *itmData == 'l') && eTokenType == TMPL_UNLESS)    { iPosition++; }
-					else if ((*itmData == 'F' || *itmData == 'f') && eTokenType == TMPL_UDF)       { iPosition++; }
-					else if ((*itmData == 'C' || *itmData == 'c') && (eTokenType == TMPL_INCLUDE
-					                                               || eTokenType == TMPL_DECLARE)) { iPosition++; }
-					else if ((*itmData == 'E' || *itmData == 'e') && eTokenType == TMPL_BREAK)     { iPosition++; }
-					else if ((*itmData == 'M' || *itmData == 'm') && eTokenType == TMPL_COMMENT)   { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-			}
-			// TMPL_VAR
-			if (eTokenType == TMPL_VAR && iPosition > 9)
-			{
-				// В этой позиции должен стоять пробел
-				if (iPosition == 11)
-				{
-					if (*itmData == ' ')  { iPosition++; }
-					// Если пробела нет, значит - ошибка
-					else                  { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition > 11)
-				{
-					// Вставляем текстовый блок ///////////////////////////////
-					insert_text_block(sTextSection);
-					// Парзинг строки параметров
-					parse_param_string(iPosition, TMPL_VAR, itmData, itmDataEnd, itmRollBackPos);
-					// Токен закончился
-					bEndToken = true; bInToken = false; iPosition = 0;
-				}
-				else { iPosition++; }
-			}
-			// TMPL_IF
-			else if (eTokenType == TMPL_IF && iPosition > 9)
-			{
-				if (iPosition > 10)
-				{
-					// Вставляем текстовый блок ///////////////////////////////
-					insert_text_block(sTextSection);
-					// Парзинг строки параметров
-					parse_param_string(iPosition, TMPL_IF, itmData, itmDataEnd, itmRollBackPos);
-					// Токен закончился;
-					bEndToken = true; bInToken = false; iPosition = 0;
-				}
-				else { iPosition++; }
-			}
-			// TMPL_ELSE
-			else if (eTokenType == TMPL_ELSE && iPosition > 9)
-			{
-				// Для ELSE - вторая буква - 'S' или 's'
-				// 'S' или 's'
-				if (iPosition == 10)
-				{
-					if (*itmData == 'S' || *itmData == 's') { iPosition++; }
-					else                                    { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'E' или 'e'
-				else if (iPosition == 11)
-				{
-					if (*itmData == 'E' || *itmData == 'e') { iPosition++; }
-					else                                    { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// '>'
-				else if (iPosition == 12)
-				{
-					// Выходим из цикла
-					if (*itmData == '>') { bInToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
-					else                 { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else { iPosition++; }
-			}
-			// TMPL_UNLESS
-			else if (eTokenType == TMPL_UNLESS && iPosition > 9)
-			{
-				// 'L' или 'l'
-				if (iPosition == 10)
-				{
-					if (*itmData == 'L' || *itmData == 'l')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'E' или 'e'
-				else if (iPosition == 11)
-				{
-					if (*itmData == 'E' || *itmData == 'e')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'S' или 's'
-				else if (iPosition == 12)
-				{
-					if (*itmData == 'S' || *itmData == 's')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'S' или 's'
-				else if (iPosition == 13)
-				{
-					if (*itmData == 'S' || *itmData == 's')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition > 13)
-				{
-					// Вставляем текстовый блок ///////////////////////////////
-					insert_text_block(sTextSection);
-					// Парзинг строки параметров
-					parse_param_string(iPosition, TMPL_UNLESS, itmData, itmDataEnd, itmRollBackPos);
-					// Токен закончился
-					bEndToken = true; bInToken = false; iPosition = 0;
-				}
-			}
-			// Для LOOP
-			else if (eTokenType == TMPL_LOOP && iPosition > 9)
-			{
-				// 'O' или 'o'
-				if (iPosition == 10)
-				{
-					if (*itmData == 'O' || *itmData == 'o')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'P' или 'p'
-				else if (iPosition == 11)
-				{
-					if (*itmData == 'P' || *itmData == 'p')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition > 11)
-				{
-					// Вставляем текстовый блок ///////////////////////////////
-					insert_text_block(sTextSection);
-					// Парзинг строки параметров
-					parse_param_string(iPosition, TMPL_LOOP, itmData, itmDataEnd, itmRollBackPos);
-					// Токен закончился
-					bEndToken = true; bInToken = false; iPosition = 0;
-				}
-			}
-			// Для UDF
-			else if (eTokenType == TMPL_UDF && iPosition > 9)
-			{
-				// В этой позиции должен стоять пробел
-				if (iPosition == 11)
-				{
-					if (*itmData == ' ')  { iPosition++; }
-					// Если пробела нет, значит - ошибка
-					else                  { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition > 11)
-				{
-					// Вставляем текстовый блок ///////////////////////////////
-					insert_text_block(sTextSection);
-					// Парзинг строки параметров
-					parse_param_string(iPosition, TMPL_UDF, itmData, itmDataEnd, itmRollBackPos);
-					// Токен закончился
-					bEndToken = true; bInToken = false; iPosition = 0;
-				}
-				else { iPosition++; }
-			}
-			// Для INCLUDE
-			else if (eTokenType == TMPL_INCLUDE && iPosition > 9)
-			{
-				// 'C' или 'c'
-				if (iPosition == 10)
-				{
-					if (*itmData == 'C' || *itmData == 'c')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'L' или 'l'
-				else if (iPosition == 11)
-				{
-					if (*itmData == 'L' || *itmData == 'l')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'U' или 'U'
-				else if (iPosition == 12)
-				{
-					if (*itmData == 'U' || *itmData == 'u')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'D' или 'd'
-				else if (iPosition == 13)
-				{
-					if (*itmData == 'D' || *itmData == 'd')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'D' или 'd'
-				else if (iPosition == 14)
-				{
-					if (*itmData == 'E' || *itmData == 'e')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition > 14)
-				{
-					// Вставляем текстовый блок ///////////////////////////////
-					insert_text_block(sTextSection);
-					// Парзинг строки параметров
-					parse_param_string(iPosition, TMPL_INCLUDE, itmData, itmDataEnd, itmRollBackPos);
-					// Токен закончился
-					bEndToken = true; bInToken = false; iPosition = 0;
-				}
-			}
-			// Для DECLARE
-			else if (eTokenType == TMPL_DECLARE && iPosition > 9)
-			{
-				// 'C' или 'c'
-				if (iPosition == 10)
-				{
-					if (*itmData == 'C' || *itmData == 'c')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'L' или 'l'
-				else if (iPosition == 11)
-				{
-					if (*itmData == 'L' || *itmData == 'l')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'A' или 'a'
-				else if (iPosition == 12)
-				{
-					if (*itmData == 'A' || *itmData == 'a')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'R' или 'r'
-				else if (iPosition == 13)
-				{
-					if (*itmData == 'R' || *itmData == 'r')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'E' или 'e'
-				else if (iPosition == 14)
-				{
-					if (*itmData == 'E' || *itmData == 'e')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition > 14)
-				{
-					// Вставляем текстовый блок ///////////////////////////////
-					insert_text_block(sTextSection);
-					// Парзинг строки параметров
-					parse_param_string(iPosition, TMPL_DECLARE, itmData, itmDataEnd, itmRollBackPos);
-					// Парзинг
-					// Токен закончился
-					bEndToken = true; bInToken = false; iPosition = 0;
-				}
-			}
-			// Для BREAK
-			else if (eTokenType == TMPL_BREAK && iPosition > 9)
-			{
-				// 'E' или 'e'
-				if (iPosition == 10)
-				{
-					if (*itmData == 'E' || *itmData == 'e')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'A' или 'a'
-				else if (iPosition == 11)
-				{
-					if (*itmData == 'A' || *itmData == 'a')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'K' или 'k'
-				else if (iPosition == 12)
-				{
-					if (*itmData == 'K' || *itmData == 'k')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition > 12)
-				{
-					// Вставляем текстовый блок ///////////////////////////////
-					insert_text_block(sTextSection);
-					// Парзинг строки параметров
-					parse_param_string(iPosition, TMPL_BREAK, itmData, itmDataEnd, itmRollBackPos);
-					// Парзинг
-					// Токен закончился
-					bEndToken = true; bInToken = false; iPosition = 0;
-				}
-			}
-			// Для COMMENT
-			else if (eTokenType == TMPL_BREAK && iPosition > 9)
-			{
-				// 'M' или 'm'
-				if (iPosition == 10 || iPosition == 11)
-				{
-					if (*itmData == 'M' || *itmData == 'm')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'E' или 'e'
-				else if (iPosition == 12)
-				{
-					if (*itmData == 'E' || *itmData == 'e')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'N' или 'n'
-				else if (iPosition == 13)
-				{
-					if (*itmData == 'N' || *itmData == 'n')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'T' или 't'
-				else if (iPosition == 14)
-				{
-					if (*itmData == 'T' || *itmData == 't')  { iPosition++; }
-					else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition > 14)
-				{
-					// Вставляем текстовый блок ///////////////////////////////
-					insert_text_block(sTextSection);
-					// Парзинг строки параметров
-					parse_param_string(iPosition, TMPL_COMMENT, itmData, itmDataEnd, itmRollBackPos);
-					// Парзинг
-					// Токен закончился
-					bEndToken = true; bInToken = false; iPosition = 0;
-				}
-			}
-		}
+  bool bInToken     = false;
+  bool inCloseToken = false;
+  bool bParseFlag   = true;
+  bool bDoRollback  = false;
+  bool bEndToken    = false;
+  bool bPrevBracket = false;
 
-		// Внутри закрывающего токена
-		if (inCloseToken)
-		{
-			switch (iPosition)
-			{
-				// '/'
-				case 2:
-					 iPosition++;
-					 break;
-				// 'T' или 't'
-				case 3:
-					if (*itmData == 'T' || *itmData == 't') { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else                                    { inCloseToken = false; bDoRollback = true; }
-					break;
-				// 'M' или 'm'
-				case 4:
-					if (*itmData == 'M' || *itmData == 'm') { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else                                    { inCloseToken = false; bDoRollback = true; }
-					break;
-				// 'P' или 'p'
-				case 5:
-					if (*itmData == 'P' || *itmData == 'p') { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else                                    { inCloseToken = false; bDoRollback = true; }
-					break;
-				// 'L' или 'L'
-				case 6:
-					if (*itmData == 'L' || *itmData == 'l') { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else                                    { inCloseToken = false; bDoRollback = true; }
-					break;
-				// '_'
-				case 7:
-					if (*itmData == '_') { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else                                    { inCloseToken = false; bDoRollback = true; }
-					break;
-				// Позиция == 8
-				// Для LOOP    - первая буква - 'L' или 'l'
-				// Для IF      - первая буква - 'I' или 'i'
-				// Для UNLESS  - первая буква - 'U' или 'u'
-				// Для COMMENT - первая буква - 'C' или 'C'
-				case 8:
-					if      (*itmData == 'L' || *itmData == 'l') { eTokenType = TMPL_LOOP;    iPosition++; }
-					else if (*itmData == 'I' || *itmData == 'i') { eTokenType = TMPL_IF;      iPosition++; }
-					else if (*itmData == 'U' || *itmData == 'u') { eTokenType = TMPL_UNLESS;  iPosition++; }
-					else if (*itmData == 'C' || *itmData == 'c') { eTokenType = TMPL_COMMENT; iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-					break;
-				// Позиция == 9
-				// Для LOOP    - вторая буква - 'O' или 'o'
-				// Для IF      - вторая буква - 'F' или 'f'
-				// Для UNLESS  - вторая буква - 'N' или 'n'
-				// Для COMMENT - вторая буква - 'O' или 'o'
-				case 9:
-					if      ((*itmData == 'O' || *itmData == 'o') && (eTokenType == TMPL_LOOP ||
-					                                                  eTokenType == TMPL_COMMENT)) { iPosition++; }
-					else if ((*itmData == 'F' || *itmData == 'f') && eTokenType == TMPL_IF)        { iPosition++; }
-					else if ((*itmData == 'N' || *itmData == 'n') && eTokenType == TMPL_UNLESS)    { iPosition++; }
-					// Иначе - мы не внутри токена, надо откатываться
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-					break;
-			}
+  while (itmData != itmDataEnd && bParseFlag)
+  {
+    if (*itmData == '{' && *(itmData + 1) == '{')
+    {
+      bPrevBracket = true;
+      iPosition = 1;
+      if (bInToken || inCloseToken)
+      {
+        if (bPrevBracket) { sTextSection.append(itmRollBackPos, itmData);       }
+        else              { sTextSection.append(itmRollBackPos, (itmData - 1)); }
+      }
+      else { bInToken = true; }
+      itmRollBackPos = itmData;
+    }
+    else { bPrevBracket = false; }
+    if (bInToken)
+    {
+      switch (iPosition)
+      {
+        case 1:
+        case 2:
+          if (*itmData != '{') {
+            bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos);
+          }
+          iPosition++;
+          break;
+        case 3:
+          if      (*itmData == '$') { eTokenType = TMPL_VAR;     iPosition++; }
+          else if (*itmData == 'i') { eTokenType = TMPL_IF;      iPosition++; }
+          else if (*itmData == 'e') { eTokenType = TMPL_ELSE;    iPosition++; }
+          else if (*itmData == 'u') { eTokenType = TMPL_UNLESS;  iPosition++; }
+          else if (*itmData == 'b') { eTokenType = TMPL_BREAK;   iPosition++; }
+          else if (*itmData == 'c') { eTokenType = TMPL_COMMENT; iPosition++; }
+          else if (*itmData == 'f') { eTokenType = TMPL_UDF;     iPosition++; }
+          else if (*itmData == '/') { inCloseToken = true; bInToken = false; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+          break;
+        case 4:
+          if      (eTokenType == TMPL_VAR)      { iPosition++; }
+          else if (*itmData == 'a' && eTokenType == TMPL_ELSE)      { eTokenType = TMPL_LOOP; iPosition++; }
+          else if (*itmData == 'f' && eTokenType == TMPL_IF)        { iPosition++; }
+          else if (*itmData == 'l' && eTokenType == TMPL_ELSE)      { iPosition++; }
+          else if (*itmData == 'n' && eTokenType == TMPL_UNLESS)    { iPosition++; }
+          else if (*itmData == 'u' && eTokenType == TMPL_UDF)       { iPosition++; }
+          else if (*itmData == 'n' && eTokenType == TMPL_IF)        { eTokenType = TMPL_INCLUDE; iPosition++; }
+          else if (*itmData == 'r' && eTokenType == TMPL_BREAK)     { iPosition++; }
+          else if (*itmData == 'o' && eTokenType == TMPL_COMMENT)   { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+          break;
+      }
+      // TMPL_VAR
+      if (eTokenType == TMPL_VAR && iPosition > 4)
+      {
+        insert_text_block(sTextSection);
+        parse_param_string(iPosition, TMPL_VAR, itmData, itmDataEnd, itmRollBackPos);
+        bEndToken = true; bInToken = false; iPosition = 0;
+      }
+      // TMPL_IF
+      else if (eTokenType == TMPL_IF && iPosition > 4)
+      {
+        if (iPosition == 5)
+        {
+          if (*itmData == 'f') { iPosition++; }
+          else                 { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition > 5)
+        {
+          insert_text_block(sTextSection);
+          parse_param_string(iPosition, TMPL_IF, itmData, itmDataEnd, itmRollBackPos);
+          bEndToken = true; bInToken = false; iPosition = 0;
+        }
+      }
+      // TMPL_ELSE
+      else if (eTokenType == TMPL_ELSE && iPosition > 4)
+      {
+        if (iPosition == 5)
+        {
+          if (*itmData == 'l') { iPosition++; }
+          else                 { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 6)
+        {
+          if (*itmData == 's') { iPosition++; }
+          else                 { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 6)
+        {
+          if (*itmData == 'e') { iPosition++; }
+          else                 { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 7)
+        {
+          if (*itmData == '}') { iPosition++; }
+          else                 { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 8)
+        {
+          if (*itmData == '}') { bInToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
+          else                 { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else { iPosition++; }
+      }
+      // TMPL_UNLESS
+      else if (eTokenType == TMPL_UNLESS && iPosition > 4)
+      {
+        if (iPosition == 5)
+        {
+          if (*itmData == 'n')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 6)
+        {
+          if (*itmData == 'l')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 7)
+        {
+          if (*itmData == 'e')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 8 || iPosition == 9)
+        {
+          if (*itmData == 's')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition > 9)
+        {
+          insert_text_block(sTextSection);
+          parse_param_string(iPosition, TMPL_UNLESS, itmData, itmDataEnd, itmRollBackPos);
+          bEndToken = true; bInToken = false; iPosition = 0;
+        }
+      }
+      // TMPL_LOOP
+      else if (eTokenType == TMPL_LOOP && iPosition > 4)
+      {
+        if (iPosition == 5)
+        {
+          if (*itmData == 'a')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 6)
+        {
+          if (*itmData == 'c')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 7)
+        {
+          if (*itmData == 'h')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition > 7)
+        {
+          insert_text_block(sTextSection);
+          parse_param_string(iPosition, TMPL_LOOP, itmData, itmDataEnd, itmRollBackPos);
+          bEndToken = true; bInToken = false; iPosition = 0;
+        }
+      }
+      // TMPL_UDF
+      else if (eTokenType == TMPL_UDF && iPosition > 4)
+      {
+        if (iPosition == 5)
+        {
+          if (*itmData == 'u')  { iPosition++; }
+          else                  { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 6)
+        {
+          if (*itmData == 'n')  { iPosition++; }
+          else                  { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 7)
+        {
+          if (*itmData == 'c')  { iPosition++; }
+          else                  { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition > 7)
+        {
+          insert_text_block(sTextSection);
+          parse_param_string(iPosition, TMPL_UDF, itmData, itmDataEnd, itmRollBackPos);
+          bEndToken = true; bInToken = false; iPosition = 0;
+        }
+        else { iPosition++; }
+      }
+      // TMPL_INCLUDE
+      else if (eTokenType == TMPL_INCLUDE && iPosition > 4)
+      {
+        if (iPosition == 5)
+        {
+          if (*itmData == 'n')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 6)
+        {
+          if (*itmData == 'c')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 7)
+        {
+          if (*itmData == 'l')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 8)
+        {
+          if (*itmData == 'u')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 9)
+        {
+          if (*itmData == 'd')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 10)
+        {
+          if (*itmData == 'e')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition > 10)
+        {
+          insert_text_block(sTextSection);
+          parse_param_string(iPosition, TMPL_INCLUDE, itmData, itmDataEnd, itmRollBackPos);
+          bEndToken = true; bInToken = false; iPosition = 0;
+        }
+      }
+      // TMPL_BREAK
+      else if (eTokenType == TMPL_BREAK && iPosition > 4)
+      {
+        if (iPosition == 5)
+        {
+          if (*itmData == 'r')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 6)
+        {
+          if (*itmData == 'e')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 7)
+        {
+          if (*itmData == 'a')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 8)
+        {
+          if (*itmData == 'k')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition > 8)
+        {
+          insert_text_block(sTextSection);
+          parse_param_string(iPosition, TMPL_BREAK, itmData, itmDataEnd, itmRollBackPos);
+          bEndToken = true; bInToken = false; iPosition = 0;
+        }
+      }
+      // TMPL_COMMENT
+      else if (eTokenType == TMPL_COMMENT && iPosition > 4)
+      {
+        if (iPosition == 5)
+        {
+          if (*itmData == 'o')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 6 || iPosition == 7)
+        {
+          if (*itmData == 'm')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 8)
+        {
+          if (*itmData == 'e')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 9)
+        {
+          if (*itmData == 'n')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 10)
+        {
+          if (*itmData == 't')  { iPosition++; }
+          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition > 10)
+        {
+          insert_text_block(sTextSection);
+          parse_param_string(iPosition, TMPL_COMMENT, itmData, itmDataEnd, itmRollBackPos);
+          bEndToken = true; bInToken = false; iPosition = 0;
+        }
+      }
+    }
 
-			// Ветвление
-			if (eTokenType == TMPL_IF && iPosition > 9)
-			{
-				// '>'
-				if (iPosition == 11)
-				{
-					// Выходим из цикла
-					if (*itmData == '>') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
-					else                 { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else { iPosition++; }
-			}
-			// Цикл
-			else if (eTokenType == TMPL_LOOP && iPosition > 9)
-			{
-				// Для LOOP - вторая буква - 'O' или 'o'
-				if (iPosition == 11)
-				{
-					if (*itmData == 'O' || *itmData == 'o') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'P' или 'p'
-				else if (iPosition == 12)
-				{
-					if (*itmData == 'P' || *itmData == 'p') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// '>'
-				else if (iPosition == 13)
-				{
-					// Выходим из цикла
-					if (*itmData == '>') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else { iPosition++; }
-			}
-			// Обратное условие
-			else if (eTokenType == TMPL_UNLESS && iPosition > 9)
-			{
-				// Для UNLESS - вторая буква - 'L' или 'l'
-				if (iPosition == 11)
-				{
-					if (*itmData == 'L' || *itmData == 'l') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'E' или 'E'
-				else if (iPosition == 12)
-				{
-					if (*itmData == 'E' || *itmData == 'e') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'S' или 's'
-				else if (iPosition == 13)
-				{
-					if (*itmData == 'S' || *itmData == 's') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'S' или 's'
-				else if (iPosition == 14)
-				{
-					if (*itmData == 'S' || *itmData == 's') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// '>'
-				else if (iPosition == 15)
-				{
-					// Выходим из цикла
-					if (*itmData == '>') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else { iPosition++; }
-			}
-			// Комментарий
-			else if (eTokenType == TMPL_COMMENT && iPosition > 9)
-			{
-				// Для COMMENT - вторая буква - 'O' или 'o'
-				if (iPosition == 11)
-				{
-					if (*itmData == 'O' || *itmData == 'o') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// 'M' или 'm'
-				else if (iPosition == 12 || iPosition == 13)
-				{
-					if (*itmData == 'M' || *itmData == 'm') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition == 14)
-				{
-					if (*itmData == 'E' || *itmData == 'e') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition == 15)
-				{
-					if (*itmData == 'N' || *itmData == 'n') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else if (iPosition == 16)
-				{
-					if (*itmData == 'T' || *itmData == 't') { iPosition++; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				// '>'
-				else if (iPosition == 17)
-				{
-					// Выходим из цикла
-					if (*itmData == '>') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
-					// Откат
-					else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-				}
-				else { iPosition++; }
-			}
-		}
+    if (inCloseToken)
+    {
+      switch (iPosition)
+      {
+        case 1:
+        case 2:
+        case 3:
+           iPosition++;
+           break;
+        case 4:
+          if      (*itmData == 'e') { eTokenType = TMPL_LOOP;    iPosition++; }
+          else if (*itmData == 'i') { eTokenType = TMPL_IF;      iPosition++; }
+          else if (*itmData == 'u') { eTokenType = TMPL_UNLESS;  iPosition++; }
+          else if (*itmData == 'c') { eTokenType = TMPL_COMMENT; iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+          break;
+        case 5:
+          if      (*itmData == 'a' && eTokenType == TMPL_LOOP)      { iPosition++; }
+          else if (*itmData == 'f' && eTokenType == TMPL_IF)        { iPosition++; }
+          else if (*itmData == 'n' && eTokenType == TMPL_UNLESS)    { iPosition++; }
+          else if (*itmData == 'o' && eTokenType == TMPL_COMMENT)   { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+          break;
+      }
 
-		// Превышаена максимальная длина токена, откатываемся
+      if (eTokenType == TMPL_IF && iPosition > 5)
+      {
+        if (iPosition == 6)
+        {
+          if (*itmData == 'f') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 7)
+        {
+          if (*itmData == '}') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 8)
+        {
+          if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else { iPosition++; }
+      }
+      else if (eTokenType == TMPL_LOOP && iPosition > 5)
+      {
+        if (iPosition == 6)
+        {
+          if (*itmData == 'a') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 7)
+        {
+          if (*itmData == 'c') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 8)
+        {
+          if (*itmData == 'h') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 9)
+        {
+          if (*itmData == '}') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 10)
+        {
+          if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else { iPosition++; }
+      }
+      else if (eTokenType == TMPL_UNLESS && iPosition > 5)
+      {
+        if (iPosition == 6)
+        {
+          if (*itmData == 'n') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 7)
+        {
+          if (*itmData == 'l') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 8)
+        {
+          if (*itmData == 'e') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 9 || iPosition == 10)
+        {
+          if (*itmData == 's') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 11)
+        {
+          if (*itmData == '}') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 12)
+        {
+          if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else { iPosition++; }
+      }
+      else if (eTokenType == TMPL_COMMENT && iPosition > 5)
+      {
+        if (iPosition == 6)
+        {
+          if (*itmData == 'o') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 7 || iPosition == 8)
+        {
+          if (*itmData == 'm') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 9)
+        {
+          if (*itmData == 'e') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 10)
+        {
+          if (*itmData == 'n') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 11)
+        {
+          if (*itmData == 't') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 12)
+        {
+          if (*itmData == '}') { iPosition++; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 13)
+        {
+          if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
+          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else { iPosition++; }
+      }
+    }
+
 		if(iPosition == C_TEMPLATE_MAX_TOKEN_LEN)
 		{
 			iPosition = 0; bInToken = false; inCloseToken = false; bDoRollback = true;
-			// Если установлена жесткая проверка на синтаксис, то падаем
 			do_rollback_token(itmData, itmRollBackPos);
 		}
 
-		// Если мы вышли из любого токена, но откат необходим - откатываемся
 		if ((!bInToken || !inCloseToken) && bDoRollback)
 		{
 			sTextSection.append(itmRollBackPos, itmData);
@@ -1151,31 +951,22 @@ template_ret_type template_text::parse_block(std::string::const_iterator itmData
 			bDoRollback = false;
 		}
 
-		// Не внутри токена и токен только что не закончился
 		if (!bInToken && !inCloseToken && !bEndToken) { sTextSection += *itmData; }
-		// Токен закончился
 		if (bEndToken) { bEndToken = false; }
 
-		// Позиция в строке
-		// Табуляция
 		if      (*itmData == '\t') { iPos += iTabLength; }
-		// Перевод строки
 		else if (*itmData == '\n') { iPos = 1; iLine++; }
-		// Любой другой символ
 		else                       { iPos++; }
 		itmData++;
 	}
 
-	// Вставляем последний текстовый блок ///////////////////////////////
 	insert_text_block(sTextSection);
-	// //////////////////////////////////////////////////////////////////
-	// Вышли
 	sReturnType.token_type = eTokenType;
 	sReturnType.parse_pos  = --itmData;
 	sReturnType.line       = iLine;
 	sReturnType.column     = iPos;
 
-return sReturnType;
+  return sReturnType;
 }
 
 //
@@ -1266,6 +1057,7 @@ std::string template_text::token2str(const e_token_type &eToken)
 return sToken;
 }
 
+
 //
 // Вставляем текстовый блок
 //
@@ -1284,321 +1076,292 @@ void template_text::insert_text_block(std::string & sTextSection)
 //
 void template_text::parse_param_string(unsigned int &iPosition, const e_token_type &eFoundToken, std::string::const_iterator & itmData, std::string::const_iterator itmDataEnd, std::string::const_iterator itmRollBackPos)
 {
-	using std::string;
+  using std::string;
 
-	stack_ref sStackRef;
-	sStackRef.function = NULL;
+  stack_ref sStackRef;
+  sStackRef.function = NULL;
 
-	bool bIsEOP       = false;
-	bool bInParam     = false;
-	bool bIsVariable  = false;
-	bool bIsQuoted    = false;
-	bool bFunctionSet = false;
+  bool bIsEOP       = false;
+  bool bInParam     = false;
+  bool bIsVariable  = false;
+  bool bIsQuoted    = false;
+  bool bFunctionSet = false;
 
-	bool bLeftBracketFound  = false;
-	bool bRightBracketFound = false;
+  bool bLeftBracketFound  = false;
+  bool bRightBracketFound = false;
 
-	char chQuote = '\0';
+  char chQuote = '\0';
 
-	string sParam;
-	string sFunctionName;
-	string::const_iterator itsParamBegin = itmData;
-	string::const_iterator itsParamEnd   = itmData;
+  string sParam;
+  string sFunctionName;
+  string::const_iterator itsParamBegin = itmData;
+  string::const_iterator itsParamEnd   = itmData;
 
-	while (itmData != itmDataEnd)
-	{
-		// Внутри параметра
-		if (bInParam)
-		{
-			// Если это переменная, то признак ее конца - пробельный символ
-			if (bIsVariable)
-			{
-				if (*itmData == ' ' || *itmData == '\t' || *itmData == '\r' || *itmData == '\n' || *itmData == ',')
-				{
-					bIsEOP = true;
-					sParam.assign(itsParamBegin, itmData);
-				}
-				else if (*itmData == '>')
-				{
-					if (bLeftBracketFound && !bRightBracketFound) { throw std::logic_error("Unbalanced left bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+  while (itmData != itmDataEnd)
+  {
+    if (bInParam)
+    {
+      if (bIsVariable)
+      {
+        if (*itmData == ' ' || *itmData == '\t' || *itmData == '\r' || *itmData == '\n' || *itmData == ',')
+        {
+          bIsEOP = true;
+          sParam.assign(itsParamBegin, itmData);
+        }
+        else if (*itmData == '}')
+        {
+          if (bLeftBracketFound && !bRightBracketFound) { throw std::logic_error("Unbalanced left bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
 
-					bIsEOP = true;
-					sParam.assign(itsParamBegin, itmData);
-				}
-				else if (*itmData == '(')
-				{
-					if (!bLeftBracketFound) { bLeftBracketFound = true; bIsEOP = true; sParam.assign(itsParamBegin, itmData); }
-					else { throw std::logic_error("Extra left bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-				}
-				else if (*itmData == ')')
-				{
-					if (!bRightBracketFound && bLeftBracketFound) { bRightBracketFound = true; bIsEOP = true; sParam.assign(itsParamBegin, itmData); }
-					else { throw std::logic_error("Unbalanced right bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-				}
-				else if (*itmData == '\'' || *itmData == '"') { throw std::logic_error("Syntax error in parameter name at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-			}
-			else
-			{
-				// Квотированный символ
-				if (bIsQuoted)
-				{
-					itsParamEnd = itmData;
-					itsParamEnd --;
+          bIsEOP = true;
+          sParam.assign(itsParamBegin, itmData);
+        }
+        else if (*itmData == '(')
+        {
+          if (!bLeftBracketFound) { bLeftBracketFound = true; bIsEOP = true; sParam.assign(itsParamBegin, itmData); }
+          else { throw std::logic_error("Extra left bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+        }
+        else if (*itmData == ')')
+        {
+          if (!bRightBracketFound && bLeftBracketFound) { bRightBracketFound = true; bIsEOP = true; sParam.assign(itsParamBegin, itmData);}
+          else { throw std::logic_error("Unbalanced right bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+        }
+        else if (*itmData == '\'' || *itmData == '"') { throw std::logic_error("Syntax error in parameter name at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+      }
+      else
+      {
+        if (bIsQuoted)
+        {
+          itsParamEnd = itmData;
+          itsParamEnd --;
 
-					if (*itmData == chQuote) { sParam.append(itsParamBegin, itsParamEnd); itsParamBegin = itmData; }
-					else
-					{
-						sParam.append(itsParamBegin, itsParamEnd);
-						if      (*itmData == 'n') { sParam += '\n'; }
-						else if (*itmData == 'r') { sParam += '\r'; }
-						else if (*itmData == 't') { sParam += '\t'; }
-						else if (*itmData == 'b') { sParam += '\b'; }
-						else if (*itmData == 'a') { sParam += '\a'; }
-						itsParamBegin = itmData;
-						++itsParamBegin;
-					}
-				}
-				else if ((*itmData == '\'' || *itmData == '"') && (*itmData == chQuote)) { bIsEOP = true; sParam.append(itsParamBegin, itmData); }
-			}
-		}
-		else
-		{
-			// Начало константы
-			if (*itmData == '\'' || *itmData == '"') { chQuote = *itmData; bInParam = true; bIsVariable = false; itsParamBegin = itmData; itsParamBegin++; }
-			// Начало переменной
-			else if (*itmData == '(')
-			{
-				if (!bLeftBracketFound) { bLeftBracketFound = true; }
-				else { throw std::logic_error("Extra left bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-			}
-			else if (*itmData == ')')
-			{
-				if (!bRightBracketFound && bLeftBracketFound) { bRightBracketFound = true; }
-				else { throw std::logic_error("Unbalanced right bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-			}
-			else if (*itmData != ' ' && *itmData != '\t' && *itmData != '\r' && *itmData != '\n' && *itmData != ',')
-			{
-				bInParam = true; bIsVariable = true; itsParamBegin = itmData;
-			}
-		}
-		// Найден конец параметра
-		if (bIsEOP)
-		{
-			if (bLeftBracketFound)
-			{
-				// Устанавливаем функцию
-				if (!bFunctionSet)
-				{
-					// Имя функции
-					sFunctionName.assign(sParam);
-					sParam.erase();
-					// Ищем имя функции в фабрике
-					sStackRef.function = NULL;
-					try { sStackRef.function = pFactory -> get(sFunctionName); }
-					// Падаем с конкретизацией строки/столбца.
-					catch(std::exception &e) { throw std::logic_error("Line " + d2str<int>(iLine) + " column " + d2str<int>(iPos) + ": " + e.what()); }
-					bFunctionSet = true;
-				}
-				else { sStackRef.function_parameters.push_back(function_param_data(sParam, bIsVariable)); sParam.erase(); }
-			}
-			else { sStackRef.function_parameters.push_back(function_param_data(sParam, bIsVariable)); sParam.erase(); }
+          if (*itmData == chQuote) { sParam.append(itsParamBegin, itsParamEnd); itsParamBegin = itmData; }
+          else
+          {
+            sParam.append(itsParamBegin, itsParamEnd);
+            if      (*itmData == 'n') { sParam += '\n'; }
+            else if (*itmData == 'r') { sParam += '\r'; }
+            else if (*itmData == 't') { sParam += '\t'; }
+            else if (*itmData == 'b') { sParam += '\b'; }
+            else if (*itmData == 'a') { sParam += '\a'; }
+            itsParamBegin = itmData;
+            ++itsParamBegin;
+          }
+        }
+        else if ((*itmData == '\'' || *itmData == '"') && (*itmData == chQuote)) { bIsEOP = true; sParam.append(itsParamBegin, itmData); }
+      }
+    }
+    else
+    {
+      if (*itmData == '\'' || *itmData == '"') { chQuote = *itmData; bInParam = true; bIsVariable = false; itsParamBegin = itmData; itsParamBegin++; }
+      else if (*itmData == '(')
+      {
+        if (!bLeftBracketFound) { bLeftBracketFound = true; }
+        else { throw std::logic_error("Extra left bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+      }
+      else if (*itmData == ')')
+      {
+        if (!bRightBracketFound && bLeftBracketFound) { bRightBracketFound = true; }
+        else { throw std::logic_error("Unbalanced right bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+      }
+      else if (*itmData != ' ' && *itmData != '\t' && *itmData != '\r' && *itmData != '\n' && *itmData != ',')
+      {
+        bInParam = true; bIsVariable = true; itsParamBegin = itmData;
+      }
+    }
+    if (bIsEOP)
+    {
+      if (bLeftBracketFound)
+      {
+        if (!bFunctionSet)
+        {
+          sFunctionName.assign(sParam);
+          sParam.erase();
+          sStackRef.function = NULL;
+          try { sStackRef.function = pFactory -> get(sFunctionName); }
+          catch(std::exception &e) { throw std::logic_error("Line " + d2str<int>(iLine) + " column " + d2str<int>(iPos) + ": " + e.what()); }
+          bFunctionSet = true;
+        }
+        else { sStackRef.function_parameters.push_back(function_param_data(sParam, bIsVariable)); sParam.erase(); }
+      }
+      else { sStackRef.function_parameters.push_back(function_param_data(sParam, bIsVariable)); sParam.erase(); }
 
-			bIsEOP = false; bInParam = false; bIsVariable = false;
-		}
-		// Признак квотированности символа
-		if (*itmData == '\\')
-		{
-			// Квотирование разрешено ТОЛЬКО внутри переменных
-			if (bIsVariable || !bInParam) { throw std::logic_error("Quoting allowed only in constants at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-			if (!bIsQuoted) { bIsQuoted = true; }
-			else            { bIsQuoted = false; }
-		}
-		else { bIsQuoted = false; }
+      bIsEOP = false; bInParam = false; bIsVariable = false;
+    }
+    if (*itmData == '\\')
+    {
+      if (bIsVariable || !bInParam) { throw std::logic_error("Quoting allowed only in constants at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+      if (!bIsQuoted) { bIsQuoted = true; }
+      else            { bIsQuoted = false; }
+    }
+    else { bIsQuoted = false; }
 
-		// Превышаена максимальная длина токена, откатываемся
-		if (iPosition == C_TEMPLATE_MAX_TOKEN_LEN)
-		{
-			iPosition = 0;
-			// Если установлена жесткая проверка на синтаксис, то падаем
-			do_rollback_token(itmData, itmRollBackPos);
-		}
+    if (iPosition == C_TEMPLATE_MAX_TOKEN_LEN)
+    {
+      iPosition = 0;
+      do_rollback_token(itmData, itmRollBackPos);
+    }
 
-		// Позиция в строке
-		// Табуляция
-		if      (*itmData == '\t') { iPos += iTabLength; }
-		// Перевод строки
-		else if (*itmData == '\n') { iPos = 1; iLine++; }
-		// Любой другой символ
-		else                       { iPos++; }
+    if      (*itmData == '\t') { iPos += iTabLength; }
+    else if (*itmData == '\n') { iPos = 1; iLine++; }
+    else                       { iPos++; }
 
-		// Найден конец тега
-		if ((bIsVariable || !bInParam)  && *itmData == '>')
-		{
-			if (bLeftBracketFound && !bRightBracketFound) { throw std::logic_error("Unbalanced left bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-			break;
-		}
+    if ((bIsVariable || !bInParam)  && *itmData == '}')
+    {
+      if (bLeftBracketFound && !bRightBracketFound) { throw std::logic_error("Unbalanced left bracket at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+      *itmData++;
+      break;
+    }
 
-		// Выходим, если найден конец тега
-		if (bRightBracketFound && *itmData != ' ' && *itmData != '\t' && *itmData != ')' && *itmData != '>') { throw std::logic_error("Syntax error at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+    if (bRightBracketFound && *itmData != ' ' && *itmData != '\t' && *itmData != ')' && *itmData != '}') { throw std::logic_error("Syntax error at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
 
-		// Максимальный размер токена
-		iPosition ++;
-		itmData ++;
-	}
+    iPosition ++;
+    itmData ++;
+  }
 
-	// Пустые параметры не катят
-	if (sStackRef.function_parameters.size() == 0) { throw std::logic_error("Need at least one parameter at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+  if (sStackRef.function_parameters.size() == 0) { throw std::logic_error("Need at least one parameter at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
 
-	// Если функция не найдена, проверяем количество параметров
-	if (!bFunctionSet)
-	{
-		if (sStackRef.function_parameters.size() != 1 && eFoundToken != TMPL_LOOP && eFoundToken != TMPL_DECLARE) { throw std::logic_error("Only one parameter are allowed at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-		sFunctionName.assign(sStackRef.function_parameters[0].param);
-	}
-	// Имя параметра
-	sStackRef.elem_name.assign(sFunctionName);
-	template_ret_type sReturnType;
-	switch (eFoundToken)
-	{
-		case TMPL_VAR:
-			if (sStackRef.function_parameters.size() != 1) { throw std::logic_error("Only one parameter are allowed for TMPL_var at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-			sStackRef.elem_name.assign(sStackRef.function_parameters[0].param);
+  if (!bFunctionSet)
+  {
+    if (sStackRef.function_parameters.size() != 1 && eFoundToken != TMPL_LOOP && eFoundToken != TMPL_DECLARE) { throw std::logic_error("Only one parameter are allowed at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+    sFunctionName.assign(sStackRef.function_parameters[0].param);
+  }
+  sStackRef.elem_name.assign(sFunctionName);
+  template_ret_type sReturnType;
+  switch (eFoundToken)
+  {
+    case TMPL_VAR:
+      if (sStackRef.function_parameters.size() != 1) { throw std::logic_error("Only one parameter are allowed for TMPL_var at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+      sStackRef.elem_name.assign(sStackRef.function_parameters[0].param);
 
-			sStackRef.template_elem = new template_var(sStackRef.function);
-			sStackRef.function      = NULL;
-			sReturnType.line        = iLine;
-			sReturnType.column      = iPos;
-			sReturnType.parse_pos   = itmData;
-			sReturnType.token_type  = TMPL_VAR;
-			break;
+      sStackRef.template_elem = new template_var(sStackRef.function);
+      sStackRef.function      = NULL;
+      sReturnType.line        = iLine;
+      sReturnType.column      = iPos;
+      sReturnType.parse_pos   = itmData;
+      sReturnType.token_type  = TMPL_VAR;
+      break;
 
-		case TMPL_IF:
-			sStackRef.template_elem = new template_if(pFactory, iLine, iPos, iTabLength, bDebug, bStrict, bLoopContextVars, bGlobalVars, true, vIncludeDir, pLoaderBase);
-			sReturnType = sStackRef.template_elem -> parse_block(++itmData, itmDataEnd);
-			break;
+    case TMPL_IF:
+      sStackRef.template_elem = new template_if(pFactory, iLine, iPos, iTabLength, bDebug, bStrict, bLoopContextVars, bGlobalVars, true, vIncludeDir, pLoaderBase);
+      sReturnType = sStackRef.template_elem -> parse_block(++itmData, itmDataEnd);
+      break;
 
-		case TMPL_UNLESS:
-			sStackRef.template_elem = new template_if(pFactory, iLine, iPos, iTabLength, bDebug, bStrict, bLoopContextVars, bGlobalVars, false, vIncludeDir, pLoaderBase);
-			sReturnType = sStackRef.template_elem -> parse_block(++itmData, itmDataEnd);
-			break;
+    case TMPL_UNLESS:
+      sStackRef.template_elem = new template_if(pFactory, iLine, iPos, iTabLength, bDebug, bStrict, bLoopContextVars, bGlobalVars, false, vIncludeDir, pLoaderBase);
+      sReturnType = sStackRef.template_elem -> parse_block(++itmData, itmDataEnd);
+      break;
 
-		case TMPL_LOOP:
-			{
-				if (bFunctionSet) { throw std::logic_error("Cannot use TMPL_loop with function at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-				bool bMLoopContextVars = bLoopContextVars;
-				bool bMGlobalVars      = bGlobalVars;
+    case TMPL_LOOP:
+      {
+        if (bFunctionSet) { throw std::logic_error("Cannot use TMPL_loop with function at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+        bool bMLoopContextVars = bLoopContextVars;
+        bool bMGlobalVars      = bGlobalVars;
 
-				// Ищем модификатор __CONTEXT_VARS__
-				std::vector<function_param_data>::iterator itvFunctionParamData = sStackRef.function_parameters.begin();
-				if (bLoopContextVars)
-				{
-					while (itvFunctionParamData != sStackRef.function_parameters.end())
-					{
-						if (itvFunctionParamData -> param == "__NO_CONTEXT_VARS__") { bMLoopContextVars = false; break; }
-						itvFunctionParamData++;
-					}
-				}
-				else
-				{
-					while (itvFunctionParamData != sStackRef.function_parameters.end())
-					{
-						if (itvFunctionParamData -> param == "__CONTEXT_VARS__") { bMLoopContextVars = true; break; }
-						itvFunctionParamData++;
-					}
-				}
+        std::vector<function_param_data>::iterator itvFunctionParamData = sStackRef.function_parameters.begin();
+        if (bLoopContextVars)
+        {
+          while (itvFunctionParamData != sStackRef.function_parameters.end())
+          {
+            if (itvFunctionParamData -> param == "__NO_CONTEXT_VARS__") { bMLoopContextVars = false; break; }
+            itvFunctionParamData++;
+          }
+        }
+        else
+        {
+          while (itvFunctionParamData != sStackRef.function_parameters.end())
+          {
+            if (itvFunctionParamData -> param == "__CONTEXT_VARS__") { bMLoopContextVars = true; break; }
+            itvFunctionParamData++;
+          }
+        }
 
-				// Ищем модификатор __GLOBAL_VARS__
-				itvFunctionParamData = sStackRef.function_parameters.begin();
-				if (bGlobalVars)
-				{
-					while (itvFunctionParamData != sStackRef.function_parameters.end())
-					{
-						if (itvFunctionParamData -> param == "__NO_GLOBAL_VARS__") { bMGlobalVars = false; break; }
-						itvFunctionParamData++;
-					}
-				}
-				else
-				{
-					while (itvFunctionParamData != sStackRef.function_parameters.end())
-					{
-						if (itvFunctionParamData -> param == "__GLOBAL_VARS__") { bMGlobalVars = true; break; }
-						itvFunctionParamData++;
-					}
-				}
-				sStackRef.elem_name.assign(sStackRef.function_parameters[sStackRef.function_parameters.size() - 1].param);
-				sStackRef.template_elem = new template_loop(pFactory, iLine, iPos, iTabLength, bDebug, bStrict, bMLoopContextVars, bMGlobalVars, vIncludeDir, pLoaderBase);
-				sReturnType = sStackRef.template_elem -> parse_block(++itmData, itmDataEnd);
-			}
+        itvFunctionParamData = sStackRef.function_parameters.begin();
+        if (bGlobalVars)
+        {
+          while (itvFunctionParamData != sStackRef.function_parameters.end())
+          {
+            if (itvFunctionParamData -> param == "__NO_GLOBAL_VARS__") { bMGlobalVars = false; break; }
+            itvFunctionParamData++;
+          }
+        }
+        else
+        {
+          while (itvFunctionParamData != sStackRef.function_parameters.end())
+          {
+            if (itvFunctionParamData -> param == "__GLOBAL_VARS__") { bMGlobalVars = true; break; }
+            itvFunctionParamData++;
+          }
+        }
+        sStackRef.elem_name.assign(sStackRef.function_parameters[sStackRef.function_parameters.size() - 1].param);
+        sStackRef.template_elem = new template_loop(pFactory, iLine, iPos, iTabLength, bDebug, bStrict, bMLoopContextVars, bMGlobalVars, vIncludeDir, pLoaderBase);
+        sReturnType = sStackRef.template_elem -> parse_block(++itmData, itmDataEnd);
+      }
 
-			break;
+      break;
 
-		case TMPL_UDF:
-			sStackRef.template_elem = new template_udf(sStackRef, bGlobalVars);
-			sReturnType.line        = iLine;
-			sReturnType.column      = iPos;
-			sReturnType.parse_pos   = itmData;
-			sReturnType.token_type  = TMPL_UDF;
-			break;
+    case TMPL_UDF:
+      sStackRef.template_elem = new template_udf(sStackRef, bGlobalVars);
+      sReturnType.line        = iLine;
+      sReturnType.column      = iPos;
+      sReturnType.parse_pos   = itmData;
+      sReturnType.token_type  = TMPL_UDF;
+      break;
 
-		case TMPL_INCLUDE:
-			{
-				if (bFunctionSet) { throw std::logic_error("Cannot use TMPL_include with function at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-				string sIncludeFile;
-				check_include_file(sStackRef.function_parameters[0].param, sIncludeFile);
+    case TMPL_INCLUDE:
+      {
+        if (bFunctionSet) { throw std::logic_error("Cannot use TMPL_include with function at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+        string sIncludeFile;
+        check_include_file(sStackRef.function_parameters[0].param, sIncludeFile);
 
-				// Если нету объекта-загрузчика, создаем объект
-				if (!pLoaderBase)
-				{
-					pLoaderBase = new loader_base();
-					bSelfCreatedLoader = true;
-				}
-				// Загружаем шаблон
-				pLoaderBase -> load_file(sIncludeFile);
-				std::string &sTemplate = pLoaderBase -> get_data();
+        if (!pLoaderBase)
+        {
+          pLoaderBase = new loader_base();
+          bSelfCreatedLoader = true;
+        }
+        pLoaderBase -> load_file(sIncludeFile);
+        std::string &sTemplate = pLoaderBase -> get_data();
 
-				sStackRef.template_elem = new template_include(pFactory, iTabLength, bDebug, bStrict, bLoopContextVars, bGlobalVars, vIncludeDir, pLoaderBase);
-				sStackRef.template_elem -> parse_block(sTemplate.begin(), sTemplate.end());
+        sStackRef.template_elem = new template_include(pFactory, iTabLength, bDebug, bStrict, bLoopContextVars, bGlobalVars, vIncludeDir, pLoaderBase);
+        sStackRef.template_elem -> parse_block(sTemplate.begin(), sTemplate.end());
 
-				sReturnType.line        = iLine;
-				sReturnType.column      = iPos;
-				sReturnType.parse_pos   = itmData;
-				sReturnType.token_type  = TMPL_INCLUDE;
-			}
-			break;
+        sReturnType.line        = iLine;
+        sReturnType.column      = iPos;
+        sReturnType.parse_pos   = itmData;
+        sReturnType.token_type  = TMPL_INCLUDE;
+      }
+      break;
 
-		case TMPL_DECLARE:
-			if (bFunctionSet) { throw std::logic_error("Cannot use TMPL_declare with function at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-			sStackRef.template_elem = new template_declare(sStackRef);
-			sReturnType.line        = iLine;
-			sReturnType.column      = iPos;
-			sReturnType.parse_pos   = itmData;
-			sReturnType.token_type  = TMPL_DECLARE;
-			break;
+    case TMPL_DECLARE:
+      if (bFunctionSet) { throw std::logic_error("Cannot use TMPL_declare with function at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+      sStackRef.template_elem = new template_declare(sStackRef);
+      sReturnType.line        = iLine;
+      sReturnType.column      = iPos;
+      sReturnType.parse_pos   = itmData;
+      sReturnType.token_type  = TMPL_DECLARE;
+      break;
 
-		case TMPL_BREAK:
-			sStackRef.template_elem = new template_break(sStackRef, bGlobalVars);
-			sReturnType.line        = iLine;
-			sReturnType.column      = iPos;
-			sReturnType.parse_pos   = itmData;
-			sReturnType.token_type  = TMPL_BREAK;
-			break;
-		default:
-			throw std::logic_error("Ouch! This should not happened at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos));
-	}
+    case TMPL_BREAK:
+      sStackRef.template_elem = new template_break(sStackRef, bGlobalVars);
+      sReturnType.line        = iLine;
+      sReturnType.column      = iPos;
+      sReturnType.parse_pos   = itmData;
+      sReturnType.token_type  = TMPL_BREAK;
+      break;
+    default:
+      throw std::logic_error("Ouch! This should not happened at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos));
+  }
 
-	iLine = sReturnType.line;
-	iPos  = sReturnType.column;
+  iLine = sReturnType.line;
+  iPos  = sReturnType.column;
 
-	// Если тип возвращенного значения не совпадает с запрашиваемым, падаем
-	if (eFoundToken != sReturnType.token_type)
-	{
-		// Удаляем ошибочный шаблон
-		delete sStackRef.template_elem;
-		fatal_parsing_error(eFoundToken, sReturnType.token_type);
-	}
+  if (eFoundToken != sReturnType.token_type)
+  {
+    delete sStackRef.template_elem;
+    fatal_parsing_error(eFoundToken, sReturnType.token_type);
+  }
 
-	vStack.push_back(sStackRef);
-	itmData = sReturnType.parse_pos;
+  vStack.push_back(sStackRef);
+  itmData = sReturnType.parse_pos;
 }
 
 //

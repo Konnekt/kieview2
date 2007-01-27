@@ -196,7 +196,7 @@ public:
 
 	// Деструктор
 	~template_text() throw();
-protected:
+private:
 
 	// Копирующий конструктор
 	template_text(const template_text & oTemplateText);
@@ -205,7 +205,7 @@ protected:
 	e_token_type get_type();
 
 	// Парзинг при инициализации
-	virtual template_ret_type parse_block(std::string::const_iterator itmData, std::string::const_iterator itmDataEnd);
+	template_ret_type parse_block(std::string::const_iterator itmData, std::string::const_iterator itmDataEnd);
 
 	// Вставка данных
 	bool param(param_data * pIParamData, param_data * pIRootParamData);
