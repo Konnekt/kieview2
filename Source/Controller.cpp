@@ -708,12 +708,16 @@ namespace kIEview2 {
           s++;
         }
         if (s <= sessionOffset) {
+          if (s == sessionOffset) {
+            howMany++;
+          }
           continue;
         } else {
           skippedSession = true;
         }
+      } else {
+        howMany++;
       }
-      howMany++;
       if (skippedSession && !table->getInt(i, table->getColIdByPos(fieldSession))) {
         break;
       }
