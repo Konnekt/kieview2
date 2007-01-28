@@ -1572,7 +1572,9 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid
   if (getCallback(dispIdMember)) {
     ret = trigger(dispIdMember, args, m_pCtrl);
   } else if (hasProperty(dispIdMember)) {
-    setProperty(getPropertyName(dispIdMember), args[0]);
+    if(args.length()) {
+      setProperty(getPropertyName(dispIdMember), args[0]);
+    }
     ret = getProperty(dispIdMember);
   }
 
