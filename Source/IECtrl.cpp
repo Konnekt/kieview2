@@ -1318,6 +1318,7 @@ STDMETHODIMP IECtrl::ClientSite::GetZoneMappings(DWORD dwZone, IEnumString **ppe
 IECtrl::External::External(IECtrl * pCtrl) {
   m_pCtrl = pCtrl;
   m_cRef = 0;
+  m_lobjID = 0;
 }
 
 IECtrl::External::~External() {
@@ -1332,6 +1333,9 @@ STDMETHODIMP IECtrl::External::QueryInterface(REFIID riid, PVOID *ppv) {
   }
   if (IID_IDispatch == riid) {
     *ppv = (IDispatch*) this;
+  }
+  if (IID_IDispatchEx == riid) {
+    *ppv = (IDispatchEx*) this;
   }
   if (NULL != *ppv) {
     ((LPUNKNOWN)*ppv)->AddRef();
@@ -1390,12 +1394,94 @@ STDMETHODIMP IECtrl::External::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
     for (UINT i = 0; i < pDispParams->cArgs; i++) {
       args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
     }
-    Var ret = m_pCtrl->m_pExternalListener->trigger(dispIdMember, args, m_pCtrl);
+    Var ret = m_pCtrl->m_pExternalListener->trigger(dispIdMember ? dispIdMember : m_lobjID, args, m_pCtrl);
     ret.getVariant(pVarResult);
+    m_lobjID = 0;
 
     return S_OK;
   }
   return DISP_E_MEMBERNOTFOUND;
+}
+
+STDMETHODIMP IECtrl::External::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pei, IServiceProvider *pspCaller){
+  if (!pDispParams) return E_INVALIDARG;
+
+  if (wFlags & DISPATCH_CONSTRUCT) {
+    if (m_pCtrl->m_pExternalListener != NULL) {
+      Var args;
+      for (UINT i = 0; i < pDispParams->cArgs; i++) {
+        args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
+      }
+      Var ret = m_pCtrl->m_pExternalListener->trigger((id) ? id : m_lobjID, args, m_pCtrl, true);
+      ret.getVariant(pVarResult);
+      m_lobjID = 0;
+      return S_OK;
+    }
+  } else if (wFlags & DISPATCH_METHOD) {
+    if (m_pCtrl->m_pExternalListener != NULL) {
+      Var args;
+      for (UINT i = 0; i < pDispParams->cArgs; i++) {
+        args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
+      }
+      Var ret = m_pCtrl->m_pExternalListener->trigger(id, args, m_pCtrl);
+      ret.getVariant(pVarResult);
+      return S_OK;
+    }
+  } else if (wFlags & DISPATCH_PROPERTYGET) {
+    if (m_pCtrl->m_pExternalListener->isObject(id)) {
+      IECtrl::Var var(this);
+      var.getVariant(pVarResult);
+      m_lobjID = id;
+      return S_OK;
+    }
+  }
+  return DISP_E_MEMBERNOTFOUND;
+//    return Invoke(id, IID_IDispatch,lcid, wFlags, pdp, pvarRes, pei, 0);
+}
+
+STDMETHODIMP IECtrl::External::GetDispID(BSTR bstrName, DWORD grfdex, DISPID *pid) {
+  const char* name = _com_util::ConvertBSTRToString(bstrName);
+  long id = m_pCtrl->m_pExternalListener->getMemberID(name);
+  *pid = id;
+  delete [] name;
+  return (id > 0) ? S_OK : DISP_E_UNKNOWNNAME;
+}
+STDMETHODIMP IECtrl::External::DeleteMemberByName(BSTR bstrName, DWORD grfdex) {
+  return S_FALSE;
+}
+STDMETHODIMP IECtrl::External::DeleteMemberByDispID(DISPID id) {
+  return S_FALSE;
+}
+STDMETHODIMP IECtrl::External::GetMemberProperties(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex) {
+  if (grfdexFetch == grfdexPropCanAll) {
+    *pgrfdex = 0;
+  } else if (grfdexFetch == grfdexPropCannotAll){
+    *pgrfdex = fdexPropCannotGet | fdexPropCannotPut | fdexPropCannotPutRef | fdexPropCannotCall | fdexPropCannotConstruct | fdexPropCannotSourceEvents;
+  } else if (grfdexFetch == grfdexPropExtraAll){
+    *pgrfdex = fdexPropDynamicType;
+  } else if (grfdexFetch == grfdexPropAll){
+    *pgrfdex = fdexPropCannotGet | fdexPropCannotPut | fdexPropCannotPutRef | fdexPropCannotCall | fdexPropCannotConstruct | fdexPropCannotSourceEvents | fdexPropDynamicType;
+  } else {
+    *pgrfdex = 0;
+  }
+  return (id > 0) ? S_OK : DISP_E_UNKNOWNNAME;
+}
+STDMETHODIMP IECtrl::External::GetMemberName(DISPID id, BSTR *pbstrName) {
+  string name = m_pCtrl->m_pExternalListener->getMemberName(id);
+  if (name == "") {
+    return DISP_E_UNKNOWNNAME;
+  } else {
+    *pbstrName = _com_util::ConvertStringToBSTR(name.c_str());
+    return S_OK;
+  }
+}
+STDMETHODIMP IECtrl::External::GetNextDispID(DWORD grfdex, DISPID id, DISPID *pid) {
+  *pid = 0;
+  return S_FALSE;
+}
+STDMETHODIMP IECtrl::External::GetNameSpaceParent(IUnknown **ppunk) {
+  *ppunk = NULL;
+  return S_FALSE;
 }
 
 /*
@@ -1682,14 +1768,14 @@ IECtrl::Var IECtrl::iObject::getProperty(const string& name) {
 
 IECtrl::Var IECtrl::iObject::getProperty(long id) {
   for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
-    if (it->second->id = id) return it->second->var;
+    if (it->second->id == id) return it->second->var;
   }
   return IECtrl::Var();
 }
 
 string IECtrl::iObject::getPropertyName(long id) {
   for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
-    if (it->second->id = id) return it->first;
+    if (it->second->id == id) return it->first;
   }
   return "";
 }

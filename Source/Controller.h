@@ -33,15 +33,16 @@ namespace kIEview2 {
     friend class PlugController<Controller>;
 
   public:
-    typedef function<IECtrl::Var(IECtrl::Var&, IECtrl*)> fExternalCallback;
-    typedef signal<IECtrl::Var(IECtrl::Var&, IECtrl*)> ExternalCallbackSig;
+    typedef function<IECtrl::Var(IECtrl::Var&, IECtrl*, bool construct)> fExternalCallback;
+    typedef signal<IECtrl::Var(IECtrl::Var&, IECtrl*, bool construct)> ExternalCallbackSig;
 
     struct sExternalCallback {
       ExternalCallbackSig signal;
       string name;
       long id;
+      bool isObject;
 
-      sExternalCallback(const StringRef& _name, fExternalCallback f): name(_name), id(random()) {
+      sExternalCallback(const StringRef& _name, fExternalCallback f, bool isObject = false): name(_name), id(random()), isObject(isObject) {
         if (!f.empty()) signal.connect(f);
       }
     };
@@ -88,7 +89,7 @@ namespace kIEview2 {
 
     sExternalCallback* getExternalCallback(const char* name);
     sExternalCallback* getExternalCallback(long id);
-    sExternalCallback* registerExternalCallback(const char* name, fExternalCallback f);
+    sExternalCallback* registerExternalCallback(const char* name, fExternalCallback f, bool isObject = false);
 
     int readMsgs(tCntId cnt, int howMany, int sessionOffset = 0);
     int readLastMsgSession(tCntId cnt, int sessionOffset = 0);

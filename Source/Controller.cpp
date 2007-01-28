@@ -539,12 +539,12 @@ namespace kIEview2 {
     return 0;
   }
 
-  Controller::sExternalCallback* Controller::registerExternalCallback(const char* name, fExternalCallback f) {
+  Controller::sExternalCallback* Controller::registerExternalCallback(const char* name, fExternalCallback f, bool isObject) {
     // locking
     LockerCS lock(_locker);
 
     if (!getExternalCallback(name)) {
-      externalCallbacks.push_back(new sExternalCallback(name, f));
+      externalCallbacks.push_back(new sExternalCallback(name, f, isObject));
       return externalCallbacks[externalCallbacks.size() - 1];
     }
     return 0;

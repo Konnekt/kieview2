@@ -41,7 +41,9 @@ namespace kIEview2 {
     int showMessage(HWND hWnd, const char* lpText, DWORD dwType);
 
     long getMemberID(const char *name);
-    IECtrl::Var trigger(long id, IECtrl::Var& args, IECtrl* ctrl);
+    string getMemberName(long id);
+    IECtrl::Var trigger(long id, IECtrl::Var& args, IECtrl* ctrl, bool construct = false);
+    bool isObject(long id);
 
     // @todo implement
     inline bool keyDown(UINT uCode, DWORD dwFlags) { return true; }

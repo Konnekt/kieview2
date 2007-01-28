@@ -91,7 +91,9 @@ public:
   class ExternalListener {
   public:
     virtual long getMemberID(const char *name) = 0;
-    virtual Var trigger(long id, Var &args, IECtrl* ctrl) = 0;
+    virtual string getMemberName(long id) = 0;
+    virtual Var trigger(long id, Var &args, IECtrl* ctrl, bool construct = false) = 0;
+    virtual bool isObject(long id) = 0;
   };
 
   class ScriptMessageListener {
@@ -286,7 +288,7 @@ private:
   };
 
 private:
-  class External : public IDispatch {
+  class External : public IDispatchEx {
   public:
     External(IECtrl* pCtrl);
     virtual ~External();
@@ -300,12 +302,21 @@ private:
     STDMETHOD(GetTypeInfo)(UINT, LCID, LPTYPEINFO*);
     STDMETHOD(GetIDsOfNames)(REFIID,LPOLESTR*,UINT,LCID,DISPID*);
     STDMETHOD(Invoke)(DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+    // IDispatchEx
+    STDMETHOD(DeleteMemberByName)(BSTR bstrName, DWORD grfdex);
+    STDMETHOD(DeleteMemberByDispID)(DISPID id);
+    STDMETHOD(GetDispID)(BSTR bstrName, DWORD grfdex, DISPID *pid);
+    STDMETHOD(GetMemberName)(DISPID id, BSTR *pbstrName);
+    STDMETHOD(GetMemberProperties)(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex);
+    STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk);
+    STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid);
+    STDMETHOD(InvokeEx)(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller);
 
   private:
     LONG m_cRef;
     IECtrl * m_pCtrl;
+    long m_lobjID;
   };
-
 private:
   class EventSink : public DWebBrowserEvents2 {
   public:
@@ -513,7 +524,7 @@ public:
     IECtrl* m_pCtrl;
   };
 
-  class iObject : public IDispatch {
+  class iObject : public IDispatchEx {
   public:
     typedef function<IECtrl::Var(IECtrl::Var&, IECtrl*)> fCallback;
     typedef signal<IECtrl::Var(IECtrl::Var&, IECtrl*)> CallbackSig;
@@ -542,16 +553,24 @@ public:
     virtual ~iObject();
 
     // IUnknown
-    virtual STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
-    virtual STDMETHODIMP_(ULONG) AddRef(void);
-    virtual STDMETHODIMP_(ULONG) Release(void);
-
+    STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
+    STDMETHODIMP_(ULONG) AddRef(void);
+    STDMETHODIMP_(ULONG) Release(void);
     // IDispatch
-    virtual STDMETHOD(GetTypeInfoCount)(UINT*);
-    virtual STDMETHOD(GetTypeInfo)(UINT, LCID, LPTYPEINFO*);
-    virtual STDMETHOD(GetIDsOfNames)(REFIID, LPOLESTR*, UINT, LCID, DISPID*);
-    virtual STDMETHOD(Invoke)(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
-    
+    STDMETHOD(GetTypeInfoCount)(UINT*);
+    STDMETHOD(GetTypeInfo)(UINT, LCID, LPTYPEINFO*);
+    STDMETHOD(GetIDsOfNames)(REFIID, LPOLESTR*, UINT, LCID, DISPID*);
+    STDMETHOD(Invoke)(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
+    // IDispatchEx
+    STDMETHOD(InvokeEx)(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller){return HRESULT(0);}
+    STDMETHOD(GetDispID)(BSTR bstrName, DWORD grfdex, DISPID *pid) {return HRESULT(0);}
+    STDMETHOD(DeleteMemberByName)(BSTR bstrName, DWORD grfdex) {return HRESULT(0);}
+    STDMETHOD(DeleteMemberByDispID)(DISPID id) {return HRESULT(0);}
+    STDMETHOD(GetMemberProperties)(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex) {return HRESULT(0);}
+    STDMETHOD(GetMemberName)(DISPID id, BSTR *pbstrName) {return HRESULT(0);}
+    STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid) {return HRESULT(0);}
+    STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk) {return HRESULT(0);}
+
     virtual sCallback* registerCallback(const char* name, fCallback f);
     virtual bool deleteCallback(const char* name);
 
