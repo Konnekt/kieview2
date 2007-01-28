@@ -549,22 +549,26 @@ public:
     // IDispatch
     virtual STDMETHOD(GetTypeInfoCount)(UINT*);
     virtual STDMETHOD(GetTypeInfo)(UINT, LCID, LPTYPEINFO*);
-    virtual STDMETHOD(GetIDsOfNames)(REFIID,LPOLESTR*,UINT,LCID,DISPID*);
-    virtual STDMETHOD(Invoke)(DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+    virtual STDMETHOD(GetIDsOfNames)(REFIID, LPOLESTR*, UINT, LCID, DISPID*);
+    virtual STDMETHOD(Invoke)(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
     
     virtual sCallback* registerCallback(const char* name, fCallback f);
+    virtual bool deleteCallback(const char* name);
+
     virtual sCallback* getCallback(const char* name);
     virtual sCallback* getCallback(long id);
-    virtual bool deleteCallback(const char* name);
     virtual long getMemberID(const char *name);
 
     virtual bool hasProperty(const string& name);
     virtual bool hasProperty(long id);
+
     virtual IECtrl::Var getProperty(const string& name);
     virtual IECtrl::Var getProperty(long id);
+
+    virtual long getPropertyID(const string& name);
     virtual string getPropertyName(long id);
-    virtual void setProperty(const string& name, IECtrl::Var& v);
-    long getPropertyId(const string& name);
+
+    virtual void setProperty(const string& name, IECtrl::Var v);
 
   protected:
     virtual IECtrl::Var trigger(long id, IECtrl::Var& args, IECtrl* ctrl);
@@ -574,8 +578,8 @@ public:
     tValues _values;
 
   private:
+    IECtrl* m_pCtrl;
     LONG m_cRef;
-    IECtrl * m_pCtrl;
   };
 };
 
