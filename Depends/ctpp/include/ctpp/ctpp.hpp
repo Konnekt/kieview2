@@ -54,7 +54,7 @@
 namespace template_parser_ns
 {
 // Тип токена
-enum e_token_type{TMPL_TEXT, TMPL_VAR, TMPL_IF, TMPL_ELSE, TMPL_UNLESS, TMPL_LOOP, TMPL_UDF, TMPL_INCLUDE, TMPL_DECLARE, TMPL_BREAK, TMPL_COMMENT};
+enum e_token_type{TMPL_TEXT, TMPL_VAR, TMPL_IF, TMPL_ELSE, TMPL_UNLESS, TMPL_UDF, TMPL_INCLUDE};
 
 // Максимальная длина токена
 static const unsigned int C_TEMPLATE_MAX_TOKEN_LEN = 128;
@@ -364,68 +364,6 @@ private:
 };
 
 //
-// Цикл
-//
-class template_loop:
-  public t_template
-{
-public:
-	// Конструктор
-	template_loop(template_parser_ns::udf_fn_factory * pIFactory, const int iILine, const int iIPos, const int iITabLength, const bool bIDebug, const bool bIStrict, const bool bILoopContextVars, const bool bIGlobalVars,	const v_include_dir &vIIncludeDir, loader_base * pILoaderBase);
-
-	// Деструктор
-	~template_loop() throw();
-
-private:
-	// Копирующий конструктор
-	template_loop(const template_loop &oTemplateLoop);
-
-	// Получение типа
-	e_token_type get_type();
-
-	// Вставка данных
-	bool param(param_data * pIParamData, param_data * pIRootParamData);
-
-	// Парзинг при инициализации
-	template_ret_type parse_block(std::string::const_iterator itmData, std::string::const_iterator itmDataEnd);
-
-	// Вывод данных
-	std::string & output(bool & bBreak);
-
-	// Стек данных
-	t_template     * pTemplateText;
-
-	// Параметр
-	param_data     * pParamData;
-	// Корневой параметр
-	param_data     * pRootParamData;
-
-	// Результат парзинга
-	std::string     sTextData;
-
-	// Функции
-	udf_fn_factory * pFactory;
-	// Номер строки
-	int              iLine;
-	// Номер столбца
-	int              iPos;
-	// Длина пробела
-	int              iTabLength;
-	// Дебаг
-	bool             bDebug;
-	// Строгая синтаксическая проверка шаблона
-	bool             bStrict;
-	// Контекстные переменные
-	bool             bLoopContextVars;
-	// Глобальные переменные
-	bool             bGlobalVars;
-	// Каталоги для include
-	const v_include_dir &vIncludeDir;
-	// Класс для чтения вложений
-	loader_base       * pLoaderBase;
-};
-
-//
 // Пользовательская функция
 //
 class template_udf:
@@ -492,73 +430,6 @@ private:
 
 	// Шаблонизатор
 	t_template         * pTemplateText;
-};
-
-
-//
-// Переменная
-//
-class template_break:
-  public t_template
-{
-public:
-	// Конструктор
-	template_break(const stack_ref &sIStackRef, bool bIGlobalVars);
-
-	// Деструктор
-	~template_break() throw();
-private:
-	// Копирующий конструктор
-	template_break(const template_break &oTemplateVar);
-
-	// Получение типа
-	e_token_type get_type();
-
-	// Вставка данных
-	bool param(param_data * pParamData, param_data * pIRootParamData);
-
-	// Вывод данных
-	std::string & output(bool & bBreak);
-
-	// Пользовательская функция
-	stack_ref         sStackRef;
-	bool              bGlobalVars;
-	bool              bBreakFlag;
-
-	std::string sTMP;
-};
-
-//
-// Объявление переменной
-//
-class template_declare:
-  public t_template
-{
-public:
-	// Конструктор
-	template_declare(const stack_ref &sIStackRef);
-
-	// Деструктор
-	~template_declare() throw();
-private:
-	// Копирующий конструктор
-	template_declare(const template_declare &oTemplate);
-
-	// Получение типа
-	e_token_type get_type();
-
-	// Вставка данных
-	bool param(param_data * pParamData, param_data * pIRootParamData);
-
-	// Вывод данных
-	std::string & output(bool & bBreak);
-
-//	param_data  * pParamData;
-
-	function_param_data oParamName;
-	function_param_data oParamValue;
-
-	std::string sTMP;
 };
 
 } // namespace template_parser_ns

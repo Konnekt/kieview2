@@ -381,13 +381,6 @@ bool template_text::param(param_data * pIParamData, param_data * pIRootParamData
 						if (itpvHash != pRootParamData -> hash() -> end()) { itvStack -> template_elem -> param(itpvHash -> second, pRootParamData); }
 					}
 				}
-				// Если на стеке объект типа TMPL_loop, то проверяем на наличие массива в локальной области видимости
-				else if (itvStack -> template_elem -> get_type() == TMPL_LOOP)
-				{
-					itpvHash = pvHash -> find(itvStack -> elem_name);
-					if (itpvHash != pvHash -> end()) { itvStack -> template_elem -> param(itpvHash -> second, pRootParamData); }
-					else                             { itvStack -> template_elem -> param(NULL, NULL); }
-				}
 				// Для ветвлений мы должны выполнить функцию и проверить результат ее выполнения на истинность
 				else if (itvStack -> template_elem -> get_type() == TMPL_IF || itvStack -> template_elem -> get_type() == TMPL_UNLESS)
 				{
@@ -456,13 +449,6 @@ bool template_text::param(param_data * pIParamData, param_data * pIRootParamData
 				else if (itvStack -> template_elem -> get_type() == TMPL_UDF)     { itvStack -> template_elem -> param(pParamData, pRootParamData); }
 				// Вложения, etc
 				else if (itvStack -> template_elem -> get_type() == TMPL_INCLUDE) { itvStack -> template_elem -> param(pParamData, pRootParamData); }
-				// Declare
-				else if (itvStack -> template_elem -> get_type() == TMPL_DECLARE) { itvStack -> template_elem -> param(pParamData, pRootParamData); }
-				// Break
-				else if (itvStack -> template_elem -> get_type() == TMPL_BREAK)
-				{
-					if (itvStack -> template_elem -> param(pParamData, pRootParamData) == false) { return false; }
-				}
 				// Падаем, поскольку не может быть такого
 				else { throw std::logic_error("Error in template_text::param NO SUCH TYPE: " + token2str(itvStack -> template_elem -> get_type())); }
 			}
@@ -531,22 +517,17 @@ template_ret_type template_text::parse_block(std::string::const_iterator itmData
           else if (*itmData == 'i') { eTokenType = TMPL_IF;      iPosition++; }
           else if (*itmData == 'e') { eTokenType = TMPL_ELSE;    iPosition++; }
           else if (*itmData == 'u') { eTokenType = TMPL_UNLESS;  iPosition++; }
-          else if (*itmData == 'b') { eTokenType = TMPL_BREAK;   iPosition++; }
-          else if (*itmData == 'c') { eTokenType = TMPL_COMMENT; iPosition++; }
           else if (*itmData == 'f') { eTokenType = TMPL_UDF;     iPosition++; }
           else if (*itmData == '/') { inCloseToken = true; bInToken = false; }
           else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
           break;
         case 4:
           if      (eTokenType == TMPL_VAR)      { iPosition++; }
-          else if (*itmData == 'a' && eTokenType == TMPL_ELSE)      { eTokenType = TMPL_LOOP; iPosition++; }
           else if (*itmData == 'f' && eTokenType == TMPL_IF)        { iPosition++; }
           else if (*itmData == 'l' && eTokenType == TMPL_ELSE)      { iPosition++; }
           else if (*itmData == 'n' && eTokenType == TMPL_UNLESS)    { iPosition++; }
           else if (*itmData == 'u' && eTokenType == TMPL_UDF)       { iPosition++; }
           else if (*itmData == 'n' && eTokenType == TMPL_IF)        { eTokenType = TMPL_INCLUDE; iPosition++; }
-          else if (*itmData == 'r' && eTokenType == TMPL_BREAK)     { iPosition++; }
-          else if (*itmData == 'o' && eTokenType == TMPL_COMMENT)   { iPosition++; }
           else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
           break;
       }
@@ -632,31 +613,6 @@ template_ret_type template_text::parse_block(std::string::const_iterator itmData
           bEndToken = true; bInToken = false; iPosition = 0;
         }
       }
-      // TMPL_LOOP
-      else if (eTokenType == TMPL_LOOP && iPosition > 4)
-      {
-        if (iPosition == 5)
-        {
-          if (*itmData == 'a')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 6)
-        {
-          if (*itmData == 'c')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 7)
-        {
-          if (*itmData == 'h')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition > 7)
-        {
-          insert_text_block(sTextSection);
-          parse_param_string(iPosition, TMPL_LOOP, itmData, itmDataEnd, itmRollBackPos);
-          bEndToken = true; bInToken = false; iPosition = 0;
-        }
-      }
       // TMPL_UDF
       else if (eTokenType == TMPL_UDF && iPosition > 4)
       {
@@ -723,71 +679,6 @@ template_ret_type template_text::parse_block(std::string::const_iterator itmData
           bEndToken = true; bInToken = false; iPosition = 0;
         }
       }
-      // TMPL_BREAK
-      else if (eTokenType == TMPL_BREAK && iPosition > 4)
-      {
-        if (iPosition == 5)
-        {
-          if (*itmData == 'r')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 6)
-        {
-          if (*itmData == 'e')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 7)
-        {
-          if (*itmData == 'a')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 8)
-        {
-          if (*itmData == 'k')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition > 8)
-        {
-          insert_text_block(sTextSection);
-          parse_param_string(iPosition, TMPL_BREAK, itmData, itmDataEnd, itmRollBackPos);
-          bEndToken = true; bInToken = false; iPosition = 0;
-        }
-      }
-      // TMPL_COMMENT
-      else if (eTokenType == TMPL_COMMENT && iPosition > 4)
-      {
-        if (iPosition == 5)
-        {
-          if (*itmData == 'o')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 6 || iPosition == 7)
-        {
-          if (*itmData == 'm')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 8)
-        {
-          if (*itmData == 'e')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 9)
-        {
-          if (*itmData == 'n')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 10)
-        {
-          if (*itmData == 't')  { iPosition++; }
-          else { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition > 10)
-        {
-          insert_text_block(sTextSection);
-          parse_param_string(iPosition, TMPL_COMMENT, itmData, itmDataEnd, itmRollBackPos);
-          bEndToken = true; bInToken = false; iPosition = 0;
-        }
-      }
     }
 
     if (inCloseToken)
@@ -800,17 +691,13 @@ template_ret_type template_text::parse_block(std::string::const_iterator itmData
            iPosition++;
            break;
         case 4:
-          if      (*itmData == 'e') { eTokenType = TMPL_LOOP;    iPosition++; }
-          else if (*itmData == 'i') { eTokenType = TMPL_IF;      iPosition++; }
+          if      (*itmData == 'i') { eTokenType = TMPL_IF;      iPosition++; }
           else if (*itmData == 'u') { eTokenType = TMPL_UNLESS;  iPosition++; }
-          else if (*itmData == 'c') { eTokenType = TMPL_COMMENT; iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
           break;
         case 5:
-          if      (*itmData == 'a' && eTokenType == TMPL_LOOP)      { iPosition++; }
-          else if (*itmData == 'f' && eTokenType == TMPL_IF)        { iPosition++; }
+          if      (*itmData == 'f' && eTokenType == TMPL_IF)        { iPosition++; }
           else if (*itmData == 'n' && eTokenType == TMPL_UNLESS)    { iPosition++; }
-          else if (*itmData == 'o' && eTokenType == TMPL_COMMENT)   { iPosition++; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
           break;
       }
@@ -828,35 +715,6 @@ template_ret_type template_text::parse_block(std::string::const_iterator itmData
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
         else if (iPosition == 8)
-        {
-          if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else { iPosition++; }
-      }
-      else if (eTokenType == TMPL_LOOP && iPosition > 5)
-      {
-        if (iPosition == 6)
-        {
-          if (*itmData == 'a') { iPosition++; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 7)
-        {
-          if (*itmData == 'c') { iPosition++; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 8)
-        {
-          if (*itmData == 'h') { iPosition++; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 9)
-        {
-          if (*itmData == '}') { iPosition++; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 10)
         {
           if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
@@ -891,45 +749,6 @@ template_ret_type template_text::parse_block(std::string::const_iterator itmData
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
         else if (iPosition == 12)
-        {
-          if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else { iPosition++; }
-      }
-      else if (eTokenType == TMPL_COMMENT && iPosition > 5)
-      {
-        if (iPosition == 6)
-        {
-          if (*itmData == 'o') { iPosition++; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 7 || iPosition == 8)
-        {
-          if (*itmData == 'm') { iPosition++; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 9)
-        {
-          if (*itmData == 'e') { iPosition++; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 10)
-        {
-          if (*itmData == 'n') { iPosition++; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 11)
-        {
-          if (*itmData == 't') { iPosition++; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 12)
-        {
-          if (*itmData == '}') { iPosition++; }
-          else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
-        }
-        else if (iPosition == 13)
         {
           if (*itmData == '}') { inCloseToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
           else { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
@@ -1035,20 +854,11 @@ std::string template_text::token2str(const e_token_type &eToken)
 		case TMPL_UNLESS:
 			sToken.assign("TMPL_UNLESS");
 			break;
-		case TMPL_LOOP:
-			sToken.assign("TMPL_LOOP");
-			break;
 		case TMPL_UDF:
 			sToken.assign("TMPL_UDF");
 			break;
 		case TMPL_INCLUDE:
 			sToken.assign("TMPL_INCLUDE");
-			break;
-		case TMPL_DECLARE:
-			sToken.assign("TMPL_DECLARE");
-			break;
-		case TMPL_BREAK:
-			sToken.assign("TMPL_BREAK");
 			break;
 		default:
 			sToken.assign("Ouch! This should NOT happened!");
@@ -1222,7 +1032,7 @@ void template_text::parse_param_string(unsigned int &iPosition, const e_token_ty
 
   if (!bFunctionSet)
   {
-    if (sStackRef.function_parameters.size() != 1 && eFoundToken != TMPL_LOOP && eFoundToken != TMPL_DECLARE) { throw std::logic_error("Only one parameter are allowed at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+    if (sStackRef.function_parameters.size() != 1) { throw std::logic_error("Only one parameter are allowed at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
     sFunctionName.assign(sStackRef.function_parameters[0].param);
   }
   sStackRef.elem_name.assign(sFunctionName);
@@ -1249,54 +1059,6 @@ void template_text::parse_param_string(unsigned int &iPosition, const e_token_ty
     case TMPL_UNLESS:
       sStackRef.template_elem = new template_if(pFactory, iLine, iPos, iTabLength, bDebug, bStrict, bLoopContextVars, bGlobalVars, false, vIncludeDir, pLoaderBase);
       sReturnType = sStackRef.template_elem -> parse_block(++itmData, itmDataEnd);
-      break;
-
-    case TMPL_LOOP:
-      {
-        if (bFunctionSet) { throw std::logic_error("Cannot use TMPL_loop with function at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-        bool bMLoopContextVars = bLoopContextVars;
-        bool bMGlobalVars      = bGlobalVars;
-
-        std::vector<function_param_data>::iterator itvFunctionParamData = sStackRef.function_parameters.begin();
-        if (bLoopContextVars)
-        {
-          while (itvFunctionParamData != sStackRef.function_parameters.end())
-          {
-            if (itvFunctionParamData -> param == "__NO_CONTEXT_VARS__") { bMLoopContextVars = false; break; }
-            itvFunctionParamData++;
-          }
-        }
-        else
-        {
-          while (itvFunctionParamData != sStackRef.function_parameters.end())
-          {
-            if (itvFunctionParamData -> param == "__CONTEXT_VARS__") { bMLoopContextVars = true; break; }
-            itvFunctionParamData++;
-          }
-        }
-
-        itvFunctionParamData = sStackRef.function_parameters.begin();
-        if (bGlobalVars)
-        {
-          while (itvFunctionParamData != sStackRef.function_parameters.end())
-          {
-            if (itvFunctionParamData -> param == "__NO_GLOBAL_VARS__") { bMGlobalVars = false; break; }
-            itvFunctionParamData++;
-          }
-        }
-        else
-        {
-          while (itvFunctionParamData != sStackRef.function_parameters.end())
-          {
-            if (itvFunctionParamData -> param == "__GLOBAL_VARS__") { bMGlobalVars = true; break; }
-            itvFunctionParamData++;
-          }
-        }
-        sStackRef.elem_name.assign(sStackRef.function_parameters[sStackRef.function_parameters.size() - 1].param);
-        sStackRef.template_elem = new template_loop(pFactory, iLine, iPos, iTabLength, bDebug, bStrict, bMLoopContextVars, bMGlobalVars, vIncludeDir, pLoaderBase);
-        sReturnType = sStackRef.template_elem -> parse_block(++itmData, itmDataEnd);
-      }
-
       break;
 
     case TMPL_UDF:
@@ -1329,23 +1091,6 @@ void template_text::parse_param_string(unsigned int &iPosition, const e_token_ty
         sReturnType.parse_pos   = itmData;
         sReturnType.token_type  = TMPL_INCLUDE;
       }
-      break;
-
-    case TMPL_DECLARE:
-      if (bFunctionSet) { throw std::logic_error("Cannot use TMPL_declare with function at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-      sStackRef.template_elem = new template_declare(sStackRef);
-      sReturnType.line        = iLine;
-      sReturnType.column      = iPos;
-      sReturnType.parse_pos   = itmData;
-      sReturnType.token_type  = TMPL_DECLARE;
-      break;
-
-    case TMPL_BREAK:
-      sStackRef.template_elem = new template_break(sStackRef, bGlobalVars);
-      sReturnType.line        = iLine;
-      sReturnType.column      = iPos;
-      sReturnType.parse_pos   = itmData;
-      sReturnType.token_type  = TMPL_BREAK;
       break;
     default:
       throw std::logic_error("Ouch! This should not happened at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos));
@@ -1613,193 +1358,6 @@ template_if::~template_if() throw()
 	if (pTemplateElseText) { delete pTemplateElseText; }
 }
 
-
-// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Класс template_loop
-//
-
-//
-// Конструктор
-//
-template_loop::template_loop(udf_fn_factory * pIFactory, const int iILine, const int iIPos, const int iITabLength, const bool bIDebug, const bool bIStrict, const bool bILoopContextVars, const bool bIGlobalVars, const v_include_dir &vIIncludeDir, loader_base * pILoaderBase):
-	pTemplateText(NULL),
-	pParamData(NULL),
-	pRootParamData(NULL),
-	pFactory(pIFactory),
-	iLine(iILine),
-	iPos(iIPos),
-	iTabLength(iITabLength),
-	bDebug(bIDebug),
-	bStrict(bIStrict),
-	bLoopContextVars(bILoopContextVars),
-	bGlobalVars(bIGlobalVars),
-	vIncludeDir(vIIncludeDir),
-	pLoaderBase(pILoaderBase)
-{
-	;;
-}
-
-//
-// Получение типа
-//
-e_token_type template_loop::get_type() { return TMPL_LOOP; }
-
-//
-// Вывод данных
-//
-std::string & template_loop::output(bool & bBreak)
-{
-	sTextData.erase();
-	// Проходим в цикле по всем элементам переданного массива
-	if (pParamData && pRootParamData)
-	{
-		t_param_array * pvArray = pParamData -> array();
-		t_param_array::iterator itpvArray = pvArray -> begin();
-		t_param_hash * pLoopParamHash;
-
-		// Счетчик элементов
-		int iCount = 1;
-		t_param_array::iterator itpvLastElement = pvArray -> end();
-		// Последний элемент массива
-		Hasher oHasher;
-		UINT_64  i__FIRST__   = oHasher("__FIRST__");
-		UINT_64  i__INNER__   = oHasher("__INNER__");
-		UINT_64  i__LAST__    = oHasher("__LAST__");
-		UINT_64  i__ODD__     = oHasher("__ODD__");
-		UINT_64  i__EVEN__    = oHasher("__EVEN__");
-		UINT_64  i__SIZE__    = oHasher("__SIZE__");
-		UINT_64  i__COUNTER__ = oHasher("__COUNTER__");
-
-		param_data * pVarFirstLastInner = new param_data(param_data::VAR);
-		param_data * pVarEvenOdd        = new param_data(param_data::VAR);
-		param_data * pVarSize           = new param_data(param_data::VAR);
-
-		pVarSize -> val() -> assign(d2str<int>(pvArray -> size()));
-		param_data * pVarCounter        = new param_data(param_data::VAR);
-
-		if (itpvLastElement != pvArray -> begin()) { itpvLastElement--; }
-		while(itpvArray != pvArray -> end())
-		{
-			// Если используются контекстные переменные
-			if (bLoopContextVars)
-			{
-				using CTPP::Pair;
-				using std::string;
-				pLoopParamHash = (*itpvArray) -> hash();
-				// Вставляем переменные цикла
-				// __FIRST__
-//				param_data * pVarFirstLastInner;
-				if (iCount == 1)
-				{
-					pVarFirstLastInner -> val() -> assign(d2str<int>(iCount));
-					pLoopParamHash -> insert(Pair<string, param_data *>("__FIRST__", pVarFirstLastInner), i__FIRST__);
-				}
-				// __INNER__
-				if (iCount != 1 && itpvArray != itpvLastElement)
-				{
-					pVarFirstLastInner -> val() -> assign(d2str<int>(iCount));
-					pLoopParamHash -> insert(Pair<string, param_data *>("__INNER__", pVarFirstLastInner), i__INNER__);
-				}
-				// __LAST__
-				else if (itpvArray == itpvLastElement)
-				{
-					pVarFirstLastInner -> val() -> assign(d2str<int>(iCount));
-					pLoopParamHash -> insert(Pair<string, param_data *>("__LAST__", pVarFirstLastInner), i__LAST__);
-				}
-
-				// __ODD__
-				if (iCount % 2 == 1)
-				{
-					pVarEvenOdd -> val() -> assign(d2str<int>(iCount));
-					pLoopParamHash -> insert(Pair<string, param_data *>("__ODD__", pVarEvenOdd), i__ODD__);
-				}
-				// __EVEN__
-				else
-				{
-					pVarEvenOdd -> val() -> assign(d2str<int>(iCount));
-					pLoopParamHash -> insert(Pair<string, param_data *>("__EVEN__", pVarEvenOdd), i__EVEN__);
-				}
-
-				// __SIZE__
-				pLoopParamHash -> insert(Pair<string, param_data *>("__SIZE__", pVarSize), i__SIZE__);
-
-				// __COUNTER__
-				pVarCounter -> val() -> assign(d2str<int>(iCount));
-				pLoopParamHash -> insert(Pair<string, param_data *>("__COUNTER__", pVarCounter), i__COUNTER__);
-
-				// Вставляем данные
-				pTemplateText -> param(*itpvArray, pRootParamData);
-
-				sTextData += pTemplateText -> output(bBreak);
-
-				// __COUNTER__
-				pLoopParamHash -> erase("__COUNTER__", i__COUNTER__);
-				// __SIZE__
-				pLoopParamHash -> erase("__SIZE__", i__SIZE__);
-
-				// __FIRST__
-				if (iCount == 1)                                 { pLoopParamHash -> erase("__FIRST__", i__FIRST__); }
-				// __INNER__
-				if (iCount != 1 && itpvArray != itpvLastElement) { pLoopParamHash -> erase("__INNER__", i__INNER__); }
-				// __LAST__
-				else if (itpvArray == itpvLastElement)           { pLoopParamHash -> erase("__LAST__", i__LAST__); }
-
-				// __ODD__ / __EVEN__
-				if (iCount % 2 == 1) { pLoopParamHash -> erase("__ODD__", i__ODD__); }
-				else                 { pLoopParamHash -> erase("__EVEN__", i__EVEN__); }
-			}
-			// Контекстные переменные не используются
-			else
-			{
-				// Вставляем данные
-				pTemplateText -> param(*itpvArray, pRootParamData);
-				sTextData += pTemplateText -> output(bBreak);
-			}
-
-			itpvArray++;
-			iCount++;
-		}
-		delete pVarCounter;
-		delete pVarSize;
-		delete pVarFirstLastInner;
-		delete pVarEvenOdd;
-	}
-// Возвращаем результат парзинга данных
-return sTextData;
-}
-
-//
-// Вставка данных
-//
-bool template_loop::param(param_data * pIParamData, param_data * pIRootParamData)
-{
-	pRootParamData = pIRootParamData;
-	pParamData = pIParamData;
-return true;
-}
-
-//
-// Парзинг при инициализации
-//
-template_ret_type template_loop::parse_block(std::string::const_iterator itmData, std::string::const_iterator itmDataEnd)
-{
-	// Парзинг при инициализации
-	pTemplateText = new template_text(pFactory, iLine, iPos, iTabLength, bDebug, bStrict, bLoopContextVars, bGlobalVars);
-	static_cast<template_text *>(pTemplateText) -> set_include_dir(vIncludeDir);
-
-	// Парзим шаблон
-	template_ret_type sRetType = pTemplateText -> parse_block(itmData, itmDataEnd);
-
-return sRetType;
-}
-
-//
-// Деструктор
-//
-template_loop::~template_loop() throw() { delete pTemplateText; }
-
-
 // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Класс template_udf
@@ -1890,125 +1448,6 @@ bool template_include::param(param_data * pIParamData, param_data * pIRootParamD
 	if (pIParamData && pIRootParamData) { pTemplateText -> param(pIParamData, pIRootParamData); }
 return true;
 }
-// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//
-// Template_break
-//
-
-//
-// Конструктор
-//
-template_break::template_break(const stack_ref &sIStackRef, bool bIGlobalVars): sStackRef(sIStackRef), bGlobalVars(bIGlobalVars)
-{
-	;;
-}
-
-//
-// Деструктор
-//
-template_break::~template_break() throw() { ;; }
-
-//
-// Получение типа
-//
-e_token_type template_break::get_type() { return TMPL_BREAK; }
-
-//
-// Вставка данных
-//
-bool template_break::param(param_data * pParamData, param_data * pIRootParamData)
-{
-	bBreakFlag = false;
-	if (pParamData && pIRootParamData)
-	{
-		std::string sValue = execute_udf_fn(sStackRef, pParamData, pIRootParamData, bGlobalVars);
-		if (sValue.length())
-		{
-			bBreakFlag = true;
-			return false;
-		}
-	}
-return true;
-}
-
-//
-// Вывод данных
-//
-std::string & template_break::output(bool & bBreak)
-{
-	bBreak = bBreakFlag;
-	return sTMP;
-}
-
-// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//
-// Объявление переменной
-//
-
-//
-// Конструктор
-//
-template_declare::template_declare(const stack_ref &sIStackRef)
-{
-	if (sIStackRef.function_parameters.size() != 2) { throw std::logic_error("TMPL_declare accept ONLY 2 parameters!"); }
-
-	oParamName  = sIStackRef.function_parameters[0];
-	oParamValue = sIStackRef.function_parameters[1];
-}
-
-	// Деструктор
-template_declare::~template_declare() throw() { ;; }
-
-// Получение типа
-e_token_type template_declare::get_type() { return TMPL_DECLARE; }
-
-// Вставка данных
-bool template_declare::param(param_data * pParamData, param_data * pIRootParamData)
-{
-	param_data::e_value_type eType = pParamData -> get_value_type();
-	if (eType == param_data::VAR || eType == param_data::ARRAY) { throw std::logic_error("TMPL_declare: given data is *NOT* hash!"); }
-
-	std::string sValue;
-	if (oParamValue.is_variable)
-	{
-		t_param_hash::iterator it = pParamData -> hash() -> find(oParamValue.param);
-
-		if (it != pParamData -> hash() -> end()) { sValue.assign(*(it -> second -> val())); }
-	}
-	else { sValue.assign(oParamValue.param); }
-
-	std::string sKeyName;
-	if (oParamName.is_variable)
-	{
-		t_param_hash::iterator it = pParamData -> hash() -> find(oParamName.param);
-		if (it == pParamData -> hash() -> end()) { return true; }
-
-		sKeyName.assign(*(it -> second -> val()));
-	}
-	else  { sKeyName.assign(oParamName.param); }
-
-	t_param_hash::iterator it = pParamData -> hash() -> find(sKeyName);
-	if (it == pParamData -> hash() -> end())
-	{
-
-		param_data * oValue = new param_data();
-		oValue -> val() -> assign(sValue);
-		pParamData -> hash() -> insert(CTPP::Pair<std::string, param_data *>(oParamName.param, oValue));
-	}
-	else
-	{
-		it -> second -> val() -> assign(sValue);
-	}
-return true;
-}
-
-std::string & template_declare::output(bool & bBreak)
-{
-return sTMP;
-}
-
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 } // namespace template_parser_ns
 // End.
