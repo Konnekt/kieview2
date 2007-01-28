@@ -577,20 +577,25 @@ template_ret_type template_text::parse_block(std::string::const_iterator itmData
       {
         if (iPosition == 5)
         {
-          if (*itmData == 's') { iPosition++; }
+          if (*itmData == 'l') { iPosition++; }
           else                 { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
         else if (iPosition == 6)
         {
-          if (*itmData == 'e') { iPosition++; }
+          if (*itmData == 's') { iPosition++; }
           else                 { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
         else if (iPosition == 7)
         {
+          if (*itmData == 'e') { iPosition++; }
+          else                 { inCloseToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
+        }
+        else if (iPosition == 8)
+        {
           if (*itmData == '}') { iPosition++; }
           else                 { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }
         }
-        else if (iPosition == 8)
+        else if (iPosition == 9)
         {
           if (*itmData == '}') { bInToken = false; bParseFlag = false; iPosition = 0; bEndToken = true; }
           else                 { bInToken = false; bDoRollback = true; do_rollback_token(itmData, itmRollBackPos); }

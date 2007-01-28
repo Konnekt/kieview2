@@ -3,20 +3,15 @@
   {{if name}}
     <span class="filename">"<b>{{$name}}</b>"</span>
   {{/if}}
-  {{if sent?}}
-    wys³any do
-  {{else}}
-    odebrany od
-  {{/if}}
+  {{if sent?}}wys³any do{{else}}odebrany od{{/if}}
+
   <span class="display"><b>{{$display}}</b></span> o
   <span class="time">{{func formatTime("%H:%M (%A)", @time)}}</span>:
   <br/><br/>
 
-  {{if filePath}}
-    <span class="path">Œcie¿ka: 
-      {{if path}}
-        <a href="file:///{{$path}}" target="_blank">{{$path}}</a> -
-      {{/if}}
+  {{if path}}
+    <span class="path">Œcie¿ka:
+      <a href="file:///{{$path}}" target="_blank">{{$path}}</a> -
       <b><a href="file:///{{$filePath}}" target="_blank">{{$fileName}}</a></b>
     </span><br/>
   {{/if}}
@@ -25,11 +20,7 @@
   {{/if}}
   {{if transfered}}
     <span class="transfered">
-      {{if isSent}}
-        Przes³ano:
-      {{else}}
-        Odebrano:
-      {{/if}}
+      {{if isSent}}Przes³ano{{else}}Odebrano{{/if}}:
       <b>{{$transferedP}}</b> ({{$transfered}} / {{$size}})
     </span><br/>
   {{/if}}
