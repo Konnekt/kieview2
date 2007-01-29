@@ -179,15 +179,12 @@ namespace kIEview2 {
   class JSWndController : public IECtrl::iObject {
   public:
     JSWndController(IECtrl *ieCtrl, IECtrl::Var& args): iObject(ieCtrl), pCtrl(Controller::getInstance()) {
-      registerCallback("toString", bind(resolve_cast0(&JSWndController::toString), this));
       registerCallback("close", bind(resolve_cast0(&JSWndController::close), this));
+
+      setProperty("toString", "WndController");
     }
 
   public:
-    IECtrl::Var toString() {
-      return "WndController";
-    }
-
     IECtrl::Var close() {
       return true;
     }
@@ -199,16 +196,11 @@ namespace kIEview2 {
   class JSController : public IECtrl::iObject {
   public:
     JSController(IECtrl *ieCtrl, IECtrl::Var& args): iObject(ieCtrl), pCtrl(Controller::getInstance()) {
-      registerCallback("toString", bind(resolve_cast0(&JSController::toString), this));
-
       setProperty("ieVersion", pCtrl->getIEVersion());
+      setProperty("toString", "Controller");
     }
 
   public:
-    IECtrl::Var toString() {
-      return "Controller";
-    }
-
     IECtrl::Var linkify() {
       return true;
     }

@@ -415,29 +415,38 @@ namespace kIEview2 {
       case UI::Notify::getMessageSize: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*) getAN();
 
+        String text;
         EDITSTREAM es;
+
         es.dwError = 0;
         es.pfnCallback = Controller::streamOut;
-        String text;
         es.dwCookie = (DWORD)&text;
         SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
 
-        return setReturnCode(rtfHtml->rtfParse((char*)text.a_str(), text.size()).size());
+        text = htmlEscape(text);
+        text = rtfHtml->rtfParse((char*)text.a_str(), text.size());
+
+        return setReturnCode(text.size());
       }
 
       case UI::Notify::getMessage: {
         UI::Notify::_getMessage* an = (UI::Notify::_getMessage*) getAN();
 
+        String text;
         EDITSTREAM es;
+
         es.dwError = 0;
         es.pfnCallback = Controller::streamOut;
-        String text;
         es.dwCookie = (DWORD)&text;
         SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
-        strcpy(an->_message->body, rtfHtml->rtfParse((char*)text.a_str(), text.size()).c_str());
+
+        text = htmlEscape(text);
+        text = rtfHtml->rtfParse((char*)text.a_str(), text.size());
+
+        strcpy(an->_message->body, text.a_str());
         an->_message->flag |= MF_HTML;
 
-        SetProp(GetParent((HWND)UIActionHandleDirect(an->act)), "MsgSend", (HANDLE)true);
+        SetProp(GetParent((HWND)UIActionHandleDirect(an->act)), "MsgSend", (HANDLE) true);
         return;
       }
     }

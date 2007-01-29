@@ -564,7 +564,7 @@ public:
     typedef std::map <string, sValue*> tValues;
 
   public:
-    iObject(IECtrl* pCtrl, bool extModificate);
+    iObject(IECtrl* pCtrl, bool extModificate = true);
     virtual ~iObject();
 
     // IUnknown
@@ -612,8 +612,7 @@ public:
     virtual void setProperty(const string& name, IECtrl::Var v, bool external = false);
 
   protected:
-    virtual IECtrl::Var trigger(long id, IECtrl::Var& args, iObject* object, bool construct = false);
-    virtual IECtrl::Var _toString(IECtrl::Var&, iObject*, bool construct);
+    virtual IECtrl::Var trigger(long id, IECtrl::Var& args, bool construct = false);
 
   protected:
     tCallbacks _callbacks;

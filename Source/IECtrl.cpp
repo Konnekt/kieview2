@@ -1623,13 +1623,10 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
   }
 }
 
-IECtrl::iObject::iObject(IECtrl* pCtrl, bool extModificate): _extModificate(extModificate) {
-  m_pCtrl = pCtrl;
-  m_cRef = 0;
-  _objectDispID = 0;
-  _doNewObject = false;
-
-  this->registerCallback("toString", bind(&iObject::_toString, this, _1, _2, _3));
+IECtrl::iObject::iObject(IECtrl* pCtrl, bool extModificate): m_cRef(0), _objectDispID(0), 
+  _doNewObject(false), m_pCtrl(pCtrl), _extModificate(extModificate) 
+{
+  setProperty("toString", "IECtrl::iObject");
 }
 
 IECtrl::iObject::~iObject() {
@@ -1664,9 +1661,9 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid
 
   Var ret;
   if (getCallback(dispIdMember)) {
-    ret = trigger(dispIdMember, args, this);
+    ret = trigger(dispIdMember, args);
   } else if (hasProperty(dispIdMember)) {
-    if(args.length()) {
+    if (args.length()) {
       setProperty(getPropertyName(dispIdMember), args[0]);
     }
     ret = getProperty(dispIdMember);
@@ -1716,9 +1713,9 @@ STDMETHODIMP IECtrl::iObject::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UI
   return hr;
 }
 
-IECtrl::Var IECtrl::iObject::trigger(long id, IECtrl::Var& args, iObject* object, bool construct) {
+IECtrl::Var IECtrl::iObject::trigger(long id, IECtrl::Var& args, bool construct) {
   sCallback* f = getCallback(id);
-  return !f ? IECtrl::Var() : f->signal(args, object, construct);
+  return !f ? IECtrl::Var() : f->signal(args, this, construct);
 }
 
 long IECtrl::iObject::getMemberID(const string& name) {
@@ -1835,9 +1832,6 @@ bool IECtrl::iObject::isPropertyExt(const string& name) {
   }
   return false;
 }
-IECtrl::Var IECtrl::iObject::_toString(IECtrl::Var &, IECtrl::iObject *, bool construct) {
-  return Var("IECtrl::iObject");
-}
 
 STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller) { 
   if (!pdp) return E_INVALIDARG;
@@ -1850,7 +1844,7 @@ STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPA
         for (UINT i = 0; i < pdp->cArgs; i++) {
           args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
         }
-        Var ret = trigger(id ? id : _objectDispID, args, this, true);
+        Var ret = trigger(id ? id : _objectDispID, args, true);
         ret.getVariant(pvarRes);
         _objectDispID = 0;
         _doNewObject = false;
@@ -1863,24 +1857,33 @@ STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPA
       for (UINT i = 0; i < pdp->cArgs; i++) {
         args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
       }
-      Var ret = trigger(id, args, this, false);
+      Var ret = trigger(id, args, false);
       ret.getVariant(pvarRes);
       return S_OK;
     }
   } else if (wFlags & DISPATCH_PROPERTYGET) {
-    if (hasProperty(id)) {
-      IECtrl::Var var(getProperty(id));
-      var.getVariant(pvarRes);
-      return S_OK;
-    } else if (id == 0) {
-      IECtrl::Var ret = trigger(getMemberID("toString"), Var(), this, false);
+    if (!id) {
+      IECtrl::Var ret;
+      if (hasCallback("toString")) {
+        ret = trigger(getMemberID("toString"), Var(), false);
+      } else if (hasProperty("toString")) {
+        ret = getProperty("toString");
+      } else {
+        return DISP_E_MEMBERNOTFOUND;
+      }
       ret.getVariant(pvarRes);
       return S_OK;
+
     } else if (hasCallback(id)) {
       IECtrl::Var var(this);
       var.getVariant(pvarRes);
       _objectDispID = id;
       _doNewObject = true;
+      return S_OK;
+
+    } else if (hasProperty(id)) {
+      IECtrl::Var var(getProperty(id));
+      var.getVariant(pvarRes);
       return S_OK;
     }
   } else if (wFlags & DISPATCH_PROPERTYPUT) {
