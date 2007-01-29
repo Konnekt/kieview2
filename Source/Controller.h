@@ -28,6 +28,9 @@
 using namespace kIEview2;
 
 namespace kIEview2 {
+  class JSWndController;
+  class JSController;
+
   class Controller : public PlugController<Controller> {
   public:
     friend class PlugController<Controller>;
@@ -59,8 +62,19 @@ namespace kIEview2 {
       String label;
     };
 
+    struct sWndObjCollection {
+      JSWndController* jsWndController;
+      ActionHandler* actionHandler;
+
+      sWndObjCollection(): jsWndController(0), actionHandler(0) { }
+      ~sWndObjCollection() {
+        if (jsWndController) delete jsWndController;
+        if (actionHandler) delete actionHandler;
+      }
+    };
+
   public:
-    typedef std::map<IECtrl*, ActionHandler*> tActionHandlers;
+    typedef std::map<IECtrl*, sWndObjCollection> tWndObjCollection;
     typedef std::map<int, sMessageHandler*> tMsgHandlers;
 
     struct sMsg {
@@ -86,6 +100,9 @@ namespace kIEview2 {
     bool hasMsgHandler(int type);
     bool registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority = 0, 
       signals::connect_position pos = signals::at_back, bool overwrite = true);
+
+    IECtrl::Var getJSWndController(IECtrl::Var& args, IECtrl* ctrl, bool construct);
+    IECtrl::Var getJSController(IECtrl::Var& args, IECtrl* ctrl, bool construct);
 
     sExternalCallback* getExternalCallback(const char* name);
     sExternalCallback* getExternalCallback(long id);
@@ -150,12 +167,54 @@ namespace kIEview2 {
 
   protected:
     tExternalCallbacks externalCallbacks;
-    tActionHandlers actionHandlers;
+    tWndObjCollection wndObjCollection;
     tMsgHandlers msgHandlers;
     CriticalSection _locker;
+    JSController* jsController;
     Tables::oTable historyTable;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
+  };
+
+  class JSWndController : public IECtrl::iObject {
+  public:
+    JSWndController(IECtrl *ieCtrl, IECtrl::Var& args): iObject(ieCtrl), pCtrl(Controller::getInstance()) {
+      registerCallback("toString", bind(resolve_cast0(&JSWndController::toString), this));
+      registerCallback("close", bind(resolve_cast0(&JSWndController::close), this));
+    }
+
+  public:
+    IECtrl::Var toString() {
+      return "WndController";
+    }
+
+    IECtrl::Var close() {
+      return true;
+    }
+
+  protected:
+    Controller* pCtrl;
+  };
+
+  class JSController : public IECtrl::iObject {
+  public:
+    JSController(IECtrl *ieCtrl, IECtrl::Var& args): iObject(ieCtrl), pCtrl(Controller::getInstance()) {
+      registerCallback("toString", bind(resolve_cast0(&JSController::toString), this));
+
+      setProperty("ieVersion", pCtrl->getIEVersion());
+    }
+
+  public:
+    IECtrl::Var toString() {
+      return "Controller";
+    }
+
+    IECtrl::Var linkify() {
+      return true;
+    }
+
+  protected:
+    Controller* pCtrl;
   };
 }
 

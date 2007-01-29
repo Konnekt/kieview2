@@ -32,7 +32,14 @@ namespace kIEview2 {
     typedef IECtrl::PopupMenuListener::MenuType tMenuType;
 
   public:
-    ActionHandler(tCntId _cntId = 0): selectedMenuItem(0), cntId(_cntId) { }
+    ActionHandler(IECtrl* ctrl, tCntId _cntId = 0): selectedMenuItem(0), cntId(_cntId) {
+      ctrl->setPopupMenuListener(this);
+      ctrl->setAnchorClickListener(this);
+      ctrl->setDropListener(this);
+      ctrl->setExternalListener(this);
+      ctrl->setScriptMessageListener(this);
+      ctrl->setKeyDownListener(this);
+    }
 
   public:
     void anchorClicked(const char* url, IECtrl* ctrl);

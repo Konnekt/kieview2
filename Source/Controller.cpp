@@ -60,6 +60,9 @@ void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int si
 namespace kIEview2 {
   // initialization
   Controller::Controller() {
+    registerExternalCallback("getWndController", bind(&Controller::getJSWndController, this, _1, _2, _3), true);
+    registerExternalCallback("getController", bind(&Controller::getJSController, this, _1, _2, _3), true);
+
     /* Static values like net, type or version */
     this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
     this->setStaticValue(IM_PLUG_PRIORITY, PLUGP_HIGH + 1);
@@ -111,20 +114,22 @@ namespace kIEview2 {
   }
 
   Controller::~Controller() {
-    IECtrl::deinit();
+    wndObjCollection.clear();
 
-    delete tplHandler;
-    delete rtfHtml;
-
+    if (jsController) {
+      delete jsController;
+    }
     for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
       delete *it;
-    }
-    for (tActionHandlers::iterator it = actionHandlers.begin(); it != actionHandlers.end(); it++) {
-      delete it->second;
     }
     for (tMsgHandlers::iterator it = msgHandlers.begin(); it != msgHandlers.end(); it++) {
       delete it->second;
     }
+
+    delete tplHandler;
+    delete rtfHtml;
+
+    IECtrl::deinit();
   }
 
   void Controller::_onPluginsLoaded() {
@@ -220,7 +225,7 @@ namespace kIEview2 {
           sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
         ));
         if (ctrl) {
-          actionHandlers[ctrl]->selectedMenuItem = 0;
+          wndObjCollection[ctrl].actionHandler->selectedMenuItem = 0;
         }
         break;
       }
@@ -239,7 +244,7 @@ namespace kIEview2 {
           sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
         ));
         if (ctrl) {
-          actionHandlers[ctrl]->selectedMenuItem = an->act.id;
+          wndObjCollection[ctrl].actionHandler->selectedMenuItem = an->act.id;
         }
         break;
       }
@@ -308,15 +313,7 @@ namespace kIEview2 {
         SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
         SetProp(an->hwndParent, "MsgSend", false);
 
-        actionHandlers[ctrl] = new ActionHandler;
-        actionHandlers[ctrl]->cntId = an->act.cnt;
-
-        ctrl->setPopupMenuListener(actionHandlers[ctrl]);
-        ctrl->setAnchorClickListener(actionHandlers[ctrl]);
-        ctrl->setDropListener(actionHandlers[ctrl]);
-        ctrl->setExternalListener(actionHandlers[ctrl]);
-        ctrl->setScriptMessageListener(actionHandlers[ctrl]);
-        ctrl->setKeyDownListener(actionHandlers[ctrl]);
+        wndObjCollection[ctrl].actionHandler = new ActionHandler(ctrl, an->act.cnt);
 
         ctrl->enableSandbox(false);
         this->clearWnd(ctrl);
@@ -327,11 +324,9 @@ namespace kIEview2 {
         sUIActionNotify_destroyWindow* an = (sUIActionNotify_destroyWindow*)this->getAN();
         IECtrl* ctrl = IECtrl::get(an->hwnd);
 
-        for (tActionHandlers::iterator it = actionHandlers.begin(); it != actionHandlers.end(); it++) {
+        for (tWndObjCollection::iterator it = wndObjCollection.begin(); it != wndObjCollection.end(); it++) {
           if (it->first == ctrl) {
-            delete it->second;
-            actionHandlers.erase(it);
-            break;
+            wndObjCollection.erase(it); break;
           }
         }
         delete ctrl;
@@ -489,6 +484,26 @@ namespace kIEview2 {
     return CallWindowProc(getInstance()->oldMsgWndProc, hWnd, msg, wParam, lParam);
   }
 
+  IECtrl::Var Controller::getJSWndController(IECtrl::Var& args, IECtrl* ctrl, bool construct) {
+    if (!construct) {
+      // throw new Exception("You forgot about 'new' !");
+    }
+    if (!wndObjCollection[ctrl].jsWndController) {
+      wndObjCollection[ctrl].jsWndController = new JSWndController(ctrl, args);
+    }
+    return wndObjCollection[ctrl].jsWndController;
+  }
+
+  IECtrl::Var Controller::getJSController(IECtrl::Var& args, IECtrl* ctrl, bool construct) {
+    if (!construct) {
+      // throw new Exception("You forgot about 'new' !");
+    }
+    if (!jsController) {
+      jsController = new JSController(ctrl, args);
+    }
+    return jsController;
+  }
+
   bool Controller::hasMsgHandler(int type) {
     // locking
     LockerCS lock(_locker);
@@ -558,7 +573,7 @@ namespace kIEview2 {
     HKEY hKey;
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
-      char userAgent[256] = {0};
+      char userAgent[256] = "";
       DWORD length = 256;
       RegQueryValueEx(hKey, "User Agent", 0, NULL, (BYTE*)&userAgent, &length);
 
@@ -755,6 +770,7 @@ namespace kIEview2 {
 
   String Controller::getStatusLabel(int status) {
     String name = "Nieznany (" + inttostr(status) + ")";
+
     switch (status & ST_MASK) {
       case ST_ONLINE: name = "Dostêpny"; break;
       case ST_CHAT: name = "Pogadam"; break;
