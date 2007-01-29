@@ -557,7 +557,7 @@ public:
       long id;
       bool external;
       bool constVal;
-      sValue(): id(random()), external(false), constVal(false) { };
+      sValue(bool const_): id(random()), external(false), constVal(const_) { };
     };
 
     typedef std::vector<sCallback*> tCallbacks;
@@ -566,6 +566,7 @@ public:
   public:
     iObject(IECtrl* pCtrl, bool extModificate = true);
     virtual ~iObject();
+    IECtrl* getIECtrl();
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
@@ -609,10 +610,11 @@ public:
     virtual bool isPropertyExt(long id);
     virtual bool isPropertyExt(const string& name);
 
-    virtual void setProperty(const string& name, IECtrl::Var v, bool external = false);
+    virtual void setProperty(const string& name, IECtrl::Var v, bool const_ = false, bool external = false);
 
   protected:
     virtual IECtrl::Var trigger(long id, IECtrl::Var& args, bool construct = false);
+    IECtrl::Var _testobj(IECtrl::Var&, iObject*, bool construct);
 
   protected:
     tCallbacks _callbacks;

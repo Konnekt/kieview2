@@ -1629,6 +1629,10 @@ IECtrl::iObject::iObject(IECtrl* pCtrl, bool extModificate): m_cRef(0), _objectD
   setProperty("toString", "IECtrl::iObject");
 }
 
+IECtrl* IECtrl::iObject::getIECtrl() {
+  return m_pCtrl;
+}
+
 IECtrl::iObject::~iObject() {
   ASSERT(m_cRef == 0);
 }
@@ -1803,9 +1807,9 @@ string IECtrl::iObject::getPropertyName(long id) {
   return "";
 }
 
-void IECtrl::iObject::setProperty(const string& name, Var v, bool external) {
+void IECtrl::iObject::setProperty(const string& name, Var v, bool const_, bool external) {
   if (_values.find(name) == _values.end()) {
-    _values[name] = new sValue();
+    _values[name] = new sValue(const_);
   }
   _values[name]->var = v;
   if (_extModificate) {
