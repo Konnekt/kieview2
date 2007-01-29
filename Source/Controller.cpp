@@ -17,14 +17,6 @@
 #include "Message.h"
 #include "TplUdf.h"
 
-/*
-#include <json/value.h>
-#include <json/reader.h>
-#include <json/writer.h>
-
-#pragma comment(lib, "json_vc71_libmt.lib")
-*/
-
 void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
   unsigned int ksize = strlen((char*)key);
   unsigned int ki = 0;
@@ -95,6 +87,7 @@ namespace kIEview2 {
 
     this->tplHandler = new TplHandler;
     this->rtfHtml = new RtfHtmlTag;
+    this->ieVersion = getIEVersion();
 
     tplHandler->bindStdFunctions();
     tplHandler->bindUdf("getCntSetting", new udf_get_cnt_setting);

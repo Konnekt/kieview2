@@ -164,6 +164,7 @@ namespace kIEview2 {
     
   public:
     WNDPROC oldMsgWndProc;
+    UINT ieVersion;
 
   protected:
     tExternalCallbacks externalCallbacks;
@@ -181,7 +182,7 @@ namespace kIEview2 {
     JSWndController(IECtrl *ieCtrl, IECtrl::Var& args): iObject(ieCtrl), pCtrl(Controller::getInstance()) {
       registerCallback("close", bind(resolve_cast0(&JSWndController::close), this));
 
-      setProperty("toString", "WndController");
+      setProperty("name", "WndController");
     }
 
   public:
@@ -196,13 +197,8 @@ namespace kIEview2 {
   class JSController : public IECtrl::iObject {
   public:
     JSController(IECtrl *ieCtrl, IECtrl::Var& args): iObject(ieCtrl), pCtrl(Controller::getInstance()) {
-      setProperty("ieVersion", pCtrl->getIEVersion());
-      setProperty("toString", "Controller");
-    }
-
-  public:
-    IECtrl::Var linkify() {
-      return true;
+      setProperty("ieVersion", (int) pCtrl->ieVersion);
+      setProperty("name", "Controller");
     }
 
   protected:

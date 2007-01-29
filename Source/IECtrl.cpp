@@ -455,37 +455,6 @@ void IECtrl::enableSandbox(bool bSandbox) {
   }
 }
 
-void IECtrl::setAutoCopySel(bool autoCopy) {
-  m_bAutoCopySel = autoCopy;
-}
-
-bool IECtrl::getAutoCopySel() {
-  return m_bAutoCopySel;
-}
-
-char * IECtrl::getSelection(bool gettext) {
-  if (m_szSelectedText != NULL) {
-    delete m_szSelectedText;
-    m_szSelectedText = NULL;
-  }
-  BSTR selectedTextW = getSelectionFunc(gettext);
-  if (selectedTextW == NULL || wcslen(selectedTextW) == 0) {
-    return NULL;
-  }
-  int len = wcslen(selectedTextW)+1;
-  char *str = new char[len];
-
-  WideCharToMultiByte(CP_ACP, 0, selectedTextW, len, str, len, NULL, FALSE);
-  delete selectedTextW;
-
-  if (!gettext) {
-    std::string temp = humanize(str);
-    ZeroMemory(str, len);
-    strncpy(str, (char*)temp.c_str(), len - 1);
-  }
-  return m_szSelectedText = str;
-}
-
 std::string IECtrl::humanize(const char* text) {
   RegEx reg;
   reg.setSubject(text);
@@ -494,12 +463,12 @@ std::string IECtrl::humanize(const char* text) {
   reg.replaceItself("/[\r\n]/m", "");
 
   // wstawiamy w odpowiednich miejscach znaki nowej linii
-  reg.replaceItself("#(?<!</div>)</div>#im", "\r\n");
-  reg.replaceItself("#<br ?/?>#i", "\r\n");
-  reg.replaceItself("#</(p|blockquote|li|[uo]l)>#i", "\r\n");
+  reg.replaceItself("#<(p|blockquote|li|[uo]l|div)[^>]*>#i", "\n");
+  reg.replaceItself("#</(p|blockquote|li|[uo]l|div)>#i", "\n");
+  reg.replaceItself("#<br ?/?>#i", "\n");
 
   // usuwamy wielokrotne znaki nowej linii
-  reg.replaceItself("/(\r?\n)\\1{2,}/", "\r\n\r\n");
+  reg.replaceItself("/[\n]{3,}/", "\n\n\n");
 
   // formatujemy listy
   reg.replaceItself("/<li>/i", "* ");
@@ -515,6 +484,9 @@ std::string IECtrl::humanize(const char* text) {
   reg.replaceItself("/&quot;/", "\"");
   reg.replaceItself("/&nbsp;/", " ");
   reg.replaceItself("/&amp;/", "&");
+
+  // dodajemy windowsowe powroty karetki
+  reg.replaceItself("/\n/", "\r\n");
 
   return reg.getSubject();
 }
@@ -545,38 +517,27 @@ bool IECtrl::copySelection(bool gettext) {
   return result;
 }
 
-IECtrl* IECtrl::get(HWND hwnd) {
-  IECtrl *ptr;
-  if (m_pList == NULL) {
+char * IECtrl::getSelection(bool gettext) {
+  if (m_szSelectedText != NULL) {
+    delete m_szSelectedText;
+    m_szSelectedText = NULL;
+  }
+  BSTR selectedTextW = getSelectionFunc(gettext);
+  if (selectedTextW == NULL || wcslen(selectedTextW) == 0) {
     return NULL;
   }
-  EnterCriticalSection(&m_mutex);
-  for (ptr = m_pList; ptr != NULL; ptr = ptr->m_pNext) {
-    if (ptr->m_hWnd == hwnd) break;
-  }
-  LeaveCriticalSection(&m_mutex);
-  return ptr;
-}
+  int len = wcslen(selectedTextW)+1;
+  char *str = new char[len];
 
-HWND IECtrl::getHWND() {
-  return m_hWnd;
-}
+  WideCharToMultiByte(CP_ACP, 0, selectedTextW, len, str, len, NULL, FALSE);
+  delete selectedTextW;
 
-void IECtrl::translateAccelerator(UINT uMsg, WPARAM wParam, LPARAM lParam) {
-  char chr = (char)LOWORD(MapVirtualKey(wParam, 2));
-  if (m_pKeyDownListener != NULL && m_pKeyDownListener->keyDown(wParam, lParam)
-    || m_pKeyDownListener == NULL && GetKeyState(VK_CONTROL) < 0 && (chr == 'C' || chr == 'c' || chr == 'A' || chr == 'a'))
-  {
-    IOleInPlaceActiveObject* pIOIPAO;
-    if (SUCCEEDED(m_pWebBrowser->QueryInterface(IID_IOleInPlaceActiveObject, (void**)&pIOIPAO))) {
-      MSG msg;
-      msg.message = uMsg;
-      msg.wParam = wParam;
-      msg.lParam = lParam;
-      pIOIPAO->TranslateAccelerator(&msg);
-      pIOIPAO->Release();
-    }
+  if (!gettext) {
+    string temp = humanize(str);
+    ZeroMemory(str, len);
+    strncpy(str, (char*) temp.c_str(), len - 1);
   }
+  return m_szSelectedText = str;
 }
 
 BSTR IECtrl::getSelectionFunc(bool gettext) {
@@ -619,6 +580,40 @@ BSTR IECtrl::getSelectionFunc(bool gettext) {
     document->Release();
   }
   return text;
+}
+
+IECtrl* IECtrl::get(HWND hwnd) {
+  IECtrl *ptr;
+  if (m_pList == NULL) {
+    return NULL;
+  }
+  EnterCriticalSection(&m_mutex);
+  for (ptr = m_pList; ptr != NULL; ptr = ptr->m_pNext) {
+    if (ptr->m_hWnd == hwnd) break;
+  }
+  LeaveCriticalSection(&m_mutex);
+  return ptr;
+}
+
+HWND IECtrl::getHWND() {
+  return m_hWnd;
+}
+
+void IECtrl::translateAccelerator(UINT uMsg, WPARAM wParam, LPARAM lParam) {
+  char chr = (char)LOWORD(MapVirtualKey(wParam, 2));
+  if (m_pKeyDownListener != NULL && m_pKeyDownListener->keyDown(wParam, lParam)
+    || m_pKeyDownListener == NULL && GetKeyState(VK_CONTROL) < 0 && (chr == 'C' || chr == 'c' || chr == 'A' || chr == 'a'))
+  {
+    IOleInPlaceActiveObject* pIOIPAO;
+    if (SUCCEEDED(m_pWebBrowser->QueryInterface(IID_IOleInPlaceActiveObject, (void**)&pIOIPAO))) {
+      MSG msg;
+      msg.message = uMsg;
+      msg.wParam = wParam;
+      msg.lParam = lParam;
+      pIOIPAO->TranslateAccelerator(&msg);
+      pIOIPAO->Release();
+    }
+  }
 }
 
 BSTR IECtrl::getHrefFromAnchor(IHTMLElement *element) {
@@ -685,8 +680,7 @@ bool IECtrl::setFocus(HWND prevFocus) {
     SetFocus(prevFocus);
     return true;
   }
-  m_bGetFocus = false;
-  return false;
+  return m_bGetFocus = false;
 }
 
 void IECtrl::saveDocument() {
@@ -704,26 +698,31 @@ void IECtrl::saveDocument() {
 }
 
 bool IECtrl::callJScript(const char* szFunc, Var &args, Var *ret) {
-  bool bRet = false;
   IHTMLDocument2 *document = getDocument();
+  bool bRet = false;
+
   if (document != NULL) {
     IDispatch * dispatch;
     if (!document->get_Script(&dispatch) && dispatch != NULL) {
       DISPID dispid = NULL;
       LPOLESTR str = _com_util::ConvertStringToBSTR(szFunc);
+
       if (!dispatch->GetIDsOfNames(IID_NULL, &str, 1, LOCALE_SYSTEM_DEFAULT, &dispid)) {
         DISPPARAMS dispparams;
         dispparams.cArgs = args.length();
         dispparams.rgvarg = new VARIANT[dispparams.cArgs];
         dispparams.cNamedArgs = 0;
         dispparams.rgdispidNamedArgs = NULL;
+
         for (UINT i = 0; i < dispparams.cArgs; i++) {
           args[i].getVariant(&dispparams.rgvarg[dispparams.cArgs-i-1]);
         }
+
         EXCEPINFO excepInfo; memset(&excepInfo, 0, sizeof(excepInfo));
         UINT nArgErr = (UINT)-1;  // initialize to invalid arg
         VARIANT vRet;
         VariantInit(&vRet);
+
         if (!dispatch->Invoke(dispid, IID_NULL, 0, DISPATCH_METHOD, &dispparams, &vRet, &excepInfo, &nArgErr)) {
           bRet = true;
         }
@@ -731,6 +730,7 @@ bool IECtrl::callJScript(const char* szFunc, Var &args, Var *ret) {
           VariantClear(&dispparams.rgvarg[i]);
         }
         delete [] dispparams.rgvarg;
+
         if (ret != NULL) {
           ret->setValue(vRet);
         }
@@ -1289,7 +1289,7 @@ STDMETHODIMP IECtrl::ClientSite::ProcessUrlAction(LPCWSTR pwszUrl, DWORD dwActio
   PBOOL pBool = (PBOOL)pPolicy;
 
   if (dwAction == URLACTION_SCRIPT_RUN) {
-    *pBool = URLPOLICY_ALLOW;
+    *pBool = URLPOLICY_DISALLOW;
   } else if (dwAction == URLACTION_JAVA_PERMISSIONS) {
     *pBool = URLPOLICY_JAVA_PROHIBIT;
   } else {
@@ -1587,8 +1587,9 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
       SIZE_T lBufferSize = GlobalSize(medium.hGlobal);
 
       char * file = NULL;
-      void * pFile = (BYTE*)df+df->pFiles;
-      IECtrl::DropListener::tFiles files;
+      void * pFile = (BYTE*) df + df->pFiles;
+      DropListener::tFiles files;
+
       if (df->fWide) {
         wchar_t* p_wFile = (wchar_t*)pFile;
         do {
@@ -1596,16 +1597,16 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
           file = new char[len];
           WideCharToMultiByte(CP_ACP, 0, p_wFile, len, file, len, NULL, FALSE);
           files.push_back((const char*)file);
-          p_wFile+=len;
+          p_wFile += len;
         } while (p_wFile[0] != L'\0');
       } else {
         char* p_aFile = (char*)pFile;
         do {
           char* p_aFile = (char*)pFile;
-          int len = strlen(p_aFile)+1;
+          int len = strlen(p_aFile) + 1;
           file = new char[len];
           files.push_back((const char*)file);
-          p_aFile+=len;
+          p_aFile += len;
         } while (p_aFile[0] != '\0');
       }
 
@@ -1613,10 +1614,9 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
         m_pCtrl->m_pDropListener->fileDropped(files, m_pCtrl);
       }
 
-      for(IECtrl::DropListener::tFiles::iterator it = files.begin(); it != files.end(); it++) {
+      for (DropListener::tFiles::iterator it = files.begin(); it != files.end(); it++) {
         delete [] (*it);
       }
-
       GlobalUnlock(medium.hGlobal);
     }
     ReleaseStgMedium(&medium);
@@ -1626,7 +1626,7 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
 IECtrl::iObject::iObject(IECtrl* pCtrl, bool extModificate): m_cRef(0), _objectDispID(0), 
   _doNewObject(false), m_pCtrl(pCtrl), _extModificate(extModificate) 
 {
-  setProperty("toString", "IECtrl::iObject");
+  setProperty("name", "IECtrl::iObject");
 }
 
 IECtrl* IECtrl::iObject::getIECtrl() {
@@ -1664,13 +1664,13 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid
   }
 
   Var ret;
-  if (getCallback(dispIdMember)) {
+  if (hasCallback(dispIdMember)) {
     ret = trigger(dispIdMember, args);
   } else if (hasProperty(dispIdMember)) {
     if (args.length()) {
-      setProperty(getPropertyName(dispIdMember), args[0]);
+      setProperty(getProperty(dispIdMember)->name, args[0]);
     }
-    ret = getProperty(dispIdMember);
+    ret = getProperty(dispIdMember)->var;
   }
 
   ret.getVariant(pVarResult);
@@ -1696,18 +1696,15 @@ STDMETHODIMP IECtrl::iObject::QueryInterface(REFIID riid, PVOID *ppv) {
 }
 
 STDMETHODIMP IECtrl::iObject::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) { 
-  HRESULT hr;
-  UINT  i;
-  hr = NOERROR;
+  HRESULT hr = NOERROR;
 
-  for (i = 0; i < cNames; i++) {
-    const char * szName = _com_util::ConvertBSTRToString(rgszNames[i]);
-    long id = getMemberID(szName);
+  for (UINT i = 0; i < cNames; i++) {
+    const char* szName = _com_util::ConvertBSTRToString(rgszNames[i]);
 
-    if (id > 0) {
-      rgDispId[i] = id;
+    if (hasCallback(szName)) {
+      rgDispId[i] = getCallback(szName)->id;
     } else if (hasProperty(szName)) {
-      rgDispId[i] = getPropertyID(szName);
+      rgDispId[i] = getProperty(szName)->id;
     } else {
       hr = ResultFromScode(DISP_E_UNKNOWNNAME);
       rgDispId[i] = DISPID_UNKNOWN;
@@ -1722,17 +1719,28 @@ IECtrl::Var IECtrl::iObject::trigger(long id, IECtrl::Var& args, bool construct)
   return !f ? IECtrl::Var() : f->signal(args, this, construct);
 }
 
-long IECtrl::iObject::getMemberID(const string& name) {
-  sCallback* f = getCallback(name);
-  return !f ? 0 : f->id;
+void IECtrl::iObject::registerCallback(const string& name, fCallback f, bool isObject) {
+  if (getCallback(name)) return;
+  _callbacks.push_back(new sCallback(name, f, isObject));
 }
 
-IECtrl::iObject::sCallback* IECtrl::iObject::registerCallback(const string& name, fCallback f, bool isObject) {
-  if (!getCallback(name)) {
-    _callbacks.push_back(new sCallback(name, f, isObject));
-    return _callbacks[_callbacks.size() - 1];
+bool IECtrl::iObject::deleteCallback(const string& name) {
+  for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
+    if ((*it)->name == name) {
+      delete (*it);
+      _callbacks.erase(it);
+      return true;
+    }
   }
-  return 0;
+  return false;
+}
+
+bool IECtrl::iObject::hasCallback(long id) {
+  return getCallback(id) > 0;
+}
+
+bool IECtrl::iObject::hasCallback(const string& name) {
+  return getCallback(name) > 0;
 }
 
 IECtrl::iObject::sCallback* IECtrl::iObject::getCallback(const string& name) {
@@ -1749,92 +1757,37 @@ IECtrl::iObject::sCallback* IECtrl::iObject::getCallback(long id) {
   return 0;
 }
 
-string IECtrl::iObject::getCallbackName(long id) {
-  for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
-    if ((*it)->id == id) return (*it)->name;
-  }
-  return "";
-}
-bool IECtrl::iObject::hasCallback(long id) {
-  IECtrl::iObject::sCallback* f = getCallback(id);
-  return !f ? false : true;
-}
-
-bool IECtrl::iObject::hasCallback(const string& name) {
-  IECtrl::iObject::sCallback* f = getCallback(name);
-  return !f ? false : true;
-}
-bool IECtrl::iObject::deleteCallback(const string& name) {
-  for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
-    if ((*it)->name == name) {
-      delete (*it);
-      _callbacks.erase(it);
-      return true;
-    }
-  }
-  return false;
-}
-
 bool IECtrl::iObject::hasProperty(const string& name) {
-  return _values.find(name) != _values.end();
+  return getProperty(name) > 0;
 }
 
 bool IECtrl::iObject::hasProperty(long id) {
-  for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
-    if (it->second->id == id) return true;
-  }
-  return false;
+  return getProperty(id) > 0;
 }
 
-IECtrl::Var IECtrl::iObject::getProperty(const string& name) {
-  if (_values.find(name) != _values.end()) {
-    return _values[name]->var;
-  }
-  return IECtrl::Var();
-}
-
-IECtrl::Var IECtrl::iObject::getProperty(long id) {
-  for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
-    if (it->second->id == id) return it->second->var;
-  }
-  return IECtrl::Var();
-}
-
-string IECtrl::iObject::getPropertyName(long id) {
-  for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
-    if (it->second->id == id) return it->first;
-  }
-  return "";
-}
-
-void IECtrl::iObject::setProperty(const string& name, Var v, bool const_, bool external) {
-  if (_values.find(name) == _values.end()) {
-    _values[name] = new sValue(const_);
-  }
-  _values[name]->var = v;
-  if (_extModificate) {
-    _values[name]->external = external;
-  }
-}
-
-long IECtrl::iObject::getPropertyID(const string& name) {
-  if (_values.find(name) != _values.end()) {
-    return _values[name]->id;
+IECtrl::iObject::sProperty* IECtrl::iObject::getProperty(const string& name) {
+  for (tProperties::iterator it = _properties.begin(); it != _properties.end(); it++) {
+    if ((*it)->name == name) return *it;
   }
   return 0;
 }
 
-bool IECtrl::iObject::isPropertyExt(long id) {
-  for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
-    if (it->second->id == id) return it->second->external;
+IECtrl::iObject::sProperty* IECtrl::iObject::getProperty(long id) {
+  for (tProperties::iterator it = _properties.begin(); it != _properties.end(); it++) {
+    if ((*it)->id == id) return *it;
   }
-  return false;
+  return 0;
 }
-bool IECtrl::iObject::isPropertyExt(const string& name) {
-  if (_values.find(name) != _values.end()) {
-    return _values[name]->external;
+
+void IECtrl::iObject::setProperty(const string& name, Var v, enAttributes attr) {
+  sProperty* val;
+  
+  if (!hasProperty(name)) {
+    _properties.push_back(val = new sProperty(name, attr));
+  } else {
+    val = getProperty(name);
   }
-  return false;
+  val->var = v;
 }
 
 STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller) { 
@@ -1843,7 +1796,7 @@ STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPA
   if (wFlags & DISPATCH_CONSTRUCT) {
     if (hasCallback(id) || _objectDispID) {
       sCallback* s = getCallback(id);
-      if ((s ? s->isObject : 0) || _doNewObject) {
+      if (s && s->isObject || _doNewObject) {
         Var args;
         for (UINT i = 0; i < pdp->cArgs; i++) {
           args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
@@ -1869,9 +1822,9 @@ STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPA
     if (!id) {
       IECtrl::Var ret;
       if (hasCallback("toString")) {
-        ret = trigger(getMemberID("toString"), Var(), false);
-      } else if (hasProperty("toString")) {
-        ret = getProperty("toString");
+        ret = trigger(getCallback("toString")->id, Var(), false);
+      } else if (hasProperty("name")) {
+        ret = getProperty("name")->var;
       } else {
         return DISP_E_MEMBERNOTFOUND;
       }
@@ -1879,25 +1832,23 @@ STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPA
       return S_OK;
 
     } else if (hasCallback(id)) {
-      IECtrl::Var var(this);
-      var.getVariant(pvarRes);
       _objectDispID = id;
       _doNewObject = true;
+
+      IECtrl::Var var(this);
+      var.getVariant(pvarRes);
       return S_OK;
 
     } else if (hasProperty(id)) {
-      IECtrl::Var var(getProperty(id));
-      var.getVariant(pvarRes);
+      getProperty(id)->var.getVariant(pvarRes);
       return S_OK;
     }
   } else if (wFlags & DISPATCH_PROPERTYPUT) {
-    if (hasProperty(id)) {
-      sValue* s = _values[getPropertyName(id)];
-      if (!s->constVal) {
-        if (pdp->cArgs) {
-          setProperty(getPropertyName(id), pdp->rgvarg[pdp->cArgs - 1], s->external);
-          return S_OK;
-        }
+    sProperty* s = getProperty(id);
+    if (s && s->attr > attrReader) {
+      if (pdp->cArgs) {
+        s->var = pdp->rgvarg[pdp->cArgs - 1];
+        return S_OK;
       }
     }
   }
@@ -1907,34 +1858,39 @@ STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPA
 STDMETHODIMP IECtrl::iObject::GetDispID(BSTR bstrName, DWORD grfdex, DISPID *pid) {
   const char* name = _com_util::ConvertBSTRToString(bstrName);
   long id = 0;
+
   if (hasCallback(name)) {
-    id = getMemberID(name);
+    id = getCallback(name)->id;
+  } else if (hasProperty(name)) {
+    id = getProperty(name)->id;
   } else {
-    if (hasProperty(name)) {
-      id = getPropertyID(name);
-    }
-    else {
-      if (grfdex == fdexNameEnsure && _extModificate) {
-        setProperty(name, Var(), true);
-        id = getPropertyID(name);
-      }
+    if (grfdex == fdexNameEnsure && _extModificate) {
+      setProperty(name, Var(), attrAccessor);
+      getProperty(name)->external = true;
+      id = getProperty(name)->id;
     }
   }
 
   *pid = id;
   delete [] name;
 
-  return (id > 0) ? S_OK : DISP_E_UNKNOWNNAME;
+  return id ? S_OK : DISP_E_UNKNOWNNAME;
 }
 
 STDMETHODIMP IECtrl::iObject::DeleteMemberByName(BSTR bstrName, DWORD grfdex) {
   const char* name = _com_util::ConvertBSTRToString(bstrName);
+  sProperty* v = getProperty(name);
   bool deleted = false;
 
-  if (_extModificate && isPropertyExt(name)) {
-    delete _values[name];
-    _values.erase(_values.find(name));
-    deleted = true;
+  if (_extModificate && v && v->external) {
+    for (tProperties::iterator it = _properties.begin(); it != _properties.end(); it++) {
+      if ((*it)->name == name) {
+        delete *it;
+        _properties.erase(it);
+        deleted = true;
+        break;
+      }
+    }
   }
   delete [] name;
 
@@ -1942,77 +1898,74 @@ STDMETHODIMP IECtrl::iObject::DeleteMemberByName(BSTR bstrName, DWORD grfdex) {
 }
 
 STDMETHODIMP IECtrl::iObject::DeleteMemberByDispID(DISPID id) {
-  bool deleted = false;
+  sProperty* v = getProperty(id);
 
-  if (_extModificate && isPropertyExt(id)) {
-    for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
-      if (it->second->id == id) {
-        _values.erase(it);
-        deleted = true;
-        break;
+  if (_extModificate && v && v->external) {
+    for (tProperties::iterator it = _properties.begin(); it != _properties.end(); it++) {
+      if ((*it)->id == id) {
+        delete *it;
+        _properties.erase(it);
+        return S_OK;
       }
     }
   }
-  return deleted ? S_OK : S_FALSE;
+  return S_FALSE;
 }
 
 STDMETHODIMP IECtrl::iObject::GetMemberProperties(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex) {
   DWORD grfdexPCA = 0, grfdexPCNA = 0, grfdexPEA = 0;
-  bool exists = false;
+  bool exists = true;
 
   if (hasCallback(id)) {
-    sCallback *s = getCallback(id);
     grfdexPCA = fdexPropCanCall;
     grfdexPCNA = fdexPropCannotPutRef | fdexPropCannotPut;
     grfdexPEA = fdexPropDynamicType;
-    if (s->isObject) {
-      grfdexPCA|= fdexPropCanGet | fdexPropCanConstruct;
+
+    if (getCallback(id)->isObject) {
+      grfdexPCA |= fdexPropCanGet | fdexPropCanConstruct;
     } else {
-      grfdexPCNA|= fdexPropCannotConstruct | fdexPropCannotGet;
+      grfdexPCNA |= fdexPropCannotConstruct | fdexPropCannotGet;
     }
-    exists = true;
   } else if (hasProperty(id)) {
-    sValue *s = _values[getPropertyName(id)];
     grfdexPCA = fdexPropCanGet | fdexPropCanPut;
     grfdexPCNA = fdexPropCannotCall | fdexPropCannotConstruct | fdexPropCannotPutRef;
     grfdexPEA = fdexPropDynamicType;
-    if (s->constVal) {
-      grfdexPCNA|= fdexPropCannotPut;
-      grfdexPCA^= fdexPropCanPut;
+
+    if (getProperty(id)->attr == attrReader) {
+      grfdexPCNA |= fdexPropCannotPut;
+      grfdexPCA ^= fdexPropCanPut;
     }
-    if (s->external) {
-    }
-    exists = true;
+  } else {
+    exists = false;
   }
 
   if (grfdexFetch == grfdexPropCanAll) {
     *pgrfdex = grfdexPCA;
-  }  else if (grfdexFetch == grfdexPropCannotAll){
+  }  else if (grfdexFetch == grfdexPropCannotAll) {
     *pgrfdex = grfdexPCNA;
-  } else if (grfdexFetch == grfdexPropExtraAll){
+  } else if (grfdexFetch == grfdexPropExtraAll) {
     *pgrfdex = grfdexPEA;
-  } else if (grfdexFetch == grfdexPropAll){
+  } else if (grfdexFetch == grfdexPropAll) {
     *pgrfdex = grfdexPCA | grfdexPCNA | grfdexPEA;
   } else {
     *pgrfdex = 0;
   }
-  return (exists) ? S_OK : DISP_E_UNKNOWNNAME;
+  return exists ? S_OK : DISP_E_UNKNOWNNAME;
 }
 
 STDMETHODIMP IECtrl::iObject::GetMemberName(DISPID id, BSTR *pbstrName) {
   string name;
-  if (hasCallback(id)) {
-    name = getCallbackName(id);
-  } else if (hasProperty(id)) {
-    name = getPropertyName(id);
-  }
 
+  if (hasCallback(id)) {
+    name = getCallback(id)->name;
+  } else if (hasProperty(id)) {
+    name = getProperty(id)->name;
+  }
   if (!name.length()) {
     return DISP_E_UNKNOWNNAME;
-  } else {
-    *pbstrName = _com_util::ConvertStringToBSTR(name.c_str());
-    return S_OK;
   }
+  *pbstrName = _com_util::ConvertStringToBSTR(name.c_str());
+  return S_OK;
 }
 
 STDMETHODIMP IECtrl::iObject::GetNextDispID(DWORD grfdex, DISPID id, DISPID *pid) {
@@ -2025,11 +1978,10 @@ STDMETHODIMP IECtrl::iObject::GetNextDispID(DWORD grfdex, DISPID id, DISPID *pid
         }
       }
     }
-
-    for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
-      if (it->second->id == id) {
-        if (it++ != _values.end()) {
-          *pid = it->second->id;
+    for (tProperties::iterator it = _properties.begin(); it != _properties.end(); it++) {
+      if ((*it)->id == id) {
+        if (it++ != _properties.end()) {
+          *pid = (*it)->id;
           return S_OK;
         }
       }
@@ -2038,11 +1990,12 @@ STDMETHODIMP IECtrl::iObject::GetNextDispID(DWORD grfdex, DISPID id, DISPID *pid
     if (_callbacks.size() > 0) {
       *pid = _callbacks[0]->id;
       return S_OK;
-    } else if (_values.size() > 0) {
-      *pid = _callbacks[0]->id;
+    } else if (_properties.size() > 0) {
+      *pid = _properties[0]->id;
       return S_OK;
     }
   }
+
   *pid = 0;
   return S_FALSE;
 }
@@ -2051,4 +2004,3 @@ STDMETHODIMP IECtrl::iObject::GetNameSpaceParent(IUnknown **ppunk) {
   *ppunk = NULL;
   return S_FALSE;
 }
-

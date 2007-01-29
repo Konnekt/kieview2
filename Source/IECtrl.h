@@ -36,7 +36,7 @@
 static const CLSID CLSID_MozillaBrowser = { 0x1339B54C, 0x3453, 0x11D2, { 0x93, 0xB9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
 
 class IECtrl {
-private:
+protected:
   class ClientSite;
   class EventSink;
   class External;
@@ -132,8 +132,12 @@ public:
 
   static std::string humanize(const char* text);
 
-  static void setAutoCopySel(bool autoCopy);
-  static bool getAutoCopySel();
+  static void setAutoCopySel(bool autoCopy) {
+    m_bAutoCopySel = autoCopy;
+  }
+  static bool getAutoCopySel() {
+    return m_bAutoCopySel;
+  }
 
   static void setOnCopyEmptySel(bool emptySel) {
     m_bOnCopyEmptySel = emptySel;
@@ -162,7 +166,7 @@ public:
     return dispatch;
   }
 
-private:
+protected:
   BSTR getHrefFromAnchor(IHTMLElement* element);
   BSTR getSelectionFunc(bool gettext = false);
 
@@ -178,6 +182,7 @@ private:
   DWORD connectEvents(IHTMLElement* pElem, IDispatch* pDisp);
   void disconnectEvents(IHTMLElement* pElem, DWORD dwCookie);
 
+protected:
   static bool m_bInited;
   HWND m_hParentWnd;
   HWND m_hWnd;
@@ -214,7 +219,7 @@ private:
   ExternalListener * m_pExternalListener;
   ScriptMessageListener * m_pScriptMessageListener;
 
-private:
+protected:
   class ClientSite : public IOleClientSite, 
                      public IOleInPlaceSite, 
                      public IDocHostUIHandler,
@@ -288,12 +293,12 @@ private:
     STDMETHOD(SetZoneMapping)(DWORD dwZone, LPCWSTR lpszPattern, DWORD dwFlags);
     STDMETHOD(GetZoneMappings)(DWORD dwZone, IEnumString **ppenumString, DWORD dwFlags);
 
-  private:
+  protected:
     LONG m_cRef;
     IECtrl * m_pCtrl;
   };
 
-private:
+protected:
   class External : public IDispatchEx {
   public:
     External(IECtrl* pCtrl);
@@ -320,13 +325,13 @@ private:
     STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid);
     STDMETHOD(InvokeEx)(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller);
 
-  private:
+  protected:
     LONG m_cRef;
     IECtrl * m_pCtrl;
     long m_lobjID;
   };
 
-private:
+protected:
   class EventSink : public DWebBrowserEvents2 {
   public:
     EventSink(IECtrl* pCtrl);
@@ -372,9 +377,39 @@ private:
     STDMETHODIMP_(void) SetSecureLockIcon(long);
     STDMETHODIMP_(void) FileDownload(VARIANT_BOOL*);
 
-  private:
+  protected:
     LONG m_cRef;
     IECtrl * m_pCtrl;
+  };
+
+  class DropTarget : public IDropTarget {
+  public:
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
+    STDMETHODIMP_(ULONG) AddRef(void);
+    STDMETHODIMP_(ULONG) Release(void);
+
+    // IDropTarget
+    STDMETHOD(DragEnter)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+    STDMETHOD(DragOver)(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+    STDMETHOD(DragLeave)(void);
+    STDMETHOD(Drop)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
+
+    // Constructor
+    DropTarget(IECtrl* ctrl);
+    ~DropTarget();
+
+  protected:
+    // internal helper function
+    DWORD DropEffect(DWORD grfKeyState, POINTL pt, DWORD dwAllowed);
+    bool QueryDataObject(IDataObject *pDataObject);
+    void DropData(IDataObject *pDataObject);
+
+    // protected member variables
+    long m_cRef;
+    bool m_fAllowDrop;
+
+    IECtrl* m_pCtrl;
   };
 
 public:
@@ -438,13 +473,13 @@ public:
     Var operator+(const char *var2);
     Var operator+(Date64 &var);
 
-  private:
+  protected:
     void clear();
     void copy(Var & copy);
 
     Var & getElement(int i);
 
-  private:
+  protected:
     enum Type {
       Unknown,
       Integer,
@@ -506,37 +541,24 @@ public:
     UINT* _refs;
   };
 
-  class DropTarget : public IDropTarget {
-  public:
-    // IUnknown
-    STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
-    STDMETHODIMP_(ULONG) AddRef(void);
-    STDMETHODIMP_(ULONG) Release(void);
-
-    // IDropTarget
-    STDMETHOD(DragEnter)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-    STDMETHOD(DragOver)(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-    STDMETHOD(DragLeave)(void);
-    STDMETHOD(Drop)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
-
-    // Constructor
-    DropTarget(IECtrl* ctrl);
-    ~DropTarget();
-
-  private:
-    // internal helper function
-    DWORD DropEffect(DWORD grfKeyState, POINTL pt, DWORD dwAllowed);
-    bool QueryDataObject(IDataObject *pDataObject);
-    void DropData(IDataObject *pDataObject);
-
-    // Private member variables
-    long m_cRef;
-    bool m_fAllowDrop;
-
-    IECtrl* m_pCtrl;
-  };
-
   class iObject : public IDispatchEx {
+  public:
+    enum enAttributes {
+      attrReader,
+      attrWriter,
+      attrAccessor
+    };
+
+    struct sProperty {
+      enAttributes attr;
+      IECtrl::Var var;
+      string name;
+      long id;
+      bool external;
+
+      sProperty(const string& _name, enAttributes _attr): id(random()), name(_name), attr(_attr), external(false) { };
+    };
+
   public:
     typedef function<IECtrl::Var(IECtrl::Var&, iObject*, bool)> fCallback;
     typedef signal<IECtrl::Var(IECtrl::Var&, iObject*, bool)> CallbackSig;
@@ -547,25 +569,19 @@ public:
       long id;
       bool isObject;
 
-      sCallback(const StringRef& _name, fCallback f, bool isObject = false): name(_name), id(random()), isObject(isObject) {
+      sCallback(const string& _name, fCallback f, bool _isObject): id(random()), name(_name), isObject(_isObject) {
         if (!f.empty()) signal.connect(f);
       }
     };
 
-    struct sValue {
-      IECtrl::Var var;
-      long id;
-      bool external;
-      bool constVal;
-      sValue(bool const_): id(random()), external(false), constVal(const_) { };
-    };
-
+  public:
+    typedef std::vector<sProperty*> tProperties;
     typedef std::vector<sCallback*> tCallbacks;
-    typedef std::map <string, sValue*> tValues;
 
   public:
     iObject(IECtrl* pCtrl, bool extModificate = true);
     virtual ~iObject();
+
     IECtrl* getIECtrl();
 
     // IUnknown
@@ -589,42 +605,34 @@ public:
     STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid);
     STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk);
 
-    virtual sCallback* registerCallback(const string& name, fCallback f, bool isObject = false);
+    virtual void registerCallback(const string& name, fCallback f, bool isObject = false);
     virtual bool deleteCallback(const string& name);
 
-    virtual bool hasCallback(long id);
     virtual bool hasCallback(const string& name);
+    virtual bool hasCallback(long id);
+
     virtual sCallback* getCallback(const string& name);
     virtual sCallback* getCallback(long id);
-    virtual string getCallbackName(long id);
-    virtual long getMemberID(const string& name);
+
+    virtual void setProperty(const string& name, IECtrl::Var v, enAttributes attr = attrReader);
 
     virtual bool hasProperty(const string& name);
     virtual bool hasProperty(long id);
 
-    virtual IECtrl::Var getProperty(const string& name);
-    virtual IECtrl::Var getProperty(long id);
-
-    virtual long getPropertyID(const string& name);
-    virtual string getPropertyName(long id);
-    virtual bool isPropertyExt(long id);
-    virtual bool isPropertyExt(const string& name);
-
-    virtual void setProperty(const string& name, IECtrl::Var v, bool const_ = false, bool external = false);
+    virtual sProperty* getProperty(const string& name);
+    virtual sProperty* getProperty(long id);
 
   protected:
     virtual IECtrl::Var trigger(long id, IECtrl::Var& args, bool construct = false);
-    IECtrl::Var _testobj(IECtrl::Var&, iObject*, bool construct);
 
   protected:
-    tCallbacks _callbacks;
-    tValues _values;
-    bool _extModificate;
-
-  private:
     IECtrl* m_pCtrl;
     LONG m_cRef;
 
+    tProperties _properties;
+    tCallbacks _callbacks;
+
+    bool _extModificate;
     bool _doNewObject;
     long _objectDispID;
   };
