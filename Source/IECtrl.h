@@ -538,15 +538,16 @@ public:
 
   class iObject : public IDispatchEx {
   public:
-    typedef function<IECtrl::Var(IECtrl::Var&, IECtrl*)> fCallback;
-    typedef signal<IECtrl::Var(IECtrl::Var&, IECtrl*)> CallbackSig;
+    typedef function<IECtrl::Var(IECtrl::Var&, iObject*, bool)> fCallback;
+    typedef signal<IECtrl::Var(IECtrl::Var&, iObject*, bool)> CallbackSig;
 
     struct sCallback {
       CallbackSig signal;
       string name;
       long id;
+      bool isObject;
 
-      sCallback(const StringRef& _name, fCallback f): name(_name), id(random()) {
+      sCallback(const StringRef& _name, fCallback f, bool isObject = false): name(_name), id(random()), isObject(isObject) {
         if (!f.empty()) signal.connect(f);
       }
     };
@@ -554,14 +555,16 @@ public:
     struct sValue {
       IECtrl::Var var;
       long id;
-      sValue(): id(random()) {}
+      bool external;
+      bool constVal;
+      sValue(): id(random()), external(false), constVal(false) { };
     };
 
     typedef std::vector<sCallback*> tCallbacks;
     typedef std::map <string, sValue*> tValues;
 
   public:
-    iObject(IECtrl* pCtrl);
+    iObject(IECtrl* pCtrl, bool extModificate);
     virtual ~iObject();
 
     // IUnknown
@@ -576,23 +579,24 @@ public:
     STDMETHOD(Invoke)(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
 
     // IDispatchEx
-    STDMETHOD(InvokeEx)(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller) { 
-      return HRESULT(0);
-    }
-    STDMETHOD(GetDispID)(BSTR bstrName, DWORD grfdex, DISPID *pid) { return HRESULT(0); }
-    STDMETHOD(DeleteMemberByName)(BSTR bstrName, DWORD grfdex) { return HRESULT(0); }
-    STDMETHOD(DeleteMemberByDispID)(DISPID id) { return HRESULT(0); }
-    STDMETHOD(GetMemberProperties)(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex) { return HRESULT(0); }
-    STDMETHOD(GetMemberName)(DISPID id, BSTR *pbstrName) { return HRESULT(0); }
-    STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid) { return HRESULT(0); }
-    STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk) { return HRESULT(0); }
+    STDMETHOD(InvokeEx)(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller);
+    STDMETHOD(GetDispID)(BSTR bstrName, DWORD grfdex, DISPID *pid);
+    STDMETHOD(DeleteMemberByName)(BSTR bstrName, DWORD grfdex);
+    STDMETHOD(DeleteMemberByDispID)(DISPID id);
+    STDMETHOD(GetMemberProperties)(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex);
+    STDMETHOD(GetMemberName)(DISPID id, BSTR *pbstrName);
+    STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid);
+    STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk);
 
-    virtual sCallback* registerCallback(const char* name, fCallback f);
-    virtual bool deleteCallback(const char* name);
+    virtual sCallback* registerCallback(const string& name, fCallback f, bool isObject = false);
+    virtual bool deleteCallback(const string& name);
 
-    virtual sCallback* getCallback(const char* name);
+    virtual bool hasCallback(long id);
+    virtual bool hasCallback(const string& name);
+    virtual sCallback* getCallback(const string& name);
     virtual sCallback* getCallback(long id);
-    virtual long getMemberID(const char *name);
+    virtual string getCallbackName(long id);
+    virtual long getMemberID(const string& name);
 
     virtual bool hasProperty(const string& name);
     virtual bool hasProperty(long id);
@@ -602,19 +606,26 @@ public:
 
     virtual long getPropertyID(const string& name);
     virtual string getPropertyName(long id);
+    virtual bool isPropertyExt(long id);
+    virtual bool isPropertyExt(const string& name);
 
-    virtual void setProperty(const string& name, IECtrl::Var v);
+    virtual void setProperty(const string& name, IECtrl::Var v, bool external = false);
 
   protected:
-    virtual IECtrl::Var trigger(long id, IECtrl::Var& args, IECtrl* ctrl);
+    virtual IECtrl::Var trigger(long id, IECtrl::Var& args, iObject* object, bool construct = false);
+    virtual IECtrl::Var _toString(IECtrl::Var&, iObject*, bool construct);
 
   protected:
     tCallbacks _callbacks;
     tValues _values;
+    bool _extModificate;
 
   private:
     IECtrl* m_pCtrl;
     LONG m_cRef;
+
+    bool _doNewObject;
+    long _objectDispID;
   };
 };
 

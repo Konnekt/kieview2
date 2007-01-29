@@ -1623,9 +1623,13 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
   }
 }
 
-IECtrl::iObject::iObject(IECtrl* pCtrl) {
+IECtrl::iObject::iObject(IECtrl* pCtrl, bool extModificate): _extModificate(extModificate) {
   m_pCtrl = pCtrl;
   m_cRef = 0;
+  _objectDispID = 0;
+  _doNewObject = false;
+
+  this->registerCallback("toString", bind(&iObject::_toString, this, _1, _2, _3));
 }
 
 IECtrl::iObject::~iObject() {
@@ -1660,7 +1664,7 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid
 
   Var ret;
   if (getCallback(dispIdMember)) {
-    ret = trigger(dispIdMember, args, m_pCtrl);
+    ret = trigger(dispIdMember, args, this);
   } else if (hasProperty(dispIdMember)) {
     if(args.length()) {
       setProperty(getPropertyName(dispIdMember), args[0]);
@@ -1678,6 +1682,9 @@ STDMETHODIMP IECtrl::iObject::QueryInterface(REFIID riid, PVOID *ppv) {
     *ppv = this;
   }
   if (IID_IDispatch == riid) {
+    *ppv = (IDispatch*) this;
+  }
+  if (IID_IDispatchEx == riid) {
     *ppv = (IDispatch*) this;
   }
   if (NULL != *ppv) {
@@ -1709,25 +1716,25 @@ STDMETHODIMP IECtrl::iObject::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UI
   return hr;
 }
 
-IECtrl::Var IECtrl::iObject::trigger(long id, IECtrl::Var& args, IECtrl* ctrl) {
+IECtrl::Var IECtrl::iObject::trigger(long id, IECtrl::Var& args, iObject* object, bool construct) {
   sCallback* f = getCallback(id);
-  return !f ? IECtrl::Var() : f->signal(args, ctrl);
+  return !f ? IECtrl::Var() : f->signal(args, object, construct);
 }
 
-long IECtrl::iObject::getMemberID(const char *name) {
+long IECtrl::iObject::getMemberID(const string& name) {
   sCallback* f = getCallback(name);
   return !f ? 0 : f->id;
 }
 
-IECtrl::iObject::sCallback* IECtrl::iObject::registerCallback(const char* name, IECtrl::iObject::fCallback f) {
+IECtrl::iObject::sCallback* IECtrl::iObject::registerCallback(const string& name, fCallback f, bool isObject) {
   if (!getCallback(name)) {
-    _callbacks.push_back(new sCallback(name, f));
+    _callbacks.push_back(new sCallback(name, f, isObject));
     return _callbacks[_callbacks.size() - 1];
   }
   return 0;
 }
 
-IECtrl::iObject::sCallback* IECtrl::iObject::getCallback(const char* name) {
+IECtrl::iObject::sCallback* IECtrl::iObject::getCallback(const string& name) {
   for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
     if ((*it)->name == name) return *it;
   }
@@ -1741,7 +1748,22 @@ IECtrl::iObject::sCallback* IECtrl::iObject::getCallback(long id) {
   return 0;
 }
 
-bool IECtrl::iObject::deleteCallback(const char* name) {
+string IECtrl::iObject::getCallbackName(long id) {
+  for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
+    if ((*it)->id == id) return (*it)->name;
+  }
+  return "";
+}
+bool IECtrl::iObject::hasCallback(long id) {
+  IECtrl::iObject::sCallback* f = getCallback(id);
+  return !f ? false : true;
+}
+
+bool IECtrl::iObject::hasCallback(const string& name) {
+  IECtrl::iObject::sCallback* f = getCallback(name);
+  return !f ? false : true;
+}
+bool IECtrl::iObject::deleteCallback(const string& name) {
   for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
     if ((*it)->name == name) {
       delete (*it);
@@ -1784,11 +1806,14 @@ string IECtrl::iObject::getPropertyName(long id) {
   return "";
 }
 
-void IECtrl::iObject::setProperty(const string& name, Var v) {
+void IECtrl::iObject::setProperty(const string& name, Var v, bool external) {
   if (_values.find(name) == _values.end()) {
     _values[name] = new sValue();
   }
   _values[name]->var = v;
+  if (_extModificate) {
+    _values[name]->external = external;
+  }
 }
 
 long IECtrl::iObject::getPropertyID(const string& name) {
@@ -1797,3 +1822,226 @@ long IECtrl::iObject::getPropertyID(const string& name) {
   }
   return 0;
 }
+
+bool IECtrl::iObject::isPropertyExt(long id) {
+  for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
+    if (it->second->id == id) return it->second->external;
+  }
+  return false;
+}
+bool IECtrl::iObject::isPropertyExt(const string& name) {
+  if (_values.find(name) != _values.end()) {
+    return _values[name]->external;
+  }
+  return false;
+}
+IECtrl::Var IECtrl::iObject::_toString(IECtrl::Var &, IECtrl::iObject *, bool construct) {
+  return Var("IECtrl::iObject");
+}
+
+STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller) { 
+  if (!pdp) return E_INVALIDARG;
+
+  if (wFlags & DISPATCH_CONSTRUCT) {
+    if (hasCallback(id) || _objectDispID) {
+      sCallback* s = getCallback(id);
+      if ((s ? s->isObject : 0) || _doNewObject) {
+        Var args;
+        for (UINT i = 0; i < pdp->cArgs; i++) {
+          args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
+        }
+        Var ret = trigger(id ? id : _objectDispID, args, this, true);
+        ret.getVariant(pvarRes);
+        _objectDispID = 0;
+        _doNewObject = false;
+        return S_OK;
+      }
+    }
+  } else if (wFlags & DISPATCH_METHOD) {
+    if (hasCallback(id)) {
+      Var args;
+      for (UINT i = 0; i < pdp->cArgs; i++) {
+        args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
+      }
+      Var ret = trigger(id, args, this, false);
+      ret.getVariant(pvarRes);
+      return S_OK;
+    }
+  } else if (wFlags & DISPATCH_PROPERTYGET) {
+    if (hasProperty(id)) {
+      IECtrl::Var var(getProperty(id));
+      var.getVariant(pvarRes);
+      return S_OK;
+    } else if (id == 0) {
+      IECtrl::Var ret = trigger(getMemberID("toString"), Var(), this, false);
+      ret.getVariant(pvarRes);
+      return S_OK;
+    } else if (hasCallback(id)) {
+      IECtrl::Var var(this);
+      var.getVariant(pvarRes);
+      _objectDispID = id;
+      _doNewObject = true;
+      return S_OK;
+    }
+  } else if (wFlags & DISPATCH_PROPERTYPUT) {
+    if (hasProperty(id)) {
+      sValue* s = _values[getPropertyName(id)];
+      if (!s->constVal) {
+        if (pdp->cArgs) {
+          setProperty(getPropertyName(id), pdp->rgvarg[pdp->cArgs - 1], s->external);
+          return S_OK;
+        }
+      }
+    }
+  }
+  // return Invoke(id, IID_IDispatch, lcid, wFlags, pdp, pvarRes, pei, 0);
+  return DISP_E_MEMBERNOTFOUND;
+}
+STDMETHODIMP IECtrl::iObject::GetDispID(BSTR bstrName, DWORD grfdex, DISPID *pid) {
+  const char* name = _com_util::ConvertBSTRToString(bstrName);
+  long id = 0;
+  if (hasCallback(name)) {
+    id = getMemberID(name);
+  } else {
+    if (hasProperty(name)) {
+      id = getPropertyID(name);
+    }
+    else {
+      if (grfdex == fdexNameEnsure && _extModificate) {
+        setProperty(name, Var(), true);
+        id = getPropertyID(name);
+      }
+    }
+  }
+
+  *pid = id;
+  delete [] name;
+
+  return (id > 0) ? S_OK : DISP_E_UNKNOWNNAME;
+}
+
+STDMETHODIMP IECtrl::iObject::DeleteMemberByName(BSTR bstrName, DWORD grfdex) {
+  const char* name = _com_util::ConvertBSTRToString(bstrName);
+  bool deleted = false;
+
+  if (_extModificate && isPropertyExt(name)) {
+    delete _values[name];
+    _values.erase(_values.find(name));
+    deleted = true;
+  }
+  delete [] name;
+
+  return deleted ? S_OK : S_FALSE;
+}
+
+STDMETHODIMP IECtrl::iObject::DeleteMemberByDispID(DISPID id) {
+  bool deleted = false;
+
+  if (_extModificate && isPropertyExt(id)) {
+    for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
+      if (it->second->id == id) {
+        _values.erase(it);
+        deleted = true;
+        break;
+      }
+    }
+  }
+  return deleted ? S_OK : S_FALSE;
+}
+
+STDMETHODIMP IECtrl::iObject::GetMemberProperties(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex) {
+  DWORD grfdexPCA = 0, grfdexPCNA = 0, grfdexPEA = 0;
+  bool exists = false;
+
+  if (hasCallback(id)) {
+    sCallback *s = getCallback(id);
+    grfdexPCA = fdexPropCanCall;
+    grfdexPCNA = fdexPropCannotPutRef | fdexPropCannotPut;
+    grfdexPEA = fdexPropDynamicType;
+    if (s->isObject) {
+      grfdexPCA|= fdexPropCanGet | fdexPropCanConstruct;
+    } else {
+      grfdexPCNA|= fdexPropCannotConstruct | fdexPropCannotGet;
+    }
+    exists = true;
+  } else if (hasProperty(id)) {
+    sValue *s = _values[getPropertyName(id)];
+    grfdexPCA = fdexPropCanGet | fdexPropCanPut;
+    grfdexPCNA = fdexPropCannotCall | fdexPropCannotConstruct | fdexPropCannotPutRef;
+    grfdexPEA = fdexPropDynamicType;
+    if (s->constVal) {
+      grfdexPCNA|= fdexPropCannotPut;
+      grfdexPCA^= fdexPropCanPut;
+    }
+    if (s->external) {
+    }
+    exists = true;
+  }
+
+  if (grfdexFetch == grfdexPropCanAll) {
+    *pgrfdex = grfdexPCA;
+  }  else if (grfdexFetch == grfdexPropCannotAll){
+    *pgrfdex = grfdexPCNA;
+  } else if (grfdexFetch == grfdexPropExtraAll){
+    *pgrfdex = grfdexPEA;
+  } else if (grfdexFetch == grfdexPropAll){
+    *pgrfdex = grfdexPCA | grfdexPCNA | grfdexPEA;
+  } else {
+    *pgrfdex = 0;
+  }
+  return (exists) ? S_OK : DISP_E_UNKNOWNNAME;
+}
+
+STDMETHODIMP IECtrl::iObject::GetMemberName(DISPID id, BSTR *pbstrName) {
+  string name;
+  if (hasCallback(id)) {
+    name = getCallbackName(id);
+  } else if (hasProperty(id)) {
+    name = getPropertyName(id);
+  }
+
+  if (!name.length()) {
+    return DISP_E_UNKNOWNNAME;
+  } else {
+    *pbstrName = _com_util::ConvertStringToBSTR(name.c_str());
+    return S_OK;
+  }
+}
+
+STDMETHODIMP IECtrl::iObject::GetNextDispID(DWORD grfdex, DISPID id, DISPID *pid) {
+  if (grfdex == fdexEnumAll) {
+    for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
+      if ((*it)->id == id) {
+        if (it++ != _callbacks.end()) {
+          *pid = (*it)->id;
+          return S_OK;
+        }
+      }
+    }
+
+    for (tValues::iterator it = _values.begin(); it != _values.end(); it++) {
+      if (it->second->id == id) {
+        if (it++ != _values.end()) {
+          *pid = it->second->id;
+          return S_OK;
+        }
+      }
+    }
+  } else if (grfdex == fdexEnumDefault) {
+    if (_callbacks.size() > 0) {
+      *pid = _callbacks[0]->id;
+      return S_OK;
+    } else if (_values.size() > 0) {
+      *pid = _callbacks[0]->id;
+      return S_OK;
+    }
+  }
+  *pid = 0;
+  return S_FALSE;
+}
+
+STDMETHODIMP IECtrl::iObject::GetNameSpaceParent(IUnknown **ppunk) {
+  *ppunk = NULL;
+  return S_FALSE;
+}
+
