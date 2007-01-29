@@ -233,6 +233,7 @@ private:
     // IOleWindow
     STDMETHOD(GetWindow)(HWND *phwnd);
     STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode);
+
     // IOleInPlace
     STDMETHOD(CanInPlaceActivate)(void);
     STDMETHOD(OnInPlaceActivate)(void);
@@ -244,6 +245,7 @@ private:
     STDMETHOD(DiscardUndoState)(void);
     STDMETHOD(DeactivateAndUndo)(void);
     STDMETHOD(OnPosRectChange)(LPCRECT lprcPosRect);
+
     // IOleClientSite
     STDMETHOD(SaveObject)(void);
     STDMETHOD(GetMoniker)(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker **ppmk);
@@ -251,6 +253,7 @@ private:
     STDMETHOD(ShowObject)(void);
     STDMETHOD(OnShowWindow)(BOOL fShow);
     STDMETHOD(RequestNewObjectLayout)(void);
+
     // IDocHostUIHandler
     STDMETHOD(ShowContextMenu)(DWORD dwID, POINT *ppt, IUnknown *pcmdtReserved, IDispatch *pdispReserved);
     STDMETHOD(GetHostInfo)(DOCHOSTUIINFO *pInfo);
@@ -267,11 +270,14 @@ private:
     STDMETHOD(GetExternal)(IDispatch **ppDispatch);
     STDMETHOD(TranslateUrl)(DWORD dwTranslate, OLECHAR *pchURLIn, OLECHAR **ppchURLOut);
     STDMETHOD(FilterDataObject)(IDataObject *pDO, IDataObject **ppDORet);
+
     // IDocHostShowUI
     STDMETHOD(ShowHelp)(HWND hwnd, LPOLESTR pszHelpFile, UINT uCommand, DWORD dwData, POINT ptMouse, IDispatch __RPC_FAR *pDispatchObjectHit);
     STDMETHOD(ShowMessage)(HWND hwnd, LPOLESTR lpstrText, LPOLESTR lpstrCaption, DWORD dwType, LPOLESTR lpstrHelpFile, DWORD dwHelpContext, LRESULT __RPC_FAR *plResult);
+
     // IServiceProvider
     STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void __RPC_FAR *__RPC_FAR *ppvObject);
+
     // IInternetSecurityManager
     STDMETHOD(SetSecuritySite)(IInternetSecurityMgrSite *pSite);
     STDMETHOD(GetSecuritySite)(IInternetSecurityMgrSite **ppSite);
@@ -297,11 +303,13 @@ private:
     STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
     STDMETHODIMP_(ULONG) AddRef(void);
     STDMETHODIMP_(ULONG) Release(void);
+
     // IDispatch
     STDMETHOD(GetTypeInfoCount)(UINT*);
     STDMETHOD(GetTypeInfo)(UINT, LCID, LPTYPEINFO*);
-    STDMETHOD(GetIDsOfNames)(REFIID,LPOLESTR*,UINT,LCID,DISPID*);
-    STDMETHOD(Invoke)(DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+    STDMETHOD(GetIDsOfNames)(REFIID, LPOLESTR*, UINT, LCID, DISPID*);
+    STDMETHOD(Invoke)(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
+
     // IDispatchEx
     STDMETHOD(DeleteMemberByName)(BSTR bstrName, DWORD grfdex);
     STDMETHOD(DeleteMemberByDispID)(DISPID id);
@@ -317,6 +325,7 @@ private:
     IECtrl * m_pCtrl;
     long m_lobjID;
   };
+
 private:
   class EventSink : public DWebBrowserEvents2 {
   public:
@@ -327,11 +336,13 @@ private:
     STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
     STDMETHODIMP_(ULONG) AddRef(void);
     STDMETHODIMP_(ULONG) Release(void);
+
     // IDispatch
     STDMETHOD(GetTypeInfoCount)(UINT*);
     STDMETHOD(GetTypeInfo)(UINT, LCID, LPTYPEINFO*);
     STDMETHOD(GetIDsOfNames)(REFIID, LPOLESTR*, UINT, LCID, DISPID*);
     STDMETHOD(Invoke)(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
+
     // DWebBrowserEvents2
     STDMETHODIMP_(void) StatusTextChange(BSTR);
     STDMETHODIMP_(void) ProgressChange(long, long);
@@ -501,6 +512,7 @@ public:
     STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
     STDMETHODIMP_(ULONG) AddRef(void);
     STDMETHODIMP_(ULONG) Release(void);
+
     // IDropTarget
     STDMETHOD(DragEnter)(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
     STDMETHOD(DragOver)(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
@@ -556,20 +568,24 @@ public:
     STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
     STDMETHODIMP_(ULONG) AddRef(void);
     STDMETHODIMP_(ULONG) Release(void);
+
     // IDispatch
     STDMETHOD(GetTypeInfoCount)(UINT*);
     STDMETHOD(GetTypeInfo)(UINT, LCID, LPTYPEINFO*);
     STDMETHOD(GetIDsOfNames)(REFIID, LPOLESTR*, UINT, LCID, DISPID*);
     STDMETHOD(Invoke)(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
+
     // IDispatchEx
-    STDMETHOD(InvokeEx)(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller){return HRESULT(0);}
-    STDMETHOD(GetDispID)(BSTR bstrName, DWORD grfdex, DISPID *pid) {return HRESULT(0);}
-    STDMETHOD(DeleteMemberByName)(BSTR bstrName, DWORD grfdex) {return HRESULT(0);}
-    STDMETHOD(DeleteMemberByDispID)(DISPID id) {return HRESULT(0);}
-    STDMETHOD(GetMemberProperties)(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex) {return HRESULT(0);}
-    STDMETHOD(GetMemberName)(DISPID id, BSTR *pbstrName) {return HRESULT(0);}
-    STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid) {return HRESULT(0);}
-    STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk) {return HRESULT(0);}
+    STDMETHOD(InvokeEx)(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller) { 
+      return HRESULT(0);
+    }
+    STDMETHOD(GetDispID)(BSTR bstrName, DWORD grfdex, DISPID *pid) { return HRESULT(0); }
+    STDMETHOD(DeleteMemberByName)(BSTR bstrName, DWORD grfdex) { return HRESULT(0); }
+    STDMETHOD(DeleteMemberByDispID)(DISPID id) { return HRESULT(0); }
+    STDMETHOD(GetMemberProperties)(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex) { return HRESULT(0); }
+    STDMETHOD(GetMemberName)(DISPID id, BSTR *pbstrName) { return HRESULT(0); }
+    STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid) { return HRESULT(0); }
+    STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk) { return HRESULT(0); }
 
     virtual sCallback* registerCallback(const char* name, fCallback f);
     virtual bool deleteCallback(const char* name);

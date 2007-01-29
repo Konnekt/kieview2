@@ -1412,7 +1412,7 @@ STDMETHODIMP IECtrl::External::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPP
       for (UINT i = 0; i < pDispParams->cArgs; i++) {
         args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
       }
-      Var ret = m_pCtrl->m_pExternalListener->trigger((id) ? id : m_lobjID, args, m_pCtrl, true);
+      Var ret = m_pCtrl->m_pExternalListener->trigger(id ? id : m_lobjID, args, m_pCtrl, true);
       ret.getVariant(pVarResult);
       m_lobjID = 0;
       return S_OK;
@@ -1423,7 +1423,7 @@ STDMETHODIMP IECtrl::External::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPP
       for (UINT i = 0; i < pDispParams->cArgs; i++) {
         args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
       }
-      Var ret = m_pCtrl->m_pExternalListener->trigger(id, args, m_pCtrl);
+      Var ret = m_pCtrl->m_pExternalListener->trigger(id, args, m_pCtrl, false);
       ret.getVariant(pVarResult);
       return S_OK;
     }
@@ -1435,15 +1435,17 @@ STDMETHODIMP IECtrl::External::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPP
       return S_OK;
     }
   }
+  // return Invoke(id, IID_IDispatch, lcid, wFlags, pdp, pvarRes, pei, 0);
   return DISP_E_MEMBERNOTFOUND;
-//    return Invoke(id, IID_IDispatch,lcid, wFlags, pdp, pvarRes, pei, 0);
 }
 
 STDMETHODIMP IECtrl::External::GetDispID(BSTR bstrName, DWORD grfdex, DISPID *pid) {
   const char* name = _com_util::ConvertBSTRToString(bstrName);
   long id = m_pCtrl->m_pExternalListener->getMemberID(name);
+
   *pid = id;
   delete [] name;
+
   return (id > 0) ? S_OK : DISP_E_UNKNOWNNAME;
 }
 STDMETHODIMP IECtrl::External::DeleteMemberByName(BSTR bstrName, DWORD grfdex) {
@@ -1452,6 +1454,7 @@ STDMETHODIMP IECtrl::External::DeleteMemberByName(BSTR bstrName, DWORD grfdex) {
 STDMETHODIMP IECtrl::External::DeleteMemberByDispID(DISPID id) {
   return S_FALSE;
 }
+
 STDMETHODIMP IECtrl::External::GetMemberProperties(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex) {
   if (grfdexFetch == grfdexPropCanAll) {
     *pgrfdex = 0;
@@ -1468,7 +1471,8 @@ STDMETHODIMP IECtrl::External::GetMemberProperties(DISPID id, DWORD grfdexFetch,
 }
 STDMETHODIMP IECtrl::External::GetMemberName(DISPID id, BSTR *pbstrName) {
   string name = m_pCtrl->m_pExternalListener->getMemberName(id);
-  if (name == "") {
+
+  if (!name.length()) {
     return DISP_E_UNKNOWNNAME;
   } else {
     *pbstrName = _com_util::ConvertStringToBSTR(name.c_str());

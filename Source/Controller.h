@@ -33,8 +33,8 @@ namespace kIEview2 {
     friend class PlugController<Controller>;
 
   public:
-    typedef function<IECtrl::Var(IECtrl::Var&, IECtrl*, bool construct)> fExternalCallback;
-    typedef signal<IECtrl::Var(IECtrl::Var&, IECtrl*, bool construct)> ExternalCallbackSig;
+    typedef function<IECtrl::Var(IECtrl::Var&, IECtrl*, bool)> fExternalCallback;
+    typedef signal<IECtrl::Var(IECtrl::Var&, IECtrl*, bool)> ExternalCallbackSig;
 
     struct sExternalCallback {
       ExternalCallbackSig signal;
