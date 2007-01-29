@@ -94,5 +94,15 @@ using namespace std;
 using namespace Konnekt;
 using namespace boost;
 
+#pragma comment(lib, "glib-2.0.lib")
+#ifdef _DEBUG
+  #pragma comment(lib, "glibmm-2.4d.lib")
+  #pragma comment(lib, "xml++-2.6d.lib")
+#else
+  #pragma comment(lib, "glibmm-2.4.lib")
+  #pragma comment(lib, "xml++-2.6.lib")
+#endif
+
+#include <libxml++/libxml++.h>
 
 #include "../Project/resource.h"

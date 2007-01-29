@@ -140,16 +140,6 @@ String TplHandler::parseString(param_data* data, const StringRef& text) {
   parser.set_include_dir(includeDirs);
   // Parse the template
   parser.parse(text);
-
-  param_data * pArray = data -> hash_insert_new_array("arr");
-
-  param_data * pHash = pArray -> array_insert_new_hash();
-  pHash -> hash_insert_new_var("NAME", "Ivanov Ivan");
-  pHash -> hash_insert_new_var("JOB", "The architect");
-
-  pHash = pArray -> array_insert_new_hash();
-  pHash -> hash_insert_new_var("NAME", "Petrov Petr");
-  pHash -> hash_insert_new_var("JOB", "The builder");
   // We impose parameters on a pattern
   parser.param(data);
 
