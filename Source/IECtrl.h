@@ -396,6 +396,15 @@ public:
     Object getObject(IECtrl* ctrl = NULL);
     IDispatch* getDispatch();
 
+    bool isUnknown();
+    bool isInteger();
+    bool isBool();
+    bool isReal();
+    bool isString();
+    bool isDate();
+    bool isObject();
+    bool isDispatch();
+
     void setValue(bool value);
     void setValue(int value);
     void setValue(double value);

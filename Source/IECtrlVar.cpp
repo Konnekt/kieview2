@@ -266,6 +266,31 @@ IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
   return IECtrl::Object(ctrl, false);
 }
 
+bool IECtrl::Var::isUnknown() {
+  return m_eType == Type::Unknown;
+}
+bool IECtrl::Var::isInteger() {
+  return m_eType == Type::Integer;
+}
+bool IECtrl::Var::isBool() {
+  return m_eType == Type::Boolean;
+}
+bool IECtrl::Var::isReal() {
+  return m_eType == Type::Real;
+}
+bool IECtrl::Var::isString() {
+  return m_eType == Type::String;
+}
+bool IECtrl::Var::isDate() {
+  return m_eType == Type::Date;
+}
+bool IECtrl::Var::isObject() {
+  return m_eType == Type::Object;
+}
+bool IECtrl::Var::isDispatch() {
+  return m_eType == Type::Dispatch;
+}
+
 IDispatch* IECtrl::Var::getDispatch() {
   if (m_eType == Type::Dispatch) {
     return m_dispValue;

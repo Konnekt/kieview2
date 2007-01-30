@@ -167,7 +167,7 @@ namespace kIEview2 {
 
   public:
     IECtrl::Var getPluginName(IECtrl::Var& args, IECtrl::iObject* obj) {
-      if (args.empty() || args[0].getType() != IECtrl::Var::Type::Integer) return false;
+      if (args.empty() || !args[0].isInteger()) return false;
       
       if (int plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL)) {
         return SAFECHAR((char*) Ctrl->IMessageDirect(IM_PLUG_NAME, plugID));
@@ -179,15 +179,12 @@ namespace kIEview2 {
       if (args.empty()) return false;
 
       int plugID = 0;
-      switch (args[0].getType()) {
-        case IECtrl::Var::Type::String:
-          plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) args[0].getString());
-          break;
-        case IECtrl::Var::Type::Integer:
-          plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL);
-          break;
-        default:
-          return false;
+      if (args[0].isString()) {
+        plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) args[0].getString());
+      } else if (args[0].isInteger()) {
+        plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL);
+      } else {
+        return false;
       }
 
       if (plugID) {
