@@ -1512,15 +1512,22 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
       return S_OK;
 
     } else if (hasCallback(id)) {
-      IECtrl::Var var(true);
-      var.getVariant(pvarRes);
+      sCallback* method = getCallback(id);
+      IECtrl::Var ret;
+
+      if (method->getter) {
+        ret = trigger(method->id, Var());
+      } else {
+        ret = true;
+      }
+      ret.getVariant(pvarRes);
       return S_OK;
 
     } else if (hasProperty(id)) {
       getProperty(id)->var.getVariant(pvarRes);
       return S_OK;
     }
-  } else if (wFlags & DISPATCH_PROPERTYPUT | DISPATCH_PROPERTYPUT) {
+  } else if ((wFlags & DISPATCH_PROPERTYPUT) || (wFlags & DISPATCH_PROPERTYPUTREF)) {
     sProperty* s = getProperty(id);
     if (s && s->attr > attrReader) {
       if (pdp->cArgs) {
@@ -1651,6 +1658,7 @@ IECtrl::iObject::sProperty* IECtrl::iObject::setProperty(const string& name, Var
 STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller) { 
   return Invoke(id, IID_IDispatch, lcid, wFlags, pdp, pvarRes, pei, 0);
 }
+
 STDMETHODIMP IECtrl::iObject::GetDispID(BSTR bstrName, DWORD grfdex, DISPID *pid) {
   const char* name = _com_util::ConvertBSTRToString(bstrName);
   long id = 0;

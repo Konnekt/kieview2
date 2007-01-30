@@ -83,7 +83,7 @@ namespace kIEview2 {
     ~Controller();
 
     bool hasMsgHandler(int type);
-    bool registerMsgHandler(int type, fMessageHandler f, const string& label, int priority = 0, 
+    bool bindMsgHandler(int type, fMessageHandler f, const string& label, int priority = 0, 
       signals::connect_position pos = signals::at_back, bool overwrite = true);
 
     IECtrl::Var getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj);

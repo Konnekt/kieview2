@@ -51,7 +51,7 @@ void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int si
 
 namespace kIEview2 {
   // initialization
-  Controller::Controller(): jsController(0), ieVersion(getIEVersion()), tplHandler(new TplHandler), rtfHtml(new RtfHtmlTag) {
+  Controller::Controller(): jsController(0), ieVersion(getIEVersion()) {
     IECtrl::getExternal()->bindMethod("oController", bind(&Controller::getJSController, this, _1, _2), true);
     IECtrl::getExternal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2), true);
 
@@ -85,6 +85,9 @@ namespace kIEview2 {
     IECtrl::init();
     setlocale(LC_ALL, "polish");
 
+    this->tplHandler = new TplHandler;
+    this->rtfHtml = new RtfHtmlTag;
+
     tplHandler->bindStdFunctions();
     tplHandler->bindUdf("getCntSetting", new udf_get_cnt_setting);
     tplHandler->bindUdf("getSetting", new udf_get_cfg_setting);
@@ -96,10 +99,10 @@ namespace kIEview2 {
     tplHandler->bindUdf("replace", new udf_replace);
     tplHandler->bindUdf("match?", new udf_match);
 
-    registerMsgHandler(MT_QUICKEVENT, bind(&Controller::_handleQuickEventTpl, this, _1, _2), "quickevent");
-    registerMsgHandler(MT_MESSAGE, bind(&Controller::_handleStdMsgTpl, this, _1, _2), "message");
-    registerMsgHandler(MT_FILE, bind(&Controller::_handleFileTpl, this, _1, _2), "file");
-    registerMsgHandler(MT_SMS, bind(&Controller::_handleSmsTpl, this, _1, _2), "sms");
+    bindMsgHandler(MT_QUICKEVENT, bind(&Controller::_handleQuickEventTpl, this, _1, _2), "quickevent");
+    bindMsgHandler(MT_MESSAGE, bind(&Controller::_handleStdMsgTpl, this, _1, _2), "message");
+    bindMsgHandler(MT_FILE, bind(&Controller::_handleFileTpl, this, _1, _2), "file");
+    bindMsgHandler(MT_SMS, bind(&Controller::_handleSmsTpl, this, _1, _2), "sms");
   }
 
   Controller::~Controller() {
@@ -119,7 +122,7 @@ namespace kIEview2 {
   }
 
   void Controller::_onPluginsLoaded() {
-    if (getIEVersion() < 6) {
+    if (ieVersion < 6) {
       Ctrl->IMessage(&sIMessage_plugOut(Ctrl->ID(), "kIEview2 potrzebuje do dzia³ania conajmniej IE6.",
         sIMessage_plugOut::erNo, sIMessage_plugOut::euNowAndOnNextStart));
       return setFailure();
@@ -501,7 +504,7 @@ namespace kIEview2 {
     return msgHandlers.find(type) != msgHandlers.end();
   }
 
-  bool Controller::registerMsgHandler(int type, fMessageHandler f, const string& label, int priority, 
+  bool Controller::bindMsgHandler(int type, fMessageHandler f, const string& label, int priority, 
     signals::connect_position pos, bool overwrite) 
   {
     if (f.empty()) return false;

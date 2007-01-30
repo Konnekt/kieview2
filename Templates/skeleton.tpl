@@ -11,6 +11,17 @@
     {{include js/prototype.js}}
   </script>
   <script type="text/javascript">
+    function onLoad() {
+      try {
+        oController = window.external.oController;
+        oWindow = window.external.oWindow;
+
+      } catch(e) {
+        insertString('<b>Exception</b> (<b>' + e.name + '</b>): ' + e.message);
+      }
+    }
+    window.onload = onLoad;
+
     function insertString(string) {
       document.getElementById('container').innerHTML += string;
       // new Insertion.Bottom('container', string);
