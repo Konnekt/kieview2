@@ -51,12 +51,9 @@ void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int si
 
 namespace kIEview2 {
   // initialization
-  Controller::Controller() {
-    ieVersion = getIEVersion();
-
+  Controller::Controller(): jsController(0), ieVersion(getIEVersion()), tplHandler(new TplHandler), rtfHtml(new RtfHtmlTag) {
     IECtrl::getExternal()->bindMethod("oController", bind(&Controller::getJSController, this, _1, _2), true);
     IECtrl::getExternal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2), true);
-    jsController = NULL;
 
     /* Static values like net, type or version */
     this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
@@ -88,9 +85,6 @@ namespace kIEview2 {
     IECtrl::init();
     setlocale(LC_ALL, "polish");
 
-    this->tplHandler = new TplHandler;
-    this->rtfHtml = new RtfHtmlTag;
-
     tplHandler->bindStdFunctions();
     tplHandler->bindUdf("getCntSetting", new udf_get_cnt_setting);
     tplHandler->bindUdf("getSetting", new udf_get_cfg_setting);
@@ -106,7 +100,6 @@ namespace kIEview2 {
     registerMsgHandler(MT_MESSAGE, bind(&Controller::_handleStdMsgTpl, this, _1, _2), "message");
     registerMsgHandler(MT_FILE, bind(&Controller::_handleFileTpl, this, _1, _2), "file");
     registerMsgHandler(MT_SMS, bind(&Controller::_handleSmsTpl, this, _1, _2), "sms");
-
   }
 
   Controller::~Controller() {
@@ -508,15 +501,13 @@ namespace kIEview2 {
     return msgHandlers.find(type) != msgHandlers.end();
   }
 
-  bool Controller::registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority, 
+  bool Controller::registerMsgHandler(int type, fMessageHandler f, const string& label, int priority, 
     signals::connect_position pos, bool overwrite) 
   {
+    if (f.empty()) return false;
     // locking
     LockerCS lock(_locker);
 
-    if (f.empty()) {
-      return false;
-    }
     if (!hasMsgHandler(type)) {
       msgHandlers[type] = new sMessageHandler;
     }

@@ -1636,7 +1636,7 @@ IECtrl::iObject::sProperty* IECtrl::iObject::getProperty(long id) {
   return 0;
 }
 
-void IECtrl::iObject::setProperty(const string& name, Var v, enAttributes attr) {
+IECtrl::iObject::sProperty* IECtrl::iObject::setProperty(const string& name, Var v, enAttributes attr) {
   sProperty* val;
   
   if (!hasProperty(name)) {
@@ -1646,6 +1646,7 @@ void IECtrl::iObject::setProperty(const string& name, Var v, enAttributes attr) 
     val->attr = attr;
   }
   val->var = v;
+  return val;
 }
 
 STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller) { 
@@ -1712,9 +1713,10 @@ STDMETHODIMP IECtrl::iObject::GetDispID(BSTR bstrName, DWORD grfdex, DISPID *pid
     id = getProperty(name)->id;
   } else {
     if (grfdex == fdexNameEnsure && _extModificate) {
-      setProperty(name, Var(), attrAccessor);
-      getProperty(name)->external = true;
-      id = getProperty(name)->id;
+      sProperty* prop = setProperty(name, Var(), attrAccessor);
+
+      prop->external = true;
+      id = prop->id;
     }
   }
 

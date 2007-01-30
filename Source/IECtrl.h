@@ -591,7 +591,7 @@ public:
     virtual sCallback* getCallback(const string& name);
     virtual sCallback* getCallback(long id);
 
-    virtual void setProperty(const string& name, IECtrl::Var v, enAttributes attr = attrReader);
+    virtual sProperty* setProperty(const string& name, IECtrl::Var v, enAttributes attr = attrReader);
 
     virtual bool hasProperty(const string& name);
     virtual bool hasProperty(long id);

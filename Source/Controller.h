@@ -42,7 +42,7 @@ namespace kIEview2 {
     struct sMessageHandler {
       tConnections connections;
       MessageHandlerSig signal;
-      String label;
+      string label;
     };
 
     struct sWndObjCollection {
@@ -81,7 +81,7 @@ namespace kIEview2 {
     ~Controller();
 
     bool hasMsgHandler(int type);
-    bool registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority = 0, 
+    bool registerMsgHandler(int type, fMessageHandler f, const string& label, int priority = 0, 
       signals::connect_position pos = signals::at_back, bool overwrite = true);
 
     IECtrl::Var getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj);
