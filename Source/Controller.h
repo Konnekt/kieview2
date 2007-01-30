@@ -29,6 +29,7 @@ using namespace kIEview2;
 
 namespace kIEview2 {
   class JSWndController;
+  class JSController;
 
   class Controller : public PlugController<Controller> {
   public:
@@ -84,6 +85,7 @@ namespace kIEview2 {
       signals::connect_position pos = signals::at_back, bool overwrite = true);
 
     IECtrl::Var getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj);
+    IECtrl::Var getJSController(IECtrl::Var& args, IECtrl::iObject* obj);
 
     int readMsgs(tCntId cnt, int howMany, int sessionOffset = 0);
     int readLastMsgSession(tCntId cnt, int sessionOffset = 0);
@@ -148,8 +150,59 @@ namespace kIEview2 {
     tMsgHandlers msgHandlers;
     CriticalSection _locker;
     Tables::oTable historyTable;
+    JSController* jsController;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
+  };
+
+  class JSController : public IECtrl::iObject {
+  public:
+    JSController(IECtrl::Var& args): iObject(NULL, true), pCtrl(Controller::getInstance()) {
+      bindMethod("getPluginVersion", bind(&JSController::getPluginVersion, this, _1, _2));
+      bindMethod("getPluginName", bind(&JSController::getPluginName, this, _1, _2));
+
+      setProperty("ieVersion", (int) pCtrl->ieVersion);
+      setProperty("name", "oController");
+    }
+
+  public:
+    IECtrl::Var getPluginName(IECtrl::Var& args, IECtrl::iObject* obj) {
+      if (args.empty() || args[0].getType() != IECtrl::Var::Type::Integer) return false;
+      
+      if (int plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL)) {
+        return SAFECHAR((char*) Ctrl->IMessageDirect(IM_PLUG_NAME, plugID));
+      }
+      return false;
+    }
+
+    IECtrl::Var getPluginVersion(IECtrl::Var& args, IECtrl::iObject* obj) {
+      if (args.empty()) return false;
+
+      int plugID = 0;
+      switch (args[0].getType()) {
+        case IECtrl::Var::Type::String:
+          plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) args[0].getString());
+          break;
+        case IECtrl::Var::Type::Integer:
+          plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL);
+          break;
+        default:
+          return false;
+      }
+
+      if (plugID) {
+        char ver[50] = {0};
+        Ctrl->ICMessage(IMC_PLUG_VERSION, Ctrl->ICMessage(IMC_PLUGID_POS, plugID, 0), (int) ver);
+        if (Ctrl->getError() != IMERROR_NORESULT) {
+	        return ver;
+        }
+      }
+      // throw JSException("Plugin not found");
+      return false;
+    }
+
+  protected:
+    Controller* pCtrl;
   };
 
   class JSWndController : public IECtrl::iObject {

@@ -52,8 +52,10 @@ void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int si
 namespace kIEview2 {
   // initialization
   Controller::Controller() {
+    ieVersion = getIEVersion();
+
+    IECtrl::getExternal()->bindMethod("oController", bind(&Controller::getJSController, this, _1, _2), true);
     IECtrl::getExternal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2), true);
-    IECtrl::getExternal()->setProperty("ieVersion", (int) (ieVersion = getIEVersion()));
 
     /* Static values like net, type or version */
     this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
@@ -108,6 +110,9 @@ namespace kIEview2 {
   Controller::~Controller() {
     wndObjCollection.clear();
 
+    if (jsController) {
+      delete jsController;
+    }
     for (tMsgHandlers::iterator it = msgHandlers.begin(); it != msgHandlers.end(); it++) {
       delete it->second;
     }
@@ -485,6 +490,13 @@ namespace kIEview2 {
       wndObjCollection[ctrl].jsWndController = new JSWndController(ctrl, args);
     }
     return wndObjCollection[ctrl].jsWndController;
+  }
+
+  IECtrl::Var Controller::getJSController(IECtrl::Var& args, IECtrl::iObject* obj) {
+    if (!jsController) {
+      jsController = new JSController(args);
+    }
+    return jsController;
   }
 
   bool Controller::hasMsgHandler(int type) {

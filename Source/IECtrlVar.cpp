@@ -273,6 +273,25 @@ IDispatch* IECtrl::Var::getDispatch() {
   return NULL;
 }
 
+bool IECtrl::Var::empty() {
+  switch (m_eType) {
+    case Type::Array:
+      if (!length()) return true;
+      break;
+    case Type::Unknown:
+      return true;
+    case Type::Integer:
+    case Type::Boolean:
+    case Type::Real:
+      if (!getInteger()) return true;
+      break;
+    case Type::String:
+      if (!strlen(getString())) return true;
+      break;
+  }
+  return false;
+}
+
 int IECtrl::Var::length() {
   if (m_eType == Type::Array) {
     return m_nLength;

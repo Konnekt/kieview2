@@ -406,6 +406,7 @@ public:
     void setValue(Object &value);
     void setValue(IDispatch* value);
 
+    bool empty();
     int length();
     Var & operator[](int i);
 
@@ -439,6 +440,18 @@ public:
     Var & getElement(int i);
 
   protected:
+    union {
+      int m_iValue;
+      double m_dValue;
+      char * m_szValue;
+      Var ** m_aValue;
+      Date64 * m_dtValue;
+      IECtrl::Object * m_objValue;
+      IDispatch * m_dispValue;
+    };
+    int m_nLength;
+
+  public:
     enum Type {
       Unknown,
       Integer,
@@ -450,18 +463,13 @@ public:
       Object,
       Dispatch
     };
-    Type m_eType;
 
-    union {
-      int m_iValue;
-      double m_dValue;
-      char * m_szValue;
-      Var ** m_aValue;
-      Date64 * m_dtValue;
-      IECtrl::Object * m_objValue;
-      IDispatch * m_dispValue;
-    };
-    int m_nLength;
+    Type getType() {
+      return m_eType;
+    }
+
+  protected:
+    Type m_eType;
   };
 
   class Object {
