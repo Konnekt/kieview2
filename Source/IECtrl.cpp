@@ -1520,7 +1520,7 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
       getProperty(id)->var.getVariant(pvarRes);
       return S_OK;
     }
-  } else if (wFlags & DISPATCH_PROPERTYPUT) {
+  } else if (wFlags & DISPATCH_PROPERTYPUT | DISPATCH_PROPERTYPUT) {
     sProperty* s = getProperty(id);
     if (s && s->attr > attrReader) {
       if (pdp->cArgs) {
@@ -1529,7 +1529,6 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
       }
     }
   }
-  // return Invoke(id, IID_IDispatch, lcid, wFlags, pdp, pvarRes, pei, 0);
   return DISP_E_MEMBERNOTFOUND;
 }
 
@@ -1650,58 +1649,7 @@ IECtrl::iObject::sProperty* IECtrl::iObject::setProperty(const string& name, Var
 }
 
 STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller) { 
-  if (!pdp) return E_INVALIDARG;
-
-  if (wFlags & DISPATCH_METHOD) {
-    if (hasCallback(id)) {
-      Var args;
-      for (UINT i = 0; i < pdp->cArgs; i++) {
-        args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
-      }
-      Var ret = trigger(id, args);
-      ret.getVariant(pvarRes);
-      return S_OK;
-    }
-  } else if (wFlags & DISPATCH_PROPERTYGET) {
-    if (!id) {
-      IECtrl::Var ret;
-      if (hasCallback("toString")) {
-        ret = trigger(getCallback("toString")->id, Var());
-      } else if (hasProperty("name")) {
-        ret = getProperty("name")->var;
-      } else {
-        return DISP_E_MEMBERNOTFOUND;
-      }
-      ret.getVariant(pvarRes);
-      return S_OK;
-
-    } else if (hasCallback(id)) {
-      sCallback* method = getCallback(id);
-      IECtrl::Var ret;
-
-      if (method->getter) {
-        ret = trigger(method->id, Var());
-      } else {
-        ret = true;
-      }
-      ret.getVariant(pvarRes);
-      return S_OK;
-
-    } else if (hasProperty(id)) {
-      getProperty(id)->var.getVariant(pvarRes);
-      return S_OK;
-    }
-  } else if (wFlags & DISPATCH_PROPERTYPUT) {
-    sProperty* s = getProperty(id);
-    if (s && s->attr > attrReader) {
-      if (pdp->cArgs) {
-        s->var = pdp->rgvarg[pdp->cArgs - 1];
-        return S_OK;
-      }
-    }
-  }
-  // return Invoke(id, IID_IDispatch, lcid, wFlags, pdp, pvarRes, pei, 0);
-  return DISP_E_MEMBERNOTFOUND;
+  return Invoke(id, IID_IDispatch, lcid, wFlags, pdp, pvarRes, pei, 0);
 }
 STDMETHODIMP IECtrl::iObject::GetDispID(BSTR bstrName, DWORD grfdex, DISPID *pid) {
   const char* name = _com_util::ConvertBSTRToString(bstrName);
@@ -1712,7 +1660,7 @@ STDMETHODIMP IECtrl::iObject::GetDispID(BSTR bstrName, DWORD grfdex, DISPID *pid
   } else if (hasProperty(name)) {
     id = getProperty(name)->id;
   } else {
-    if (grfdex == fdexNameEnsure && _extModificate) {
+    if (grfdex & fdexNameEnsure && _extModificate) {
       sProperty* prop = setProperty(name, Var(), attrAccessor);
 
       prop->external = true;

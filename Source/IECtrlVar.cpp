@@ -61,6 +61,10 @@ IECtrl::Var::Var(IDispatch *v) {
   setValue(v);
 }
 
+IECtrl::Var::Var(IDispatch **v) {
+  setValue(v);
+}
+
 IECtrl::Var::~Var() {
   clear();
 }
@@ -117,6 +121,10 @@ IECtrl::Var & IECtrl::Var::operator=(IDispatch* value) {
   return *this;
 }
 
+IECtrl::Var & IECtrl::Var::operator=(IDispatch** value) {
+  setValue(value);
+  return *this;
+}
 int IECtrl::Var::getInteger() {
   if (m_eType == Type::Integer || m_eType == Type::Boolean)
     return m_iValue;
@@ -169,6 +177,8 @@ const char * IECtrl::Var::getString() {
     return "Object";
   else if (m_eType == Type::Dispatch)
     return "Dispatch";
+  else if (m_eType == Type::DispatchRef)
+    return "Dispatch Reference";
   else if (m_eType == Type::Date) {
     if (m_dtValue != NULL) {
       return m_dtValue->strftime("%Y-%m-%d %H:%M:%S").c_str();
@@ -216,7 +226,10 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
   } else if (m_eType == Type::Dispatch) {
     v->vt = VT_DISPATCH;
     v->pdispVal = m_dispValue;
-  } else if (m_eType == Type::Array) {
+  } else if (m_eType == Type::DispatchRef) {
+    v->vt = VT_DISPATCH | VT_BYREF;
+    v->ppdispVal = m_pdispValue;
+  }else if (m_eType == Type::Array) {
     /*
     if (v->parray && (v->vt & VT_ARRAY)) {
       if (v->parray->rgsabound[0].cElements < m_nLength && m_aValue != NULL) {
@@ -290,10 +303,20 @@ bool IECtrl::Var::isObject() {
 bool IECtrl::Var::isDispatch() {
   return m_eType == Type::Dispatch;
 }
+bool IECtrl::Var::isDispatchRef() {
+  return m_eType == Type::DispatchRef;
+}
 
 IDispatch* IECtrl::Var::getDispatch() {
   if (m_eType == Type::Dispatch) {
     return m_dispValue;
+  }
+  return NULL;
+}
+
+IDispatch** IECtrl::Var::getDispatchRef() {
+  if (m_eType == Type::DispatchRef) {
+    return m_pdispValue;
   }
   return NULL;
 }
@@ -451,7 +474,9 @@ void IECtrl::Var::copy(IECtrl::Var& copy) {
     case Type::Dispatch:
       setValue(copy.getDispatch());
       break;
-
+    case Type::DispatchRef:
+      setValue(copy.getDispatchRef());
+      break;
     default:
       m_eType = Type::Unknown;
       m_nLength = 0;
@@ -575,6 +600,7 @@ void IECtrl::Var::setValue(VARIANT &v) {
       setValue(v.pdispVal);
       break;
     }
+    case VT_DISPATCH | VT_BYREF: setValue(v.ppdispVal); break;
   }
 }
 
@@ -594,6 +620,12 @@ void IECtrl::Var::setValue(IDispatch* dispatch) {
   clear();
   m_dispValue = dispatch;
   m_eType = Type::Dispatch;
+}
+
+void IECtrl::Var::setValue(IDispatch** dispatch) {
+  clear();
+  m_pdispValue = dispatch;
+  m_eType = Type::DispatchRef;
 }
 
 IECtrl::Var & IECtrl::Var::getElement(int i) {

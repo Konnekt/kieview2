@@ -385,6 +385,7 @@ public:
     Var(Date64 &v);
     Var(Object &v);
     Var(IDispatch *v);
+    Var(IDispatch **v);
     ~Var();
 
     int getInteger();
@@ -395,6 +396,7 @@ public:
     Date64 getDate();
     Object getObject(IECtrl* ctrl = NULL);
     IDispatch* getDispatch();
+    IDispatch** getDispatchRef();
 
     bool isUnknown();
     bool isInteger();
@@ -404,6 +406,7 @@ public:
     bool isDate();
     bool isObject();
     bool isDispatch();
+    bool isDispatchRef();
 
     void setValue(bool value);
     void setValue(int value);
@@ -414,6 +417,7 @@ public:
     void setValue(Date64 &value);
     void setValue(Object &value);
     void setValue(IDispatch* value);
+    void setValue(IDispatch** value);
 
     bool empty();
     int length();
@@ -429,6 +433,7 @@ public:
     Var & operator=(Date64 &value);
     Var & operator=(Object &value);
     Var & operator=(IDispatch* value);
+    Var & operator=(IDispatch** value);
 
     void operator+=(Var & var);
     void operator+=(int var);
@@ -457,6 +462,7 @@ public:
       Date64 * m_dtValue;
       Object * m_objValue;
       IDispatch * m_dispValue;
+      IDispatch ** m_pdispValue;
     };
     int m_nLength;
 
@@ -470,7 +476,8 @@ public:
       Array,
       Date,
       Object,
-      Dispatch
+      Dispatch,
+      DispatchRef
     };
 
     Type getType() {
