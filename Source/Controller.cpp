@@ -52,7 +52,7 @@ void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int si
 namespace kIEview2 {
   // initialization
   Controller::Controller() {
-    IECtrl::getExternal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2));
+    IECtrl::getExternal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2), true);
     IECtrl::getExternal()->setProperty("ieVersion", (int) (ieVersion = getIEVersion()));
 
     /* Static values like net, type or version */

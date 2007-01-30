@@ -526,8 +526,9 @@ public:
       CallbackSig signal;
       string name;
       long id;
+      bool getter;
 
-      sCallback(const string& _name, fCallback f): id(random()), name(_name) {
+      sCallback(const string& _name, fCallback f, bool _getter): id(random()), name(_name), getter(_getter) {
         if (!f.empty()) signal.connect(f);
       }
     };
@@ -564,7 +565,7 @@ public:
     STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid);
     STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk);
 
-    virtual void bindMethod(const string& name, fCallback f);
+    virtual void bindMethod(const string& name, fCallback f, bool getter = false);
     virtual bool unbindMethod(const string& name);
 
     virtual bool hasCallback(const string& name);
