@@ -455,7 +455,7 @@ public:
       char * m_szValue;
       Var ** m_aValue;
       Date64 * m_dtValue;
-      IECtrl::Object * m_objValue;
+      Object * m_objValue;
       IDispatch * m_dispValue;
     };
     int m_nLength;
@@ -491,8 +491,8 @@ public:
 
     void bindMethod(const char* name, const char* func);
 
-    void addProperty(const char *name, IECtrl::Var var, bool ref = true);
-    void setProperty(const char *name, IECtrl::Var var, bool ref = true);
+    void addProperty(const char *name, Var var, bool ref = true);
+    void setProperty(const char *name, Var var, bool ref = true);
 
     IECtrl::Var getProperty(const char *name);
     VARIANT* getVariant(VARIANT* v);
@@ -527,7 +527,7 @@ public:
 
     struct sProperty {
       enAttributes attr;
-      IECtrl::Var var;
+      Var var;
       string name;
       long id;
       bool external;
@@ -536,8 +536,8 @@ public:
     };
 
   public:
-    typedef function<IECtrl::Var(IECtrl::Var&, iObject*)> fCallback;
-    typedef signal<IECtrl::Var(IECtrl::Var&, iObject*)> CallbackSig;
+    typedef function<Var(Var&, iObject*)> fCallback;
+    typedef signal<Var(Var&, iObject*)> CallbackSig;
 
     struct sCallback {
       CallbackSig signal;
@@ -591,7 +591,7 @@ public:
     virtual sCallback* getCallback(const string& name);
     virtual sCallback* getCallback(long id);
 
-    virtual sProperty* setProperty(const string& name, IECtrl::Var v, enAttributes attr = attrReader);
+    virtual sProperty* setProperty(const string& name, Var v, enAttributes attr = attrReader);
 
     virtual bool hasProperty(const string& name);
     virtual bool hasProperty(long id);
@@ -600,7 +600,7 @@ public:
     virtual sProperty* getProperty(long id);
 
   protected:
-    virtual IECtrl::Var trigger(long id, IECtrl::Var& args);
+    virtual Var trigger(long id, Var& args);
 
   protected:
     IECtrl* m_pCtrl;

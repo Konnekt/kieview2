@@ -28,8 +28,10 @@
 using namespace kIEview2;
 
 namespace kIEview2 {
-  class JSWndController;
-  class JSController;
+  namespace JS {
+    class WndController;
+    class Controller;
+  }
 
   class Controller : public PlugController<Controller> {
   public:
@@ -46,7 +48,7 @@ namespace kIEview2 {
     };
 
     struct sWndObjCollection {
-      JSWndController* jsWndController;
+      JS::WndController* jsWndController;
       ActionHandler* actionHandler;
 
       sWndObjCollection(): jsWndController(0), actionHandler(0) { }
@@ -150,78 +152,103 @@ namespace kIEview2 {
     tMsgHandlers msgHandlers;
     CriticalSection _locker;
     Tables::oTable historyTable;
-    JSController* jsController;
+    JS::Controller* jsController;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
   };
 
-  class JSController : public IECtrl::iObject {
-  public:
-    JSController(IECtrl::Var& args): iObject(NULL, true), pCtrl(Controller::getInstance()) {
-      bindMethod("getPluginVersion", bind(&JSController::getPluginVersion, this, _1, _2));
-      bindMethod("getPluginName", bind(&JSController::getPluginName, this, _1, _2));
+  namespace JS {
+    class Controller : public IECtrl::iObject {
+    public:
+      Controller(IECtrl::Var& args): iObject(NULL, true), pCtrl(::Controller::getInstance()) {
+        bindMethod("getPluginVersion", bind(&Controller::getPluginVersion, this, _1, _2));
+        bindMethod("getPluginName", bind(&Controller::getPluginName, this, _1, _2));
 
-      setProperty("ieVersion", (int) pCtrl->ieVersion);
-      setProperty("name", "oController");
-    }
-
-  public:
-    IECtrl::Var getPluginName(IECtrl::Var& args, IECtrl::iObject* obj) {
-      if (args.empty() || !args[0].isInteger()) return false;
-      
-      if (int plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL)) {
-        return SAFECHAR((char*) Ctrl->IMessageDirect(IM_PLUG_NAME, plugID));
+        setProperty("ieVersion", (int) pCtrl->ieVersion);
+        setProperty("name", "oController");
       }
-      return false;
-    }
 
-    IECtrl::Var getPluginVersion(IECtrl::Var& args, IECtrl::iObject* obj) {
-      if (args.empty()) return false;
-
-      int plugID = 0;
-      if (args[0].isString()) {
-        plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) args[0].getString());
-      } else if (args[0].isInteger()) {
-        plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL);
-      } else {
+    public:
+      IECtrl::Var getPluginName(IECtrl::Var& args, IECtrl::iObject* obj) {
+        if (args.empty() || !args[0].isInteger()) return false;
+        
+        if (int plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL)) {
+          return SAFECHAR((char*) Ctrl->IMessageDirect(IM_PLUG_NAME, plugID));
+        }
         return false;
       }
 
-      if (plugID) {
-        char ver[50] = {0};
-        Ctrl->ICMessage(IMC_PLUG_VERSION, Ctrl->ICMessage(IMC_PLUGID_POS, plugID, 0), (int) ver);
-        if (Ctrl->getError() != IMERROR_NORESULT) {
-	        return ver;
+      IECtrl::Var getPluginVersion(IECtrl::Var& args, IECtrl::iObject* obj) {
+        if (args.empty()) return false;
+
+        int plugID = 0;
+        if (args[0].isString()) {
+          plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) args[0].getString());
+        } else if (args[0].isInteger()) {
+          plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL);
+        } else {
+          return false;
         }
+
+        if (plugID) {
+          char ver[50] = {0};
+          Ctrl->ICMessage(IMC_PLUG_VERSION, Ctrl->ICMessage(IMC_PLUGID_POS, plugID, 0), (int) ver);
+          if (Ctrl->getError() != IMERROR_NORESULT) {
+	          return ver;
+          }
+        }
+        // throw JSException("Plugin not found");
+        return false;
       }
-      // throw JSException("Plugin not found");
-      return false;
-    }
 
-  protected:
-    Controller* pCtrl;
-  };
+    protected:
+      ::Controller* pCtrl;
+    };
 
-  class JSWndController : public IECtrl::iObject {
-  public:
-    JSWndController(IECtrl *ieCtrl, IECtrl::Var& args): iObject(ieCtrl, true), pCtrl(Controller::getInstance()) {
-      bindMethod("minimize", bind(resolve_cast0(&JSWndController::minimize), this));
-      bindMethod("close", bind(resolve_cast0(&JSWndController::close), this));
+    class WndController : public IECtrl::iObject {
+    public:
+      WndController(IECtrl* ieCtrl, IECtrl::Var& args): iObject(ieCtrl, true), pCtrl(::Controller::getInstance()) {
+        bindMethod("minimized", bind(resolve_cast0(&WndController::minimized), this));
+        bindMethod("visible", bind(resolve_cast0(&WndController::visible), this));
 
-      setProperty("name", "oWindow");
-    }
+        bindMethod("minimize", bind(resolve_cast0(&WndController::minimize), this));
+        bindMethod("restore", bind(resolve_cast0(&WndController::restore), this));
+        bindMethod("close", bind(resolve_cast0(&WndController::close), this));
 
-  public:
-    IECtrl::Var minimize() {
-      return "@implement";
-    }
-    IECtrl::Var close() {
-      return "@implement";
-    }
+        setProperty("name", "oWindow");
+      }
 
-  protected:
-    Controller* pCtrl;
-  };
+    public:
+      IECtrl::Var minimized() {
+        return !IsIconic(m_pCtrl->getHWND());
+      }
+      IECtrl::Var visible() {
+        return IsWindowVisible(m_pCtrl->getHWND());
+      }
+
+      IECtrl::Var minimize() {
+        if (!minimized().getBool()) {
+          return ShowWindow(m_pCtrl->getHWND(), SW_MINIMIZE);
+        }
+        return false;
+      }
+      IECtrl::Var restore() {
+        if (minimized().getBool()) {
+          ShowWindow(m_pCtrl->getHWND(), SW_RESTORE);
+        }
+        if (visible().getBool()) {
+          SetWindowPos(m_pCtrl->getHWND(), HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        }
+        return true;
+      }
+      IECtrl::Var close() {
+        return "@implement";
+      }
+
+    protected:
+      ::Controller* pCtrl;
+    };
+  }
 }
 
 #endif // __CONTROLLER_H__

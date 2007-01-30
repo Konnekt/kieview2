@@ -482,14 +482,14 @@ namespace kIEview2 {
   IECtrl::Var Controller::getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj) {
     IECtrl* ctrl = obj->getIECtrl();
     if (!wndObjCollection[ctrl].jsWndController) {
-      wndObjCollection[ctrl].jsWndController = new JSWndController(ctrl, args);
+      wndObjCollection[ctrl].jsWndController = new JS::WndController(ctrl, args);
     }
     return wndObjCollection[ctrl].jsWndController;
   }
 
   IECtrl::Var Controller::getJSController(IECtrl::Var& args, IECtrl::iObject* obj) {
     if (!jsController) {
-      jsController = new JSController(args);
+      jsController = new JS::Controller(args);
     }
     return jsController;
   }
