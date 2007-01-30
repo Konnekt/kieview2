@@ -52,8 +52,8 @@ void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int si
 namespace kIEview2 {
   // initialization
   Controller::Controller() {
-    registerExternalCallback("getWndController", bind(&Controller::getJSWndController, this, _1, _2, _3), true);
-    registerExternalCallback("getController", bind(&Controller::getJSController, this, _1, _2, _3), true);
+    IECtrl::getExternal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2));
+    IECtrl::getExternal()->setProperty("ieVersion", (int) (ieVersion = getIEVersion()));
 
     /* Static values like net, type or version */
     this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
@@ -87,7 +87,6 @@ namespace kIEview2 {
 
     this->tplHandler = new TplHandler;
     this->rtfHtml = new RtfHtmlTag;
-    this->ieVersion = getIEVersion();
 
     tplHandler->bindStdFunctions();
     tplHandler->bindUdf("getCntSetting", new udf_get_cnt_setting);
@@ -109,12 +108,6 @@ namespace kIEview2 {
   Controller::~Controller() {
     wndObjCollection.clear();
 
-    if (jsController) {
-      delete jsController;
-    }
-    for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
-      delete *it;
-    }
     for (tMsgHandlers::iterator it = msgHandlers.begin(); it != msgHandlers.end(); it++) {
       delete it->second;
     }
@@ -486,24 +479,12 @@ namespace kIEview2 {
     return CallWindowProc(getInstance()->oldMsgWndProc, hWnd, msg, wParam, lParam);
   }
 
-  IECtrl::Var Controller::getJSWndController(IECtrl::Var& args, IECtrl* ctrl, bool construct) {
-    if (!construct) {
-      // throw new Exception("You forgot about 'new' !");
-    }
+  IECtrl::Var Controller::getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj) {
+    IECtrl* ctrl = obj->getIECtrl();
     if (!wndObjCollection[ctrl].jsWndController) {
       wndObjCollection[ctrl].jsWndController = new JSWndController(ctrl, args);
     }
     return wndObjCollection[ctrl].jsWndController;
-  }
-
-  IECtrl::Var Controller::getJSController(IECtrl::Var& args, IECtrl* ctrl, bool construct) {
-    if (!construct) {
-      // throw new Exception("You forgot about 'new' !");
-    }
-    if (!jsController) {
-      jsController = new JSController(ctrl, args);
-    }
-    return jsController;
   }
 
   bool Controller::hasMsgHandler(int type) {
@@ -534,37 +515,6 @@ namespace kIEview2 {
     }
     msgHandlers[type]->label = label;
     return (msgHandlers[type]->connections[label] = msgHandlers[type]->signal.connect(priority, f, pos)).connected();
-  }
-
-  Controller::sExternalCallback* Controller::getExternalCallback(const char* name) {
-    // locking
-    LockerCS lock(_locker);
-
-    for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
-      if ((*it)->name == name) return *it;
-    }
-    return 0;
-  }
-
-  Controller::sExternalCallback* Controller::getExternalCallback(long id) {
-    // locking
-    LockerCS lock(_locker);
-
-    for (tExternalCallbacks::iterator it = externalCallbacks.begin(); it != externalCallbacks.end(); it++) {
-      if ((*it)->id == id) return *it;
-    }
-    return 0;
-  }
-
-  Controller::sExternalCallback* Controller::registerExternalCallback(const char* name, fExternalCallback f, bool isObject) {
-    // locking
-    LockerCS lock(_locker);
-
-    if (!getExternalCallback(name)) {
-      externalCallbacks.push_back(new sExternalCallback(name, f, isObject));
-      return externalCallbacks[externalCallbacks.size() - 1];
-    }
-    return 0;
   }
 
   int Controller::getIEVersion() {

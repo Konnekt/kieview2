@@ -30,26 +30,6 @@ namespace kIEview2 {
     return MessageBox(hWnd, lpText, "[kIEview2] Wiadomoœæ od skryptu", dwType); 
   }
 
-  IECtrl::Var ActionHandler::trigger(long id, IECtrl::Var& args, IECtrl* ctrl, bool construct) {
-    Controller::sExternalCallback* f = Controller::getInstance()->getExternalCallback(id);
-    return !f ? IECtrl::Var() : f->signal(args, ctrl, construct);
-  }
-
-  long ActionHandler::getMemberID(const char *name) {
-    Controller::sExternalCallback* f = Controller::getInstance()->getExternalCallback(name);
-    return !f ? 0 : f->id;
-  }
-
-  string ActionHandler::getMemberName(long id) {
-    Controller::sExternalCallback* f = Controller::getInstance()->getExternalCallback(id);
-    return !f ? "" : f->name;
-  }
-
-  bool ActionHandler::isObject(long id) {
-    Controller::sExternalCallback* f = Controller::getInstance()->getExternalCallback(id);
-    return !f ? false : f->isObject;
-  }
-
   ActionHandler::tMenuAction ActionHandler::popupMenu(tMenuType type, POINT pt, IECtrl* ctrl) {
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), -1, ACTS_HIDDEN);

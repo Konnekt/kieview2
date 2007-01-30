@@ -29,28 +29,10 @@ using namespace kIEview2;
 
 namespace kIEview2 {
   class JSWndController;
-  class JSController;
 
   class Controller : public PlugController<Controller> {
   public:
     friend class PlugController<Controller>;
-
-  public:
-    typedef function<IECtrl::Var(IECtrl::Var&, IECtrl*, bool)> fExternalCallback;
-    typedef signal<IECtrl::Var(IECtrl::Var&, IECtrl*, bool)> ExternalCallbackSig;
-
-    struct sExternalCallback {
-      ExternalCallbackSig signal;
-      string name;
-      long id;
-      bool isObject;
-
-      sExternalCallback(const StringRef& _name, fExternalCallback f, bool isObject = false): name(_name), id(random()), isObject(isObject) {
-        if (!f.empty()) signal.connect(f);
-      }
-    };
-
-    typedef std::vector<sExternalCallback*> tExternalCallbacks;
 
   public:
     typedef function<void(param_data&, UI::Notify::_insertMsg*)> fMessageHandler;
@@ -101,12 +83,7 @@ namespace kIEview2 {
     bool registerMsgHandler(int type, fMessageHandler f, StringRef label, int priority = 0, 
       signals::connect_position pos = signals::at_back, bool overwrite = true);
 
-    IECtrl::Var getJSWndController(IECtrl::Var& args, IECtrl* ctrl, bool construct);
-    IECtrl::Var getJSController(IECtrl::Var& args, IECtrl* ctrl, bool construct);
-
-    sExternalCallback* getExternalCallback(const char* name);
-    sExternalCallback* getExternalCallback(long id);
-    sExternalCallback* registerExternalCallback(const char* name, fExternalCallback f, bool isObject = false);
+    IECtrl::Var getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj);
 
     int readMsgs(tCntId cnt, int howMany, int sessionOffset = 0);
     int readLastMsgSession(tCntId cnt, int sessionOffset = 0);
@@ -167,11 +144,9 @@ namespace kIEview2 {
     UINT ieVersion;
 
   protected:
-    tExternalCallbacks externalCallbacks;
     tWndObjCollection wndObjCollection;
     tMsgHandlers msgHandlers;
     CriticalSection _locker;
-    JSController* jsController;
     Tables::oTable historyTable;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
@@ -179,26 +154,19 @@ namespace kIEview2 {
 
   class JSWndController : public IECtrl::iObject {
   public:
-    JSWndController(IECtrl *ieCtrl, IECtrl::Var& args): iObject(ieCtrl), pCtrl(Controller::getInstance()) {
-      registerCallback("close", bind(resolve_cast0(&JSWndController::close), this));
+    JSWndController(IECtrl *ieCtrl, IECtrl::Var& args): iObject(ieCtrl, true), pCtrl(Controller::getInstance()) {
+      bindMethod("minimize", bind(resolve_cast0(&JSWndController::minimize), this));
+      bindMethod("close", bind(resolve_cast0(&JSWndController::close), this));
 
-      setProperty("name", "WndController");
+      setProperty("name", "oWindow");
     }
 
   public:
+    IECtrl::Var minimize() {
+      return "@implement";
+    }
     IECtrl::Var close() {
-      return true;
-    }
-
-  protected:
-    Controller* pCtrl;
-  };
-
-  class JSController : public IECtrl::iObject {
-  public:
-    JSController(IECtrl *ieCtrl, IECtrl::Var& args): iObject(ieCtrl), pCtrl(Controller::getInstance()) {
-      setProperty("ieVersion", (int) pCtrl->ieVersion);
-      setProperty("name", "Controller");
+      return "@implement";
     }
 
   protected:

@@ -16,6 +16,7 @@
 
 #define DISPID_BEFORENAVIGATE2 250
 
+IECtrl::External* IECtrl::m_pExternal = NULL;
 IECtrl* IECtrl::m_pList = NULL;
 CRITICAL_SECTION IECtrl::m_mutex;
 
@@ -38,6 +39,7 @@ void IECtrl::deinit() {
   while (m_pList != NULL) {
     delete m_pList;
   }
+  delete m_pExternal;
   DeleteCriticalSection(&m_mutex);
   m_bInited = false;
 }
@@ -55,14 +57,12 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
   m_bClosed = false;
   m_bSandbox = true;
   m_bGetSelection = false;
-  m_pExternal = new External(this);
   m_pDropTarget = new DropTarget(this);
 
   m_pAnchorClickListener = NULL;
   m_pPopupMenuListener = NULL;
   m_pDropListener = NULL;
   m_pKeyDownListener = NULL;
-  m_pExternalListener = NULL;
   m_pScriptMessageListener = NULL;
 
   m_pWebBrowser = NULL;
@@ -159,9 +159,6 @@ IECtrl::~IECtrl() {
   DestroyWindow(m_hWnd);
   if (m_pClientSite != NULL) {
     delete m_pClientSite;
-  }
-  if (m_pExternal != NULL) {
-    delete m_pExternal;
   }
   if (m_pDropTarget != NULL) {
     delete m_pDropTarget;
@@ -593,6 +590,13 @@ IECtrl* IECtrl::get(HWND hwnd) {
   }
   LeaveCriticalSection(&m_mutex);
   return ptr;
+}
+
+IECtrl::External* IECtrl::getExternal() {
+  if (!m_pExternal) {
+    m_pExternal = new External;
+  }
+  return m_pExternal;
 }
 
 HWND IECtrl::getHWND() {
@@ -1223,8 +1227,8 @@ STDMETHODIMP IECtrl::ClientSite::GetDropTarget(IDropTarget *pDropTarget, IDropTa
 }
 
 STDMETHODIMP IECtrl::ClientSite::GetExternal(IDispatch **ppDispatch) {
-  *ppDispatch = m_pCtrl->m_pExternal;
-  m_pCtrl->m_pExternal->AddRef();
+  *ppDispatch = m_pCtrl->getExternal();
+  m_pCtrl->getExternal()->AddRef();
   return S_OK;
 }
 
@@ -1309,183 +1313,6 @@ STDMETHODIMP IECtrl::ClientSite::SetZoneMapping(DWORD dwZone, LPCWSTR lpszPatter
 
 STDMETHODIMP IECtrl::ClientSite::GetZoneMappings(DWORD dwZone, IEnumString **ppenumString, DWORD dwFlags) {
   return INET_E_DEFAULT_ACTION;
-}
-
-/*
- * External
- */
-
-IECtrl::External::External(IECtrl * pCtrl) {
-  m_pCtrl = pCtrl;
-  m_cRef = 0;
-  m_lobjID = 0;
-}
-
-IECtrl::External::~External() {
-  _ASSERT(m_cRef == 0);
-}
-
-// IUnknown
-STDMETHODIMP IECtrl::External::QueryInterface(REFIID riid, PVOID *ppv) {
-  *ppv = NULL;
-  if (IID_IUnknown == riid) {
-    *ppv = this;
-  }
-  if (IID_IDispatch == riid) {
-    *ppv = (IDispatch*) this;
-  }
-  if (IID_IDispatchEx == riid) {
-    *ppv = (IDispatchEx*) this;
-  }
-  if (NULL != *ppv) {
-    ((LPUNKNOWN)*ppv)->AddRef();
-    return NOERROR;
-  }
-  return E_NOINTERFACE;
-}
-
-STDMETHODIMP_(ULONG) IECtrl::External::AddRef(void) {
-  ++m_cRef;
-  return m_cRef;
-}
-
-STDMETHODIMP_(ULONG) IECtrl::External::Release(void) {
-  --m_cRef;
-  return m_cRef;
-}
-
-// IDispatch
-STDMETHODIMP IECtrl::External::GetTypeInfoCount(UINT *ptr) { 
-  return E_NOTIMPL; 
-}
-
-STDMETHODIMP IECtrl::External::GetTypeInfo(UINT iTInfo, LCID lcid, LPTYPEINFO* ppTInfo) { 
-  return S_OK; 
-}
-
-STDMETHODIMP IECtrl::External::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) { 
-  HRESULT hr;
-  UINT  i;
-  hr = NOERROR;
-
-  for (i = 0; i < cNames; i++) {
-    const char * szName = _com_util::ConvertBSTRToString(rgszNames[i]);
-    long id = 0;
-    if (m_pCtrl->m_pExternalListener != NULL) {
-      id = m_pCtrl->m_pExternalListener->getMemberID(szName);
-    }
-    delete [] szName;
-    if (id > 0) {
-      rgDispId[i] = id;
-    } else {
-      hr = ResultFromScode(DISP_E_UNKNOWNNAME);
-      rgDispId[i] = DISPID_UNKNOWN;
-    }
-  }
-  return hr;
-}
-
-STDMETHODIMP IECtrl::External::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr) 
-{
-  if (!pDispParams) return E_INVALIDARG;
-
-  if (m_pCtrl->m_pExternalListener != NULL) {
-    Var args;
-    for (UINT i = 0; i < pDispParams->cArgs; i++) {
-      args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
-    }
-    Var ret = m_pCtrl->m_pExternalListener->trigger(dispIdMember ? dispIdMember : m_lobjID, args, m_pCtrl);
-    ret.getVariant(pVarResult);
-    m_lobjID = 0;
-
-    return S_OK;
-  }
-  return DISP_E_MEMBERNOTFOUND;
-}
-
-STDMETHODIMP IECtrl::External::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pei, IServiceProvider *pspCaller){
-  if (!pDispParams) return E_INVALIDARG;
-
-  if (wFlags & DISPATCH_CONSTRUCT) {
-    if (m_pCtrl->m_pExternalListener != NULL) {
-      Var args;
-      for (UINT i = 0; i < pDispParams->cArgs; i++) {
-        args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
-      }
-      Var ret = m_pCtrl->m_pExternalListener->trigger(id ? id : m_lobjID, args, m_pCtrl, true);
-      ret.getVariant(pVarResult);
-      m_lobjID = 0;
-      return S_OK;
-    }
-  } else if (wFlags & DISPATCH_METHOD) {
-    if (m_pCtrl->m_pExternalListener != NULL) {
-      Var args;
-      for (UINT i = 0; i < pDispParams->cArgs; i++) {
-        args[-1] = pDispParams->rgvarg[pDispParams->cArgs - i - 1];
-      }
-      Var ret = m_pCtrl->m_pExternalListener->trigger(id, args, m_pCtrl, false);
-      ret.getVariant(pVarResult);
-      return S_OK;
-    }
-  } else if (wFlags & DISPATCH_PROPERTYGET) {
-    if (m_pCtrl->m_pExternalListener->isObject(id)) {
-      IECtrl::Var var(this);
-      var.getVariant(pVarResult);
-      m_lobjID = id;
-      return S_OK;
-    }
-  }
-  // return Invoke(id, IID_IDispatch, lcid, wFlags, pdp, pvarRes, pei, 0);
-  return DISP_E_MEMBERNOTFOUND;
-}
-
-STDMETHODIMP IECtrl::External::GetDispID(BSTR bstrName, DWORD grfdex, DISPID *pid) {
-  const char* name = _com_util::ConvertBSTRToString(bstrName);
-  long id = m_pCtrl->m_pExternalListener->getMemberID(name);
-
-  *pid = id;
-  delete [] name;
-
-  return (id > 0) ? S_OK : DISP_E_UNKNOWNNAME;
-}
-STDMETHODIMP IECtrl::External::DeleteMemberByName(BSTR bstrName, DWORD grfdex) {
-  return S_FALSE;
-}
-STDMETHODIMP IECtrl::External::DeleteMemberByDispID(DISPID id) {
-  return S_FALSE;
-}
-
-STDMETHODIMP IECtrl::External::GetMemberProperties(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex) {
-  if (grfdexFetch == grfdexPropCanAll) {
-    *pgrfdex = 0;
-  } else if (grfdexFetch == grfdexPropCannotAll){
-    *pgrfdex = fdexPropCannotGet | fdexPropCannotPut | fdexPropCannotPutRef | fdexPropCannotCall | fdexPropCannotConstruct | fdexPropCannotSourceEvents;
-  } else if (grfdexFetch == grfdexPropExtraAll){
-    *pgrfdex = fdexPropDynamicType;
-  } else if (grfdexFetch == grfdexPropAll){
-    *pgrfdex = fdexPropCannotGet | fdexPropCannotPut | fdexPropCannotPutRef | fdexPropCannotCall | fdexPropCannotConstruct | fdexPropCannotSourceEvents | fdexPropDynamicType;
-  } else {
-    *pgrfdex = 0;
-  }
-  return (id > 0) ? S_OK : DISP_E_UNKNOWNNAME;
-}
-STDMETHODIMP IECtrl::External::GetMemberName(DISPID id, BSTR *pbstrName) {
-  string name = m_pCtrl->m_pExternalListener->getMemberName(id);
-
-  if (!name.length()) {
-    return DISP_E_UNKNOWNNAME;
-  } else {
-    *pbstrName = _com_util::ConvertStringToBSTR(name.c_str());
-    return S_OK;
-  }
-}
-STDMETHODIMP IECtrl::External::GetNextDispID(DWORD grfdex, DISPID id, DISPID *pid) {
-  *pid = 0;
-  return S_FALSE;
-}
-STDMETHODIMP IECtrl::External::GetNameSpaceParent(IUnknown **ppunk) {
-  *ppunk = NULL;
-  return S_FALSE;
 }
 
 /*
@@ -1609,11 +1436,9 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
           p_aFile += len;
         } while (p_aFile[0] != '\0');
       }
-
       if (m_pCtrl->m_pDropListener != NULL) {
         m_pCtrl->m_pDropListener->fileDropped(files, m_pCtrl);
       }
-
       for (DropListener::tFiles::iterator it = files.begin(); it != files.end(); it++) {
         delete [] (*it);
       }
@@ -1623,14 +1448,19 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
   }
 }
 
-IECtrl::iObject::iObject(IECtrl* pCtrl, bool extModificate): m_cRef(0), _objectDispID(0), 
-  _doNewObject(false), m_pCtrl(pCtrl), _extModificate(extModificate) 
-{
-  setProperty("name", "IECtrl::iObject");
+/*
+ * IECtrl::iObject *
+                   */
+
+IECtrl::iObject::iObject(IECtrl* pCtrl, bool extModificate): m_cRef(0), m_pCtrl(pCtrl), _extModificate(extModificate) {
+  setProperty("name", "[IECtrl::iObject]", attrReader);
 }
 
 IECtrl* IECtrl::iObject::getIECtrl() {
   return m_pCtrl;
+}
+void IECtrl::iObject::setIECtrl(IECtrl* pCtrl) {
+  m_pCtrl = pCtrl;
 }
 
 IECtrl::iObject::~iObject() {
@@ -1714,17 +1544,18 @@ STDMETHODIMP IECtrl::iObject::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UI
   return hr;
 }
 
-IECtrl::Var IECtrl::iObject::trigger(long id, IECtrl::Var& args, bool construct) {
+IECtrl::Var IECtrl::iObject::trigger(long id, IECtrl::Var& args) {
   sCallback* f = getCallback(id);
-  return !f ? IECtrl::Var() : f->signal(args, this, construct);
+  return !f ? IECtrl::Var() : f->signal(args, this);
 }
 
-void IECtrl::iObject::registerCallback(const string& name, fCallback f, bool isObject) {
-  if (getCallback(name)) return;
-  _callbacks.push_back(new sCallback(name, f, isObject));
+void IECtrl::iObject::bindMethod(const string& name, fCallback f) {
+  if (!getCallback(name)) {
+    _callbacks.push_back(new sCallback(name, f));
+  }
 }
 
-bool IECtrl::iObject::deleteCallback(const string& name) {
+bool IECtrl::iObject::unbindMethod(const string& name) {
   for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
     if ((*it)->name == name) {
       delete (*it);
@@ -1786,6 +1617,7 @@ void IECtrl::iObject::setProperty(const string& name, Var v, enAttributes attr) 
     _properties.push_back(val = new sProperty(name, attr));
   } else {
     val = getProperty(name);
+    val->attr = attr;
   }
   val->var = v;
 }
@@ -1793,28 +1625,13 @@ void IECtrl::iObject::setProperty(const string& name, Var v, enAttributes attr) 
 STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller) { 
   if (!pdp) return E_INVALIDARG;
 
-  if (wFlags & DISPATCH_CONSTRUCT) {
-    if (hasCallback(id) || _objectDispID) {
-      sCallback* s = getCallback(id);
-      if (s && s->isObject || _doNewObject) {
-        Var args;
-        for (UINT i = 0; i < pdp->cArgs; i++) {
-          args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
-        }
-        Var ret = trigger(id ? id : _objectDispID, args, true);
-        ret.getVariant(pvarRes);
-        _objectDispID = 0;
-        _doNewObject = false;
-        return S_OK;
-      }
-    }
-  } else if (wFlags & DISPATCH_METHOD) {
+  if (wFlags & DISPATCH_METHOD) {
     if (hasCallback(id)) {
       Var args;
       for (UINT i = 0; i < pdp->cArgs; i++) {
         args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
       }
-      Var ret = trigger(id, args, false);
+      Var ret = trigger(id, args);
       ret.getVariant(pvarRes);
       return S_OK;
     }
@@ -1822,7 +1639,7 @@ STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPA
     if (!id) {
       IECtrl::Var ret;
       if (hasCallback("toString")) {
-        ret = trigger(getCallback("toString")->id, Var(), false);
+        ret = trigger(getCallback("toString")->id, Var());
       } else if (hasProperty("name")) {
         ret = getProperty("name")->var;
       } else {
@@ -1832,10 +1649,7 @@ STDMETHODIMP IECtrl::iObject::InvokeEx(DISPID id, LCID lcid, WORD wFlags, DISPPA
       return S_OK;
 
     } else if (hasCallback(id)) {
-      _objectDispID = id;
-      _doNewObject = true;
-
-      IECtrl::Var var(this);
+      IECtrl::Var var(true);
       var.getVariant(pvarRes);
       return S_OK;
 
@@ -1917,21 +1731,16 @@ STDMETHODIMP IECtrl::iObject::GetMemberProperties(DISPID id, DWORD grfdexFetch, 
   bool exists = true;
 
   if (hasCallback(id)) {
-    grfdexPCA = fdexPropCanCall;
+    grfdexPCA = fdexPropCanGet | fdexPropCanCall;
     grfdexPCNA = fdexPropCannotPutRef | fdexPropCannotPut;
     grfdexPEA = fdexPropDynamicType;
 
-    if (getCallback(id)->isObject) {
-      grfdexPCA |= fdexPropCanGet | fdexPropCanConstruct;
-    } else {
-      grfdexPCNA |= fdexPropCannotConstruct | fdexPropCannotGet;
-    }
   } else if (hasProperty(id)) {
     grfdexPCA = fdexPropCanGet | fdexPropCanPut;
     grfdexPCNA = fdexPropCannotCall | fdexPropCannotConstruct | fdexPropCannotPutRef;
     grfdexPEA = fdexPropDynamicType;
 
-    if (getProperty(id)->attr == attrReader) {
+    if (getProperty(id)->attr < attrWriter) {
       grfdexPCNA |= fdexPropCannotPut;
       grfdexPCA ^= fdexPropCanPut;
     }

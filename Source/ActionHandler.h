@@ -24,7 +24,6 @@ namespace kIEview2 {
   class ActionHandler: public IECtrl::AnchorClickListener,
                        public IECtrl::PopupMenuListener,
                        public IECtrl::DropListener,
-                       public IECtrl::ExternalListener,
                        public IECtrl::KeyDownListener,
                        public IECtrl::ScriptMessageListener {
   public:
@@ -36,7 +35,6 @@ namespace kIEview2 {
       ctrl->setPopupMenuListener(this);
       ctrl->setAnchorClickListener(this);
       ctrl->setDropListener(this);
-      ctrl->setExternalListener(this);
       ctrl->setScriptMessageListener(this);
       ctrl->setKeyDownListener(this);
     }
@@ -46,11 +44,6 @@ namespace kIEview2 {
     void fileDropped(const char *url, IECtrl* ctrl);
     MakeAction popupMenu(MenuType type, POINT pt, IECtrl* ctrl);
     int showMessage(HWND hWnd, const char* lpText, DWORD dwType);
-
-    long getMemberID(const char *name);
-    string getMemberName(long id);
-    IECtrl::Var trigger(long id, IECtrl::Var& args, IECtrl* ctrl, bool construct = false);
-    bool isObject(long id);
 
     // @todo implement
     inline bool keyDown(UINT uCode, DWORD dwFlags) { return true; }

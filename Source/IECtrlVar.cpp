@@ -19,11 +19,11 @@ IECtrl::Var::Var() {
   m_nLength = 0;
 }
 
-IECtrl::Var::Var(int value) {
+IECtrl::Var::Var(bool value) {
   setValue(value);
 }
 
-IECtrl::Var::Var(bool value) {
+IECtrl::Var::Var(int value) {
   setValue(value);
 }
 
@@ -74,6 +74,11 @@ const IECtrl::Var & IECtrl::Var::operator=(const IECtrl::Var &copy) {
 IECtrl::Var & IECtrl::Var::operator=(IECtrl::Var &copy) {
   if (this == &copy) return *this;
   this->copy(copy);
+  return *this;
+}
+
+IECtrl::Var & IECtrl::Var::operator=(bool value) {
+  setValue(value);
   return *this;
 }
 
@@ -649,7 +654,6 @@ IECtrl::Object::Object(const Object &object) {
   CopyMemory(this, &object, sizeof(Object));
   (*_refs)++;
 }
-
 
 void IECtrl::Object::bindMethod(const char* name, const char* func) {
   DISPID fnDispID = getDispID(_pdexScript, func, fdexNameEnsure);

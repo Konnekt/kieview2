@@ -88,14 +88,6 @@ public:
     virtual bool keyDown(UINT uCode, DWORD dwFlags) = 0; // zwraca true jesli pozwala przepuscic klawisz
   };
 
-  class ExternalListener {
-  public:
-    virtual long getMemberID(const char *name) = 0;
-    virtual string getMemberName(long id) = 0;
-    virtual Var trigger(long id, Var &args, IECtrl* ctrl, bool construct = false) = 0;
-    virtual bool isObject(long id) = 0;
-  };
-
   class ScriptMessageListener {
   public:
     // dwType tak jak MessageBox, zwraca to co MessageBox
@@ -145,6 +137,7 @@ public:
   static bool getOnCopyEmptySel() {
     return m_bOnCopyEmptySel;
   }
+  static External* getExternal();
 
   char* getSelection(bool gettext = false);
   bool copySelection(bool gettext = false);
@@ -153,7 +146,6 @@ public:
   void setPopupMenuListener(PopupMenuListener * listener) { m_pPopupMenuListener = listener; }
   void setDropListener(DropListener * listener) { m_pDropListener = listener; }
   void setKeyDownListener(KeyDownListener * listener) { m_pKeyDownListener = listener; }
-  void setExternalListener(ExternalListener * listener) { m_pExternalListener = listener; }
   void setScriptMessageListener(ScriptMessageListener * listener) { m_pScriptMessageListener = listener; }
 
   IHTMLDocument2* getDocument();
@@ -188,6 +180,7 @@ protected:
   HWND m_hWnd;
 
   static CRITICAL_SECTION m_mutex;
+  static External* m_pExternal;
   static IECtrl * m_pList;
   IECtrl * m_pPrev;
   IECtrl * m_pNext;
@@ -198,7 +191,6 @@ protected:
   IConnectionPoint * m_pConnectionPoint;
   EventSink * m_pEventSink;
   ClientSite * m_pClientSite;
-  IDispatch * m_pExternal;
   IDropTarget * m_pDropTarget;
   IWebBrowser2 * m_pWebBrowser;
 
@@ -216,7 +208,6 @@ protected:
   PopupMenuListener * m_pPopupMenuListener;
   DropListener * m_pDropListener;
   KeyDownListener * m_pKeyDownListener;
-  ExternalListener * m_pExternalListener;
   ScriptMessageListener * m_pScriptMessageListener;
 
 protected:
@@ -296,39 +287,6 @@ protected:
   protected:
     LONG m_cRef;
     IECtrl * m_pCtrl;
-  };
-
-protected:
-  class External : public IDispatchEx {
-  public:
-    External(IECtrl* pCtrl);
-    virtual ~External();
-
-    // IUnknown
-    STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
-    STDMETHODIMP_(ULONG) AddRef(void);
-    STDMETHODIMP_(ULONG) Release(void);
-
-    // IDispatch
-    STDMETHOD(GetTypeInfoCount)(UINT*);
-    STDMETHOD(GetTypeInfo)(UINT, LCID, LPTYPEINFO*);
-    STDMETHOD(GetIDsOfNames)(REFIID, LPOLESTR*, UINT, LCID, DISPID*);
-    STDMETHOD(Invoke)(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
-
-    // IDispatchEx
-    STDMETHOD(DeleteMemberByName)(BSTR bstrName, DWORD grfdex);
-    STDMETHOD(DeleteMemberByDispID)(DISPID id);
-    STDMETHOD(GetDispID)(BSTR bstrName, DWORD grfdex, DISPID *pid);
-    STDMETHOD(GetMemberName)(DISPID id, BSTR *pbstrName);
-    STDMETHOD(GetMemberProperties)(DISPID id, DWORD grfdexFetch, DWORD *pgrfdex);
-    STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk);
-    STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid);
-    STDMETHOD(InvokeEx)(DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller);
-
-  protected:
-    LONG m_cRef;
-    IECtrl * m_pCtrl;
-    long m_lobjID;
   };
 
 protected:
@@ -417,8 +375,8 @@ public:
   class Var {
   public:
     Var();
-    Var(int value);
     Var(bool value);
+    Var(int value);
     Var(double value);
     Var(const char * value);
     Var(const Var & copy);
@@ -438,8 +396,8 @@ public:
     Object getObject(IECtrl* ctrl = NULL);
     IDispatch* getDispatch();
 
-    void setValue(int value);
     void setValue(bool value);
+    void setValue(int value);
     void setValue(double value);
     void setValue(const char * value);
     void setValue(Var* value[], unsigned int count);
@@ -453,6 +411,7 @@ public:
 
     const Var & operator=(const Var &copy);
     Var & operator=(Var &copy);
+    Var & operator=(bool value);
     Var & operator=(int value);
     Var & operator=(double value);
     Var & operator=(const char * value);
@@ -560,16 +519,15 @@ public:
     };
 
   public:
-    typedef function<IECtrl::Var(IECtrl::Var&, iObject*, bool)> fCallback;
-    typedef signal<IECtrl::Var(IECtrl::Var&, iObject*, bool)> CallbackSig;
+    typedef function<IECtrl::Var(IECtrl::Var&, iObject*)> fCallback;
+    typedef signal<IECtrl::Var(IECtrl::Var&, iObject*)> CallbackSig;
 
     struct sCallback {
       CallbackSig signal;
       string name;
       long id;
-      bool isObject;
 
-      sCallback(const string& _name, fCallback f, bool _isObject): id(random()), name(_name), isObject(_isObject) {
+      sCallback(const string& _name, fCallback f): id(random()), name(_name) {
         if (!f.empty()) signal.connect(f);
       }
     };
@@ -579,10 +537,11 @@ public:
     typedef std::vector<sCallback*> tCallbacks;
 
   public:
-    iObject(IECtrl* pCtrl, bool extModificate = true);
+    iObject(IECtrl* pCtrl = 0, bool extModificate = true);
     virtual ~iObject();
 
     IECtrl* getIECtrl();
+    void setIECtrl(IECtrl* pCtrl);
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, PVOID *ppv);
@@ -605,8 +564,8 @@ public:
     STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid);
     STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk);
 
-    virtual void registerCallback(const string& name, fCallback f, bool isObject = false);
-    virtual bool deleteCallback(const string& name);
+    virtual void bindMethod(const string& name, fCallback f);
+    virtual bool unbindMethod(const string& name);
 
     virtual bool hasCallback(const string& name);
     virtual bool hasCallback(long id);
@@ -623,7 +582,7 @@ public:
     virtual sProperty* getProperty(long id);
 
   protected:
-    virtual IECtrl::Var trigger(long id, IECtrl::Var& args, bool construct = false);
+    virtual IECtrl::Var trigger(long id, IECtrl::Var& args);
 
   protected:
     IECtrl* m_pCtrl;
@@ -633,8 +592,14 @@ public:
     tCallbacks _callbacks;
 
     bool _extModificate;
-    bool _doNewObject;
-    long _objectDispID;
+  };
+
+protected:
+  class External : public iObject {
+  public:
+    External(): iObject(NULL, true) {
+      setProperty("name", "sweet, cosy and full of surprises: JS <-> C++ connectivity bridge, exclusively by kIEview2 ;>");
+    }
   };
 };
 
