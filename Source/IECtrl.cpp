@@ -1811,30 +1811,31 @@ STDMETHODIMP IECtrl::iObject::GetMemberName(DISPID id, BSTR *pbstrName) {
 }
 
 STDMETHODIMP IECtrl::iObject::GetNextDispID(DWORD grfdex, DISPID id, DISPID *pid) {
-  if (grfdex == fdexEnumAll) {
+  if (id == DISPID_STARTENUM) {
+    if (_callbacks.size() > 0) {
+        *pid = _callbacks[0]->id;
+        return S_OK;
+      } else if (_properties.size() > 0) {
+        *pid = _properties[0]->id;
+        return S_OK;
+      }
+  } else {
+    bool next = false;
     for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
       if ((*it)->id == id) {
-        if (it++ != _callbacks.end()) {
-          *pid = (*it)->id;
-          return S_OK;
-        }
+        next  = true;
+      } else if (next) {
+        *pid = (*it)->id;
+        return S_OK;
       }
     }
     for (tProperties::iterator it = _properties.begin(); it != _properties.end(); it++) {
       if ((*it)->id == id) {
-        if (it++ != _properties.end()) {
-          *pid = (*it)->id;
-          return S_OK;
-        }
+        next = true;
+      } else if (next) {
+        *pid = (*it)->id;
+        return S_OK;
       }
-    }
-  } else if (grfdex == fdexEnumDefault) {
-    if (_callbacks.size() > 0) {
-      *pid = _callbacks[0]->id;
-      return S_OK;
-    } else if (_properties.size() > 0) {
-      *pid = _properties[0]->id;
-      return S_OK;
     }
   }
 
