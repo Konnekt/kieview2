@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\Depends\ctpp\include&quot;"
+				AdditionalIncludeDirectories="..\Depends\ctpp\include;..\Depends\XZip"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;KIEVIEW2_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="stamina_d.lib Advapi32.lib"
+				AdditionalDependencies="stamina_d.lib Advapi32.lib XZip_d.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(ProjectDir)Lib"
 				GenerateDebugInformation="true"
@@ -119,7 +119,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;..\Depends\ctpp\include&quot;"
+				AdditionalIncludeDirectories="..\Depends\ctpp\include;..\Depends\XZip"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;KIEVIEW2_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -138,7 +138,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="stamina.lib Advapi32.lib"
+				AdditionalDependencies="stamina.lib Advapi32.lib XZip.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(ProjectDir)Lib"
 				GenerateDebugInformation="true"
@@ -190,7 +190,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Source\EmotParsers.cpp"
+				RelativePath="..\Source\EmotHandler.cpp"
 				>
 			</File>
 			<File
@@ -260,7 +260,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Source\EmotParsers.h"
+				RelativePath="..\Source\EmotHandler.h"
 				>
 			</File>
 			<File

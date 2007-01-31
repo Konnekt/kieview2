@@ -24,6 +24,7 @@
 #include "ActionHandler.h"
 #include "TplHandler.h"
 #include "RtfHtml.h"
+#include "EmotHandler.h"
 
 using namespace kIEview2;
 
@@ -154,6 +155,7 @@ namespace kIEview2 {
     Tables::oTable historyTable;
     JS::Controller* jsController;
     TplHandler* tplHandler;
+    EmotHandler* emotHandler;
     RtfHtmlTag* rtfHtml;
   };
 

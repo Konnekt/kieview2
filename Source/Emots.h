@@ -26,8 +26,6 @@ public:
   bool operator <(const Emot&) {
     return true;
   }
-  
-  // TODO: findAndReplace, lub coœ w tym stylu?
 
 public:
   String text;

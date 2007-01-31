@@ -86,6 +86,7 @@ namespace kIEview2 {
     setlocale(LC_ALL, "polish");
 
     this->tplHandler = new TplHandler;
+    this->emotHandler = new EmotHandler();
     this->rtfHtml = new RtfHtmlTag;
 
     tplHandler->bindStdFunctions();
@@ -116,6 +117,7 @@ namespace kIEview2 {
     }
 
     delete tplHandler;
+    delete emotHandler;
     delete rtfHtml;
 
     IECtrl::deinit();
@@ -137,6 +139,9 @@ namespace kIEview2 {
     // @debug replace with user selected tpl directory
     tplHandler->setKonnektPath((char*) Ctrl->ICMessage(IMC_KONNEKTDIR));
     tplHandler->addTplDir("/data/templates/core/");
+    
+    emotHandler->setKonnektPath((char*) Ctrl->ICMessage(IMC_KONNEKTDIR));
+    emotHandler->loadPackages();
 
     IconRegister(IML_16, ico::logo, Ctrl->hDll(), IDI_LOGO);
     IconRegister(IML_16, ico::link, Ctrl->hDll(), IDI_LINK);
