@@ -1536,12 +1536,12 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
         }
       }
     }
-    return DISP_E_MEMBERNOTFOUND;
-  } catch (const Exception& e) {
-    pExcepInfo->bstrDescription = _com_util::ConvertStringToBSTR(e.getText().c_str());
-    pExcepInfo->wCode = 1000;
+  } catch (const JSException& e) {
+    pExcepInfo->bstrDescription = _com_util::ConvertStringToBSTR(e.getReason().a_str());
+    pExcepInfo->wCode = e.getCode();
     return DISP_E_EXCEPTION;
   }
+  return DISP_E_MEMBERNOTFOUND;
 }
 
 STDMETHODIMP IECtrl::iObject::QueryInterface(REFIID riid, PVOID *ppv) {

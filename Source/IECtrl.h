@@ -32,6 +32,13 @@
 #include <stdio.h>
 #include <crtdbg.h>
 
+// Stamina.Lib includes
+#include <stamina/exception.h>
+#include <stamina/regex.h>
+
+using namespace std;
+using namespace Stamina;
+
 // na wszelki wypadek ;>
 static const CLSID CLSID_MozillaBrowser = { 0x1339B54C, 0x3453, 0x11D2, { 0x93, 0xB9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
 
@@ -524,6 +531,21 @@ public:
     UINT* _refs;
   };
 
+  class JSException : public ExceptionString {
+  public:
+    JSException(const StringRef& msg, int code = 0): ExceptionString(msg), _code(code) { }
+
+    virtual int getCode() const {
+      return _code;
+    }
+    virtual bool hasCode() const {
+      return _code != 0;
+    }
+
+  protected:
+    int _code;
+  };
+
   class iObject : public IDispatchEx {
   public:
     enum enAttributes {
@@ -617,24 +639,6 @@ public:
     tCallbacks _callbacks;
 
     bool _extModificate;
-
-  protected:
-    class Exception {
-    public:
-      Exception() {
-        _text = "[IECtrl::Object] Default exception handler";
-      }
-      Exception(const string& text) {
-        _text = text;
-      }
-
-      string getText() const {
-        return _text;
-      }
-
-    private:
-      string _text;
-    };
   };
 
 protected:
