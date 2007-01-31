@@ -617,6 +617,24 @@ public:
     tCallbacks _callbacks;
 
     bool _extModificate;
+
+  protected:
+    class Exception {
+    public:
+      Exception() {
+        _text = "[IECtrl::Object] Default exception handler";
+      }
+      Exception(const string& text) {
+        _text = text;
+      }
+
+      string getText() const {
+        return _text;
+      }
+
+    private:
+      string _text;
+    };
   };
 
 protected:

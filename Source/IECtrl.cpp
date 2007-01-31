@@ -1488,55 +1488,60 @@ STDMETHODIMP IECtrl::iObject::GetTypeInfo(UINT iTInfo, LCID lcid, LPTYPEINFO* pp
 STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pdp, VARIANT* pvarRes, EXCEPINFO* pExcepInfo, UINT* puArgErr) {
   if (!pdp) return E_INVALIDARG;
 
-  if (wFlags & DISPATCH_METHOD) {
-    if (hasCallback(id)) {
-      Var args;
-      for (UINT i = 0; i < pdp->cArgs; i++) {
-        args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
-      }
-      Var ret = trigger(id, args);
-      ret.getVariant(pvarRes);
-      return S_OK;
-    }
-  } else if (wFlags & DISPATCH_PROPERTYGET) {
-    if (!id) {
-      IECtrl::Var ret;
-      if (hasCallback("toString")) {
-        ret = trigger(getCallback("toString")->id, Var());
-      } else if (hasProperty("name")) {
-        ret = getProperty("name")->var;
-      } else {
-        return DISP_E_MEMBERNOTFOUND;
-      }
-      ret.getVariant(pvarRes);
-      return S_OK;
-
-    } else if (hasCallback(id)) {
-      sCallback* method = getCallback(id);
-      IECtrl::Var ret;
-
-      if (method->getter) {
-        ret = trigger(method->id, Var());
-      } else {
-        ret = true;
-      }
-      ret.getVariant(pvarRes);
-      return S_OK;
-
-    } else if (hasProperty(id)) {
-      getProperty(id)->var.getVariant(pvarRes);
-      return S_OK;
-    }
-  } else if ((wFlags & DISPATCH_PROPERTYPUT) || (wFlags & DISPATCH_PROPERTYPUTREF)) {
-    sProperty* s = getProperty(id);
-    if (s && s->attr > attrReader) {
-      if (pdp->cArgs) {
-        s->var = pdp->rgvarg[pdp->cArgs - 1];
+  try {
+    if (wFlags & DISPATCH_METHOD) {
+      if (hasCallback(id)) {
+        Var args;
+        for (UINT i = 0; i < pdp->cArgs; i++) {
+          args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
+        }
+        Var ret = trigger(id, args);
+        ret.getVariant(pvarRes);
         return S_OK;
       }
+    } else if (wFlags & DISPATCH_PROPERTYGET) {
+      if (!id) {
+        IECtrl::Var ret;
+        if (hasCallback("toString")) {
+          ret = trigger(getCallback("toString")->id, Var());
+        } else if (hasProperty("name")) {
+          ret = getProperty("name")->var;
+        } else {
+          return DISP_E_MEMBERNOTFOUND;
+        }
+        ret.getVariant(pvarRes);
+        return S_OK;
+      } else if (hasCallback(id)) {
+        sCallback* method = getCallback(id);
+        IECtrl::Var ret;
+
+        if (method->getter) {
+          ret = trigger(method->id, Var());
+        } else {
+          ret = true;
+        }
+        ret.getVariant(pvarRes);
+        return S_OK;
+
+      } else if (hasProperty(id)) {
+        getProperty(id)->var.getVariant(pvarRes);
+        return S_OK;
+      }
+    } else if ((wFlags & DISPATCH_PROPERTYPUT) || (wFlags & DISPATCH_PROPERTYPUTREF)) {
+      sProperty* s = getProperty(id);
+      if (s && s->attr > attrReader) {
+        if (pdp->cArgs) {
+          s->var = pdp->rgvarg[pdp->cArgs - 1];
+          return S_OK;
+        }
+      }
     }
+    return DISP_E_MEMBERNOTFOUND;
+  } catch (const Exception& e) {
+    pExcepInfo->bstrDescription = _com_util::ConvertStringToBSTR(e.getText().c_str());
+    pExcepInfo->wCode = 1000;
+    return DISP_E_EXCEPTION;
   }
-  return DISP_E_MEMBERNOTFOUND;
 }
 
 STDMETHODIMP IECtrl::iObject::QueryInterface(REFIID riid, PVOID *ppv) {
