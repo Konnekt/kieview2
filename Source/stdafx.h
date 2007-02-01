@@ -55,7 +55,6 @@
 #include <deque>
 #include <stdstring.h>
 #include <string>
-#include <fstream>
 
 #ifdef _DEBUG
   #pragma comment(lib, "stamina_d.lib")
@@ -66,8 +65,6 @@
 #include <boost/signal.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 
 #include <stamina/helpers.h>
 #include <stamina/object.h>
@@ -107,8 +104,5 @@ using namespace boost;
 #endif
 
 #include <libxml++/libxml++.h>
-
-#include <XZip.h>
-#include <XUnzip.h>
 
 #include "../Project/resource.h"
