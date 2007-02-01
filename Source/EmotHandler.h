@@ -24,85 +24,105 @@
 #include <XUnzip.h>
 
 #include <fstream>
+
+#include "Controller.h"
 #include "Emots.h"
 
+typedef list<EmotSet> tEmotSets;
+
+using namespace std;
+using namespace Stamina;
+
+/*
+ * Base emot definition parser
+ */
+class EmotParserException: public ExceptionString {
+public:
+  EmotParserException(const StringRef& reason): ExceptionString(reason) { }
+};
+class WrongFormat: public EmotParserException {
+public:
+  WrongFormat(const StringRef& reason): EmotParserException(reason) { }
+};
+class CannotOpen: public EmotParserException {
+public:
+  CannotOpen(const StringRef& reason): EmotParserException(reason) { }
+};
+
+class EmotParser {
+public:
+  virtual string getDefFileName(const string& fileDir) = 0;
+  virtual EmotSet parse(const string& filePath, const string& fileDir) = 0;
+};
+
+/*
+ * JISP emot definition parser
+ */
+class JispParser: public EmotParser {
+public:
+  class XMLParserException: public EmotParserException {
+  public:
+    XMLParserException(const StringRef& reason): EmotParserException(reason) { }
+  };
+
+public:
+  string getDefFileName(const string& fileDir) {
+    return fileDir + ".jisp";
+  }
+  EmotSet parse(const string& filePath, const string& fileDir);
+};
+
+/*
+ * GG emot definition parser
+ */
+class GGEmotParser: public EmotParser {
+public:
+  string getDefFileName(const string& fileDir) {
+    return "emots.txt";
+  }
+  EmotSet parse(const string& filePath, const string& fileDir);
+};
+
+/*
+ * Emots parsing class
+ */
 class EmotHandler : public SharedObject<iSharedObject> {
 public:
   /* Class version */
   STAMINA_OBJECT_CLASS_VERSION(EmotHandler, iSharedObject, Version(0,1,0,0));
 
 public:
-  typedef list<EmotSet> tEmotSets;
-  typedef list<string> tEmotDirs;
-
-  class EmotParser {
-  public:
-    class WrongFormat: public ExceptionString {
-    public:
-      WrongFormat(const StringRef& reason): ExceptionString(reason) { }
-    };
-
-  public:
-    virtual EmotSet parse(string str) = 0;
-  };
-
-  class JispParser: public EmotParser {
-  public:
-    class XMLParserException: public ExceptionString {
-    public:
-      XMLParserException(const StringRef& reason): ExceptionString(reason) { }
-    };
-
-  public:
-    JispParser() {
-      this->parser.set_substitute_entities();
-    }
-
-  public:
-    EmotSet parse(string str);
-
-  protected:
-    xmlpp::DomParser parser;
-  };
-
-  class GGEmotParser: public EmotParser {
-  public:
-    EmotSet parse(string str);
-
-  protected:
-    RegEx parser;
-  };
-
-  class EmotReplacer {
-  public:
-    String replace(StringRef& str, EmotSet& set);
-
-  protected:
-    RegEx parser;
-  };
+  typedef list<EmotParser*> tParsers;
 
 public:
-  EmotHandler(const string& emotDir = "emots");
-
-  inline void setKonnektPath(const string& path) {
-    kPath = path;
-  }
-  inline void setEmotDir(const string& dir) {
-    emotDir = dir;
+  // EmotHandler();
+  ~EmotHandler() {
+    for (tParsers::iterator it = parsers.begin(); it != parsers.end(); it++) {
+      delete *it;
+    }
   }
 
-  void addEmotDir(const string& dir);
-  
+  string getEmotDir() {
+    return Controller::getConfig()->getChar(kIEview2::cfg::emotsDir);
+  }
+  string getKonnektPath() {
+    if (!kPath.size() && Ctrl) {
+      kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
+    }
+    return kPath;
+  }
+
+  void addParser(EmotParser* parser) {
+    parsers.push_back(parser);
+  }
+  String parse(cMessage* msg);
+
   void loadPackages();
 
 protected:
   tEmotSets emotSets;
-  tEmotDirs emotDirs;
+  tParsers parsers;
   string kPath;
-  string emotDir;
-  GGEmotParser ggEmotParser;
-  JispParser jispParser;
-  
 };
 
 #endif // __EMOTSHANDLER_H__

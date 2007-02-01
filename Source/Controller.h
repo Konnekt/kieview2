@@ -197,8 +197,7 @@ namespace kIEview2 {
 	          return ver;
           }
         }
-        // throw JSException("Plugin not found");
-        return false;
+        throw IECtrl::JSException("Plugin not found");
       }
 
     protected:

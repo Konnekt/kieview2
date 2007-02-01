@@ -16,6 +16,7 @@
 #include "Controller.h"
 #include "Message.h"
 #include "TplUdf.h"
+#include "EmotHandler.h"
 
 void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
   unsigned int ksize = strlen((char*)key);
@@ -337,7 +338,7 @@ namespace kIEview2 {
           args[0] = tplHandler->parseException(e).a_str();
         }
 
-        Ctrl->Sleep(1000);
+        //Ctrl->Sleep(1000);
         ctrl->callJScript("addMessage", args, &ret);
         if (an->_scroll && autoScroll) ctrl->scrollToBottom();
         break;
@@ -933,6 +934,14 @@ namespace kIEview2 {
     }
     if (config->getInt(cfg::linkify)) {
       body = linkify(body);
+    }
+    if (config->getInt(cfg::useEmots)) {
+      EmotHandler emotHandler;
+      emotHandler.addParser(new JispParser);
+      emotHandler.addParser(new GGEmotParser);
+      emotHandler.loadPackages();
+
+      body = emotHandler.parse(msg);
     }
     body = normalizeSpaces(body);
 

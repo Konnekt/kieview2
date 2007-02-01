@@ -53,7 +53,7 @@ public:
   EmotSet(const StringRef& _name = "", const string& _version = "", const StringRef& _description = "", 
     const tAuthors& _authors = tAuthors(), const string& _creationTime = "", const StringRef& _url = ""):
     name(_name), version(_version), description(_description), authors(_authors), creationTime(_creationTime),
-    url(_url) { }
+    url(_url), net(0) { }
   
 public:
   tAuthors authors;
@@ -64,6 +64,9 @@ public:
   String description;
   string creationTime;
   String url;
+
+  string dir;
+  int net;
 };
 
 #endif // __EMOTS_H__
