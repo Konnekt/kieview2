@@ -287,27 +287,23 @@ void IECtrl::scrollToTop() {
 bool IECtrl::isScrollOnBottom() {
   bool isScroll = false;
 
-  IHTMLDocument2 *document = getDocument();
-  if (document != NULL) {
-    IHTMLDocument2 *pDocument = NULL;
-    if (SUCCEEDED(document->QueryInterface( IID_IHTMLDocument2, (void**)&pDocument)) && pDocument != NULL) {
-      IHTMLElement *pBody = NULL;
-      if (SUCCEEDED(pDocument->get_body(&pBody)) && pBody != NULL) {
-        IHTMLElement2 *pElement = NULL;
-        if (SUCCEEDED(pBody->QueryInterface(IID_IHTMLElement2,(void**)&pElement)) && pElement != NULL) {
-            long sh, ch, st;
-            pElement->get_scrollHeight(&sh);
-            pElement->get_clientHeight(&ch);
-            pElement->get_scrollTop(&st);
+  IHTMLDocument2 *pDocument = getDocument();
+  if (pDocument != NULL) {
+    IHTMLElement *pBody = NULL;
+    if (SUCCEEDED(pDocument->get_body(&pBody)) && pBody != NULL) {
+      IHTMLElement2 *pElement = NULL;
+      if (SUCCEEDED(pBody->QueryInterface(IID_IHTMLElement2,(void**)&pElement)) && pElement != NULL) {
+        long sh, ch, st;
+        pElement->get_scrollHeight(&sh);
+        pElement->get_clientHeight(&ch);
+        pElement->get_scrollTop(&st);
 
-            isScroll = (sh <= ch + st);
-            pElement->Release();
-        }
-        pBody->Release();
+        isScroll = (sh <= ch + st);
+        pElement->Release();
       }
-      pDocument->Release();
+      pBody->Release();
     }
-    document->Release();
+    pDocument->Release();
   }
   return isScroll;
 }
@@ -1537,7 +1533,9 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
       }
     }
   } catch (const JSException& e) {
+    memset(pExcepInfo, 0, sizeof(EXCEPINFO));
     pExcepInfo->bstrDescription = _com_util::ConvertStringToBSTR(e.getReason().a_str());
+    pExcepInfo->scode = DISP_E_EXCEPTION;
     pExcepInfo->wCode = e.getCode();
     return DISP_E_EXCEPTION;
   }
