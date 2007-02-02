@@ -628,6 +628,8 @@ public:
     virtual sProperty* getProperty(const string& name);
     virtual sProperty* getProperty(long id);
 
+    static HRESULT __stdcall fillExceptionData(EXCEPINFO *pExcepInfo);
+
   protected:
     virtual Var trigger(long id, Var& args);
 
@@ -639,6 +641,8 @@ public:
     tCallbacks _callbacks;
 
     bool _extModificate;
+
+    static EXCEPINFO _excepInfo;
   };
 
 protected:

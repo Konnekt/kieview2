@@ -1448,6 +1448,8 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
  * IECtrl::iObject *
                    */
 
+EXCEPINFO IECtrl::iObject::_excepInfo = {0};
+
 IECtrl::iObject::iObject(IECtrl* pCtrl, bool extModificate): m_cRef(0), m_pCtrl(pCtrl), _extModificate(extModificate) {
   setProperty("name", "[IECtrl::iObject]", attrReader);
 }
@@ -1479,6 +1481,13 @@ STDMETHODIMP IECtrl::iObject::GetTypeInfoCount(UINT *ptr) {
 
 STDMETHODIMP IECtrl::iObject::GetTypeInfo(UINT iTInfo, LCID lcid, LPTYPEINFO* ppTInfo) { 
   return S_OK; 
+}
+
+HRESULT __stdcall IECtrl::iObject::fillExceptionData(EXCEPINFO *pExcepInfo) {
+  if (pExcepInfo != NULL) {
+    memcpy(pExcepInfo, &_excepInfo, sizeof(EXCEPINFO));
+  }
+  return pExcepInfo->wCode;
 }
 
 STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pdp, VARIANT* pvarRes, EXCEPINFO* pExcepInfo, UINT* puArgErr) {
@@ -1533,10 +1542,13 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
       }
     }
   } catch (const JSException& e) {
-    memset(pExcepInfo, 0, sizeof(EXCEPINFO));
-    pExcepInfo->bstrDescription = _com_util::ConvertStringToBSTR(e.getReason().a_str());
+    memset(&_excepInfo, 0, sizeof(EXCEPINFO));
+    _excepInfo.bstrDescription = _com_util::ConvertStringToBSTR(e.getReason().a_str());
+    _excepInfo.scode = e.getCode();
+    _excepInfo.wCode = e.getCode();
+    _excepInfo.pfnDeferredFillIn = fillExceptionData;
+    fillExceptionData(pExcepInfo);
     pExcepInfo->scode = DISP_E_EXCEPTION;
-    pExcepInfo->wCode = e.getCode();
     return DISP_E_EXCEPTION;
   }
   return DISP_E_MEMBERNOTFOUND;
