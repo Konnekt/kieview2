@@ -139,7 +139,9 @@ namespace kIEview2 {
     void _handleFileTpl(param_data& data, UI::Notify::_insertMsg* an);
 
   public:
+    bool autoScroll(sUIActionNotify_base* an, IECtrl* ctrl);
     void clearWnd(IECtrl* ctrl);
+
     static DWORD CALLBACK streamOut(DWORD, LPBYTE, LONG, LONG*);
     static LRESULT CALLBACK msgWndProc(HWND, UINT, WPARAM, LPARAM);
     
@@ -175,7 +177,7 @@ namespace kIEview2 {
         if (int plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL)) {
           return SAFECHAR((char*) Ctrl->IMessageDirect(IM_PLUG_NAME, plugID));
         }
-        return false;
+        throw IECtrl::JSException("Plugin not found");
       }
 
       IECtrl::Var getPluginVersion(IECtrl::Var& args, IECtrl::iObject* obj) {

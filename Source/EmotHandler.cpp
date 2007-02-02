@@ -180,9 +180,9 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
   return result;
 }
 
-String EmotHandler::parse(cMessage* msg) {
+String EmotHandler::parse(const StringRef& body, cMessage* msg) {
   RegEx reg;
-  reg.setSubject(msg->body);
+  reg.setSubject(body);
 
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
     for (EmotSet::tEmots::iterator it2 = it->emots.begin(); it2 != it->emots.end(); it2++) {
@@ -191,7 +191,7 @@ String EmotHandler::parse(cMessage* msg) {
       } else {
         reg.setPattern(reg.addSlashes(it2->text));
       }
-      reg.replaceItself(("<img src=\"" + getKonnektPath() + getEmotDir() + it2->img_path + "\" />").c_str());
+      reg.replaceItself(("<img src=\"" + getKonnektPath() + getEmotDir() + "\\" + it->dir + "\\" + it2->img_path + "\" />").c_str());
     }
   }
   return reg.getSubject();
@@ -202,7 +202,7 @@ void EmotHandler::loadPackages() {
   list<string> emotDirs;
 
   try {
-    filesystem::path path(getKonnektPath() + getEmotDir(), filesystem::native);
+    filesystem::path path(getEmotDir(), filesystem::native);
     for (filesystem::directory_iterator it(path); it != filesystem::directory_iterator(); it++) {
       if (filesystem::is_directory(*it)) {
         emotDirs.push_back(Helpers::ltrim(unifyPath(it->string()), ".\\"));
@@ -217,7 +217,7 @@ void EmotHandler::loadPackages() {
     string title = it->substr(it->find_last_of("\\") + 1);
 
     for (tParsers::iterator it2 = parsers.begin(); it2 != parsers.end(); it2++) {
-      string fName = (*it2)->getDefFileName(title);
+      string fName = *it + "\\" + (*it2)->getDefFileName(title);
       if (!fileExists(fName.c_str())) continue;
 
       try {

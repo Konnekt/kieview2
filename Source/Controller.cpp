@@ -330,17 +330,16 @@ namespace kIEview2 {
         IECtrl::Var args;
         IECtrl::Var ret;
 
-        // ctrl->isScrollOnBottom()
-        bool autoScroll = UIActionGetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::autoScroll, an->act.cnt)) & ACTS_CHECKED;
+        bool autoScroll = an->_scroll && this->autoScroll(an, ctrl);
         try {
           args[0] = _parseMsgTpl(an).a_str();
         } catch(const exception &e) { 
           args[0] = tplHandler->parseException(e).a_str();
         }
 
-        //Ctrl->Sleep(1000);
+        Ctrl->Sleep(1000);
         ctrl->callJScript("addMessage", args, &ret);
-        if (an->_scroll && autoScroll) ctrl->scrollToBottom();
+        if (autoScroll) ctrl->scrollToBottom();
         break;
       }
 
@@ -351,7 +350,7 @@ namespace kIEview2 {
         IECtrl::Var args;
         IECtrl::Var ret;
 
-        bool autoScroll = UIActionGetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::autoScroll, an->act.cnt)) & ACTS_CHECKED;
+        bool autoScroll = this->autoScroll(an, ctrl);
         try {
           args[0] = _parseStatusTpl(an).a_str();
         } catch(const exception &e) { 
@@ -526,6 +525,15 @@ namespace kIEview2 {
     return (msgHandlers[type]->connections[label] = msgHandlers[type]->signal.connect(priority, f, pos)).connected();
   }
 
+  bool Controller::autoScroll(sUIActionNotify_base* an, IECtrl* ctrl) {
+    if (!an->act.cnt) return false;
+
+    if ((UIActionGetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::autoScroll, an->act.cnt)) & ACTS_CHECKED) || ctrl->isScrollOnBottom()) {
+      return true;
+    }
+    return false;
+  }
+
   int Controller::getIEVersion() {
     // HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ -> User Agent
     // Mozilla/4.0 (compatible; MSIE 6.0; Win32)
@@ -649,7 +657,7 @@ namespace kIEview2 {
     }
 
     for (list<UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
-      Message::inject(it->_message, cnt, it->_display, false);
+      Message::inject(it->_message, cnt, it->_display);
 
       delete it->_message;
     }
@@ -941,7 +949,7 @@ namespace kIEview2 {
       emotHandler.addParser(new GGEmotParser);
       emotHandler.loadPackages();
 
-      body = emotHandler.parse(msg);
+      body = emotHandler.parse(body, msg);
     }
     body = normalizeSpaces(body);
 

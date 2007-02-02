@@ -115,7 +115,7 @@ public:
   void addParser(EmotParser* parser) {
     parsers.push_back(parser);
   }
-  String parse(cMessage* msg);
+  String parse(const StringRef& body, cMessage* msg);
 
   void loadPackages();
 
