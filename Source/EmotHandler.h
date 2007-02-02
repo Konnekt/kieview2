@@ -17,9 +17,6 @@
 #ifndef __EMOTSHANDLER_H__
 #define __EMOTSHANDLER_H__
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
-
 #include <XZip.h>
 #include <XUnzip.h>
 

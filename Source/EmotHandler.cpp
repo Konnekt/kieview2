@@ -187,9 +187,17 @@ String EmotHandler::parse(const StringRef& body, cMessage* msg) {
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
     for (EmotSet::tEmots::iterator it2 = it->emots.begin(); it2 != it->emots.end(); it2++) {
       if (it2->preg) {
-        reg.setPattern(it2->text);
+        try {
+          reg.setPattern(it2->text);
+        } catch (RegEx::CompileException& e) {
+          IMLOG("B³¹d definicji emotikony: %s, %i", e.error, e.pos);
+        }
       } else {
-        reg.setPattern(reg.addSlashes(it2->text));
+        try {
+          reg.setPattern(reg.addSlashes(it2->text));
+        } catch (RegEx::CompileException& e) {
+          IMLOG("B³¹d definicji emotikony: %s, %i", e.error, e.pos);
+        }
       }
       reg.replaceItself(("<img src=\"" + getKonnektPath() + getEmotDir() + "\\" + it->dir + "\\" + it2->img_path + "\" />").c_str());
     }
@@ -201,17 +209,24 @@ void EmotHandler::loadPackages() {
   if (emotSets.size()) emotSets.clear();
   list<string> emotDirs;
 
-  try {
-    filesystem::path path(getEmotDir(), filesystem::native);
-    for (filesystem::directory_iterator it(path); it != filesystem::directory_iterator(); it++) {
-      if (filesystem::is_directory(*it)) {
-        emotDirs.push_back(Helpers::ltrim(unifyPath(it->string()), ".\\"));
-      }
-    }
-  } catch (const exception& e) {
-    // @todo nie ma katalogu emots - robimy coœ?
-    IMLOG("dupsko: %s", e.what());
+  WIN32_FIND_DATA FindFileData;
+  HANDLE hFind = INVALID_HANDLE_VALUE;
+
+  hFind = FindFirstFile((getKonnektPath() + getEmotDir() + "\\*").c_str(), &FindFileData);
+  if (hFind == INVALID_HANDLE_VALUE) {
+    // @todo prawdpodobnie nie ma katalogu emots - robimy coœ?
+    IMLOG("dupsko: %u", GetLastError());
+    return;
   }
+  
+  do {
+    if (strcmp(FindFileData.cFileName, ".") && strcmp(FindFileData.cFileName, "..")) {
+      emotDirs.push_back(Helpers::ltrim(unifyPath(getKonnektPath() + getEmotDir() + "\\" + FindFileData.cFileName), ".\\"));
+    }
+  }
+  while (FindNextFile(hFind, &FindFileData) != 0);
+
+  FindClose(hFind);
 
   for (list<string>::iterator it = emotDirs.begin(); it != emotDirs.end(); it++) {
     string title = it->substr(it->find_last_of("\\") + 1);
