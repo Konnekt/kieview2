@@ -184,32 +184,66 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
   return result;
 }
 
+String EmotHandler::prepareBody(const StringRef& body, bool encode, bool html) {
+  RegEx reg;
+  reg.setSubject(body);
+
+  if (encode) {
+    reg.replaceItself(html ? "/&amp;/" : "/&/", "\1");
+    reg.replaceItself(html ? "/&lt;/" : "/</", "\2");
+    reg.replaceItself(html ? "/&gt;/" : "/>/", "\3");
+    reg.replaceItself(html ? "/&quot;/" : "/\"/", "\4");
+    reg.replaceItself(html ? "/&apos;/" : "/'/", "\5");
+  } else {
+    reg.replaceItself("/\1/", html ? "&amp;" : "/&/");
+    reg.replaceItself("/\2/", html ? "&lt;" : "/</");
+    reg.replaceItself("/\3/", html ? "&gt;" : "/>/");
+    reg.replaceItself("/\4/", html ? "&quot;" : "/\"/");
+    reg.replaceItself("/\5/", html ? "&apos;" : "/'/");
+  }
+  return reg.getSubject();
+}
+
+string __stdcall EmotHandler::emotInsertion(RegEx* reg, void* param) {
+  sEmotInsertion* ei = static_cast<sEmotInsertion*>(param);
+
+  ei->match = reg->getSub(0).c_str();
+  return "<kiev2:emot:insertion id=\"" + inttostr(ei->id) + "\" />";
+}
+
 string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
   EmotHandler* handler = static_cast<EmotHandler*>(param);
+  sEmotInsertion* ei = &handler->emotInsertions.at(atoi(reg->getSub(1).c_str()));
 
-  IMLOG("tag = %s, path = %s", reg->getSub(0).c_str(), reg->getSub(1).c_str());
-  return "<img src=\"" + unifyPath(handler->getEmotDir() + "/" + reg->getSub(1)) + "\" class=\"emoticon\" alt=\"\" />";
+  IMLOG("[EmotHandler::replaceEmot()] match = %s, img_path = %s, emot = %s, set = %s", ei->match.c_str(), ei->emot->img_path.c_str(),
+    ei->emot->text.c_str(), ei->emotSet->name.c_str());
+  return "<img src=\"" + unifyPath(handler->getEmotDir() + "/" + ei->emotSet->dir + "/" + ei->emot->img_path) + 
+    "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
 }
 
 String EmotHandler::parse(const StringRef& body, int net) {
   RegEx reg;
-  reg.setSubject(body);
+  reg.setSubject(prepareBody(body));
 
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
     // if (emotSetsByNet.find(net) != emotSetsByNet.end() && emotSetsByNet[net].size()) 
 
     for (EmotSet::tEmots::iterator it2 = it->emots.begin(); it2 != it->emots.end(); it2++) {
-      IMLOG("emot_set = %s, emot_text = %s, emot_preg = %i", it->name.c_str(), it2->text.c_str(), it2->preg);
+      sEmotInsertion ei(emotInsertions.size(), &*it2, &*it);
       try {
-        reg.setPattern(!it2->preg ? "/" + reg.addSlashes(it2->text) + "/i" : it2->text);
-        reg.replaceItself(("<kiev2:emot path=\"" + it->dir + "/" + it2->img_path + "\" />").c_str());
+        reg.setPattern(prepareBody(!it2->preg ? "/" + reg.addSlashes(it2->text) + "/i" : it2->text, true, false));
+        reg.replaceItself(&EmotHandler::emotInsertion, 0, (void*) &ei);
       } catch (const RegEx::CompileException& e) {
         IMLOG("B³¹d definicji emotikony: %s, %i", e.error, e.pos);
+        continue;
       }
+      emotInsertions.push_back(ei);
     }
   }
-  reg.replaceItself("#<kiev2:emot path=\"([^\"]+)\" />#", &EmotHandler::replaceEmot, 0, (void*) this);
-  return reg.getSubject();
+  reg.replaceItself("#<kiev2:emot:insertion id=\"([0-9]+)\" />#", &EmotHandler::replaceEmot, 0, (void*) this);
+  emotInsertions.clear();
+
+  return prepareBody(reg.getSubject(), false);
 }
 
 void EmotHandler::loadPackages() {

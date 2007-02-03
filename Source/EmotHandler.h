@@ -149,6 +149,19 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(EmotHandler, iSharedObject, Version(0,1,0,0));
 
 public:
+  struct sEmotInsertion {
+    string match;
+    UINT id;
+
+    EmotSet* emotSet;
+    Emot* emot;
+
+    sEmotInsertion(UINT _id, Emot* _emot, EmotSet* _emotSet): id(_id), emot(_emot), emotSet(_emotSet) { }
+    sEmotInsertion(): id(0), emotSet(0), emot(0) { }
+  };
+
+public:
+  typedef vector<sEmotInsertion> tEmotInsertions;
   typedef map<int, list<int>> tNetEmotSets;
   typedef list<EmotParser*> tParsers;
 
@@ -178,9 +191,13 @@ public:
   void loadPackages();
 
 protected:
+  String prepareBody(const StringRef& body, bool encode = true, bool html = true);
+
+  static string __stdcall emotInsertion(RegEx* reg, void* param);
   static string __stdcall replaceEmot(RegEx* reg, void* param);
 
 protected:
+  tEmotInsertions emotInsertions;
   tNetEmotSets emotSetsByNet;
   tEmotSets emotSets;
   tParsers parsers;

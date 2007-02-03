@@ -51,7 +51,7 @@ public:
     const tAuthors& _authors = tAuthors(), const string& _creationTime = "", const StringRef& _url = ""):
     name(_name), version(_version), description(_description), authors(_authors), creationTime(_creationTime),
       url(_url), id(random()) { }
-  
+
 public:
   UINT id;
 
