@@ -1503,6 +1503,23 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
         Var ret = trigger(id, args);
         ret.getVariant(pvarRes);
         return S_OK;
+      } else if (hasProperty(id)) {
+        sProperty* s = getProperty(id);
+        if (s->var.isDispatch()) {
+          DISPPARAMS dispparams = {0, 0, NULL, NULL};
+          if (pdp->cArgs) {
+            dispparams.cArgs = pdp->cArgs;
+            dispparams.rgvarg = new VARIANT[pdp->cArgs];
+            memcpy(dispparams.rgvarg, pdp->rgvarg, sizeof(VARIANT) * pdp->cArgs);
+          }
+          UINT nArgErr = (UINT)-1;
+          HRESULT hr;
+          hr = s->var.getDispatch()->Invoke(DISPID_VALUE, IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &dispparams, pvarRes, pExcepInfo, &nArgErr);
+          if (dispparams.rgvarg) {
+            delete [] dispparams.rgvarg;
+          }
+          return hr;
+        }
       }
     } else if (wFlags & DISPATCH_PROPERTYGET) {
       if (!id) {
@@ -1536,8 +1553,19 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
       sProperty* s = getProperty(id);
       if (s && s->attr > attrReader) {
         if (pdp->cArgs) {
-          s->var = pdp->rgvarg[pdp->cArgs - 1];
-          return S_OK;
+          if (wFlags & DISPATCH_PROPERTYPUTREF) {
+            if (pdp->rgvarg[pdp->cArgs - 1].vt == VT_DISPATCH) {
+              getProperty(id)->var = pdp->rgvarg[pdp->cArgs - 1];
+              return S_OK;
+            }
+          } else {
+            if (pdp->rgvarg[pdp->cArgs - 1].vt == VT_DISPATCH) {
+              ///
+            } else {
+              getProperty(id)->var = pdp->rgvarg[pdp->cArgs - 1];
+              return S_OK;
+            }
+          }
         }
       }
     }
@@ -1786,12 +1814,17 @@ STDMETHODIMP IECtrl::iObject::GetMemberName(DISPID id, BSTR *pbstrName) {
 STDMETHODIMP IECtrl::iObject::GetNextDispID(DWORD grfdex, DISPID id, DISPID *pid) {
   if (id == DISPID_STARTENUM) {
     if (_callbacks.size() > 0) {
-        *pid = _callbacks[0]->id;
-        return S_OK;
-      } else if (_properties.size() > 0) {
-        *pid = _properties[0]->id;
-        return S_OK;
+      *pid = _callbacks[0]->id;
+      return S_OK;
+    } else if (_properties.size() > 0) {
+      int i = 0;
+      for (tProperties::iterator it = _properties.begin(); it != _properties.end(); it++) {
+        if (!(*it)->var.isDispatch()) {
+          *pid = (*it)->id;
+          return S_OK;
+        }
       }
+    }
   } else {
     bool next = false;
     for (tCallbacks::iterator it = _callbacks.begin(); it != _callbacks.end(); it++) {
@@ -1806,6 +1839,7 @@ STDMETHODIMP IECtrl::iObject::GetNextDispID(DWORD grfdex, DISPID id, DISPID *pid
       if ((*it)->id == id) {
         next = true;
       } else if (next) {
+        if ((*it)->var.isDispatch()) continue;
         *pid = (*it)->id;
         return S_OK;
       }
