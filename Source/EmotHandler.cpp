@@ -225,7 +225,7 @@ void EmotHandler::parseSet(RegEx& reg, EmotSet& set) {
   for (EmotSet::tEmots::iterator it = set.emots.begin(); it != set.emots.end(); it++) {
     sEmotInsertion ei(emotInsertions.size(), &*it, &set);
     try {
-      reg.setPattern(prepareBody(!it->preg ? "/" + reg.addSlashes(it->text) + "/i" : it->text, true, false));
+      reg.setPattern(prepareBody(!it->preg ? "/" + addSlashes(it->text, "\"'\\/^$!?()[]+.{}*|", '\\') + "/i" : it->text, true, false));
       reg.replaceItself(&EmotHandler::emotInsertion, 0, (void*) &ei);
     } catch (const RegEx::CompileException& e) {
       IMLOG("B³¹d definicji emotikony: %s, %i", e.error, e.pos);
