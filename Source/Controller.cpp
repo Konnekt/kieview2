@@ -919,12 +919,10 @@ namespace kIEview2 {
   }
 
   String Controller::_parseMsgTpl(UI::Notify::_insertMsg* an) {
+    if (!isMsgFromHistory(an) && (an->_message->flag & MF_HIDE)) return "";
+
     // locking
     LockerCS lock(_locker);
-
-    if (!isMsgFromHistory(an) && (an->_message->flag & MF_HIDE)) {
-      return "";
-    }
 
     cMessage* msg = an->_message;
     string type = getMsgTypeLabel(msg->type);
@@ -932,24 +930,25 @@ namespace kIEview2 {
     tCntId cnt = getCntFromMsg(msg);
     Date64 date(msg->time);
 
-    // @todo MF_LEAVEASIS
-
     if (msg->flag & MF_HTML) {
       // body = makeSafeHtml(body);
     } else {
       body = htmlEscape(body);
       body = nl2br(body);
     }
-    if (config->getInt(cfg::linkify)) {
-      body = linkify(body);
-    }
-    if (config->getInt(cfg::useEmots)) {
-      EmotHandler emotHandler;
-      emotHandler.addParser(new JispParser);
-      emotHandler.addParser(new GGEmotParser);
-      emotHandler.loadPackages();
+    if (!(msg->flag & MF_LEAVEASIS)) {
+      if (config->getInt(cfg::useEmots)) {
+        // @debug just for now...
+        EmotHandler emotHandler;
+        emotHandler.addParser(new JispParser);
+        emotHandler.addParser(new GGEmotParser);
+        emotHandler.loadPackages();
 
-      body = emotHandler.parse(body, msg);
+        body = emotHandler.parse(body, msg->net);
+      }
+      if (config->getInt(cfg::linkify)) {
+        body = linkify(body);
+      }
     }
     body = normalizeSpaces(body);
 

@@ -19,15 +19,12 @@
 
 class Emot {
 public:
-  Emot(const StringRef& _text = "", const string& _img_path = "", const string& _menu_img_path = "", bool _preg = false, 
-    bool _in_menu = true): 
-    text(_text), img_path(_img_path), menu_img_path(_menu_img_path), preg(_preg), in_menu(_in_menu) { }
-  
-  bool operator <(const Emot&) {
-    return true;
-  }
+  Emot(const StringRef& _text = "", const string& _img_path = "", const string& _menu_img_path = "", bool _preg = false, bool _in_menu = true):
+    text(_text), img_path(_img_path), menu_img_path(_menu_img_path), preg(_preg), in_menu(_in_menu), id(random()) { }
 
 public:
+  UINT id;
+
   String text;
   string img_path;
   string menu_img_path;
@@ -53,9 +50,11 @@ public:
   EmotSet(const StringRef& _name = "", const string& _version = "", const StringRef& _description = "", 
     const tAuthors& _authors = tAuthors(), const string& _creationTime = "", const StringRef& _url = ""):
     name(_name), version(_version), description(_description), authors(_authors), creationTime(_creationTime),
-    url(_url), net(0) { }
+      url(_url), id(random()) { }
   
 public:
+  UINT id;
+
   tAuthors authors;
   tEmots emots;
 
@@ -66,7 +65,6 @@ public:
   String url;
 
   string dir;
-  int net;
 };
 
 #endif // __EMOTS_H__

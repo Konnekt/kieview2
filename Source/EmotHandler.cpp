@@ -135,7 +135,6 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
   file.close();
 
   EmotSet result;
-  EmotSet::tEmots emots;
   tStringVector strings;
   bool inMenu;
 
@@ -143,6 +142,8 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
   RegEx reg;
 
   for (tStringVector::iterator it = strings.begin(); it != strings.end(); it++) {
+    EmotSet::tEmots emots;
+
     if ((*it)[0] == '*') {
       inMenu = false;
       (*it).erase(0);
@@ -174,71 +175,70 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
         break;
       }
     }
-    result.emots.merge(emots);
+    result.emots.insert(result.emots.end(), emots.begin(), emots.end());
   }
+
+  result.name = fileDir;
   result.dir = fileDir;
+
   return result;
 }
 
-String EmotHandler::parse(const StringRef& body, cMessage* msg) {
+string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
+  EmotHandler* handler = static_cast<EmotHandler*>(param);
+
+  IMLOG("tag = %s, path = %s", reg->getSub(0).c_str(), reg->getSub(1).c_str());
+  return "<img src=\"" + unifyPath(handler->getEmotDir() + "/" + reg->getSub(1)) + "\" class=\"emoticon\" alt=\"\" />";
+}
+
+String EmotHandler::parse(const StringRef& body, int net) {
   RegEx reg;
   reg.setSubject(body);
 
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
+    // if (emotSetsByNet.find(net) != emotSetsByNet.end() && emotSetsByNet[net].size()) 
+
     for (EmotSet::tEmots::iterator it2 = it->emots.begin(); it2 != it->emots.end(); it2++) {
-      if (it2->preg) {
-        try {
-          reg.setPattern(it2->text);
-        } catch (RegEx::CompileException& e) {
-          IMLOG("B³¹d definicji emotikony: %s, %i", e.error, e.pos);
-        }
-      } else {
-        try {
-          reg.setPattern(reg.addSlashes(it2->text));
-        } catch (RegEx::CompileException& e) {
-          IMLOG("B³¹d definicji emotikony: %s, %i", e.error, e.pos);
-        }
+      IMLOG("emot_set = %s, emot_text = %s, emot_preg = %i", it->name.c_str(), it2->text.c_str(), it2->preg);
+      try {
+        reg.setPattern(!it2->preg ? "/" + reg.addSlashes(it2->text) + "/i" : it2->text);
+        reg.replaceItself(("<kiev2:emot path=\"" + it->dir + "/" + it2->img_path + "\" />").c_str());
+      } catch (const RegEx::CompileException& e) {
+        IMLOG("B³¹d definicji emotikony: %s, %i", e.error, e.pos);
       }
-      reg.replaceItself(("<img src=\"" + getKonnektPath() + getEmotDir() + "\\" + it->dir + "\\" + it2->img_path + "\" />").c_str());
     }
   }
+  reg.replaceItself("#<kiev2:emot path=\"([^\"]+)\" />#", &EmotHandler::replaceEmot, 0, (void*) this);
   return reg.getSubject();
 }
 
 void EmotHandler::loadPackages() {
   if (emotSets.size()) emotSets.clear();
-  list<string> emotDirs;
 
-  WIN32_FIND_DATA FindFileData;
-  HANDLE hFind = INVALID_HANDLE_VALUE;
+  string emotDir = getEmotDir();
+  Dir::tItems emotDirs;
 
-  hFind = FindFirstFile((getKonnektPath() + getEmotDir() + "\\*").c_str(), &FindFileData);
-  if (hFind == INVALID_HANDLE_VALUE) {
-    // @todo prawdpodobnie nie ma katalogu emots - robimy coœ?
-    IMLOG("dupsko: %u", GetLastError());
+  try {
+    emotDirs = Dir::getDirs(emotDir + "\\*");
+  } catch (const Exception& e) {
+    IMLOG("Nie znaleziono katalogu z emotami (%s) !", e.getReason().a_str());
     return;
   }
-  
-  do {
-    if (strcmp(FindFileData.cFileName, ".") && strcmp(FindFileData.cFileName, "..")) {
-      emotDirs.push_back(Helpers::ltrim(unifyPath(getKonnektPath() + getEmotDir() + "\\" + FindFileData.cFileName), ".\\"));
-    }
+  if (!emotDirs.size()) {
+    IMLOG("Brak katalogów z pakietami");
+    return;
   }
-  while (FindNextFile(hFind, &FindFileData) != 0);
 
-  FindClose(hFind);
-
-  for (list<string>::iterator it = emotDirs.begin(); it != emotDirs.end(); it++) {
-    string title = it->substr(it->find_last_of("\\") + 1);
-
+  for (Dir::tItems::iterator it = emotDirs.begin(); it != emotDirs.end(); it++) {
     for (tParsers::iterator it2 = parsers.begin(); it2 != parsers.end(); it2++) {
-      string fName = *it + "\\" + (*it2)->getDefFileName(title);
-      if (!fileExists(fName.c_str())) continue;
+
+      string fileName = unifyPath(emotDir + "/" + it->cFileName + "/" + (*it2)->getDefFileName(it->cFileName));
+      if (!fileExists(fileName.c_str())) continue;
 
       try {
-        emotSets.push_back((*it2)->parse(fName, title));
+        emotSets.push_back((*it2)->parse(fileName, it->cFileName));
       } catch (const EmotParserException& e) {
-        IMLOG("dupsko: %s", e.getReason().a_str());
+        IMLOG("dupsko podczas parsowania emotSeta: %s", e.getReason().a_str());
       }
       break;
     }

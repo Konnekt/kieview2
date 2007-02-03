@@ -52,6 +52,66 @@ public:
   virtual EmotSet parse(const string& filePath, const string& fileDir) = 0;
 };
 
+class Dir {
+public:
+  class NotFound: public ExceptionString {
+  public:
+    NotFound(const StringRef& reason): ExceptionString(reason) { }
+  };
+
+public:
+  typedef list<WIN32_FIND_DATA> tItems;
+
+public:
+  static bool isFile(WIN32_FIND_DATA fd) {
+    return !(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+  }
+
+  static bool isDir(WIN32_FIND_DATA fd) {
+    return fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+  }
+
+  static bool isDot(WIN32_FIND_DATA fd) {
+    return fd.cFileName == "." || fd.cFileName == "..";
+  }
+
+  static tItems getItems(const string& dir) {
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+    WIN32_FIND_DATA fd;
+
+    if ((hFind = FindFirstFile(dir.c_str(), &fd)) == INVALID_HANDLE_VALUE) {
+      throw NotFound(inttostr(GetLastError()));
+    }
+
+    tItems items;
+    do {
+      if (!isDot(fd)) items.push_back(fd);
+    }
+    while (FindNextFile(hFind, &fd));
+
+    FindClose(hFind);
+    return items;
+  }
+
+  static tItems getFiles(const string& dir) {
+    tItems items = getItems(dir);
+
+    for (tItems::iterator it = items.begin(); it != items.end(); it++) {
+      if (!isFile(*it)) it = items.erase(it);
+    }
+    return items;
+  }
+
+  static tItems getDirs(const string& dir) {
+    tItems items = getItems(dir);
+
+    for (tItems::iterator it = items.begin(); it != items.end(); it++) {
+      if (!isDir(*it)) it = items.erase(it);
+    }
+    return items;
+  }
+};
+
 /*
  * JISP emot definition parser
  */
@@ -89,6 +149,7 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(EmotHandler, iSharedObject, Version(0,1,0,0));
 
 public:
+  typedef map<int, list<int>> tNetEmotSets;
   typedef list<EmotParser*> tParsers;
 
 public:
@@ -100,7 +161,7 @@ public:
   }
 
   string getEmotDir() {
-    return Controller::getConfig()->getChar(kIEview2::cfg::emotsDir);
+    return getKonnektPath() + Controller::getConfig()->getChar(kIEview2::cfg::emotsDir);
   }
   string getKonnektPath() {
     if (!kPath.size() && Ctrl) {
@@ -112,11 +173,15 @@ public:
   void addParser(EmotParser* parser) {
     parsers.push_back(parser);
   }
-  String parse(const StringRef& body, cMessage* msg);
+  String parse(const StringRef& body, int net);
 
   void loadPackages();
 
 protected:
+  static string __stdcall replaceEmot(RegEx* reg, void* param);
+
+protected:
+  tNetEmotSets emotSetsByNet;
   tEmotSets emotSets;
   tParsers parsers;
   string kPath;
