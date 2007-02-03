@@ -928,7 +928,8 @@ namespace kIEview2 {
     string type = getMsgTypeLabel(msg->type);
     String body = msg->body;
     tCntId cnt = getCntFromMsg(msg);
-    Date64 date(msg->time);
+    Date64 date;
+    date = msg->time;
 
     if (msg->flag & MF_HTML) {
       // body = makeSafeHtml(body);

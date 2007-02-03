@@ -23,14 +23,18 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
 
   HZIP file = OpenZip((void*) OpenFile(filePath.c_str(), &ofs, OF_READ), 0, ZIP_HANDLE);
   if (!(FindZipItem(file, (fileDir + "/icondef.xml").c_str(), true, &index, &entry) == ZR_OK)) {
+    CloseZip(file);
     throw CannotOpen("Cannot open file " + filePath);
   }
 
   String code;
   char* buff = new char[entry.unc_size];
+
   UnzipItem(file, index, buff, entry.unc_size, ZIP_MEMORY);
   code = buff;
-  delete buff;
+
+  delete [] buff;
+  CloseZip(file);
 
   xmlpp::DomParser parser;
   parser.set_substitute_entities();
@@ -108,12 +112,13 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
     if (mime.empty()) continue;
 
     nodes = (*it)->get_children("text");
-    if(nodes.empty()) throw WrongFormat("Brak tekstu do zamiany");
+    if (nodes.empty()) throw WrongFormat("Brak tekstu do zamiany");
+
     for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
       if (dynamic_cast<xmlpp::Element*>(*it)) {
         emot.text = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str();
         if (dynamic_cast<xmlpp::Element*>(*it)->get_attribute("regexp")) {
-          emot.preg = atoi(dynamic_cast<xmlpp::Element*>(*it)->get_attribute("regexp")->get_value().c_str());
+          emot.preg = (bool) atoi(dynamic_cast<xmlpp::Element*>(*it)->get_attribute("regexp")->get_value().c_str());
         } else {
           emot.preg = false;
         }
