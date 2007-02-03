@@ -221,25 +221,33 @@ string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
     "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
 }
 
+void EmotHandler::parseSet(RegEx& reg, EmotSet& set) {
+  for (EmotSet::tEmots::iterator it = set.emots.begin(); it != set.emots.end(); it++) {
+    sEmotInsertion ei(emotInsertions.size(), &*it, &set);
+    try {
+      reg.setPattern(prepareBody(!it->preg ? "/" + reg.addSlashes(it->text) + "/i" : it->text, true, false));
+      reg.replaceItself(&EmotHandler::emotInsertion, 0, (void*) &ei);
+    } catch (const RegEx::CompileException& e) {
+      IMLOG("B³¹d definicji emotikony: %s, %i", e.error, e.pos);
+      continue;
+    }
+    emotInsertions.push_back(ei);
+  }
+}
+
 String EmotHandler::parse(const StringRef& body, int net) {
   RegEx reg;
   reg.setSubject(prepareBody(body));
 
-  for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-    // if (emotSetsByNet.find(net) != emotSetsByNet.end() && emotSetsByNet[net].size()) 
-
-    for (EmotSet::tEmots::iterator it2 = it->emots.begin(); it2 != it->emots.end(); it2++) {
-      sEmotInsertion ei(emotInsertions.size(), &*it2, &*it);
-      try {
-        reg.setPattern(prepareBody(!it2->preg ? "/" + reg.addSlashes(it2->text) + "/i" : it2->text, true, false));
-        reg.replaceItself(&EmotHandler::emotInsertion, 0, (void*) &ei);
-      } catch (const RegEx::CompileException& e) {
-        IMLOG("B³¹d definicji emotikony: %s, %i", e.error, e.pos);
-        continue;
-      }
-      emotInsertions.push_back(ei);
+  if (emotSetsByNet.find(net) != emotSetsByNet.end() && emotSetsByNet[net].size()) {
+    for (list<EmotSet*>::iterator it = emotSetsByNet[net].begin(); it != emotSetsByNet[net].end(); it++) {
+      parseSet(reg, **it);
     }
   }
+  for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
+    parseSet(reg, *it);
+  }
+
   reg.replaceItself("#<kiev2:emot:insertion id=\"([0-9]+)\" />#", &EmotHandler::replaceEmot, 0, (void*) this);
   emotInsertions.clear();
 

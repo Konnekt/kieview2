@@ -25,8 +25,6 @@
 #include "Controller.h"
 #include "Emots.h"
 
-typedef list<EmotSet> tEmotSets;
-
 using namespace std;
 using namespace Stamina;
 
@@ -162,8 +160,9 @@ public:
 
 public:
   typedef vector<sEmotInsertion> tEmotInsertions;
-  typedef map<int, list<int>> tNetEmotSets;
+  typedef map<int, list<EmotSet*>> tNetEmotSets;
   typedef list<EmotParser*> tParsers;
+  typedef list<EmotSet> tEmotSets;
 
 public:
   // EmotHandler();
@@ -192,6 +191,7 @@ public:
 
 protected:
   String prepareBody(const StringRef& body, bool encode = true, bool html = true);
+  void parseSet(RegEx& reg, EmotSet& set);
 
   static string __stdcall emotInsertion(RegEx* reg, void* param);
   static string __stdcall replaceEmot(RegEx* reg, void* param);
