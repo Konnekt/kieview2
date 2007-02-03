@@ -112,6 +112,11 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
     for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
       if (dynamic_cast<xmlpp::Element*>(*it)) {
         emot.text = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str();
+        if (dynamic_cast<xmlpp::Element*>(*it)->get_attribute("regexp")) {
+          emot.preg = atoi(dynamic_cast<xmlpp::Element*>(*it)->get_attribute("regexp")->get_value().c_str());
+        } else {
+          emot.preg = false;
+        }
         result.emots.push_back(emot);
       }
     }
