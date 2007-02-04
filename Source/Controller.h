@@ -23,6 +23,7 @@
 #include "IECtrl.h"
 #include "ActionHandler.h"
 #include "TplHandler.h"
+#include "EmotHandler.h"
 #include "RtfHtml.h"
 
 using namespace kIEview2;
@@ -148,6 +149,7 @@ namespace kIEview2 {
   public:
     WNDPROC oldMsgWndProc;
     UINT ieVersion;
+    string kPath;
 
   protected:
     tWndObjCollection wndObjCollection;
@@ -155,6 +157,7 @@ namespace kIEview2 {
     CriticalSection _locker;
     Tables::oTable historyTable;
     JS::Controller* jsController;
+    EmotHandler emotHandler;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
   };

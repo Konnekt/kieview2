@@ -16,7 +16,6 @@
 #include "Controller.h"
 #include "Message.h"
 #include "TplUdf.h"
-#include "EmotHandler.h"
 
 void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
   unsigned int ksize = strlen((char*)key);
@@ -134,9 +133,14 @@ namespace kIEview2 {
   void Controller::_onPrepare() {
     historyTable = Tables::registerTable(Ctrl, tableNotFound, optPrivate);
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
+    kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
+
+    emotHandler.addParser(new JispParser);
+    emotHandler.addParser(new GGEmotParser);
+    emotHandler.loadPackages();
 
     // @debug replace with user selected tpl directory
-    tplHandler->setKonnektPath((char*) Ctrl->ICMessage(IMC_KONNEKTDIR));
+    tplHandler->setKonnektPath(kPath);
     tplHandler->addTplDir("/data/templates/core/");
 
     IconRegister(IML_16, ico::logo, Ctrl->hDll(), IDI_LOGO);
@@ -287,6 +291,7 @@ namespace kIEview2 {
 
   void Controller::_onCfgChanged() {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
+    emotHandler.loadPackages(); // reLoadPackages
   }
 
   void Controller::_msgCtrlView() {
@@ -909,6 +914,9 @@ namespace kIEview2 {
       if (config->getInt(cfg::linkify)) {
         info = linkify(info);
       }
+      if (config->getInt(cfg::useEmots)) {
+        info = emotHandler.parse(info, config->getInt(CNT_NET, an->act.cnt));
+      }
       info = normalizeSpaces(info);
       data.hash_insert_new_var("info", info);
     }
@@ -939,12 +947,6 @@ namespace kIEview2 {
     }
     if (!(msg->flag & MF_LEAVEASIS)) {
       if (config->getInt(cfg::useEmots)) {
-        // @debug just for now...
-        EmotHandler emotHandler;
-        emotHandler.addParser(new JispParser);
-        emotHandler.addParser(new GGEmotParser);
-        emotHandler.loadPackages();
-
         body = emotHandler.parse(body, msg->net);
       }
       if (config->getInt(cfg::linkify)) {

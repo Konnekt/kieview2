@@ -22,7 +22,7 @@
 
 #include <fstream>
 
-#include "Controller.h"
+#include "Base64.h"
 #include "Emots.h"
 
 using namespace std;
@@ -61,6 +61,13 @@ public:
   typedef list<WIN32_FIND_DATA> tItems;
 
 public:
+  static bool hasItem(const string& name, tItems items) {
+    for (tItems::iterator it = items.begin(); it != items.end(); it++) {
+      if (name == it->cFileName) return true;
+    }
+    return false;
+  }
+
   static bool isFile(WIN32_FIND_DATA fd) {
     return !(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
   }
@@ -172,15 +179,8 @@ public:
     }
   }
 
-  string getEmotDir() {
-    return getKonnektPath() + Controller::getConfig()->getChar(kIEview2::cfg::emotsDir);
-  }
-  string getKonnektPath() {
-    if (!kPath.size() && Ctrl) {
-      kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
-    }
-    return kPath;
-  }
+  string getKonnektPath();
+  string getEmotDir();
 
   void addParser(EmotParser* parser) {
     parsers.push_back(parser);
@@ -201,7 +201,6 @@ protected:
   tNetEmotSets emotSetsByNet;
   tEmotSets emotSets;
   tParsers parsers;
-  string kPath;
 };
 
 #endif // __EMOTSHANDLER_H__

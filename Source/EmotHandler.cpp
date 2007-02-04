@@ -15,6 +15,7 @@
 #include "stdafx.h"
 #include "EmotHandler.h"
 #include "Helpers.h"
+#include "Controller.h"
 
 EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
   ZIPENTRY entry;
@@ -194,6 +195,14 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
   return result;
 }
 
+string EmotHandler::getKonnektPath() {
+  return Controller::getInstance()->kPath;
+}
+
+string EmotHandler::getEmotDir() {
+  return getKonnektPath() + Controller::getConfig()->getChar(kIEview2::cfg::emotsDir);
+}
+
 String EmotHandler::prepareBody(const StringRef& body, bool encode, bool html) {
   RegEx reg;
   reg.setSubject(body);
@@ -238,7 +247,7 @@ void EmotHandler::parseSet(RegEx& reg, EmotSet& set) {
       reg.setPattern(prepareBody(!it->preg ? "/" + addSlashes(it->text, "\"'\\/^$!?()[]+.{}*|", '\\') + "/i" : it->text, true, false));
       reg.replaceItself(&EmotHandler::emotInsertion, 0, (void*) &ei);
     } catch (const RegEx::CompileException& e) {
-      IMLOG("B³¹d definicji emotikony: %s, %i", e.error, e.pos);
+      IMLOG("[EmotHandler::parseSet()] B³¹d definicji emotikony: %s, pos %i", e.error, e.pos);
       continue;
     }
     emotInsertions.push_back(ei);
@@ -273,11 +282,11 @@ void EmotHandler::loadPackages() {
   try {
     emotDirs = Dir::getDirs(emotDir + "\\*");
   } catch (const Exception& e) {
-    IMLOG("Nie znaleziono katalogu z emotami (%s) !", e.getReason().a_str());
+    IMLOG("[EmotHandler::loadPackages()] Nie znaleziono katalogu z emotami (%s) !", e.getReason().a_str());
     return;
   }
   if (!emotDirs.size()) {
-    IMLOG("Brak katalogów z pakietami");
+    IMLOG("[EmotHandler::loadPackages()] Brak katalogów z pakietami !");
     return;
   }
 
@@ -290,7 +299,7 @@ void EmotHandler::loadPackages() {
       try {
         emotSets.push_back((*it2)->parse(fileName, it->cFileName));
       } catch (const EmotParserException& e) {
-        IMLOG("dupsko podczas parsowania emotSeta: %s", e.getReason().a_str());
+        IMLOG("[EmotHandler::loadPackages()] b³¹d podczas parsowania emotSeta: %s", e.getReason().a_str());
       }
       break;
     }
