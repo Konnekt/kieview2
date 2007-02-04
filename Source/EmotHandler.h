@@ -135,16 +135,20 @@ public:
   };
 
 public:
+  Zip(): _handle(0) { }
   Zip(const string& path) {
-    if (!(_handle = OpenZip((void*) path.c_str(), 0, ZIP_FILENAME))) {
-      throw CannotOpen("Cannot open file " + path);
-    }
+    open(path);
   }
   ~Zip() {
     close();
   }
 
 public:
+  void open(const string& path) {
+    if (!(_handle = OpenZip((void*) path.c_str(), 0, ZIP_FILENAME))) {
+      throw CannotOpen("Cannot open file " + path);
+    }
+  }
   void close() {
     CloseZip(_handle);
   }
@@ -153,14 +157,14 @@ public:
     ZIPENTRY entry;
     int index;
 
-    if (!(FindZipItem(_handle, path.c_str(), true, &index, &entry) == ZR_OK)) {
+    if (FindZipItem(_handle, path.c_str(), true, &index, &entry) != ZR_OK) {
       throw NotFound("Cannot find file " + path);
     }
 
     ByteBuffer str;
     char* buff = new char[entry.unc_size];
 
-    if (!(UnzipItem(_handle, index, buff, entry.unc_size, ZIP_MEMORY) == ZR_OK)) {
+    if (UnzipItem(_handle, index, buff, entry.unc_size, ZIP_MEMORY) != ZR_OK) {
       // powinien byc wyjatek, ale nigdy nie zwraca ZR_OK...
     }
     str.append((const unsigned char*) buff, entry.unc_size);
@@ -173,14 +177,14 @@ public:
     ZIPENTRY entry;
     int index;
 
-    if (!(FindZipItem(_handle, path.c_str(), true, &index, &entry) == ZR_OK)) {
+    if (FindZipItem(_handle, path.c_str(), true, &index, &entry) != ZR_OK) {
       throw NotFound("Cannot find file " + path);
     }
 
     String str;
     char* buff = new char[entry.unc_size];
 
-    if (!(UnzipItem(_handle, index, buff, entry.unc_size, ZIP_MEMORY) == ZR_OK)) {
+    if (UnzipItem(_handle, index, buff, entry.unc_size, ZIP_MEMORY) != ZR_OK) {
       // powinien byc wyjatek, ale nigdy nie zwraca ZR_OK...
     }
     str = buff;

@@ -18,10 +18,11 @@
 #include "Controller.h"
 
 EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
-  Zip zip(filePath);
   String code;
+  Zip zip;
 
   try {
+    zip.open(filePath);
     code = zip.getFile(fileDir + "/icondef.xml");
   } catch(const Exception& e) {
     throw CannotOpen(e.getReason());
@@ -98,7 +99,7 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
           // emot.menu_img_path = emot.img_path = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content();
 
           try {
-            emot.img_data = zip.getBinaryFile(fileDir + "/" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content());
+            emot.img_data.assign(zip.getBinaryFile(fileDir + "/" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content()));
           } catch(const Exception& e) {
             throw CannotOpen(e.getReason());
           }

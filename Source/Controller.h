@@ -188,7 +188,7 @@ namespace kIEview2 {
           throw IECtrl::JSException(e.getReason());
         }
         if (emot->is_virtual) {
-          return emot->img_data.getBuffer();
+          return (char*) emot->img_data.getString();
         }
         // wczytujemy plik z img_path i zwracamy
         return "ssaj";
