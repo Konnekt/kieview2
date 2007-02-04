@@ -16,6 +16,9 @@
 #include "Controller.h"
 #include "Message.h"
 #include "TplUdf.h"
+#include "../Project/resource.h"
+#include "EmotUI.h"
+
 
 void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
   unsigned int ksize = strlen((char*)key);
@@ -67,8 +70,8 @@ namespace kIEview2 {
     this->registerObserver(IM_UI_PREPARE, bind(resolve_cast0(&Controller::_onPrepare), this));
     this->registerObserver(IM_UIACTION, bind(resolve_cast0(&Controller::_onAction), this));
     this->registerObserver(IM_CFG_CHANGED, bind(resolve_cast0(&Controller::_onCfgChanged), this));
-    this->registerActionObserver(UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
-    this->registerActionObserver(UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
+    this->registerActionObserver(Konnekt::UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
+    this->registerActionObserver(Konnekt::UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
 
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
@@ -78,9 +81,9 @@ namespace kIEview2 {
     config->setColumn(DTCFG, cfg::emotsPack, DT_CT_STR, "", "kIEview2/emots/pack");
     config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 1, "kIEview2/autoScroll");
 
-    this->subclassAction(UI::ACT::msg_ctrlview, IMIG_MSGWND);
-    this->subclassAction(UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
-    this->subclassAction(UI::ACT::msg_ctrlsend, IMIG_MSGWND);
+    this->subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_MSGWND);
+    this->subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
+    this->subclassAction(Konnekt::UI::ACT::msg_ctrlsend, IMIG_MSGWND);
 
     IECtrl::init();
     setlocale(LC_ALL, "polish");
@@ -155,6 +158,8 @@ namespace kIEview2 {
     IconRegister(IML_16, ico::print, Ctrl->hDll(), IDI_PRINT);
     IconRegister(IML_16, ico::source, Ctrl->hDll(), IDI_SOURCE);
     IconRegister(IML_16, ico::autoScroll, Ctrl->hDll(), IDI_AUTOSCROLL);
+    IconRegister(IML_16, ico::checked, Ctrl->hDll(), IDI_CHECKED);
+    IconRegister(IML_16, ico::unchecked, Ctrl->hDll(), IDI_UNCHECKED);
 
     // menu akcji pod prawym klawiszem myszy
     UIGroupAdd(IMIG_MSGWND, act::popup::popup, ACTR_INIT);
@@ -216,7 +221,7 @@ namespace kIEview2 {
     switch(an->act.id) {
       case act::popup::popup: {
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
-          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
+          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, Konnekt::UI::ACT::msg_ctrlview, an->act.cnt)
         ));
         if (ctrl) {
           wndObjCollection[ctrl].actionHandler->selectedMenuItem = 0;
@@ -235,7 +240,7 @@ namespace kIEview2 {
       case act::popup::clear: {
         if (an->code != ACTN_ACTION) break;
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
-          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, UI::ACT::msg_ctrlview, an->act.cnt)
+          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, Konnekt::UI::ACT::msg_ctrlview, an->act.cnt)
         ));
         if (ctrl) {
           wndObjCollection[ctrl].actionHandler->selectedMenuItem = an->act.id;
@@ -328,8 +333,8 @@ namespace kIEview2 {
         break;
       }
 
-      case UI::Notify::insertMsg: {
-        UI::Notify::_insertMsg* an = (UI::Notify::_insertMsg*)this->getAN();
+      case Konnekt::UI::Notify::insertMsg: {
+        Konnekt::UI::Notify::_insertMsg* an = (Konnekt::UI::Notify::_insertMsg*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
 
         IECtrl::Var args;
@@ -348,8 +353,8 @@ namespace kIEview2 {
         break;
       }
 
-      case UI::Notify::insertStatus: {
-        UI::Notify::_insertStatus* an = (UI::Notify::_insertStatus*)this->getAN();
+      case Konnekt::UI::Notify::insertStatus: {
+        Konnekt::UI::Notify::_insertStatus* an = (Konnekt::UI::Notify::_insertStatus*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
 
         IECtrl::Var args;
@@ -368,21 +373,21 @@ namespace kIEview2 {
         break;
       }
 
-      case UI::Notify::lock: {
+      case Konnekt::UI::Notify::lock: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
         // TODO: Mo¿emy spodziewaæ siê, ¿e zaraz dodamy du¿o danych, np. przy przegl¹daniu historii
         break;
       }
 
-      case UI::Notify::unlock: {
+      case Konnekt::UI::Notify::unlock: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
         // TODO: Du¿a iloœæ danych zosta³a dodana
         break;
       }
 
-      case UI::Notify::clear: {
+      case Konnekt::UI::Notify::clear: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
         this->clearWnd(ctrl);
@@ -391,7 +396,7 @@ namespace kIEview2 {
 
       case ACTN_SETCNT: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
-        an->notify2 = (int)GetDlgItem((HWND)UIActionHandleDirect(sUIAction(0, an->act.parent, an->act.cnt)), UI::ACT::msg_ctrlview);
+        an->notify2 = (int)GetDlgItem((HWND)UIActionHandleDirect(sUIAction(0, an->act.parent, an->act.cnt)), Konnekt::UI::ACT::msg_ctrlview);
         break;
       }
     }
@@ -402,11 +407,11 @@ namespace kIEview2 {
     LockerCS lock(_locker);
 
     switch (getAN()->code) {
-      case UI::Notify::supportsFormatting: {
+      case Konnekt::UI::Notify::supportsFormatting: {
         return setSuccess();
       }
 
-      case UI::Notify::getMessageSize: {
+      case Konnekt::UI::Notify::getMessageSize: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*) getAN();
 
         String text;
@@ -423,8 +428,8 @@ namespace kIEview2 {
         return setReturnCode(text.size());
       }
 
-      case UI::Notify::getMessage: {
-        UI::Notify::_getMessage* an = (UI::Notify::_getMessage*) getAN();
+      case Konnekt::UI::Notify::getMessage: {
+        Konnekt::UI::Notify::_getMessage* an = (Konnekt::UI::Notify::_getMessage*) getAN();
 
         String text;
         EDITSTREAM es;
@@ -450,11 +455,11 @@ namespace kIEview2 {
   LRESULT CALLBACK Controller::msgWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) { 
       case WM_NOTIFY: {
-        if (wParam == ICMessage(IMI_ACTION_GETINDEX, (int)&sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlsend), 0)) {
+        if (wParam == ICMessage(IMI_ACTION_GETINDEX, (int)&sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend), 0)) {
           switch (((NMHDR*)lParam)->code) {
             case EN_SELCHANGE: {
               int cntID = (int) GetProp(hWnd, "CntID");
-              HWND hEdit = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlsend, cntID));
+              HWND hEdit = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, cntID));
 
               CHARFORMAT cf;
               ZeroMemory(&cf, sizeof(CHARFORMAT));
@@ -628,7 +633,7 @@ namespace kIEview2 {
     Tables::oTable table = historyTable;
     bool dataLoaded = loadMsgTable(cnt);
 
-    list<UI::Notify::_insertMsg> msgs;
+    list<Konnekt::UI::Notify::_insertMsg> msgs;
     int m = 0;
 
     for (int i = table->getRowCount() - 1, s = 0; (i >= 0) && (m < howMany); i--) {
@@ -653,7 +658,7 @@ namespace kIEview2 {
       msg->flag = table->getInt(i, table->getColIdByPos(fieldFlag));
       msg->time = table->getInt64(i, table->getColIdByPos(fieldTime));
 
-      msgs.push_back(UI::Notify::_insertMsg(msg, getStringCol(table, i, fieldDisplay), false));
+      msgs.push_back(Konnekt::UI::Notify::_insertMsg(msg, getStringCol(table, i, fieldDisplay), false));
       m++;
     }
 
@@ -661,7 +666,7 @@ namespace kIEview2 {
       Message::quickEvent(cnt, "Wczytujê wiadomoœci z historii.");
     }
 
-    for (list<UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
+    for (list<Konnekt::UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
       Message::inject(it->_message, cnt, it->_display);
 
       delete it->_message;
@@ -721,7 +726,6 @@ namespace kIEview2 {
   void Controller::clearWnd(IECtrl* ctrl) {
     // locking
     LockerCS lock(_locker);
-
     ctrl->clear();
     SetProp(GetParent(ctrl->getHWND()), "MsgSend", false);
 
@@ -857,7 +861,7 @@ namespace kIEview2 {
     return PassStringRef(txt);
   }
 
-  String Controller::getDisplayFromMsg(UI::Notify::_insertMsg* an) {
+  String Controller::getDisplayFromMsg(Konnekt::UI::Notify::_insertMsg* an) {
     cMessage* msg = an->_message;
     String display = GetExtParam(msg->ext, MEX_DISPLAY);
     tCntId cnt = getCntFromMsg(msg);
@@ -882,7 +886,7 @@ namespace kIEview2 {
   }
 
   void Controller::handleTextFlag(int flag, int mask) {
-    HWND hwnd = (HWND) UIActionHandleDirect(sUIAction(IMIG_MSGWND, UI::ACT::msg_ctrlsend, getAN()->act.cnt));
+    HWND hwnd = (HWND) UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, getAN()->act.cnt));
     CHARFORMAT cf;
     ZeroMemory(&cf, sizeof(CHARFORMAT));
     cf.cbSize = sizeof(CHARFORMAT);
@@ -898,7 +902,7 @@ namespace kIEview2 {
     SendMessage(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
   }
 
-  String Controller::_parseStatusTpl(UI::Notify::_insertStatus* an) {
+  String Controller::_parseStatusTpl(Konnekt::UI::Notify::_insertStatus* an) {
     Date64 date(true);
 
     // We create structure of the data
@@ -926,7 +930,7 @@ namespace kIEview2 {
     return tplHandler->parseTpl(&data, "status");
   }
 
-  String Controller::_parseMsgTpl(UI::Notify::_insertMsg* an) {
+  String Controller::_parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an) {
     if (!isMsgFromHistory(an) && (an->_message->flag & MF_HIDE)) return "";
 
     // locking
@@ -976,7 +980,7 @@ namespace kIEview2 {
   /*
    * Message types specific methods
    */
-  void Controller::_handleQuickEventTpl(param_data& data, UI::Notify::_insertMsg* an) {
+  void Controller::_handleQuickEventTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
     if (an->_message->flag & MF_QE_SHOWTIME) {
       data.hash_insert_new_var("showTime?", "1");
     }
@@ -985,7 +989,7 @@ namespace kIEview2 {
     }
   }
 
-  void Controller::_handleStdMsgTpl(param_data& data, UI::Notify::_insertMsg* an) {
+  void Controller::_handleStdMsgTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
     string extInfo = GetExtParam(an->_message->ext, MEX_ADDINFO);
     String title = GetExtParam(an->_message->ext, MEX_TITLE);
     tCntId cnt = getCntFromMsg(an->_message);
@@ -1010,7 +1014,7 @@ namespace kIEview2 {
     }
   }
 
-  void Controller::_handleSmsTpl(param_data& data, UI::Notify::_insertMsg* an) {
+  void Controller::_handleSmsTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
     String from = GetExtParam(an->_message->ext, Sms::extFrom);
     string gate = GetExtParam(an->_message->ext, Sms::extGate);
 
@@ -1021,7 +1025,7 @@ namespace kIEview2 {
     data.hash_insert_new_var("gate", gate);
   }
 
-  void Controller::_handleFileTpl(param_data& data, UI::Notify::_insertMsg* an) {
+  void Controller::_handleFileTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
     int transferTime = atoi(GetExtParam(an->_message->ext, MEX_FILE_TRANSFER_TIME).c_str());
     double transfered = atoi(GetExtParam(an->_message->ext, MEX_FILE_TRANSFERED).c_str());
     double size = atoi(GetExtParam(an->_message->ext, MEX_FILE_SIZE).c_str());

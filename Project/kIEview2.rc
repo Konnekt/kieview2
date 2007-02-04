@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include <windows.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -106,6 +106,8 @@ IDI_UNDERLINE           ICON                    "..\\Res\\underline.ico"
 IDI_PRINT               ICON                    "..\\Res\\print.ico"
 IDI_SOURCE              ICON                    "..\\Res\\source.ico"
 IDI_AUTOSCROLL          ICON                    "..\\Res\\autoScroll.ico"
+IDI_CHECKED             ICON                    "..\\Res\\checked.ico"
+IDI_UNCHECKED           ICON                    "..\\Res\\unchecked.ico"
 #endif    // Polish resources
 /////////////////////////////////////////////////////////////////////////////
 

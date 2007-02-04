@@ -52,6 +52,8 @@ namespace kIEview2 {
     const unsigned int print = ico + 10;
     const unsigned int source = ico + 11;
     const unsigned int autoScroll = ico + 12;
+    const unsigned int checked = ico + 13;
+    const unsigned int unchecked = ico + 14;
   }
 
   namespace act {

@@ -56,8 +56,13 @@
 #include <stdstring.h>
 #include <string>
 
+#pragma comment(lib, "ComCtl32.lib")
+#pragma comment(lib, "Msimg32.lib")
+
 #ifdef _DEBUG
   #pragma comment(lib, "stamina_d.lib")
+  #pragma comment(lib, "stamina_ui_d.lib")
+  #pragma comment(lib, "listwnd_d.lib")
 #else
   #pragma comment(lib, "stamina.lib")
 #endif
@@ -76,6 +81,9 @@
 #include <stamina/regex.h>
 #include <stamina/timer.h>
 #include <stamina/DataTable/Crypt.h>
+#include <Stamina/ListWnd/ListWnd.h>
+#include <Stamina/ListWnd/ListView.h>
+#include <Stamina/UI/DrawableButton.h>
 
 using namespace Stamina;
 using namespace std;

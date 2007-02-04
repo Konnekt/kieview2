@@ -25,6 +25,7 @@
 #include "TplHandler.h"
 #include "EmotHandler.h"
 #include "RtfHtml.h"
+#include "EmotUI.h"
 
 using namespace kIEview2;
 
@@ -39,8 +40,8 @@ namespace kIEview2 {
     friend class PlugController<Controller>;
 
   public:
-    typedef function<void(param_data&, UI::Notify::_insertMsg*)> fMessageHandler;
-    typedef signal<void(param_data&, UI::Notify::_insertMsg*)> MessageHandlerSig;
+    typedef function<void(param_data&, Konnekt::UI::Notify::_insertMsg*)> fMessageHandler;
+    typedef signal<void(param_data&, Konnekt::UI::Notify::_insertMsg*)> MessageHandlerSig;
 
     struct sMessageHandler {
       tConnections connections;
@@ -120,7 +121,7 @@ namespace kIEview2 {
     void _msgCtrlSend();
 
     tCntId getCntFromMsg(cMessage* msg);
-    String getDisplayFromMsg(UI::Notify::_insertMsg* an);
+    String getDisplayFromMsg(Konnekt::UI::Notify::_insertMsg* an);
 
     bool isMsgFromHistory(sUIActionNotify_base* an);
     bool loadMsgTable(tCntId cnt);
@@ -128,16 +129,16 @@ namespace kIEview2 {
     void handleTextFlag(int flag, int mask);
     char* getStringCol(Tables::oTable& table, tRowId row, int pos); // do zmiany
 
-    String _parseStatusTpl(UI::Notify::_insertStatus* an);
-    String _parseMsgTpl(UI::Notify::_insertMsg* an);
+    String _parseStatusTpl(Konnekt::UI::Notify::_insertStatus* an);
+    String _parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an);
 
     /*
      * Message types specific methods
      */
-    void _handleQuickEventTpl(param_data& data, UI::Notify::_insertMsg* an);
-    void _handleStdMsgTpl(param_data& data, UI::Notify::_insertMsg* an);
-    void _handleSmsTpl(param_data& data, UI::Notify::_insertMsg* an);
-    void _handleFileTpl(param_data& data, UI::Notify::_insertMsg* an);
+    void _handleQuickEventTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an);
+    void _handleStdMsgTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an);
+    void _handleSmsTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an);
+    void _handleFileTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an);
 
   public:
     bool autoScroll(sUIActionNotify_base* an, IECtrl* ctrl);

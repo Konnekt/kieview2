@@ -14,7 +14,8 @@
 #define IDI_PRINT                       111
 #define IDI_SOURCE                      112
 #define IDI_AUTOSCROLL                  113
-
+#define IDI_CHECKED                     114
+#define IDI_UNCHECKED                   115
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
