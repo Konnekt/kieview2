@@ -18,24 +18,14 @@
 #include "Controller.h"
 
 EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
-  ZIPENTRY entry;
-  OFSTRUCT ofs;
-  int index;
-
-  HZIP file = OpenZip((void*) OpenFile(filePath.c_str(), &ofs, OF_READ), 0, ZIP_HANDLE);
-  if (!(FindZipItem(file, (fileDir + "/icondef.xml").c_str(), true, &index, &entry) == ZR_OK)) {
-    CloseZip(file);
-    throw CannotOpen("Cannot open file " + filePath);
-  }
-
+  Zip zip(filePath);
   String code;
-  char* buff = new char[entry.unc_size];
 
-  UnzipItem(file, index, buff, entry.unc_size, ZIP_MEMORY);
-  code = buff;
-
-  delete [] buff;
-  CloseZip(file);
+  try {
+    code = zip.getFile(fileDir + "/icondef.xml");
+  } catch(const Exception& e) {
+    throw CannotOpen(e.getReason());
+  }
 
   xmlpp::DomParser parser;
   parser.set_substitute_entities();
@@ -96,14 +86,22 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
   icons = rootNode->get_children("icon");
   for (xmlpp::Node::NodeList::iterator it = icons.begin(); it != icons.end(); it++) {
     string mime;
+
     Emot emot;
+    emot.is_virtual = true;
 
     nodes = (*it)->get_children("object");
     for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
       if (dynamic_cast<xmlpp::Element*>(*it) && dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")) {
         mime = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")->get_value();
         if (mime == "image/png" || mime == "image/gif" || mime == "image/jpeg") {
-          emot.menu_img_path = emot.img_path = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content();
+          // emot.menu_img_path = emot.img_path = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content();
+
+          try {
+            emot.img_data = zip.getBinaryFile(fileDir + "/" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content());
+          } catch(const Exception& e) {
+            throw CannotOpen(e.getReason());
+          }
           break;
         }
         mime.clear();
@@ -236,8 +234,12 @@ string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
 
   IMLOG("[EmotHandler::replaceEmot()] match = %s, img_path = %s, emot = %s, set = %s", ei->match.c_str(), ei->emot->img_path.c_str(),
     ei->emot->text.c_str(), ei->emotSet->name.c_str());
-  return "<img src=\"" + unifyPath(handler->getEmotDir() + "/" + ei->emotSet->dir + "/" + ei->emot->img_path) + 
-    "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
+
+  return "<img src=\"" + 
+    (ei->emot->is_virtual ? 
+      "javascript:window.external.oController.getEmot(" + inttostr(ei->emot->id) + ");" :
+      unifyPath(handler->getEmotDir() + "/" + ei->emotSet->dir + "/" + ei->emot->img_path)
+    ) + "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
 }
 
 void EmotHandler::parseSet(RegEx& reg, EmotSet& set) {

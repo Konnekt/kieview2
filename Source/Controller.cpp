@@ -16,9 +16,6 @@
 #include "Controller.h"
 #include "Message.h"
 #include "TplUdf.h"
-#include "../Project/resource.h"
-#include "EmotUI.h"
-
 
 void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
   unsigned int ksize = strlen((char*)key);

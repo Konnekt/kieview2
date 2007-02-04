@@ -117,6 +117,83 @@ public:
   }
 };
 
+class Zip {
+public:
+  class NotFound: public ExceptionString {
+  public:
+    NotFound(const StringRef& reason): ExceptionString(reason) { }
+  };
+
+  class CannotOpen: public ExceptionString {
+  public:
+    CannotOpen(const StringRef& reason): ExceptionString(reason) { }
+  };
+
+  class CannotRead: public ExceptionString {
+  public:
+    CannotRead(const StringRef& reason): ExceptionString(reason) { }
+  };
+
+public:
+  Zip(const string& path) {
+    if (!(_handle = OpenZip((void*) path.c_str(), 0, ZIP_FILENAME))) {
+      throw CannotOpen("Cannot open file " + path);
+    }
+  }
+  ~Zip() {
+    close();
+  }
+
+public:
+  void close() {
+    CloseZip(_handle);
+  }
+
+  ByteBuffer getBinaryFile(const string& path) {
+    ZIPENTRY entry;
+    int index;
+
+    if (!(FindZipItem(_handle, path.c_str(), true, &index, &entry) == ZR_OK)) {
+      throw NotFound("Cannot find file " + path);
+    }
+
+    ByteBuffer str;
+    char* buff = new char[entry.unc_size];
+
+    if (!(UnzipItem(_handle, index, buff, entry.unc_size, ZIP_MEMORY) == ZR_OK)) {
+      // powinien byc wyjatek, ale nigdy nie zwraca ZR_OK...
+    }
+    str.append((const unsigned char*) buff, entry.unc_size);
+
+    delete [] buff;
+    return str;
+  }
+
+  String getFile(const string& path) {
+    ZIPENTRY entry;
+    int index;
+
+    if (!(FindZipItem(_handle, path.c_str(), true, &index, &entry) == ZR_OK)) {
+      throw NotFound("Cannot find file " + path);
+    }
+
+    String str;
+    char* buff = new char[entry.unc_size];
+
+    if (!(UnzipItem(_handle, index, buff, entry.unc_size, ZIP_MEMORY) == ZR_OK)) {
+      // powinien byc wyjatek, ale nigdy nie zwraca ZR_OK...
+    }
+    str = buff;
+
+    delete [] buff;
+    return str;
+  }
+
+protected:
+  OFSTRUCT _ofs;
+  HZIP _handle;
+};
+
 /*
  * JISP emot definition parser
  */
@@ -181,6 +258,21 @@ public:
 
   string getKonnektPath();
   string getEmotDir();
+
+  EmotSet* getEmotSet(UINT id) {
+    for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
+      return &*it;
+    }
+    throw ExceptionString("EmotSet not found");
+  }
+  Emot* getEmot(UINT id) {
+    for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
+      for (EmotSet::tEmots::iterator it2 = it->emots.begin(); it2 != it->emots.end(); it2++) {
+        if (it2->id == id) return &*it2;
+      }
+    }
+    throw ExceptionString("Emot not found");
+  }
 
   void addParser(EmotParser* parser) {
     parsers.push_back(parser);

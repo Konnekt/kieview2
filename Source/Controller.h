@@ -152,13 +152,15 @@ namespace kIEview2 {
     UINT ieVersion;
     string kPath;
 
+    EmotHandler emotHandler;
+
   protected:
     tWndObjCollection wndObjCollection;
     tMsgHandlers msgHandlers;
     CriticalSection _locker;
     Tables::oTable historyTable;
     JS::Controller* jsController;
-    EmotHandler emotHandler;
+    // EmotHandler emotHandler;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
   };
@@ -169,15 +171,32 @@ namespace kIEview2 {
       Controller(IECtrl::Var& args): iObject(NULL, true), pCtrl(::Controller::getInstance()) {
         bindMethod("getPluginVersion", bind(&Controller::getPluginVersion, this, _1, _2));
         bindMethod("getPluginName", bind(&Controller::getPluginName, this, _1, _2));
+        bindMethod("getEmot", bind(&Controller::getEmot, this, _1, _2));
 
         setProperty("ieVersion", (int) pCtrl->ieVersion);
         setProperty("name", "oController");
       }
 
     public:
+      IECtrl::Var getEmot(IECtrl::Var& args, IECtrl::iObject* obj) {
+        if (args.empty() || !args[0].isInteger()) return false;
+
+        Emot* emot;
+        try {
+          emot = pCtrl->emotHandler.getEmot(args[0].getInteger());
+        } catch (const Exception& e) {
+          throw IECtrl::JSException(e.getReason());
+        }
+        if (emot->is_virtual) {
+          return emot->img_data.getBuffer();
+        }
+        // wczytujemy plik z img_path i zwracamy
+        return "ssaj";
+      }
+
       IECtrl::Var getPluginName(IECtrl::Var& args, IECtrl::iObject* obj) {
         if (args.empty() || !args[0].isInteger()) return false;
-        
+
         if (int plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL)) {
           return SAFECHAR((char*) Ctrl->IMessageDirect(IM_PLUG_NAME, plugID));
         }

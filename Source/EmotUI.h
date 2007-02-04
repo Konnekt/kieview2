@@ -77,4 +77,5 @@ public:
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
   };
 };
+
 #endif  // __EMOT_UI_H__

@@ -20,16 +20,19 @@
 class Emot {
 public:
   Emot(const StringRef& _text = "", const string& _img_path = "", const string& _menu_img_path = "", bool _preg = false, bool _in_menu = true):
-    text(_text), img_path(_img_path), menu_img_path(_menu_img_path), preg(_preg), in_menu(_in_menu), id(random()) { }
+    text(_text), img_path(_img_path), menu_img_path(_menu_img_path), preg(_preg), in_menu(_in_menu), id(random()), is_virtual(false) { }
 
 public:
   UINT id;
 
-  String text;
-  string img_path;
+  ByteBuffer img_data;
   string menu_img_path;
-  bool preg;
+  string img_path;
+  String text;
+
+  bool is_virtual;
   bool in_menu;
+  bool preg;
 };
 
 class EmotAuthor {
