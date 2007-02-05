@@ -3,9 +3,19 @@
 
 EmotPackInfoLV::EmotPackInfoLV(HWND parent, int x, int y, int w, int h) {
   _lv = new ListWnd::ListView(x, y, w, h, parent, 0);
+  _lv->alwaysShowScrollbars(false, true);
 
   _checked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
   _unchecked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
+}
+
+EmotPackInfoLV::~EmotPackInfoLV() {
+  _lv->removeAll();
+  delete _lv;
+}
+
+ListWnd::ListView* EmotPackInfoLV::getLV() {
+  return _lv;
 }
 
 void EmotPackInfoLV::setPos(int x, int y) {
@@ -46,8 +56,6 @@ EmotPackInfoLV::EmotPackInfoItem* EmotPackInfoLV::getItem(UINT id) {
   return (EmotPackInfoItem*)_items[id]->getEntry().get();
 }
 
-
-
 Size EmotPackInfoLV::EmotPackInfoItem::getMinSize() {
   return Size(30, 38);
 }
@@ -65,7 +73,10 @@ Size EmotPackInfoLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const
 }
 
 bool EmotPackInfoLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
-  if (_check->hitTest(pos)) {
+  Point p = pos;
+  p.x-= _parent->getLV()->getScrollPos().x;
+  p.y-= _parent->getLV()->getScrollPos().y;
+  if (_check->hitTest(p)) {
     if (_emotInfo->checked) {
       _check->setImage(_parent->_unchecked.get());
       this->_emotInfo->checked = false;
@@ -81,6 +92,22 @@ bool EmotPackInfoLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const 
   }
 }
 
+bool EmotPackInfoLV::EmotPackInfoItem::onKeyUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info) {
+  if (vkey == VK_SPACE) {
+    if (_emotInfo->checked) {
+      _check->setImage(_parent->_unchecked.get());
+      this->_emotInfo->checked = false;
+      this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
+    } else {
+      _check->setImage(_parent->_checked.get());
+      this->_emotInfo->checked = true;
+      this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
+    }
+    return 0;
+  } else {
+    return 1;
+  }
+}
 void EmotPackInfoLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent) {
   HDC dc = lv->getDC();
   Rect rc = lv->itemToClient(li->getRect());

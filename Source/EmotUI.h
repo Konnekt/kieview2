@@ -36,7 +36,9 @@ public:
 
 public:
   EmotPackInfoLV(HWND parent, int x, int y, int w, int h);
-  virtual ~EmotPackInfoLV() {}
+  virtual ~EmotPackInfoLV();
+
+  virtual ListWnd::ListView* getLV();
 
   virtual void setPos(int x, int y);
   virtual void setSize(int w, int h);
@@ -58,6 +60,8 @@ protected:
 public:
   class EmotPackInfoItem: public ListWnd::EntryImpl {
   public:
+    STAMINA_OBJECT_CLASS_VERSION(EmotPackInfoItem, ListWnd::EntryImpl, Version(0,1,0,0));
+
     EmotPackInfoLV::EmotPackInfoItem(EmotPackInfoLV* parent, EmotPackInfoLV::sEmotPackInfo* emotInfo): _parent(parent), _emotInfo(emotInfo) {
       _check = new Stamina::UI::DrawableButtonBasic(Rect(0,0,16,16), emotInfo->checked ? _parent->_checked : _parent->_unchecked);
     }
@@ -75,6 +79,7 @@ public:
 
     Stamina::UI::oDrawableButton _check;
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
+    bool onKeyUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info);
   };
 };
 
