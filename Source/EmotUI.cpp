@@ -7,10 +7,14 @@ EmotPackInfoLV::EmotPackInfoLV(HWND parent, int x, int y, int w, int h) {
 
   _checked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
   _unchecked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
+
+  hFont = CreateFont(16, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Verdana");
 }
 
 EmotPackInfoLV::~EmotPackInfoLV() {
   _lv->removeAll();
+  DeleteObject(hFont);
   delete _lv;
 }
 
@@ -57,19 +61,19 @@ EmotPackInfoLV::EmotPackInfoItem* EmotPackInfoLV::getItem(UINT id) {
 }
 
 Size EmotPackInfoLV::EmotPackInfoItem::getMinSize() {
-  return Size(30, 38);
+  return Size(30, 32);
 }
 
 Size EmotPackInfoLV::EmotPackInfoItem::getMaxSize() {
-  return Size(0x7FFF, 38);
+  return Size(0x7FFF, 32);
 }
 
 Size EmotPackInfoLV::EmotPackInfoItem::getQuickSize() {
-  return Size(0, 38);
+  return Size(0, 32);
 }
 
 Size EmotPackInfoLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn) {
-  return Size(fitIn.w, 16);
+  return Size(fitIn.w, 22);
 }
 
 bool EmotPackInfoLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
@@ -113,33 +117,42 @@ void EmotPackInfoLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const L
   Rect rc = lv->itemToClient(li->getRect());
   string name = this->_emotInfo->name;
 
-  HBRUSH hBrush;
-
   Rect rci = rc;
-  rci.left+= 20;
+  rci.left+= 25;
+  rci.top+=2;
+
+  Stamina::UI::oImage gradient;
+
+  SetTextColor(dc, RGB(255, 255, 255));
 
   if (li->isSelected()) {
-    hBrush = CreateSolidBrush(RGB(162, 186, 251));
-    SetTextColor(dc, 0xFF);
+    gradient = Stamina::UI::createSimpleGradient(RGB(62, 154, 222), RGB(0, 102, 204), Size(rc.right - rc.left, rc.bottom - rc.top));
   } else {
-    hBrush = CreateSolidBrush(RGB(254, 241, 216));
-    SetTextColor(dc, 0);
+    if (_emotInfo->checked) {
+      gradient = Stamina::UI::createSimpleGradient(RGB(102, 204, 51), RGB(0, 153, 0), Size(rc.right - rc.left, rc.bottom - rc.top));
+    } else {
+      gradient = Stamina::UI::createSimpleGradient(RGB(255, 121, 75), RGB(255, 51, 0), Size(rc.right - rc.left, rc.bottom - rc.top));    
+    }
   }
-  HBRUSH hOldBrush = (HBRUSH)SelectObject(dc, hBrush);
-  FillRect(dc, rc.ref(), hBrush);
-  DeleteObject(SelectObject(dc, hOldBrush));
-  _emotInfo->image->draw(dc, rci.getLT());
-  Rect rctxt = rc;
-  rctxt.left+= 40;
+  gradient->draw(dc, rc.getLT());
 
+  _emotInfo->image->draw(dc, rci.getLT());
+
+  Rect rctxt = rc;
+  rctxt.left+= 45;
+  rctxt.top+= 3;
   SetBkMode(dc, TRANSPARENT);
+
   Rect rccheck = rc;
-  rccheck.left;
-  rccheck.top+=0;
+  rccheck.left+=3;
+  rccheck.top+=3;
   _check->setPos(rccheck.getLT());
   Stamina::Point p = Point(0,0);
   _check->draw(dc, p);
-  DrawTextA(dc, name.c_str(), -1, rctxt.ref(), DT_NOPREFIX | DT_WORDBREAK);
+
+  HFONT hOldFont = (HFONT)SelectObject(dc, _parent->hFont);
+  DrawTextA(dc, name.c_str(), -1, rctxt.ref(), DT_NOPREFIX | DT_END_ELLIPSIS | DT_SINGLELINE);
+  SelectObject(dc, hOldFont);
 
   lv->releaseDC(dc);
 }

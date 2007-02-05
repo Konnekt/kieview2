@@ -6,9 +6,9 @@
   *  @filesource
   *  @copyright    Copyright (c) 2006-2007 ursus6
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
-  *  @version      $Revision: 43 $
-  *  @modifiedby   $LastChangedBy: ursus6 $
-  *  @lastmodified $Date: 2006-12-31 16:47:02 +0100 (N, 31 gru 2006) $
+  *  @version      $Revision$
+  *  @modifiedby   $LastChangedBy$
+  *  @lastmodified $Date$
   */
 
 #pragma once
@@ -56,6 +56,7 @@ public:
 
 protected:
   ListWnd::ListView* _lv;
+  HFONT hFont;
 
 public:
   class EmotPackInfoItem: public ListWnd::EntryImpl {
