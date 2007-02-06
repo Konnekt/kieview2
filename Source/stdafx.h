@@ -84,6 +84,7 @@
 #include <Stamina/ListWnd/ListWnd.h>
 #include <Stamina/ListWnd/ListView.h>
 #include <Stamina/UI/DrawableButton.h>
+#include <Stamina/UI/ToolTipX.h>
 
 using namespace Stamina;
 using namespace std;

@@ -108,6 +108,7 @@ IDI_SOURCE              ICON                    "..\\Res\\source.ico"
 IDI_AUTOSCROLL          ICON                    "..\\Res\\autoScroll.ico"
 IDI_CHECKED             ICON                    "..\\Res\\checked.ico"
 IDI_UNCHECKED           ICON                    "..\\Res\\unchecked.ico"
+IDI_EMOTSINFO           ICON                    "..\\Res\\infoe.ico"
 #endif    // Polish resources
 /////////////////////////////////////////////////////////////////////////////
 

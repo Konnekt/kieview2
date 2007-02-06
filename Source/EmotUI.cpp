@@ -7,14 +7,20 @@ EmotPackInfoLV::EmotPackInfoLV(HWND parent, int x, int y, int w, int h) {
 
   _checked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
   _unchecked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
+  _inform = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::emotsinfo, IML_16), false);
 
   hFont = CreateFont(16, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Verdana");
+
+  _tooltip = new Stamina::UI::ToolTipX::ToolTip(getLV()->getHwnd(), 0);
+  Stamina::UI::ToolTipX::Tip* tip = new Stamina::UI::ToolTipX::Tip();
+  _tooltip->setTip(tip, false);
 }
 
 EmotPackInfoLV::~EmotPackInfoLV() {
   _lv->removeAll();
   DeleteObject(hFont);
+  delete _tooltip;
   delete _lv;
 }
 
@@ -75,11 +81,33 @@ Size EmotPackInfoLV::EmotPackInfoItem::getQuickSize() {
 Size EmotPackInfoLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn) {
   return Size(fitIn.w, 22);
 }
+void EmotPackInfoLV::EmotPackInfoItem::showToolTip(Point& pos) {
+  string tiptext = stringf("Zestaw emot: <b>%s</b>", _emotInfo->name.c_str());
+  if (_emotInfo->authors.length())
+    tiptext+= stringf("<br/>Autorzy: <b>%s</b>", _emotInfo->authors.c_str());
+  if (_emotInfo->releasedTime.length())
+    tiptext+= stringf("<br/>Stworzono: <b>%s</b>", _emotInfo->releasedTime.c_str());
+  if (_emotInfo->other.length()) 
+    tiptext+= stringf("<br/>Dodatkowe: %s", _emotInfo->other.c_str());
+
+  Stamina::UI::ToolTipX::oTip tip;
+  if (_emotInfo->image.isValid()) {
+    tip= Stamina::UI::ToolTipX::Tip::textAndImage(tiptext, true, _emotInfo->image);
+  } else {
+    tip = new Stamina::UI::ToolTipX::TipTextRich(tiptext);
+  }
+
+  _parent->_tooltip->setPos(pos, true, Stamina::UI::ToolTipX::enPositioning::positionFirst, Stamina::UI::ToolTipX::enPlacement::pRightBottom);
+  _parent->_tooltip->setTip(tip.get(), false);
+  _parent->_tooltip->show();
+}
 
 bool EmotPackInfoLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
+  if (_parent->_tooltip->visible()) _parent->_tooltip->hide();
   Point p = pos;
   p.x-= _parent->getLV()->getScrollPos().x;
   p.y-= _parent->getLV()->getScrollPos().y;
+
   if (_check->hitTest(p)) {
     if (_emotInfo->checked) {
       _check->setImage(_parent->_unchecked.get());
@@ -91,6 +119,8 @@ bool EmotPackInfoLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const 
       this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
     }
     return 0;
+  } else if (_inform->hitTest(p)) {
+      showToolTip(_inform->getPos());
   } else {
     return 1;
   }
@@ -112,6 +142,7 @@ bool EmotPackInfoLV::EmotPackInfoItem::onKeyUp(ListWnd::ListView* lv, const List
     return 1;
   }
 }
+
 void EmotPackInfoLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent) {
   HDC dc = lv->getDC();
   Rect rc = lv->itemToClient(li->getRect());
@@ -136,18 +167,24 @@ void EmotPackInfoLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const L
   }
   gradient->draw(dc, rc.getLT());
 
-  _emotInfo->image->draw(dc, rci.getLT());
-
   Rect rctxt = rc;
-  rctxt.left+= 45;
+  rctxt.left+= 21;
   rctxt.top+= 3;
+  rctxt.right-= 3 + 16 + 5;
   SetBkMode(dc, TRANSPARENT);
+
+  Stamina::Point p = Point(0,0);
+
+  Rect rcinform = rc;
+  rcinform.left = rcinform.right - 3 - 16;
+  rcinform.top+=3;
+  _inform->setPos(rcinform.getLT());
+  _inform->draw(dc, p);
 
   Rect rccheck = rc;
   rccheck.left+=3;
   rccheck.top+=3;
   _check->setPos(rccheck.getLT());
-  Stamina::Point p = Point(0,0);
   _check->draw(dc, p);
 
   HFONT hOldFont = (HFONT)SelectObject(dc, _parent->hFont);

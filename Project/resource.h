@@ -16,6 +16,7 @@
 #define IDI_AUTOSCROLL                  113
 #define IDI_CHECKED                     114
 #define IDI_UNCHECKED                   115
+#define IDI_EMOTSINFO                   116
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

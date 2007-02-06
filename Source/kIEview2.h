@@ -54,6 +54,7 @@ namespace kIEview2 {
     const unsigned int autoScroll = ico + 12;
     const unsigned int checked = ico + 13;
     const unsigned int unchecked = ico + 14;
+    const unsigned int emotsinfo = ico + 15;
   }
 
   namespace act {

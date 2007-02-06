@@ -29,6 +29,9 @@ public:
     string name;
     bool checked;
     Stamina::UI::oImage image;
+    string authors;
+    string releasedTime;
+    string other;
 
     sEmotPackInfo(): name("unknown"), checked(false) { }
     sEmotPackInfo(string name, bool checked, Stamina::UI::oImage& image): name(name), checked(checked), image(image) { }
@@ -53,6 +56,9 @@ public:
 
   Stamina::UI::oImage _checked;
   Stamina::UI::oImage _unchecked;
+  Stamina::UI::oImage _inform;
+
+  Stamina::UI::ToolTipX::ToolTip* _tooltip;
 
 protected:
   ListWnd::ListView* _lv;
@@ -65,6 +71,7 @@ public:
 
     EmotPackInfoLV::EmotPackInfoItem(EmotPackInfoLV* parent, EmotPackInfoLV::sEmotPackInfo* emotInfo): _parent(parent), _emotInfo(emotInfo) {
       _check = new Stamina::UI::DrawableButtonBasic(Rect(0,0,16,16), emotInfo->checked ? _parent->_checked : _parent->_unchecked);
+      _inform = new Stamina::UI::DrawableButtonBasic(Rect(0,0,16,16), _parent->_inform);
     }
 
     Size getMinSize();
@@ -73,12 +80,14 @@ public:
     Size getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn);
 
     void paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent);
+    void showToolTip(Point& pos);
 
   protected:
     EmotPackInfoLV* _parent;
     sEmotPackInfo* _emotInfo;
 
     Stamina::UI::oDrawableButton _check;
+    Stamina::UI::oDrawableButton _inform;
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
     bool onKeyUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info);
   };
