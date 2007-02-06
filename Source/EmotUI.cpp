@@ -2,7 +2,7 @@
 #include "emotUI.h"
 
 EmotPackInfoLV::EmotPackInfoLV(HWND parent, int x, int y, int w, int h) {
-  _lv = new ListWnd::ListView(x, y, w, h, parent, 0);
+  _lv = new EmotLV(x, y, w, h, parent, 0);
   _lv->alwaysShowScrollbars(false, true);
 
   _checked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
@@ -15,6 +15,9 @@ EmotPackInfoLV::EmotPackInfoLV(HWND parent, int x, int y, int w, int h) {
   _tooltip = new Stamina::UI::ToolTipX::ToolTip(getLV()->getHwnd(), 0);
   Stamina::UI::ToolTipX::Tip* tip = new Stamina::UI::ToolTipX::Tip();
   _tooltip->setTip(tip, false);
+  
+  draged = false;
+  draged_id = 0;
 }
 
 EmotPackInfoLV::~EmotPackInfoLV() {
@@ -36,17 +39,39 @@ void EmotPackInfoLV::setSize(int w, int h) {
   MoveWindow(_lv->getHwnd(), 0, 0, w, h, SWP_NOMOVE);
 }
 
-int EmotPackInfoLV::addItem(sEmotPackInfo *s) {
+UINT EmotPackInfoLV::addItem(sEmotPackInfo *s) {
   _items.push_back(_lv->insertEntry(new EmotPackInfoItem(this, s)).get());
   return _items.size() - 1;
 }
 
 bool EmotPackInfoLV::moveItem(UINT id, int pos) {
-  if (id > _items.size()) return false;
+  if ((id > _items.size()) || (id == pos)) return false;
 
-  ListWnd::oEntry entry = _items[id]->getEntry();
+  int inc = 0;
+  tItems::iterator it = _items.begin();
+
+  if (id > pos) {
+    while(inc++ < pos) it++;
+    _items.insert(it, _items[id]);
+
+    it = _items.begin();
+    inc = 0;
+    while(inc++ < id + 1) it++;
+    _items.erase(it);
+  } else {
+    while(inc++ < pos + 1) it++;
+    _items.insert(it, _items[id]);
+
+    it = _items.begin();
+    inc = 0;
+    while(inc++ < id) it++;
+    _items.erase(it);
+  }
+
+  ListWnd::Item* item = _items[pos];
+  ListWnd::oEntry entry = item->getEntry();
   _lv->removeEntry(entry, false);
-  _items[id] = _lv->insertEntry(entry, pos).get();
+  _items[pos] = _lv->insertEntry(entry, pos).get();
   return true;
 }
 
@@ -102,6 +127,27 @@ void EmotPackInfoLV::EmotPackInfoItem::showToolTip(Point& pos) {
   _parent->_tooltip->show();
 }
 
+bool EmotPackInfoLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
+  if (_parent->draged) {
+    UINT id = _parent->_lv->getItemIndex(li);
+    Rect rc = lv->itemToClient(li->getRect());
+    if (_parent->draged_id != id) {
+      if (pos.y < rc.getCenter().y) {
+        if (_parent->draged_id != id) {
+          _parent->moveItem(_parent->draged_id, id);
+        }
+      } else {
+        if (_parent->draged_id != id + 1) {
+          _parent->moveItem(_parent->draged_id, id);
+        }
+      }
+    }
+    _parent->draged = false;
+  }
+  ReleaseCapture();
+  return 1;
+}
+
 bool EmotPackInfoLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
   if (_parent->_tooltip->visible()) _parent->_tooltip->hide();
   Point p = pos;
@@ -121,9 +167,13 @@ bool EmotPackInfoLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const 
     return 0;
   } else if (_inform->hitTest(p)) {
       showToolTip(_inform->getPos());
+      return 0;
   } else {
-    return 1;
+    _parent->draged = true;
+    _parent->draged_id = _parent->_lv->getItemIndex(li);
+    SetCapture(_parent->_lv->getHwnd());
   }
+  return 1;
 }
 
 bool EmotPackInfoLV::EmotPackInfoItem::onKeyUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info) {

@@ -19,6 +19,15 @@
 #include "stdafx.h"
 #include "kIEview2.h"
 
+class EmotLV: public ListWnd::ListView {
+public:
+  EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::ListView(x, y, w, h, parent, id) { }
+  void onMouseUp(int vkey, const Stamina::Point &pos) {
+    ReleaseCapture();
+    ListWnd::ListView::onMouseUp(vkey, pos);
+  }
+};
+
 class EmotPackInfoLV {
 public:
   typedef std::vector<ListWnd::Item*> tItems;
@@ -26,6 +35,7 @@ public:
   class EmotPackInfoItem;
 
   struct sEmotPackInfo {
+    UINT id;
     string name;
     bool checked;
     Stamina::UI::oImage image;
@@ -33,8 +43,8 @@ public:
     string releasedTime;
     string other;
 
-    sEmotPackInfo(): name("unknown"), checked(false) { }
-    sEmotPackInfo(string name, bool checked, Stamina::UI::oImage& image): name(name), checked(checked), image(image) { }
+    sEmotPackInfo(): id(Stamina::random()), name("unknown"), checked(false) { }
+    sEmotPackInfo(string name, bool checked, Stamina::UI::oImage& image): id(Stamina::random()), name(name), checked(checked), image(image) { }
   };
 
 public:
@@ -46,7 +56,7 @@ public:
   virtual void setPos(int x, int y);
   virtual void setSize(int w, int h);
 
-  virtual int addItem(sEmotPackInfo *s);
+  virtual UINT addItem(sEmotPackInfo *s);
   virtual bool moveItem(UINT id, int pos);
   virtual int removeItem(UINT id);
   virtual int itemsCount();
@@ -59,6 +69,8 @@ public:
   Stamina::UI::oImage _inform;
 
   Stamina::UI::ToolTipX::ToolTip* _tooltip;
+  bool draged;
+  UINT draged_id;
 
 protected:
   ListWnd::ListView* _lv;
@@ -89,6 +101,7 @@ public:
     Stamina::UI::oDrawableButton _check;
     Stamina::UI::oDrawableButton _inform;
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
+    bool onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
     bool onKeyUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info);
   };
 };
