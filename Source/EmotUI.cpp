@@ -24,7 +24,6 @@ EmotPackInfoLV::~EmotPackInfoLV() {
   _lv->removeAll();
   DeleteObject(hFont);
   delete _tooltip;
-  delete _lv;
 }
 
 ListWnd::ListView* EmotPackInfoLV::getLV() {
@@ -50,28 +49,45 @@ bool EmotPackInfoLV::moveItem(UINT id, int pos) {
   int inc = 0;
   tItems::iterator it = _items.begin();
 
-  if (id > pos) {
-    while(inc++ < pos) it++;
+  if (pos == 0) {
     _items.insert(it, _items[id]);
-
     it = _items.begin();
     inc = 0;
     while(inc++ < id + 1) it++;
     _items.erase(it);
-  } else {
-    while(inc++ < pos + 1) it++;
-    _items.insert(it, _items[id]);
-
-    it = _items.begin();
-    inc = 0;
+  } else if (pos == _items.size()) {
+    _items.push_back(_items[id]);
     while(inc++ < id) it++;
     _items.erase(it);
+    pos-= 1;
+  } else if ((id <= _items.size() - 1) && (pos <= _items.size() - 1)) {
+    if (id >= pos) {
+      while(inc++ < pos) it++;
+      _items.insert(it, _items[id]);
+
+      it = _items.begin();
+      inc = 0;
+      while(inc++ < id + 1) it++;
+      _items.erase(it);
+    } else {
+      while(inc++ < pos) it++;
+      _items.insert(it, _items[id]);
+
+      it = _items.begin();
+      inc = 0;
+      while(inc++ < id) it++;
+      _items.erase(it);
+      pos-=1;
+    }
+  } else {
+    return false;
   }
 
   ListWnd::Item* item = _items[pos];
   ListWnd::oEntry entry = item->getEntry();
   _lv->removeEntry(entry, false);
   _items[pos] = _lv->insertEntry(entry, pos).get();
+
   return true;
 }
 
@@ -86,9 +102,18 @@ int EmotPackInfoLV::itemsCount() {
   return _items.size();
 }
 
-EmotPackInfoLV::EmotPackInfoItem* EmotPackInfoLV::getItem(UINT id) {
+ListWnd::oItem EmotPackInfoLV::getItem(UINT id) {
   if (id > _items.size()) return NULL;
-  return (EmotPackInfoItem*)_items[id]->getEntry().get();
+  return _items[id];
+}
+
+EmotPackInfoLV::sEmotPackInfo* EmotPackInfoLV::getEPI(UINT id) {
+  if (id > _items.size()) return NULL;
+  return ((EmotPackInfoItem*)_items[id]->getEntry().get())->getEmotPackInfo();
+}
+
+EmotPackInfoLV::sEmotPackInfo* EmotPackInfoLV::EmotPackInfoItem::getEmotPackInfo() {
+  return _emotInfo;
 }
 
 Size EmotPackInfoLV::EmotPackInfoItem::getMinSize() {
@@ -135,10 +160,12 @@ bool EmotPackInfoLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const Li
       if (pos.y < rc.getCenter().y) {
         if (_parent->draged_id != id) {
           _parent->moveItem(_parent->draged_id, id);
+          _parent->_items[id - (id> _parent->draged_id ? 1 : 0)]->setSelected(_parent->getLV(), true);
         }
       } else {
         if (_parent->draged_id != id + 1) {
-          _parent->moveItem(_parent->draged_id, id);
+          _parent->moveItem(_parent->draged_id, id + 1);
+          _parent->_items[id + (id< _parent->draged_id ? 1 : 0)]->setSelected(_parent->getLV(), true);
         }
       }
     }

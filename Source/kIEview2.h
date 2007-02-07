@@ -35,6 +35,7 @@ namespace kIEview2 {
     const unsigned int ui = net * 1000;
 
     const unsigned int cfgGroup = ui + 1;
+    const unsigned int emotLV = ui + 2;
   }
 
   namespace ico {

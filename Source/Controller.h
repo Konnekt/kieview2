@@ -119,6 +119,7 @@ namespace kIEview2 {
 
     void _msgCtrlView();
     void _msgCtrlSend();
+    void _emotlv();
 
     tCntId getCntFromMsg(cMessage* msg);
     String getDisplayFromMsg(Konnekt::UI::Notify::_insertMsg* an);

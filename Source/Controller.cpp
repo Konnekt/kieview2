@@ -16,6 +16,7 @@
 #include "Controller.h"
 #include "Message.h"
 #include "TplUdf.h"
+#include "EmotUI.h"
 
 void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
   unsigned int ksize = strlen((char*)key);
@@ -69,6 +70,7 @@ namespace kIEview2 {
     this->registerObserver(IM_CFG_CHANGED, bind(resolve_cast0(&Controller::_onCfgChanged), this));
     this->registerActionObserver(Konnekt::UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
     this->registerActionObserver(Konnekt::UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
+    this->registerActionObserver(ui::emotLV, bind(resolve_cast0(&Controller::_emotlv), this));
 
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
@@ -207,6 +209,8 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, cfg::useEmots, ACTT_CHECK, "U¿ywaj emotikon", cfg::useEmots);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Katalog w którym znajduj¹ siê pakiety emotikon");
     UIActionCfgAdd(ui::cfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Lista wyboru paczek emot");
+    UIActionCfgAdd(ui::cfgGroup, ui::emotLV, ACTT_HWND);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
   }
 
@@ -395,6 +399,30 @@ namespace kIEview2 {
       case ACTN_SETCNT: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         an->notify2 = (int)GetDlgItem((HWND)UIActionHandleDirect(sUIAction(0, an->act.parent, an->act.cnt)), Konnekt::UI::ACT::msg_ctrlview);
+        break;
+      }
+    }
+  }
+  void Controller::_emotlv() {
+    // locking
+    LockerCS lock(_locker);
+    switch (this->getAN()->code) {
+      case ACTN_CREATEWINDOW: {
+        sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
+        EmotPackInfoLV* lv = new EmotPackInfoLV(an->hwndParent, an->x, an->y + 5, 220, 200);
+        an->hwnd = lv->getLV()->getHwnd();
+        SetProp(an->hwnd, "LV*", (HANDLE)lv);
+
+        an->w+= 220;
+        an->h+=205;
+        an->y+=205;
+        an->x+=220;
+        break;
+      }
+      case ACTN_DESTROYWINDOW: {
+        sUIActionNotify_destroyWindow* an = (sUIActionNotify_destroyWindow*)this->getAN();
+        EmotPackInfoLV* lv = (EmotPackInfoLV *)GetProp(an->hwnd, "LV*");
+        delete lv;
         break;
       }
     }

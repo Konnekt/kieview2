@@ -44,7 +44,7 @@ public:
     string other;
 
     sEmotPackInfo(): id(Stamina::random()), name("unknown"), checked(false) { }
-    sEmotPackInfo(string name, bool checked, Stamina::UI::oImage& image): id(Stamina::random()), name(name), checked(checked), image(image) { }
+    sEmotPackInfo(string name, bool checked): id(Stamina::random()), name(name), checked(checked) { }
   };
 
 public:
@@ -60,7 +60,8 @@ public:
   virtual bool moveItem(UINT id, int pos);
   virtual int removeItem(UINT id);
   virtual int itemsCount();
-  virtual EmotPackInfoItem* getItem(UINT id);
+  virtual ListWnd::oItem getItem(UINT id);
+  virtual sEmotPackInfo* getEPI(UINT id);
 
   tItems _items;
 
@@ -93,6 +94,8 @@ public:
 
     void paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent);
     void showToolTip(Point& pos);
+
+    sEmotPackInfo* getEmotPackInfo();
 
   protected:
     EmotPackInfoLV* _parent;
