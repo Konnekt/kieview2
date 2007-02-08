@@ -105,7 +105,7 @@ public:
     Stamina::UI::oDrawableButton _inform;
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
     bool onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
-    bool onKeyUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info);
+    bool onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info);
   };
 };
 

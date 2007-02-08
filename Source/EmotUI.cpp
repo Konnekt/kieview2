@@ -154,10 +154,12 @@ void EmotPackInfoLV::EmotPackInfoItem::showToolTip(Point& pos) {
 
 bool EmotPackInfoLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
   if (_parent->draged) {
+  Point p = pos;
+  p.y-= _parent->getLV()->getScrollPos().y;
     UINT id = _parent->_lv->getItemIndex(li);
     Rect rc = lv->itemToClient(li->getRect());
     if (_parent->draged_id != id) {
-      if (pos.y < rc.getCenter().y) {
+      if (p.y < rc.getCenter().y) {
         if (_parent->draged_id != id) {
           _parent->moveItem(_parent->draged_id, id);
           _parent->_items[id - (id> _parent->draged_id ? 1 : 0)]->setSelected(_parent->getLV(), true);
@@ -177,9 +179,22 @@ bool EmotPackInfoLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const Li
 
 bool EmotPackInfoLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
   if (_parent->_tooltip->visible()) _parent->_tooltip->hide();
+
   Point p = pos;
   p.x-= _parent->getLV()->getScrollPos().x;
   p.y-= _parent->getLV()->getScrollPos().y;
+
+  Rect rc = lv->itemToClient(li->getRect());
+
+  Rect rcinform = rc;
+  rcinform.left = rcinform.right - 3 - 16;
+  rcinform.top+=3;
+  _inform->setPos(rcinform.getLT());
+
+  Rect rccheck = rc;
+  rccheck.left+=3;
+  rccheck.top+=3;
+  _check->setPos(rccheck.getLT());
 
   if (_check->hitTest(p)) {
     if (_emotInfo->checked) {
@@ -203,7 +218,7 @@ bool EmotPackInfoLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const 
   return 1;
 }
 
-bool EmotPackInfoLV::EmotPackInfoItem::onKeyUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info) {
+bool EmotPackInfoLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info) {
   if (vkey == VK_SPACE) {
     if (_emotInfo->checked) {
       _check->setImage(_parent->_unchecked.get());
