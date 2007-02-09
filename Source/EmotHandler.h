@@ -17,16 +17,11 @@
 #ifndef __EMOTSHANDLER_H__
 #define __EMOTSHANDLER_H__
 
-#include <XZip.h>
 #include <XUnzip.h>
-
 #include <fstream>
 
-#include "Base64.h"
+// #include "Base64.h"
 #include "Emots.h"
-
-using namespace std;
-using namespace Stamina;
 
 /*
  * Base emot definition parser
@@ -101,8 +96,9 @@ public:
   static tItems getFiles(const string& dir) {
     tItems items = getItems(dir);
 
-    for (tItems::iterator it = items.begin(); it != items.end(); it++) {
+    for (tItems::iterator it = items.begin(); it != items.end();) {
       if (!isFile(*it)) it = items.erase(it);
+      else it++;
     }
     return items;
   }
@@ -110,8 +106,9 @@ public:
   static tItems getDirs(const string& dir) {
     tItems items = getItems(dir);
 
-    for (tItems::iterator it = items.begin(); it != items.end(); it++) {
+    for (tItems::iterator it = items.begin(); it != items.end();) {
       if (!isDir(*it)) it = items.erase(it);
+      else it++;
     }
     return items;
   }
@@ -135,7 +132,7 @@ public:
   };
 
 public:
-  Zip(): _handle(0) { }
+  Zip(): _handle(NULL) { }
   Zip(const string& path) {
     open(path);
   }
@@ -145,12 +142,17 @@ public:
 
 public:
   void open(const string& path) {
+    if (_handle) close();
+
     if (!(_handle = OpenZip((void*) path.c_str(), 0, ZIP_FILENAME))) {
       throw CannotOpen("Cannot open file " + path);
     }
   }
   void close() {
+    if (!_handle) return;
+
     CloseZip(_handle);
+    _handle = NULL;
   }
 
   ByteBuffer getBinaryFile(const string& path) {
@@ -162,14 +164,11 @@ public:
     }
 
     ByteBuffer str;
-    char* buff = new char[entry.unc_size];
+    ZRESULT result = UnzipItem(_handle, index, str.getBuffer(), entry.unc_size, ZIP_MEMORY);
 
-    if (UnzipItem(_handle, index, buff, entry.unc_size, ZIP_MEMORY) != ZR_OK) {
-      // powinien byc wyjatek, ale nigdy nie zwraca ZR_OK...
+    if (result != ZR_OK) {
+      throw CannotRead("XZip error: " + inttostr(result) + " in file: " + path);
     }
-    str.append((const unsigned char*) buff, entry.unc_size);
-
-    delete [] buff;
     return str;
   }
 
@@ -182,14 +181,19 @@ public:
     }
 
     String str;
-    char* buff = new char[entry.unc_size];
+    ZRESULT result;
 
-    if (UnzipItem(_handle, index, buff, entry.unc_size, ZIP_MEMORY) != ZR_OK) {
-      // powinien byc wyjatek, ale nigdy nie zwraca ZR_OK...
-    }
-    str = buff;
+    char* buff = new char[entry.unc_size];
+    // do {
+      result = UnzipItem(_handle, index, buff, entry.unc_size, ZIP_MEMORY);
+      str += buff;
+    // } while (result == ZR_MORE);
 
     delete [] buff;
+
+    if (result != ZR_OK) {
+      throw CannotRead("XZip error: " + inttostr(result) + " in file: " + path);
+    }
     return str;
   }
 

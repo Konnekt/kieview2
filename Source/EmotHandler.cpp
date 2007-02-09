@@ -39,8 +39,8 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
 
   try {
     parser.parse_memory(code.c_str());
-  } catch (xmlpp::exception ex) {
-    throw XMLParserException(ex.what());
+  } catch (xmlpp::exception e) {
+    throw XMLParserException(e.what());
   }
 
   rootNode = parser.get_document()->get_root_node();
