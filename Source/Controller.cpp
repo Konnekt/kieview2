@@ -445,7 +445,11 @@ namespace kIEview2 {
         es.dwCookie = (DWORD)&text;
         SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
 
+        char sla[] = {'\\', '\'', 0} ;
+        char xsla[] = {253, 254, 0} ;
+        text.replaceChars(sla, xsla);
         text = htmlEscape(text);
+        text.replaceChars(xsla, sla);
         text = rtfHtml->rtfParse((char*)text.a_str(), text.size());
 
         return setReturnCode(text.size());
@@ -462,7 +466,11 @@ namespace kIEview2 {
         es.dwCookie = (DWORD)&text;
         SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
 
+        char sla[] = {'\\', '\'', 0} ;
+        char xsla[] = {253, 254, 0} ;
+        text.replaceChars(sla, xsla);
         text = htmlEscape(text);
+        text.replaceChars(xsla, sla);
         text = rtfHtml->rtfParse((char*)text.a_str(), text.size());
 
         strcpy(an->_message->body, text.a_str());
