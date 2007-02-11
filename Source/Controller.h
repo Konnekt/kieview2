@@ -119,7 +119,7 @@ namespace kIEview2 {
 
     void _msgCtrlView();
     void _msgCtrlSend();
-    void _emotlv();
+    void _emotLV();
 
     tCntId getCntFromMsg(cMessage* msg);
     String getDisplayFromMsg(Konnekt::UI::Notify::_insertMsg* an);
@@ -182,14 +182,14 @@ namespace kIEview2 {
       IECtrl::Var getEmot(IECtrl::Var& args, IECtrl::iObject* obj) {
         if (args.empty() || !args[0].isInteger()) return false;
 
-        Emot* emot;
+        eM* emot;
         try {
           emot = pCtrl->emotHandler.getEmot(args[0].getInteger());
         } catch (const Exception& e) {
           throw IECtrl::JSException(e.getReason());
         }
-        if (emot->is_virtual) {
-          return (char*) emot->img_data.getString();
+        if (emot->isVirtual()) {
+          return (char*) emot->getRawData().getString();
         }
         // wczytujemy plik z img_path i zwracamy
         return "ssaj";

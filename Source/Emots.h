@@ -17,57 +17,190 @@
 #ifndef __EMOTS_H__
 #define __EMOTS_H__
 
-class Emot {
+class eM {
 public:
-  Emot(const StringRef& _text = "", const string& _img_path = "", const string& _menu_img_path = "", bool _preg = false, bool _in_menu = true):
-    text(_text), img_path(_img_path), menu_img_path(_menu_img_path), preg(_preg), in_menu(_in_menu), id(random()), is_virtual(false) { }
+  eM(bool in_menu = true, bool preg = true, bool __virtual = false): 
+    _id(random()), _in_menu(in_menu), _virtual(__virtual), _preg(preg) { }
+    virtual ~eM() { }
 
 public:
-  UINT id;
+  UINT getID() {
+    return _id;
+  }
 
-  ByteBuffer img_data;
-  string menu_img_path;
-  string img_path;
-  String text;
+  virtual ByteBuffer getRawData() {
+    return _img_data;
+  }
+  virtual void setRawData(const ByteBuffer& new_data) {
+    _img_data.assign(new_data);
+  }
 
-  bool is_virtual;
-  bool in_menu;
-  bool preg;
+  virtual string getImgPath() {
+    return _img_path;
+  }
+  virtual void setImgPath(const StringRef& new_path) {
+    _img_path = new_path;
+  }
+
+  virtual string getMenuImgPath() {
+    return _img_path;
+  }
+  virtual void setMenuImgPath(const StringRef& new_path) {
+    _menu_img_path = new_path;
+  }
+
+  virtual String getText() {
+    return _text;
+  }
+  virtual void setText(const StringRef& new_text) {
+    _text = new_text;
+  }
+
+  virtual bool isVirtual() {
+    return _virtual;
+  }
+  virtual void setVirtual(bool value) {
+    _virtual = value;
+  }
+
+  virtual bool isPreg() {
+    return _preg;
+  }
+  virtual void setPreg(bool value) {
+    _preg = value;
+  }
+
+  virtual bool inMenu() {
+    return _in_menu;
+  }
+  virtual void setInMenu(bool value) {
+    _in_menu = value;
+  }
+
+protected:
+  UINT _id;
+
+  ByteBuffer _img_data;
+  string _menu_img_path;
+  string _img_path;
+  String _text;
+
+  bool _in_menu;
+  bool _virtual;
+  bool _preg;
 };
 
-class EmotAuthor {
+class eMAuthor {
 public:
-  EmotAuthor(const StringRef& _name = "", const StringRef& _jid = ""): name(_name), jid(_jid) { }
+  eMAuthor(const StringRef& name, const StringRef& jid = ""): _name(name), _jid(jid) { }
+  eMAuthor() { }
+  virtual ~eMAuthor() { }
 
 public:
-  String name;
-  String jid;
+  virtual String getName() {
+    return _name;
+  }
+  virtual void setName(const StringRef& name) {
+    _name = name;
+  }
+
+  virtual String getJid() {
+    return _jid;
+  }
+  virtual void setJid(const StringRef& jid) {
+    _jid = jid;
+  }
+
+protected:
+  String _name;
+  String _jid;
 };
 
-class EmotSet {
+class eMSet {
 public:
-  typedef list<EmotAuthor> tAuthors;
-  typedef list<Emot> tEmots;
-
-public:
-  EmotSet(const StringRef& _name = "", const string& _version = "", const StringRef& _description = "", 
-    const tAuthors& _authors = tAuthors(), const string& _creationTime = "", const StringRef& _url = ""):
-    name(_name), version(_version), description(_description), authors(_authors), creationTime(_creationTime),
-      url(_url), id(random()) { }
+  typedef list<eMAuthor> tAuthors;
+  typedef list<eM> tEmots;
 
 public:
-  UINT id;
+  eMSet(const StringRef& name, const string& version = "", const StringRef& description = ""):
+    _id(random()), _name(name), _version(version), _description(description) { }
+  eMSet() { }
+  virtual ~eMSet() { }
 
-  tAuthors authors;
-  tEmots emots;
+public:
+  UINT getID() {
+    return _id;
+  }
 
-  String name;
-  string version;
-  String description;
-  string creationTime;
-  String url;
+  virtual String getName() {
+    return _name;
+  }
+  virtual void setName(const StringRef& name) {
+    _name = name;
+  }
 
-  string dir;
+  virtual string getVersion() {
+    return _version;
+  }
+  virtual void setVersion(const string& version) {
+    _version = version;
+  }
+
+  virtual String getDescription() {
+    return _description;
+  }
+  virtual void setDescription(const StringRef& desc) {
+    _description = desc;
+  }
+
+  virtual Date64 getCTime() {
+    return _creationTime;
+  }
+  virtual void setCTime(const Date64& cTime) {
+    _creationTime = cTime;
+  }
+
+  virtual String getUrl() {
+    return _url;
+  }
+  virtual void setUrl(const StringRef& url) {
+    _url = url;
+  }
+
+  virtual string getDir() {
+    return _dir;
+  }
+  virtual void setDir(const string& dir) {
+    _dir = dir;
+  }
+
+  virtual tAuthors& getAuthors() {
+    return _authors;
+  }
+  virtual void addAuthor(const eMAuthor& author) {
+    _authors.push_back(author);
+  }
+
+  virtual tEmots& getEmots() {
+    return _emots;
+  }
+  virtual void addEmot(const eM& emot) {
+    _emots.push_back(emot);
+  }
+
+protected:
+  UINT _id;
+
+  tAuthors _authors;
+  tEmots _emots;
+
+  String _name;
+  string _version;
+  String _description;
+  Date64 _creationTime;
+  String _url;
+
+  string _dir;
 };
 
 #endif // __EMOTS_H__

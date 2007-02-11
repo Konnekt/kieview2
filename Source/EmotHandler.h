@@ -21,6 +21,7 @@
 #include <fstream>
 
 // #include "Base64.h"
+#include "EmotUI.h"
 #include "Emots.h"
 
 /*
@@ -39,10 +40,10 @@ public:
   CannotOpen(const StringRef& reason): EmotParserException(reason) { }
 };
 
-class EmotParser {
+class eMParser {
 public:
   virtual string getDefFileName(const string& fileDir) = 0;
-  virtual EmotSet parse(const string& filePath, const string& fileDir) = 0;
+  virtual eMSet parse(const string& filePath, const string& fileDir) = 0;
 };
 
 class Dir {
@@ -192,7 +193,7 @@ public:
     String str;
 
     ZRESULT result = UnzipItem(_handle, index, buff, entry.unc_size);
-    str = buff;
+    str.assign(buff);
     delete [] buff;
 
     if (result != ZR_OK) {
@@ -212,7 +213,7 @@ protected:
 /*
  * JISP emot definition parser
  */
-class JispParser: public EmotParser {
+class JispParser: public eMParser {
 public:
   class XMLParserException: public EmotParserException {
   public:
@@ -223,18 +224,18 @@ public:
   string getDefFileName(const string& fileDir) {
     return fileDir + ".jisp";
   }
-  EmotSet parse(const string& filePath, const string& fileDir);
+  eMSet parse(const string& filePath, const string& fileDir);
 };
 
 /*
  * GG emot definition parser
  */
-class GGEmotParser: public EmotParser {
+class GGParser: public eMParser {
 public:
   string getDefFileName(const string& fileDir) {
     return "emots.txt";
   }
-  EmotSet parse(const string& filePath, const string& fileDir);
+  eMSet parse(const string& filePath, const string& fileDir);
 };
 
 /*
@@ -250,18 +251,18 @@ public:
     string match;
     UINT id;
 
-    EmotSet* emotSet;
-    Emot* emot;
+    eMSet* emotSet;
+    eM* emot;
 
-    sEmotInsertion(UINT _id, Emot* _emot, EmotSet* _emotSet): id(_id), emot(_emot), emotSet(_emotSet) { }
+    sEmotInsertion(UINT _id, eM* _emot, eMSet* _emotSet): id(_id), emot(_emot), emotSet(_emotSet) { }
     sEmotInsertion(): id(0), emotSet(0), emot(0) { }
   };
 
 public:
   typedef vector<sEmotInsertion> tEmotInsertions;
-  typedef map<int, list<EmotSet*>> tNetEmotSets;
-  typedef list<EmotParser*> tParsers;
-  typedef list<EmotSet> tEmotSets;
+  typedef map<int, list<eMSet*>> tNetEmotSets;
+  typedef list<eMParser*> tParsers;
+  typedef list<eMSet> tEmotSets;
 
 public:
   // EmotHandler();
@@ -274,31 +275,58 @@ public:
   string getKonnektPath();
   string getEmotDir();
 
-  EmotSet* getEmotSet(UINT id) {
+  eMSet* getEmotSet(UINT id) {
     for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-      return &*it;
+      if (it->getID() == id) return &*it;
     }
     throw ExceptionString("EmotSet not found");
   }
-  Emot* getEmot(UINT id) {
+  eM* getEmot(UINT id) {
     for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-      for (EmotSet::tEmots::iterator it2 = it->emots.begin(); it2 != it->emots.end(); it2++) {
-        if (it2->id == id) return &*it2;
+      for (eMSet::tEmots::iterator it2 = it->getEmots().begin(); it2 != it->getEmots().end(); it2++) {
+        if (it2->getID() == id) return &*it2;
       }
     }
     throw ExceptionString("Emot not found");
   }
 
-  void addParser(EmotParser* parser) {
+  void addParser(eMParser* parser) {
     parsers.push_back(parser);
   }
   String parse(const StringRef& body, int net);
 
   void loadPackages();
 
+  void fillLV(EmotLV* lv) {
+    Stamina::UI::oImage img = new Stamina::UI::Icon((HICON) Ctrl->ICMessage(IMI_ICONGET, kIEview2::ico::emots, IML_16), false);
+
+    for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
+      lv->addItem(new EmotLV::sEmotPackInfo(false, &*it, img));
+    }
+  }
+
+  void loadSettings(int cfgCol) {
+    string data; // = Controller::getConfig()->getChar(cfgCol);
+    tStringVector sets;
+
+    Stamina::split(data, "\n", sets);
+    for (tStringVector::iterator it = sets.begin(); it != sets.end(); it++) {
+      for (tEmotSets::iterator it2 = emotSets.begin(); it2 != emotSets.end(); it2++) {
+        if (it2->getName() == *it) break; // turn on
+      }
+    }
+  }
+  void saveSettings() {
+    String result;
+
+    for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
+      result += it->getDir() + "\n";
+    }
+  }
+
 protected:
   String prepareBody(const StringRef& body, bool encode = true, bool html = true);
-  void parseSet(RegEx& reg, EmotSet& set);
+  void parseSet(RegEx& reg, eMSet& set);
 
   static string __stdcall emotInsertion(RegEx* reg, void* param);
   static string __stdcall replaceEmot(RegEx* reg, void* param);

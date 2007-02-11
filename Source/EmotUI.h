@@ -17,41 +17,41 @@
 #define __EMOT_UI_H__
 
 #include "stdafx.h"
+
 #include "kIEview2.h"
+#include "Emots.h"
 
 class EmotLV: public ListWnd::ListView {
 public:
   EmotLV(int x, int y, int w, int h, HWND parent, HMENU id);
   virtual ~EmotLV();
-  typedef std::vector<ListWnd::Item*> tItems;
 
-  class EmotPackInfoItem;
-
+public:
   struct sEmotPackInfo {
-    UINT id;
-    string name;
-    bool checked;
     Stamina::UI::oImage image;
-    string authors;
-    string releasedTime;
-    string other;
+    bool checked;
+    eMSet* set;
 
-    sEmotPackInfo(): id(Stamina::random()), name("unknown"), checked(false) { }
-    sEmotPackInfo(string name, bool checked): id(Stamina::random()), name(name), checked(checked) { }
+    sEmotPackInfo(bool checked, eMSet* _set, Stamina::UI::oImage img): checked(checked), image(img), set(_set) { }
+    sEmotPackInfo(): checked(false) { }
   };
 
-  void onMouseUp(int vkey, const Stamina::Point &pos);
-  void onMouseMove(int vkey, const Stamina::Point &pos);
+  typedef std::vector<ListWnd::Item*> tItems;
 
-  virtual void setPos(int x, int y);
+public:
   virtual void setSize(int w, int h);
+  virtual void setPos(int x, int y);
 
-  virtual UINT addItem(sEmotPackInfo *s);
+  virtual UINT addItem(sEmotPackInfo* pack);
   virtual bool moveItem(UINT id, int pos);
-  virtual int removeItem(UINT id);
+  virtual void removeItem(UINT id);
   virtual int itemsCount();
   virtual ListWnd::oItem getItem(UINT id);
   virtual sEmotPackInfo* getEPI(UINT id);
+
+protected:
+  void onMouseMove(int vkey, const Stamina::Point &pos);
+  void onMouseUp(int vkey, const Stamina::Point &pos);
 
 protected:
   tItems _items;

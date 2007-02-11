@@ -17,7 +17,7 @@
 #include "Helpers.h"
 #include "Controller.h"
 
-EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
+eMSet JispParser::parse(const string& filePath, const string& fileDir) {
   String code;
   Zip zip;
 
@@ -35,7 +35,8 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
   xmlpp::Node* metaNode;
   xmlpp::Node::NodeList icons;
   xmlpp::Node::NodeList nodes;
-  EmotSet result;
+  xmlpp::Attribute* attrib;
+  eMSet result;
 
   try {
     parser.parse_memory(code.c_str());
@@ -53,43 +54,42 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
 
   nodes = metaNode->get_children("name");
   if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.name = dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str();
+    result.setName(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
   }
 
   nodes = metaNode->get_children("version");
   if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.version = dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str();
+    result.setVersion(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
   }
 
   nodes = metaNode->get_children("description");
   if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.description = dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str();
+    result.setDescription(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
   }
 
   nodes = metaNode->get_children("author");
   for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
     if (dynamic_cast<xmlpp::Element*>(*it)) {
-      result.authors.push_back(EmotAuthor(dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str(),
-        dynamic_cast<xmlpp::Element*>(*it)->get_attribute("jid") ? dynamic_cast<xmlpp::Element*>(*it)->get_attribute("jid")->get_value().c_str() : ""));
+      attrib = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("jid");
+      result.addAuthor(eMAuthor(dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str(),
+        attrib ? attrib->get_value().c_str() : ""));
     }
   }
 
   nodes = metaNode->get_children("creation");
   if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.creationTime = dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str();
+    // result.setCTime(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
   }
 
   nodes = metaNode->get_children("home");
   if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.url = dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str();
+    result.setUrl(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
   }
   
   icons = rootNode->get_children("icon");
   for (xmlpp::Node::NodeList::iterator it = icons.begin(); it != icons.end(); it++) {
+    eM emot(true, false, true);
     string mime;
-
-    Emot emot;
-    emot.is_virtual = true;
 
     nodes = (*it)->get_children("object");
     for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
@@ -99,7 +99,7 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
           // emot.menu_img_path = emot.img_path = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content();
 
           try {
-            emot.img_data.assign(zip.getBinaryFile(fileDir + "/" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content()));
+            emot.setRawData(zip.getBinaryFile(fileDir + "/" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content()));
           } catch(const Exception& e) {
             throw CannotOpen(e.getReason());
           }
@@ -116,21 +116,21 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
 
     for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
       if (dynamic_cast<xmlpp::Element*>(*it)) {
-        emot.text = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str();
-        if (dynamic_cast<xmlpp::Element*>(*it)->get_attribute("regexp")) {
-          emot.preg = (bool) atoi(dynamic_cast<xmlpp::Element*>(*it)->get_attribute("regexp")->get_value().c_str());
-        } else {
-          emot.preg = false;
+        emot.setText(dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str());
+        attrib = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("regexp");
+        if (attrib) {
+          emot.setPreg((bool) atoi(attrib->get_value().c_str()));
         }
-        result.emots.push_back(emot);
+        result.addEmot(emot);
       }
     }
   }
-  result.dir = fileDir;
+
+  result.setDir(fileDir);
   return result;
 }
 
-EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
+eMSet GGParser::parse(const string& filePath, const string& fileDir) {
   ifstream file(filePath.c_str());
   string code, buff;
 
@@ -144,7 +144,7 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
   }
   file.close();
 
-  EmotSet result;
+  eMSet result;
   tStringVector strings;
   bool inMenu;
 
@@ -152,7 +152,7 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
   RegEx reg;
 
   for (tStringVector::iterator it = strings.begin(); it != strings.end(); it++) {
-    EmotSet::tEmots emots;
+    eMSet::tEmots emots;
 
     if ((*it)[0] == '*') {
       inMenu = false;
@@ -165,7 +165,9 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
     reg.setPattern("/,?\"(.+?)\",?/");
 
     while (reg.match_global()) {
-      emots.push_back(Emot(reg[1].c_str(), "", "", reg[1][0] == '/', inMenu));
+      eM emot(inMenu, reg[1][0] == '/');
+      emot.setText(reg[1].c_str());
+      emots.push_back(emot);
 
       if (reg.getSubject()[reg.getStart()] == ')' || (*it)[0] != '(') {
         string img_path;
@@ -175,9 +177,9 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
           img_path = reg[1];
           menu_img_path = reg.match_global() ? reg[1] : img_path;
 
-          for (EmotSet::tEmots::iterator it = emots.begin(); it != emots.end(); it++) {
-            it->img_path = img_path;
-            it->menu_img_path = menu_img_path;
+          for (eMSet::tEmots::iterator it = emots.begin(); it != emots.end(); it++) {
+            it->setMenuImgPath(menu_img_path);
+            it->setImgPath(img_path);
           }
         } else {
           throw WrongFormat("Brak œcie¿ki do obrazka");
@@ -185,11 +187,11 @@ EmotSet GGEmotParser::parse(const string& filePath, const string& fileDir) {
         break;
       }
     }
-    result.emots.insert(result.emots.end(), emots.begin(), emots.end());
+    result.getEmots().insert(result.getEmots().end(), emots.begin(), emots.end());
   }
 
-  result.name = fileDir;
-  result.dir = fileDir;
+  result.setName(fileDir);
+  result.setDir(fileDir);
 
   return result;
 }
@@ -224,8 +226,8 @@ String EmotHandler::prepareBody(const StringRef& body, bool encode, bool html) {
 
 string __stdcall EmotHandler::emotInsertion(RegEx* reg, void* param) {
   sEmotInsertion* ei = static_cast<sEmotInsertion*>(param);
-
   ei->match = reg->getSub(0).c_str();
+
   return "<kiev2:emot:insertion id=\"" + inttostr(ei->id) + "\" />";
 }
 
@@ -233,21 +235,21 @@ string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
   EmotHandler* handler = static_cast<EmotHandler*>(param);
   sEmotInsertion* ei = &handler->emotInsertions.at(atoi(reg->getSub(1).c_str()));
 
-  IMLOG("[EmotHandler::replaceEmot()] match = %s, img_path = %s, emot = %s, set = %s", ei->match.c_str(), ei->emot->img_path.c_str(),
-    ei->emot->text.c_str(), ei->emotSet->name.c_str());
+  IMLOG("[EmotHandler::replaceEmot()] match = %s, img_path = %s, emot = %s, set = %s", ei->match.c_str(), ei->emot->getImgPath().c_str(),
+    ei->emot->getText().c_str(), ei->emotSet->getName().c_str());
 
   return "<img src=\"" + 
-    (ei->emot->is_virtual ? 
-      "javascript:window.external.oController.getEmot(" + inttostr(ei->emot->id) + ");" :
-      unifyPath(handler->getEmotDir() + "/" + ei->emotSet->dir + "/" + ei->emot->img_path)
+    (ei->emot->isVirtual() ? 
+      "javascript:window.external.oController.getEmot(" + inttostr(ei->emot->getID()) + ");" :
+      unifyPath(handler->getEmotDir() + "/" + ei->emotSet->getDir() + "/" + ei->emot->getImgPath())
     ) + "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
 }
 
-void EmotHandler::parseSet(RegEx& reg, EmotSet& set) {
-  for (EmotSet::tEmots::iterator it = set.emots.begin(); it != set.emots.end(); it++) {
+void EmotHandler::parseSet(RegEx& reg, eMSet& set) {
+  for (eMSet::tEmots::iterator it = set.getEmots().begin(); it != set.getEmots().end(); it++) {
     sEmotInsertion ei(emotInsertions.size(), &*it, &set);
     try {
-      reg.setPattern(prepareBody(!it->preg ? "/" + addSlashes(it->text, "\"'\\/^$!?()[]+.{}*|", '\\') + "/i" : it->text, true, false));
+      reg.setPattern(prepareBody(!it->isPreg() ? "/" + reg.addSlashes(it->getText()) + "/i" : it->getText(), true, false));
       reg.replaceItself(&EmotHandler::emotInsertion, 0, (void*) &ei);
     } catch (const RegEx::CompileException& e) {
       IMLOG("[EmotHandler::parseSet()] B³¹d definicji emotikony: %s, pos %i", e.error, e.pos);
@@ -262,7 +264,7 @@ String EmotHandler::parse(const StringRef& body, int net) {
   reg.setSubject(prepareBody(body));
 
   if (emotSetsByNet.find(net) != emotSetsByNet.end() && emotSetsByNet[net].size()) {
-    for (list<EmotSet*>::iterator it = emotSetsByNet[net].begin(); it != emotSetsByNet[net].end(); it++) {
+    for (list<eMSet*>::iterator it = emotSetsByNet[net].begin(); it != emotSetsByNet[net].end(); it++) {
       parseSet(reg, **it);
     }
   }

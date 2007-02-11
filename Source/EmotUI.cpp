@@ -1,30 +1,43 @@
+/**
+  *  kIEview2
+  *
+  *  Any modifications or reusing strictly prohibited!
+  *
+  *  @filesource
+  *  @copyright    Copyright (c) 2006-2007 ursus6
+  *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
+  *  @version      $Revision$
+  *  @modifiedby   $LastChangedBy$
+  *  @lastmodified $Date$
+  */
+
 #include "stdafx.h"
 #include "emotUI.h"
+#include "Emots.h"
 
 EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::ListView(x, y, w, h, parent, id) {
-  alwaysShowScrollbars(false, true);
+  alwaysShowScrollbars(false, false);
 
   _checked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
   _unchecked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
   _inform = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::emotsinfo, IML_16), false);
 
   hFont = CreateFont(16, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-      CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Verdana");
+    CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Verdana");
 
   _tooltip = new Stamina::UI::ToolTipX::ToolTip(getHwnd(), 0);
-  Stamina::UI::ToolTipX::Tip* tip = new Stamina::UI::ToolTipX::Tip();
-  _tooltip->setTip(tip, false);
+  _tooltip->setTip(new Stamina::UI::ToolTipX::Tip(), false);
 
   draged = false;
   draged_id = 0;
   mmitem = -1;
 }
 
-
 void EmotLV::onMouseUp(int vkey, const Stamina::Point &pos) {
   ReleaseCapture();
   ListWnd::ListView::onMouseUp(vkey, pos);
   draged = false;
+
   if (mmitem != -1) {
     _items[mmitem]->repaint(this);
   }
@@ -36,14 +49,15 @@ void EmotLV::onMouseMove(int vkey, const Stamina::Point &pos) {
   GetCursorPos(&pt);
   RECT rc;
   GetWindowRect(getHwnd(), &rc);
+
   if (rc.top > pt.y) {
     Point d = this->getScrollPos();
-    d.y-= rc.top - pt.y;
+    d.y -= rc.top - pt.y;
     scrollTo(d);
     Sleep(100);
   } else if (pos.y > getClientRect().bottom){
     Point d = this->getScrollPos();
-    d.y+= pos.y - getClientRect().bottom;
+    d.y += pos.y - getClientRect().bottom;
     scrollTo(d);
     Sleep(100);
   }
@@ -79,31 +93,31 @@ bool EmotLV::moveItem(UINT id, int pos) {
     _items.insert(it, _items[id]);
     it = _items.begin();
     inc = 0;
-    while(inc++ < id + 1) it++;
+    while (inc++ < id + 1) it++;
     _items.erase(it);
   } else if (pos == _items.size()) {
     _items.push_back(_items[id]);
-    while(inc++ < id) it++;
+    while (inc++ < id) it++;
     _items.erase(it);
-    pos-= 1;
+    pos -= 1;
   } else if ((id <= _items.size() - 1) && (pos <= _items.size() - 1)) {
     if (id >= pos) {
-      while(inc++ < pos) it++;
+      while (inc++ < pos) it++;
       _items.insert(it, _items[id]);
 
       it = _items.begin();
       inc = 0;
-      while(inc++ < id + 1) it++;
+      while (inc++ < id + 1) it++;
       _items.erase(it);
     } else {
-      while(inc++ < pos) it++;
+      while (inc++ < pos) it++;
       _items.insert(it, _items[id]);
 
       it = _items.begin();
       inc = 0;
-      while(inc++ < id) it++;
+      while (inc++ < id) it++;
       _items.erase(it);
-      pos-=1;
+      pos -=1;
     }
   } else {
     return false;
@@ -117,11 +131,10 @@ bool EmotLV::moveItem(UINT id, int pos) {
   return true;
 }
 
-int EmotLV::removeItem(UINT id) {
+void EmotLV::removeItem(UINT id) {
   removeEntry(_items[id]->getEntry());
   tItems::iterator it = _items.begin() + id;
   _items.erase(it);
-  return id;
 }
 
 int EmotLV::itemsCount() {
@@ -158,13 +171,13 @@ Size EmotLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd
   return Size(fitIn.w, 22);
 }
 void EmotLV::EmotPackInfoItem::showToolTip(EmotLV* elv, Point& pos) {
-  string tiptext = stringf("Zestaw emot: <b>%s</b>", _emotInfo->name.c_str());
-  if (_emotInfo->authors.length())
-    tiptext+= stringf("<br/>Autorzy: <b>%s</b>", _emotInfo->authors.c_str());
-  if (_emotInfo->releasedTime.length())
-    tiptext+= stringf("<br/>Stworzono: <b>%s</b>", _emotInfo->releasedTime.c_str());
-  if (_emotInfo->other.length()) 
-    tiptext+= stringf("<br/>Dodatkowe: %s", _emotInfo->other.c_str());
+  eMSet* set = _emotInfo->set;
+
+  string tiptext = "Zestaw emot: <b>" + set->getName() + "</b>";
+  if (set->getVersion().length()) tiptext += " (" + set->getVersion() + ")";
+  tiptext += "<br/>\n";
+  if (set->getUrl().length()) tiptext += "URL: " + set->getUrl() + "<br/>\n";
+  if (set->getDescription().length()) tiptext += "Opis: " + set->getDescription();
 
   Stamina::UI::ToolTipX::oTip tip;
   if (_emotInfo->image.isValid()) {
@@ -326,11 +339,11 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   EmotLV* elv = (EmotLV*)lv;
   HDC dc = lv->getDC();
   Rect rc = lv->itemToClient(li->getRect());
-  string name = _emotInfo->name;
+  string name = _emotInfo->set->getName();
 
   Rect rci = rc;
-  rci.left+= 25;
-  rci.top+=2;
+  rci.left += 25;
+  rci.top +=2;
 
   Stamina::UI::oImage gradient;
 

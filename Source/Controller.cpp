@@ -70,7 +70,7 @@ namespace kIEview2 {
     this->registerObserver(IM_CFG_CHANGED, bind(resolve_cast0(&Controller::_onCfgChanged), this));
     this->registerActionObserver(Konnekt::UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
     this->registerActionObserver(Konnekt::UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
-    this->registerActionObserver(ui::emotLV, bind(resolve_cast0(&Controller::_emotlv), this));
+    this->registerActionObserver(ui::emotLV, bind(resolve_cast0(&Controller::_emotLV), this));
 
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
@@ -138,7 +138,7 @@ namespace kIEview2 {
     kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
 
     emotHandler.addParser(new JispParser);
-    emotHandler.addParser(new GGEmotParser);
+    emotHandler.addParser(new GGParser);
     emotHandler.loadPackages();
 
     // @debug replace with user selected tpl directory
@@ -403,23 +403,24 @@ namespace kIEview2 {
       }
     }
   }
-  void Controller::_emotlv() {
+  void Controller::_emotLV() {
     // locking
     LockerCS lock(_locker);
-    switch (this->getAN()->code) {
+
+    switch (getAN()->code) {
       case ACTN_CREATEWINDOW: {
-        sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
+        sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
         EmotLV* lv = new EmotLV(an->x, an->y + 5, 220, 200,an->hwndParent, 0);
         an->hwnd = lv->getHwnd();
         SetProp(an->hwnd, "LV*", (HANDLE)lv);
 
-        an->w+= 220;
-        an->h+=205;
-        an->y+=205;
-        an->x+=220;
-        break;
-      }
-      case ACTN_DESTROYWINDOW: {
+        emotHandler.fillLV(lv);
+
+        an->x += 220;
+        an->y += 205;
+
+        an->w += 220;
+        an->h += 205;
         break;
       }
     }
@@ -757,7 +758,10 @@ namespace kIEview2 {
   void Controller::clearWnd(IECtrl* ctrl) {
     // locking
     LockerCS lock(_locker);
+
+    // ctrl->navigate("file:///C:/Documents%20and%20Settings/Sija/Pulpit/Konnekt.dev/data/templates/core/__bootstrap.html");
     ctrl->clear();
+
     SetProp(GetParent(ctrl->getHWND()), "MsgSend", false);
 
     // We create structure of the data
@@ -772,8 +776,8 @@ namespace kIEview2 {
   }
 
   DWORD CALLBACK Controller::streamOut(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) {
-    String* entry = (String*)dwCookie;
-    *entry += (char*)pbBuff;
+    String* entry = (String*) dwCookie;
+    *entry += (char*) pbBuff;
     return 0;
   }
 

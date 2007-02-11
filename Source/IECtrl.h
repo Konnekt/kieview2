@@ -117,7 +117,7 @@ public:
   void setWindowPos(int x, int y, int cx, int cy);
 
   void enableSandbox(bool bSandbox = true);
-  void navigate(const char *);
+  void navigate(const char *url);
   void clear();
   void write(const WCHAR *text);
   void write(const char *text);
