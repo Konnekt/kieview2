@@ -17,7 +17,7 @@
 #ifndef __EMOTSHANDLER_H__
 #define __EMOTSHANDLER_H__
 
-#include <XUnzip.h>
+#include "unzip.h"
 #include <fstream>
 
 // #include "Base64.h"
@@ -132,10 +132,11 @@ public:
   };
 
 public:
-  Zip(): _handle(NULL) { }
-  Zip(const string& path) {
+  Zip(const string& path): _handle(NULL) {
     open(path);
   }
+  Zip(): _handle(NULL) { }
+
   ~Zip() {
     close();
   }
@@ -144,7 +145,7 @@ public:
   void open(const string& path) {
     if (_handle) close();
 
-    if (!(_handle = OpenZip((void*) path.c_str(), 0, ZIP_FILENAME))) {
+    if (!(_handle = OpenZip(path.c_str(), 0))) {
       throw CannotOpen("Cannot open file " + path);
     }
   }
@@ -163,11 +164,18 @@ public:
       throw NotFound("Cannot find file " + path);
     }
 
+    char* buff = new char[entry.unc_size];
     ByteBuffer str;
-    ZRESULT result = UnzipItem(_handle, index, str.getBuffer(), entry.unc_size, ZIP_MEMORY);
+
+    ZRESULT result = UnzipItem(_handle, index, buff, entry.unc_size);
+    str.assign((const unsigned char*) buff, entry.unc_size);
+    delete [] buff;
 
     if (result != ZR_OK) {
-      throw CannotRead("XZip error: " + inttostr(result) + " in file: " + path);
+      char errMsg[256];
+      FormatZipMessage(result, errMsg, 255);
+
+      throw CannotRead("Msg: " + string(errMsg) + " in file: " + path);
     }
     return str;
   }
@@ -180,19 +188,18 @@ public:
       throw NotFound("Cannot find file " + path);
     }
 
-    String str;
-    ZRESULT result;
-
     char* buff = new char[entry.unc_size];
-    // do {
-      result = UnzipItem(_handle, index, buff, entry.unc_size, ZIP_MEMORY);
-      str += buff;
-    // } while (result == ZR_MORE);
+    String str;
 
+    ZRESULT result = UnzipItem(_handle, index, buff, entry.unc_size);
+    str = buff;
     delete [] buff;
 
     if (result != ZR_OK) {
-      throw CannotRead("XZip error: " + inttostr(result) + " in file: " + path);
+      char errMsg[256];
+      FormatZipMessage(result, errMsg, 255);
+
+      throw CannotRead("Msg: " + string(errMsg) + " in file: " + path);
     }
     return str;
   }

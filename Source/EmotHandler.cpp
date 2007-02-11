@@ -39,7 +39,7 @@ EmotSet JispParser::parse(const string& filePath, const string& fileDir) {
 
   try {
     parser.parse_memory(code.c_str());
-  } catch (xmlpp::exception e) {
+  } catch (const xmlpp::exception& e) {
     throw XMLParserException(e.what());
   }
 
@@ -211,13 +211,13 @@ String EmotHandler::prepareBody(const StringRef& body, bool encode, bool html) {
     reg.replaceItself(html ? "/&lt;/" : "/</", "\2");
     reg.replaceItself(html ? "/&gt;/" : "/>/", "\3");
     reg.replaceItself(html ? "/&quot;/" : "/\"/", "\4");
-    reg.replaceItself(html ? "/&apos;/" : "/'/", "\5");
+    reg.replaceItself(html ? "/&(apos|#0?39);/" : "/'/", "\5");
   } else {
     reg.replaceItself("/\1/", html ? "&amp;" : "/&/");
     reg.replaceItself("/\2/", html ? "&lt;" : "/</");
     reg.replaceItself("/\3/", html ? "&gt;" : "/>/");
     reg.replaceItself("/\4/", html ? "&quot;" : "/\"/");
-    reg.replaceItself("/\5/", html ? "&apos;" : "/'/");
+    reg.replaceItself("/\5/", html ? "&#039;" : "/'/");
   }
   return reg.getSubject();
 }
@@ -302,7 +302,7 @@ void EmotHandler::loadPackages() {
       try {
         emotSets.push_back((*it2)->parse(fileName, it->cFileName));
       } catch (const EmotParserException& e) {
-        IMLOG("[EmotHandler::loadPackages()] b³¹d podczas parsowania emotSeta: %s", e.getReason().a_str());
+        IMLOG("[EmotHandler::loadPackages()] b³¹d podczas parsowania paczki emot (%s): %s", it->cFileName, e.getReason().a_str());
       }
       break;
     }

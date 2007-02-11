@@ -65,6 +65,8 @@
   #pragma comment(lib, "listwnd_d.lib")
 #else
   #pragma comment(lib, "stamina.lib")
+  #pragma comment(lib, "stamina_ui.lib")
+  #pragma comment(lib, "listwnd.lib")
 #endif
 
 #include <boost/signal.hpp>
@@ -81,6 +83,7 @@
 #include <stamina/regex.h>
 #include <stamina/timer.h>
 #include <stamina/DataTable/Crypt.h>
+
 #include <Stamina/ListWnd/ListWnd.h>
 #include <Stamina/ListWnd/ListView.h>
 #include <Stamina/UI/DrawableButton.h>
