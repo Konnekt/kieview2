@@ -409,8 +409,8 @@ namespace kIEview2 {
     switch (this->getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
-        EmotPackInfoLV* lv = new EmotPackInfoLV(an->hwndParent, an->x, an->y + 5, 220, 200);
-        an->hwnd = lv->getLV()->getHwnd();
+        EmotLV* lv = new EmotLV(an->x, an->y + 5, 220, 200,an->hwndParent, 0);
+        an->hwnd = lv->getHwnd();
         SetProp(an->hwnd, "LV*", (HANDLE)lv);
 
         an->w+= 220;
@@ -420,9 +420,6 @@ namespace kIEview2 {
         break;
       }
       case ACTN_DESTROYWINDOW: {
-        sUIActionNotify_destroyWindow* an = (sUIActionNotify_destroyWindow*)this->getAN();
-        EmotPackInfoLV* lv = (EmotPackInfoLV *)GetProp(an->hwnd, "LV*");
-        delete lv;
         break;
       }
     }

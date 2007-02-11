@@ -1,9 +1,8 @@
 #include "stdafx.h"
 #include "emotUI.h"
 
-EmotPackInfoLV::EmotPackInfoLV(HWND parent, int x, int y, int w, int h) {
-  _lv = new EmotLV(x, y, w, h, parent, 0);
-  _lv->alwaysShowScrollbars(false, true);
+EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::ListView(x, y, w, h, parent, id) {
+  alwaysShowScrollbars(false, true);
 
   _checked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
   _unchecked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
@@ -12,38 +11,65 @@ EmotPackInfoLV::EmotPackInfoLV(HWND parent, int x, int y, int w, int h) {
   hFont = CreateFont(16, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Verdana");
 
-  _tooltip = new Stamina::UI::ToolTipX::ToolTip(getLV()->getHwnd(), 0);
+  _tooltip = new Stamina::UI::ToolTipX::ToolTip(getHwnd(), 0);
   Stamina::UI::ToolTipX::Tip* tip = new Stamina::UI::ToolTipX::Tip();
   _tooltip->setTip(tip, false);
-  
+
   draged = false;
   draged_id = 0;
+  mmitem = -1;
 }
 
-EmotPackInfoLV::~EmotPackInfoLV() {
-  _lv->removeAll();
+
+void EmotLV::onMouseUp(int vkey, const Stamina::Point &pos) {
+  ReleaseCapture();
+  ListWnd::ListView::onMouseUp(vkey, pos);
+  draged = false;
+  if (mmitem != -1) {
+    _items[mmitem]->repaint(this);
+  }
+  mmitem = -1;
+}
+
+void EmotLV::onMouseMove(int vkey, const Stamina::Point &pos) {
+  POINT pt;
+  GetCursorPos(&pt);
+  RECT rc;
+  GetWindowRect(getHwnd(), &rc);
+  if (rc.top > pt.y) {
+    Point d = this->getScrollPos();
+    d.y-= rc.top - pt.y;
+    scrollTo(d);
+    Sleep(100);
+  } else if (pos.y > getClientRect().bottom){
+    Point d = this->getScrollPos();
+    d.y+= pos.y - getClientRect().bottom;
+    scrollTo(d);
+    Sleep(100);
+  }
+  ListWnd::ListView::onMouseMove(vkey, pos);
+}
+
+EmotLV::~EmotLV() {
+  removeAll();
   DeleteObject(hFont);
   delete _tooltip;
 }
 
-ListWnd::ListView* EmotPackInfoLV::getLV() {
-  return _lv;
+void EmotLV::setPos(int x, int y) {
+  MoveWindow(getHwnd(), x, y, 0, 0, SWP_NOSIZE);
 }
 
-void EmotPackInfoLV::setPos(int x, int y) {
-  MoveWindow(_lv->getHwnd(), x, y, 0, 0, SWP_NOSIZE);
+void EmotLV::setSize(int w, int h) {
+  MoveWindow(getHwnd(), 0, 0, w, h, SWP_NOMOVE);
 }
 
-void EmotPackInfoLV::setSize(int w, int h) {
-  MoveWindow(_lv->getHwnd(), 0, 0, w, h, SWP_NOMOVE);
-}
-
-UINT EmotPackInfoLV::addItem(sEmotPackInfo *s) {
-  _items.push_back(_lv->insertEntry(new EmotPackInfoItem(this, s)).get());
+UINT EmotLV::addItem(sEmotPackInfo *s) {
+  _items.push_back(insertEntry(new EmotPackInfoItem(this, s)).get());
   return _items.size() - 1;
 }
 
-bool EmotPackInfoLV::moveItem(UINT id, int pos) {
+bool EmotLV::moveItem(UINT id, int pos) {
   if ((id > _items.size()) || (id == pos)) return false;
 
   int inc = 0;
@@ -85,53 +111,53 @@ bool EmotPackInfoLV::moveItem(UINT id, int pos) {
 
   ListWnd::Item* item = _items[pos];
   ListWnd::oEntry entry = item->getEntry();
-  _lv->removeEntry(entry, false);
-  _items[pos] = _lv->insertEntry(entry, pos).get();
+  removeEntry(entry, false);
+  _items[pos] = insertEntry(entry, pos).get();
 
   return true;
 }
 
-int EmotPackInfoLV::removeItem(UINT id) {
-  _lv->removeEntry(_items[id]->getEntry());
+int EmotLV::removeItem(UINT id) {
+  removeEntry(_items[id]->getEntry());
   tItems::iterator it = _items.begin() + id;
   _items.erase(it);
   return id;
 }
 
-int EmotPackInfoLV::itemsCount() {
+int EmotLV::itemsCount() {
   return _items.size();
 }
 
-ListWnd::oItem EmotPackInfoLV::getItem(UINT id) {
+ListWnd::oItem EmotLV::getItem(UINT id) {
   if (id > _items.size()) return NULL;
   return _items[id];
 }
 
-EmotPackInfoLV::sEmotPackInfo* EmotPackInfoLV::getEPI(UINT id) {
+EmotLV::sEmotPackInfo* EmotLV::getEPI(UINT id) {
   if (id > _items.size()) return NULL;
   return ((EmotPackInfoItem*)_items[id]->getEntry().get())->getEmotPackInfo();
 }
 
-EmotPackInfoLV::sEmotPackInfo* EmotPackInfoLV::EmotPackInfoItem::getEmotPackInfo() {
+EmotLV::sEmotPackInfo* EmotLV::EmotPackInfoItem::getEmotPackInfo() {
   return _emotInfo;
 }
 
-Size EmotPackInfoLV::EmotPackInfoItem::getMinSize() {
+Size EmotLV::EmotPackInfoItem::getMinSize() {
   return Size(30, 32);
 }
 
-Size EmotPackInfoLV::EmotPackInfoItem::getMaxSize() {
+Size EmotLV::EmotPackInfoItem::getMaxSize() {
   return Size(0x7FFF, 32);
 }
 
-Size EmotPackInfoLV::EmotPackInfoItem::getQuickSize() {
+Size EmotLV::EmotPackInfoItem::getQuickSize() {
   return Size(0, 32);
 }
 
-Size EmotPackInfoLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn) {
+Size EmotLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn) {
   return Size(fitIn.w, 22);
 }
-void EmotPackInfoLV::EmotPackInfoItem::showToolTip(Point& pos) {
+void EmotLV::EmotPackInfoItem::showToolTip(EmotLV* elv, Point& pos) {
   string tiptext = stringf("Zestaw emot: <b>%s</b>", _emotInfo->name.c_str());
   if (_emotInfo->authors.length())
     tiptext+= stringf("<br/>Autorzy: <b>%s</b>", _emotInfo->authors.c_str());
@@ -142,92 +168,153 @@ void EmotPackInfoLV::EmotPackInfoItem::showToolTip(Point& pos) {
 
   Stamina::UI::ToolTipX::oTip tip;
   if (_emotInfo->image.isValid()) {
-    tip= Stamina::UI::ToolTipX::Tip::textAndImage(tiptext, true, _emotInfo->image);
+    tip = Stamina::UI::ToolTipX::Tip::textAndImage(tiptext, true, _emotInfo->image);
   } else {
     tip = new Stamina::UI::ToolTipX::TipTextRich(tiptext);
   }
 
-  _parent->_tooltip->setPos(pos, true, Stamina::UI::ToolTipX::enPositioning::positionFirst, Stamina::UI::ToolTipX::enPlacement::pRightBottom);
-  _parent->_tooltip->setTip(tip.get(), false);
-  _parent->_tooltip->show();
+  elv->_tooltip->setPos(pos, true, Stamina::UI::ToolTipX::enPositioning::positionFirst, Stamina::UI::ToolTipX::enPlacement::pRightBottom);
+  elv->_tooltip->setTip(tip.get(), false);
+  elv->_tooltip->show();
 }
 
-bool EmotPackInfoLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
-  if (_parent->draged) {
-  Point p = pos;
-  p.y-= _parent->getLV()->getScrollPos().y;
-    UINT id = _parent->_lv->getItemIndex(li);
+bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
+  EmotLV* elv = (EmotLV*)lv;
+  if (elv->draged) {
+    if (elv->mmitem != -1) {
+      elv->_items[elv->mmitem]->repaint(lv);
+    }
+    Point p = pos;
+    p.y-= elv->getScrollPos().y;
+    UINT id = elv->getItemIndex(li);
     Rect rc = lv->itemToClient(li->getRect());
-    if (_parent->draged_id != id) {
+    if (elv->draged_id != id) {
       if (p.y < rc.getCenter().y) {
-        if (_parent->draged_id != id) {
-          _parent->moveItem(_parent->draged_id, id);
-          _parent->_items[id - (id> _parent->draged_id ? 1 : 0)]->setSelected(_parent->getLV(), true);
+        if (elv->draged_id != id) {
+          elv->moveItem(elv->draged_id, id);
+          elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setSelected(elv, true);
+          elv->mmitem = -1;
         }
       } else {
-        if (_parent->draged_id != id + 1) {
-          _parent->moveItem(_parent->draged_id, id + 1);
-          _parent->_items[id + (id< _parent->draged_id ? 1 : 0)]->setSelected(_parent->getLV(), true);
+        if (elv->draged_id != id + 1) {
+          elv->moveItem(elv->draged_id, id + 1);
+          elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setSelected(elv, true);
+          elv->mmitem = -1;
         }
       }
     }
-    _parent->draged = false;
+    elv->draged = false;
   }
   ReleaseCapture();
   return 1;
 }
 
-bool EmotPackInfoLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
-  if (_parent->_tooltip->visible()) _parent->_tooltip->hide();
+bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
+  EmotLV* elv = (EmotLV*)lv;
+  if (vkey == VK_LBUTTON) {
+    if (elv->_tooltip->visible()) elv->_tooltip->hide();
 
-  Point p = pos;
-  p.x-= _parent->getLV()->getScrollPos().x;
-  p.y-= _parent->getLV()->getScrollPos().y;
+    Point p = pos;
+    p.x-= elv->getScrollPos().x;
+    p.y-= elv->getScrollPos().y;
 
-  Rect rc = lv->itemToClient(li->getRect());
+    Rect rc = lv->itemToClient(li->getRect());
 
-  Rect rcinform = rc;
-  rcinform.left = rcinform.right - 3 - 16;
-  rcinform.top+=3;
-  _inform->setPos(rcinform.getLT());
+    Rect rcinform = rc;
+    rcinform.left = rcinform.right - 3 - 16;
+    rcinform.top+=3;
+    _inform->setPos(rcinform.getLT());
 
-  Rect rccheck = rc;
-  rccheck.left+=3;
-  rccheck.top+=3;
-  _check->setPos(rccheck.getLT());
+    Rect rccheck = rc;
+    rccheck.left+=3;
+    rccheck.top+=3;
+    _check->setPos(rccheck.getLT());
 
-  if (_check->hitTest(p)) {
-    if (_emotInfo->checked) {
-      _check->setImage(_parent->_unchecked.get());
-      this->_emotInfo->checked = false;
-      this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
-    } else {
-      _check->setImage(_parent->_checked.get());
-      this->_emotInfo->checked = true;
-      this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
-    }
-    return 0;
-  } else if (_inform->hitTest(p)) {
-      showToolTip(_inform->getPos());
+    if (_check->hitTest(p)) {
+      if (_emotInfo->checked) {
+        _check->setImage(elv->_unchecked.get());
+        this->_emotInfo->checked = false;
+        this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
+      } else {
+        _check->setImage(elv->_checked.get());
+        this->_emotInfo->checked = true;
+        this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
+      }
       return 0;
-  } else {
-    _parent->draged = true;
-    _parent->draged_id = _parent->_lv->getItemIndex(li);
-    SetCapture(_parent->_lv->getHwnd());
+    } else if (_inform->hitTest(p)) {
+        showToolTip(static_cast<EmotLV*>(lv), _inform->getPos());
+        return 0;
+    } else {
+      elv->draged = true;
+      elv->draged_id = lv->getItemIndex(li);
+      elv->mmitem = elv->draged_id;
+      SetCapture(lv->getHwnd());
+    }
   }
   return 1;
 }
 
-bool EmotPackInfoLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info) {
+bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
+  EmotLV* elv = (EmotLV*)lv;
+  if (elv->draged) {
+    int id = lv->getItemIndex(li);
+    if (elv->mmitem != -1) {
+      if (elv->mmitem != id) {
+        elv->_items[elv->mmitem]->repaint(lv);
+        elv->mmitem = id;
+      }
+    }
+    HDC dc = lv->getDC();
+    Rect rc = lv->itemToClient(li->getRect());
+    Point p = pos;
+    p.y-= lv->getScrollPos().y;
+    if (elv->draged_id != id) {
+      Stamina::UI::oImage gradient = Stamina::UI::createSimpleGradient(RGB(255, 204, 102), RGB(255, 153, 51), Size(rc.width(),rc.height() - 13));
+      if (p.y < rc.getCenter().y) {
+        if (elv->draged_id != id) {
+          Rect rct = rc;
+          rct.top+= rc.height() / 2;
+          lv->repaintRect(rct);
+          gradient->draw(dc, Point(rc.left, rc.top));
+          HPEN hOldPen = (HPEN)SelectObject(dc, CreatePen(PS_SOLID, 1, RGB(0, 153, 0)));
+          HBRUSH hOldBrush = (HBRUSH)SelectObject(dc, CreateSolidBrush(RGB(204, 255, 204)));
+          POINT p[] = {{rc.getCenter().x - 3, rc.top + 7}, {rc.getCenter().x, rc.top + 1}, {rc.getCenter().x + 3, rc.top + 7}};
+          Polygon(dc, p, 3);
+          DeleteObject(SelectObject(dc, hOldPen));
+          DeleteObject(SelectObject(dc, hOldBrush));
+        }
+      } else {
+        if (elv->draged_id != id + 1) {
+          Rect rct = rc;
+          rct.bottom-= rc.height() / 2;
+          lv->repaintRect(rct);
+          gradient->draw(dc, Point(rc.left, rc.bottom - (rc.getHeight() - 13)));
+          POINT p[] = {{rc.getCenter().x - 3, rc.bottom - 8}, {rc.getCenter().x, rc.bottom - 2}, {rc.getCenter().x + 3, rc.bottom - 8}};
+          HPEN hOldPen = (HPEN)SelectObject(dc, CreatePen(PS_SOLID, 1, RGB(0, 153, 0)));
+          HBRUSH hOldBrush = (HBRUSH)SelectObject(dc, CreateSolidBrush(RGB(204, 255, 204)));
+          Polygon(dc, p, 3);
+          DeleteObject(SelectObject(dc, hOldPen));
+          DeleteObject(SelectObject(dc, hOldBrush));
+        }
+      }
+    }
+    lv->releaseDC(dc);
+    return 0;
+  }
+  return 1;
+}
+
+bool EmotLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info) {
+  EmotLV* elv = (EmotLV*)lv;
   if (vkey == VK_SPACE) {
     if (_emotInfo->checked) {
-      _check->setImage(_parent->_unchecked.get());
-      this->_emotInfo->checked = false;
-      this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
+      _check->setImage(elv->_unchecked.get());
+      _emotInfo->checked = false;
+      refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
     } else {
-      _check->setImage(_parent->_checked.get());
-      this->_emotInfo->checked = true;
-      this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
+      _check->setImage(elv->_checked.get());
+      _emotInfo->checked = true;
+      refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
     }
     return 0;
   } else {
@@ -235,10 +322,11 @@ bool EmotPackInfoLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const Li
   }
 }
 
-void EmotPackInfoLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent) {
+void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent) {
+  EmotLV* elv = (EmotLV*)lv;
   HDC dc = lv->getDC();
   Rect rc = lv->itemToClient(li->getRect());
-  string name = this->_emotInfo->name;
+  string name = _emotInfo->name;
 
   Rect rci = rc;
   rci.left+= 25;
@@ -279,7 +367,7 @@ void EmotPackInfoLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const L
   _check->setPos(rccheck.getLT());
   _check->draw(dc, p);
 
-  HFONT hOldFont = (HFONT)SelectObject(dc, _parent->hFont);
+  HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
   DrawTextA(dc, name.c_str(), -1, rctxt.ref(), DT_NOPREFIX | DT_END_ELLIPSIS | DT_SINGLELINE);
   SelectObject(dc, hOldFont);
 
