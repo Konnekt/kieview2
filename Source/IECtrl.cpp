@@ -13,7 +13,6 @@
 
 #include "stdafx.h"
 #include "IECtrl.h"
-
 #define DISPID_BEFORENAVIGATE2 250
 
 IECtrl::External* IECtrl::m_pExternal = NULL;
@@ -57,6 +56,7 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
   m_bClosed = false;
   m_bSandbox = true;
   m_bGetSelection = false;
+  m_bIsReady = false;
   m_pDropTarget = new DropTarget(this);
 
   m_pAnchorClickListener = NULL;
@@ -73,7 +73,6 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
     // m_pWebBrowser->put_RegisterAsBrowser(VARIANT_FALSE);
     // m_pWebBrowser->put_RegisterAsDropTarget(VARIANT_FALSE);
     m_pWebBrowser->put_Offline(m_bSandbox ? VARIANT_TRUE : VARIANT_FALSE);
-
     if (SUCCEEDED(m_pWebBrowser->QueryInterface(IID_IOleObject, (void**)&pOleObject))) {
       m_rcClient.left = x;
       m_rcClient.top = y;
@@ -905,6 +904,7 @@ void IECtrl::EventSink::NavigateComplete(IDispatch* pDisp, VARIANT* url) {
 }
 
 void IECtrl::EventSink::DocumentComplete(IDispatch* pDisp, VARIANT* url) {
+  m_pCtrl->m_bIsReady = true;
 }
 
 void IECtrl::EventSink::OnQuit() {

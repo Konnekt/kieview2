@@ -23,8 +23,12 @@
 
 class EmotLV: public ListWnd::ListView {
 public:
+  typedef vector<EmotLV*> tEmotLVs;
+
+public:
   EmotLV(int x, int y, int w, int h, HWND parent, HMENU id);
   virtual ~EmotLV();
+  static bool isVaildLV(EmotLV* lv);
 
 public:
   struct sEmotPackInfo {
@@ -62,6 +66,7 @@ protected:
 
 protected:
   tItems _items;
+  static tEmotLVs _lvs;
 
   Stamina::UI::oImage _checked;
   Stamina::UI::oImage _unchecked;
@@ -96,6 +101,7 @@ public:
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
     bool onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
     bool onMouseMove(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
+    bool onMouseDblClk(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
     bool onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info);
 
     sEmotPackInfo* getEmotPackInfo();

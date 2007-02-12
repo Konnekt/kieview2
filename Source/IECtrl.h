@@ -128,6 +128,9 @@ public:
   void saveDocument();
   void selectAll();
   bool callJScript(const char* szFunc, Var &args, Var *ret);
+  bool isReady() {
+    return m_bIsReady;
+  }
 
   static std::string humanize(const char* text);
 
@@ -207,6 +210,7 @@ protected:
   char * m_szSelectedText;
   bool m_bClosed;
   bool m_bSandbox;
+  bool m_bIsReady;
 
   static bool m_bOnCopyEmptySel;
   static bool m_bAutoCopySel;

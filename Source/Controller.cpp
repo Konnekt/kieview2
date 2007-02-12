@@ -110,9 +110,6 @@ namespace kIEview2 {
   Controller::~Controller() {
     wndObjCollection.clear();
 
-    if (emotLV) {
-      delete emotLV;
-    }
     if (jsController) {
       delete jsController;
     }
@@ -300,7 +297,7 @@ namespace kIEview2 {
       }
       case ui::emotLV: {
         if (an->code == ACTN_SAVE) {
-          if (emotLV != NULL) emotLV->saveState();
+          if (EmotLV::isVaildLV(emotLV)) emotLV->saveState();
         }
         break;
       }
@@ -420,8 +417,6 @@ namespace kIEview2 {
   }
   void Controller::_emotLV() {
     if (getAN()->code == ACTN_CREATEWINDOW) {
-      if (emotLV != NULL) delete emotLV;
-
       sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
       emotLV = new EmotLV(an->x, an->y + 5, 220, 120, an->hwndParent, 0);
       an->hwnd = emotLV->getHwnd();
@@ -433,9 +428,7 @@ namespace kIEview2 {
 
       an->w += 220;
       an->h += 125;
-
     } else if (getAN()->code == ACTN_DESTROYWINDOW) {
-      emotLV = NULL;
     }
   }
 
