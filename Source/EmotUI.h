@@ -49,6 +49,13 @@ public:
   virtual ListWnd::oItem getItem(UINT id);
   virtual sEmotPackInfo* getEPI(UINT id);
 
+  virtual void saveState() {
+    for (UINT i = 0; i < _items.size(); i++) {
+      sEmotPackInfo* info = ((EmotPackInfoItem*)_items[i]->getEntry().get())->getEmotPackInfo();
+      info->set->setEnabled(info->checked);
+    }
+  }
+
 protected:
   void onMouseMove(int vkey, const Stamina::Point &pos);
   void onMouseUp(int vkey, const Stamina::Point &pos);

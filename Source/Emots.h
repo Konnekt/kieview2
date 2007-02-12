@@ -123,13 +123,20 @@ public:
 
 public:
   eMSet(const StringRef& name, const string& version = "", const StringRef& description = ""):
-    _id(random()), _name(name), _version(version), _description(description) { }
-  eMSet() { }
+    _id(random()), _enabled(false), _name(name), _version(version), _description(description) { }
+  eMSet(): _enabled(false) { }
   virtual ~eMSet() { }
 
 public:
   UINT getID() {
     return _id;
+  }
+
+  virtual bool isEnabled() {
+    return _enabled;
+  }
+  virtual void setEnabled(bool value) {
+    _enabled = value;
   }
 
   virtual String getName() {
@@ -200,6 +207,7 @@ protected:
   Date64 _creationTime;
   String _url;
 
+  bool _enabled;
   string _dir;
 };
 

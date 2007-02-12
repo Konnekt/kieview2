@@ -162,6 +162,7 @@ namespace kIEview2 {
     Tables::oTable historyTable;
     JS::Controller* jsController;
     // EmotHandler emotHandler;
+    EmotLV* emotLV;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
   };

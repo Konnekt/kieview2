@@ -99,7 +99,7 @@ namespace kIEview2 {
     const unsigned int linkify = cfg + 2;
     const unsigned int useEmots = cfg + 3;
     const unsigned int emotsDir = cfg + 4;
-    const unsigned int emotsPack = cfg + 5;
+    const unsigned int emotPacks = cfg + 5;
     const unsigned int autoScroll = cfg + 6;
   }
 }

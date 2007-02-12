@@ -52,7 +52,7 @@ void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int si
 
 namespace kIEview2 {
   // initialization
-  Controller::Controller(): jsController(0), ieVersion(getIEVersion()) {
+  Controller::Controller(): jsController(0), emotLV(0), ieVersion(getIEVersion()) {
     IECtrl::getExternal()->bindMethod("oController", bind(&Controller::getJSController, this, _1, _2), true);
     IECtrl::getExternal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2), true);
 
@@ -77,7 +77,7 @@ namespace kIEview2 {
     config->setColumn(DTCFG, cfg::linkify, DT_CT_INT, 1, "kIEview2/linkify/use");
     config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEview2/emots/use");
     config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots", "kIEview2/emots/dir");
-    config->setColumn(DTCFG, cfg::emotsPack, DT_CT_STR, "", "kIEview2/emots/pack");
+    config->setColumn(DTCFG, cfg::emotPacks, DT_CT_STR, "", "kIEview2/emots/packs");
     config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 1, "kIEview2/autoScroll");
 
     this->subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_MSGWND);
@@ -110,6 +110,9 @@ namespace kIEview2 {
   Controller::~Controller() {
     wndObjCollection.clear();
 
+    if (emotLV) {
+      delete emotLV;
+    }
     if (jsController) {
       delete jsController;
     }
@@ -137,9 +140,11 @@ namespace kIEview2 {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
     kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
 
-    emotHandler.addParser(new JispParser);
+    //emotHandler.addParser(new JispParser);
     emotHandler.addParser(new GGParser);
+
     emotHandler.loadPackages();
+    emotHandler.loadSettings();
 
     // @debug replace with user selected tpl directory
     tplHandler->setKonnektPath(kPath);
@@ -210,7 +215,7 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Katalog w którym znajduj¹ siê pakiety emotikon");
     UIActionCfgAdd(ui::cfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Lista wyboru paczek emot");
-    UIActionCfgAdd(ui::cfgGroup, ui::emotLV, ACTT_HWND);
+    UIActionCfgAdd(ui::cfgGroup, ui::emotLV, ACTT_HWND | ACTR_SAVE);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
   }
 
@@ -293,12 +298,22 @@ namespace kIEview2 {
         UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::emotsDir), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
         break;
       }
+      case ui::emotLV: {
+        if (an->code == ACTN_SAVE) {
+          if (emotLV != NULL) emotLV->saveState();
+        }
+        break;
+      }
     }
   }
 
   void Controller::_onCfgChanged() {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
-    emotHandler.loadPackages(); // reLoadPackages
+
+     // reLoadPackages
+    emotHandler.saveSettings();
+    emotHandler.loadPackages();
+    emotHandler.loadSettings();
   }
 
   void Controller::_msgCtrlView() {
@@ -404,25 +419,23 @@ namespace kIEview2 {
     }
   }
   void Controller::_emotLV() {
-    // locking
-    LockerCS lock(_locker);
+    if (getAN()->code == ACTN_CREATEWINDOW) {
+      if (emotLV != NULL) delete emotLV;
 
-    switch (getAN()->code) {
-      case ACTN_CREATEWINDOW: {
-        sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
-        EmotLV* lv = new EmotLV(an->x, an->y + 5, 220, 200,an->hwndParent, 0);
-        an->hwnd = lv->getHwnd();
-        SetProp(an->hwnd, "LV*", (HANDLE)lv);
+      sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
+      emotLV = new EmotLV(an->x, an->y + 5, 220, 200, an->hwndParent, 0);
+      an->hwnd = emotLV->getHwnd();
 
-        emotHandler.fillLV(lv);
+      emotHandler.fillLV(emotLV);
 
-        an->x += 220;
-        an->y += 205;
+      an->x += 220;
+      an->y += 205;
 
-        an->w += 220;
-        an->h += 205;
-        break;
-      }
+      an->w += 220;
+      an->h += 205;
+
+    } else if (getAN()->code == ACTN_DESTROYWINDOW) {
+      emotLV = NULL;
     }
   }
 

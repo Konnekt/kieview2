@@ -22,8 +22,8 @@ EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::List
   _unchecked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
   _inform = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::emotsinfo, IML_16), false);
 
-  hFont = CreateFont(16, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Verdana");
+  hFont = CreateFont(-11, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+    CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
 
   _tooltip = new Stamina::UI::ToolTipX::ToolTip(getHwnd(), 0);
   _tooltip->setTip(new Stamina::UI::ToolTipX::Tip(), false);
@@ -193,14 +193,17 @@ void EmotLV::EmotPackInfoItem::showToolTip(EmotLV* elv, Point& pos) {
 
 bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
   EmotLV* elv = (EmotLV*)lv;
+
   if (elv->draged) {
     if (elv->mmitem != -1) {
       elv->_items[elv->mmitem]->repaint(lv);
     }
+
     Point p = pos;
-    p.y-= elv->getScrollPos().y;
+    p.y -= elv->getScrollPos().y;
     UINT id = elv->getItemIndex(li);
     Rect rc = lv->itemToClient(li->getRect());
+
     if (elv->draged_id != id) {
       if (p.y < rc.getCenter().y) {
         if (elv->draged_id != id) {
@@ -228,19 +231,19 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
     if (elv->_tooltip->visible()) elv->_tooltip->hide();
 
     Point p = pos;
-    p.x-= elv->getScrollPos().x;
-    p.y-= elv->getScrollPos().y;
+    p.x -= elv->getScrollPos().x;
+    p.y -= elv->getScrollPos().y;
 
     Rect rc = lv->itemToClient(li->getRect());
 
     Rect rcinform = rc;
     rcinform.left = rcinform.right - 3 - 16;
-    rcinform.top+=3;
+    rcinform.top += 3;
     _inform->setPos(rcinform.getLT());
 
     Rect rccheck = rc;
-    rccheck.left+=3;
-    rccheck.top+=3;
+    rccheck.left += 3;
+    rccheck.top += 3;
     _check->setPos(rccheck.getLT());
 
     if (_check->hitTest(p)) {
@@ -255,7 +258,7 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
       }
       return 0;
     } else if (_inform->hitTest(p)) {
-        showToolTip(static_cast<EmotLV*>(lv), _inform->getPos());
+        showToolTip(elv, _inform->getPos());
         return 0;
     } else {
       elv->draged = true;
@@ -280,13 +283,13 @@ bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd:
     HDC dc = lv->getDC();
     Rect rc = lv->itemToClient(li->getRect());
     Point p = pos;
-    p.y-= lv->getScrollPos().y;
+    p.y -= lv->getScrollPos().y;
     if (elv->draged_id != id) {
       Stamina::UI::oImage gradient = Stamina::UI::createSimpleGradient(RGB(255, 204, 102), RGB(255, 153, 51), Size(rc.width(),rc.height() - 13));
       if (p.y < rc.getCenter().y) {
         if (elv->draged_id != id) {
           Rect rct = rc;
-          rct.top+= rc.height() / 2;
+          rct.top += rc.height() / 2;
           lv->repaintRect(rct);
           gradient->draw(dc, Point(rc.left, rc.top));
           HPEN hOldPen = (HPEN)SelectObject(dc, CreatePen(PS_SOLID, 1, RGB(0, 153, 0)));
@@ -299,7 +302,7 @@ bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd:
       } else {
         if (elv->draged_id != id + 1) {
           Rect rct = rc;
-          rct.bottom-= rc.height() / 2;
+          rct.bottom -= rc.height() / 2;
           lv->repaintRect(rct);
           gradient->draw(dc, Point(rc.left, rc.bottom - (rc.getHeight() - 13)));
           POINT p[] = {{rc.getCenter().x - 3, rc.bottom - 8}, {rc.getCenter().x, rc.bottom - 2}, {rc.getCenter().x + 3, rc.bottom - 8}};
@@ -343,7 +346,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
 
   Rect rci = rc;
   rci.left += 25;
-  rci.top +=2;
+  rci.top += 2;
 
   Stamina::UI::oImage gradient;
 
@@ -361,22 +364,22 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   gradient->draw(dc, rc.getLT());
 
   Rect rctxt = rc;
-  rctxt.left+= 21;
-  rctxt.top+= 3;
-  rctxt.right-= 3 + 16 + 5;
+  rctxt.left += 21;
+  rctxt.top += 3;
+  rctxt.right -= 3 + 16 + 5;
   SetBkMode(dc, TRANSPARENT);
 
   Stamina::Point p = Point(0,0);
 
   Rect rcinform = rc;
   rcinform.left = rcinform.right - 3 - 16;
-  rcinform.top+=3;
+  rcinform.top += 3;
   _inform->setPos(rcinform.getLT());
   _inform->draw(dc, p);
 
   Rect rccheck = rc;
-  rccheck.left+=3;
-  rccheck.top+=3;
+  rccheck.left += 3;
+  rccheck.top += 3;
   _check->setPos(rccheck.getLT());
   _check->draw(dc, p);
 

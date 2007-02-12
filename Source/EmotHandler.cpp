@@ -196,6 +196,36 @@ eMSet GGParser::parse(const string& filePath, const string& fileDir) {
   return result;
 }
 
+void EmotHandler::loadSettings() {
+  string data = Controller::getConfig()->getChar(cfg::emotPacks);
+  data = Helpers::trim(data, "\n");
+
+  if (!data.length()) return;
+
+  tStringVector sets;
+  Stamina::split(data, "\n", sets);
+
+  for (tStringVector::iterator it = sets.begin(); it != sets.end(); it++) {
+    bool isEnabled = (bool) atoi(it->substr(0,1).c_str());
+    it->erase(0, 2);
+
+    for (tEmotSets::iterator it2 = emotSets.begin(); it2 != emotSets.end(); it2++) {
+      if (it2->getDir() == *it) {
+        it2->setEnabled(isEnabled); break;
+      }
+    }
+  }
+}
+
+void EmotHandler::saveSettings() {
+  String result;
+
+  for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
+    result += inttostr((int)it->isEnabled()) + "|" + it->getDir() + "\n";
+  }
+  Controller::getConfig()->set(cfg::emotPacks, result);
+}
+
 string EmotHandler::getKonnektPath() {
   return Controller::getInstance()->kPath;
 }
@@ -246,6 +276,8 @@ string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
 }
 
 void EmotHandler::parseSet(RegEx& reg, eMSet& set) {
+  if (!set.isEnabled()) return;
+
   for (eMSet::tEmots::iterator it = set.getEmots().begin(); it != set.getEmots().end(); it++) {
     sEmotInsertion ei(emotInsertions.size(), &*it, &set);
     try {

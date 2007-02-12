@@ -21,6 +21,7 @@
 #include <fstream>
 
 // #include "Base64.h"
+#include "Helpers.h"
 #include "EmotUI.h"
 #include "Emots.h"
 
@@ -301,28 +302,12 @@ public:
     Stamina::UI::oImage img = new Stamina::UI::Icon((HICON) Ctrl->ICMessage(IMI_ICONGET, kIEview2::ico::emots, IML_16), false);
 
     for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-      lv->addItem(new EmotLV::sEmotPackInfo(false, &*it, img));
+      lv->addItem(new EmotLV::sEmotPackInfo(it->isEnabled(), &*it, img));
     }
   }
 
-  void loadSettings(int cfgCol) {
-    string data; // = Controller::getConfig()->getChar(cfgCol);
-    tStringVector sets;
-
-    Stamina::split(data, "\n", sets);
-    for (tStringVector::iterator it = sets.begin(); it != sets.end(); it++) {
-      for (tEmotSets::iterator it2 = emotSets.begin(); it2 != emotSets.end(); it2++) {
-        if (it2->getName() == *it) break; // turn on
-      }
-    }
-  }
-  void saveSettings() {
-    String result;
-
-    for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-      result += it->getDir() + "\n";
-    }
-  }
+  void loadSettings();
+  void saveSettings();
 
 protected:
   String prepareBody(const StringRef& body, bool encode = true, bool html = true);
