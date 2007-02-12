@@ -212,9 +212,9 @@ namespace kIEview2 {
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Emotikony");
     UIActionCfgAdd(ui::cfgGroup, cfg::useEmots, ACTT_CHECK, "U¿ywaj emotikon", cfg::useEmots);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Katalog w którym znajduj¹ siê pakiety emotikon");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê 'pakiety' emotikon");
     UIActionCfgAdd(ui::cfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Lista wyboru paczek emot");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SEPARATOR, "Wybierz pakiety emotikon:");
     UIActionCfgAdd(ui::cfgGroup, ui::emotLV, ACTT_HWND | ACTR_SAVE);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
   }
@@ -320,13 +320,13 @@ namespace kIEview2 {
     // locking
     LockerCS lock(_locker);
 
-    switch (this->getAN()->code) {
+    switch (getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
         IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
         an->hwnd = ctrl->getHWND();
 
-        this->oldMsgWndProc = (WNDPROC)SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
+        oldMsgWndProc = (WNDPROC)SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
         SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
         SetProp(an->hwndParent, "MsgSend", false);
 
@@ -423,16 +423,16 @@ namespace kIEview2 {
       if (emotLV != NULL) delete emotLV;
 
       sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
-      emotLV = new EmotLV(an->x, an->y + 5, 220, 200, an->hwndParent, 0);
+      emotLV = new EmotLV(an->x, an->y + 5, 220, 120, an->hwndParent, 0);
       an->hwnd = emotLV->getHwnd();
 
       emotHandler.fillLV(emotLV);
 
       an->x += 220;
-      an->y += 205;
+      an->y += 125;
 
       an->w += 220;
-      an->h += 205;
+      an->h += 125;
 
     } else if (getAN()->code == ACTN_DESTROYWINDOW) {
       emotLV = NULL;
@@ -772,20 +772,10 @@ namespace kIEview2 {
     // locking
     LockerCS lock(_locker);
 
-    // ctrl->navigate("file:///C:/Documents%20and%20Settings/Sija/Pulpit/Konnekt.dev/data/templates/core/__bootstrap.html");
-    ctrl->clear();
+    ctrl->navigate(("file:///" + unifyPath(kPath, false, '/') + "/data/templates/core/__bootstrap.html").c_str());
+    // ctrl->clear();
 
     SetProp(GetParent(ctrl->getHWND()), "MsgSend", false);
-
-    // We create structure of the data
-    param_data data(param_data::HASH);
-
-    try {
-      ctrl->write(tplHandler->parseTpl(&data, "skeleton").a_str());
-    } catch(const exception &e) {
-      ctrl->write("obsra³em siê, przepraszam<br/>");
-      ctrl->write(e.what());
-    }
   }
 
   DWORD CALLBACK Controller::streamOut(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) {

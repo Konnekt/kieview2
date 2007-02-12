@@ -353,12 +353,12 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   SetTextColor(dc, RGB(255, 255, 255));
 
   if (li->isSelected()) {
-    gradient = Stamina::UI::createSimpleGradient(RGB(62, 154, 222), RGB(0, 102, 204), Size(rc.right - rc.left, rc.bottom - rc.top));
+    gradient = Stamina::UI::createSimpleGradient(RGB(107, 107, 107), RGB(160, 160, 160), Size(rc.right - rc.left, rc.bottom - rc.top));
   } else {
     if (_emotInfo->checked) {
-      gradient = Stamina::UI::createSimpleGradient(RGB(102, 204, 51), RGB(0, 153, 0), Size(rc.right - rc.left, rc.bottom - rc.top));
+      gradient = Stamina::UI::createSimpleGradient(RGB(102, 204, 51), RGB(202, 238, 185), Size(rc.right - rc.left, rc.bottom - rc.top));
     } else {
-      gradient = Stamina::UI::createSimpleGradient(RGB(255, 121, 75), RGB(255, 51, 0), Size(rc.right - rc.left, rc.bottom - rc.top));    
+      gradient = Stamina::UI::createSimpleGradient(RGB(145, 145, 145), RGB(220, 220, 220), Size(rc.right - rc.left, rc.bottom - rc.top));    
     }
   }
   gradient->draw(dc, rc.getLT());

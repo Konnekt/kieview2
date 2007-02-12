@@ -882,6 +882,7 @@ void IECtrl::EventSink::PropertyChange(BSTR text) {
 
 void IECtrl::EventSink::BeforeNavigate2(IDispatch* pDisp, VARIANT* url, VARIANT* flags, VARIANT* targetFrameName, VARIANT* postData, VARIANT* headers, VARIANT_BOOL* cancel) 
 {
+  /*
   int i = wcslen(url->bstrVal);
   char* tTemp = new char[i+1];
   WideCharToMultiByte(CP_ACP, 0, url->bstrVal, -1, tTemp, i+1, NULL, NULL);
@@ -894,6 +895,7 @@ void IECtrl::EventSink::BeforeNavigate2(IDispatch* pDisp, VARIANT* url, VARIANT*
     *cancel = VARIANT_TRUE;
   }
   delete tTemp;
+  */
 }
 
 void IECtrl::EventSink::NewWindow2(IDispatch** ppDisp, VARIANT_BOOL* cancel) {

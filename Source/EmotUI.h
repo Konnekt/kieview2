@@ -50,7 +50,7 @@ public:
   virtual sEmotPackInfo* getEPI(UINT id);
 
   virtual void saveState() {
-    for (UINT i = 0; i < _items.size(); i++) {
+    for (UINT i = 0; i < itemsCount(); i++) {
       sEmotPackInfo* info = ((EmotPackInfoItem*)_items[i]->getEntry().get())->getEmotPackInfo();
       info->set->setEnabled(info->checked);
     }
