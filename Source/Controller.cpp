@@ -184,7 +184,7 @@ namespace kIEview2 {
 
     if (config->getInt(cfg::showFormatTb)) {
       UIGroupAdd(IMIG_MSGBAR, act::formatTb::formatTb);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::emots, 0, "Emotikony", ico::emots);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::emots, config->getInt(cfg::useEmots) ? 0 : ACTS_HIDDEN, "Emotikony", ico::emots);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::bold, ACTT_CHECK, "Pogrubienie", ico::bold);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::italic, ACTT_CHECK, "Kursywa", ico::italic);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::underline, ACTT_CHECK, "Podkreœlenie", ico::underline);
@@ -215,13 +215,13 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Emotikony");
-    UIActionCfgAdd(ui::cfgGroup, cfg::useEmots, ACTT_CHECK, "Wyœwietlaj emotikony", cfg::useEmots);
+    UIActionCfgAdd(ui::cfgGroup, cfg::useEmots, ACTT_CHECK | ACTR_INIT, "Wyœwietlaj emotikony", cfg::useEmots);
     UIActionCfgAdd(ui::cfgGroup, cfg::useEmotsInHistory, ACTT_CHECK, "+ równie¿ w historii" AP_TIPRICH 
       "<b>Uwaga!</b> wyd³u¿a czas ³adowania rozmowy", cfg::useEmotsInHistory);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê \"pakiety\" emotikon");
     UIActionCfgAdd(ui::cfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SEPARATOR, "Wybierz pakiety emotikon:");
-    UIActionCfgAdd(ui::cfgGroup, ui::emotLV, ACTT_HWND | ACTSC_INLINE | ACTR_SAVE);
+    UIActionCfgAdd(ui::cfgGroup, ui::emotLV, ACTT_HWND | ACTSC_INLINE);
     UIActionCfgAdd(ui::cfgGroup, ui::refreshEmotLV, ACTT_BUTTON, "Odœwie¿" AP_ICO "702", 0, 0, 0, 75);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
   }
@@ -316,6 +316,8 @@ namespace kIEview2 {
   }
 
   void Controller::_onCfgChanged() {
+    UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::emots), 
+      !config->getInt(cfg::useEmots) ? -1 : 0, ACTS_HIDDEN);
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
 
     if (EmotLV::isVaildLV(emotLV)) {
@@ -429,21 +431,18 @@ namespace kIEview2 {
   }
 
   void Controller::_emotLV() {
-    switch (getAN()->code) {
-      case ACTN_CREATEWINDOW: {
-        sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
-        emotLV = new EmotLV(an->x, an->y + 5, 220, 120, an->hwndParent, 0);
-        an->hwnd = emotLV->getHwnd();
+    if (getAN()->code == ACTN_CREATEWINDOW) {
+      sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
+      emotLV = new EmotLV(an->x, an->y + 5, 220, 120, an->hwndParent, 0);
+      an->hwnd = emotLV->getHwnd();
 
-        emotHandler.fillLV(emotLV);
+      emotHandler.fillLV(emotLV);
 
-        an->x += 220;
-        an->y += 125;
+      an->x += 220;
+      an->y += 125;
 
-        an->w += 220;
-        an->h += 125;
-        break;
-      }
+      an->w += 220;
+      an->h += 125;
     }
   }
 
@@ -467,8 +466,9 @@ namespace kIEview2 {
         es.dwCookie = (DWORD)&text;
         SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
 
-        char sla[] = {'\\', '\'', 0} ;
-        char xsla[] = {253, 254, 0} ;
+        char sla[] = {'\\', '\'', 0};
+        char xsla[] = {253, 254, 0};
+
         text.replaceChars(sla, xsla);
         text = htmlEscape(text);
         text.replaceChars(xsla, sla);
@@ -488,8 +488,9 @@ namespace kIEview2 {
         es.dwCookie = (DWORD)&text;
         SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
 
-        char sla[] = {'\\', '\'', 0} ;
-        char xsla[] = {253, 254, 0} ;
+        char sla[] = {'\\', '\'', 0};
+        char xsla[] = {253, 254, 0};
+
         text.replaceChars(sla, xsla);
         text = htmlEscape(text);
         text.replaceChars(xsla, sla);
@@ -520,17 +521,17 @@ namespace kIEview2 {
               cf.dwMask = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_COLOR;
               SendMessage(hEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
-              if((cf.dwEffects & CFE_BOLD) && (cf.dwMask & CFM_BOLD)) {
+              if ((cf.dwEffects & CFE_BOLD) && (cf.dwMask & CFM_BOLD)) {
                 UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold, cntID), -1, ACTS_CHECKED);
               } else {
                 UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold, cntID), 0, ACTS_CHECKED);
               }
-              if((cf.dwEffects & CFE_ITALIC) && (cf.dwMask & CFM_ITALIC)) {
+              if ((cf.dwEffects & CFE_ITALIC) && (cf.dwMask & CFM_ITALIC)) {
                 UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic, cntID), -1, ACTS_CHECKED);
               } else {
                 UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic, cntID), 0, ACTS_CHECKED);
               }
-              if((cf.dwEffects & CFE_UNDERLINE) && (cf.dwMask & CFM_UNDERLINE)) {
+              if ((cf.dwEffects & CFE_UNDERLINE) && (cf.dwMask & CFM_UNDERLINE)) {
                 UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline, cntID), -1, ACTS_CHECKED);
               } else {
                 UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline, cntID), 0, ACTS_CHECKED);
@@ -891,7 +892,7 @@ namespace kIEview2 {
 
   String Controller::linkify(StringRef& txt) {
     txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-])+@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6})+)~i", &Controller::mailifyDo, txt.c_str());
-    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", &Controller::linkifyDo, txt.c_str());
+    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", &Controller::linkifyDo, txt.c_str());
 
     return PassStringRef(txt);
   }

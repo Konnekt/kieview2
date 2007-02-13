@@ -123,8 +123,8 @@ public:
 
 public:
   eMSet(const StringRef& name, const string& version = "", const StringRef& description = ""):
-    _id(random()), _enabled(false), _name(name), _version(version), _description(description) { }
-  eMSet(): _enabled(false) { }
+    _id(random()), _enabled(false), _pos(-1), _name(name), _version(version), _description(description) { }
+  eMSet(): _enabled(false), _pos(-1) { }
   virtual ~eMSet() { }
 
 public:
@@ -181,6 +181,13 @@ public:
     _dir = dir;
   }
 
+  virtual int getPos() {
+    return _pos;
+  }
+  virtual void setPos(int value) {
+    _pos = value;
+  }
+
   virtual tAuthors& getAuthors() {
     return _authors;
   }
@@ -209,6 +216,7 @@ protected:
 
   bool _enabled;
   string _dir;
+  int _pos;
 };
 
 #endif // __EMOTS_H__
