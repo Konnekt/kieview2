@@ -36,6 +36,7 @@ namespace kIEview2 {
 
     const unsigned int cfgGroup = ui + 1;
     const unsigned int emotLV = ui + 2;
+    const unsigned int refreshEmotLV = ui + 3;
   }
 
   namespace ico {
@@ -97,10 +98,12 @@ namespace kIEview2 {
 
     const unsigned int showFormatTb = cfg + 1;
     const unsigned int linkify = cfg + 2;
-    const unsigned int useEmots = cfg + 3;
-    const unsigned int emotsDir = cfg + 4;
-    const unsigned int emotPacks = cfg + 5;
-    const unsigned int autoScroll = cfg + 6;
+    const unsigned int linkifyInHistory = cfg + 3;
+    const unsigned int useEmots = cfg + 4;
+    const unsigned int useEmotsInHistory = cfg + 5;
+    const unsigned int emotsDir = cfg + 6;
+    const unsigned int emotPacks = cfg + 7;
+    const unsigned int autoScroll = cfg + 8;
   }
 }
 

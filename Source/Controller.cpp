@@ -75,7 +75,9 @@ namespace kIEview2 {
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
     config->setColumn(DTCFG, cfg::linkify, DT_CT_INT, 1, "kIEview2/linkify/use");
+    config->setColumn(DTCFG, cfg::linkifyInHistory, DT_CT_INT, 1, "kIEview2/linkify/useInHistory");
     config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEview2/emots/use");
+    config->setColumn(DTCFG, cfg::useEmotsInHistory, DT_CT_INT, 1, "kIEview2/emots/useInHistory");
     config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots", "kIEview2/emots/dir");
     config->setColumn(DTCFG, cfg::emotPacks, DT_CT_STR, "", "kIEview2/emots/packs");
     config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 1, "kIEview2/autoScroll");
@@ -204,15 +206,23 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Automatycznie przewijaj okno rozmowy", cfg::autoScroll);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_NEEDRESTART, "Wyœwietlaj toolbar w oknie rozmowy", cfg::showFormatTb);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
+
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Linki");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Zamieniaj linki na 'klikalne'", cfg::linkify);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "+ równie¿ w historii" AP_TIPRICH 
+      "<b>Uwaga!</b> wyd³u¿a czas ³adowania rozmowy", cfg::linkifyInHistory);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Emotikony");
-    UIActionCfgAdd(ui::cfgGroup, cfg::useEmots, ACTT_CHECK, "U¿ywaj emotikon", cfg::useEmots);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê 'pakiety' emotikon");
+    UIActionCfgAdd(ui::cfgGroup, cfg::useEmots, ACTT_CHECK, "Wyœwietlaj emotikony", cfg::useEmots);
+    UIActionCfgAdd(ui::cfgGroup, cfg::useEmotsInHistory, ACTT_CHECK, "+ równie¿ w historii" AP_TIPRICH 
+      "<b>Uwaga!</b> wyd³u¿a czas ³adowania rozmowy", cfg::useEmotsInHistory);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê \"pakiety\" emotikon");
     UIActionCfgAdd(ui::cfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SEPARATOR, "Wybierz pakiety emotikon:");
-    UIActionCfgAdd(ui::cfgGroup, ui::emotLV, ACTT_HWND | ACTR_SAVE);
+    UIActionCfgAdd(ui::cfgGroup, ui::emotLV, ACTT_HWND | ACTSC_INLINE | ACTR_SAVE);
+    UIActionCfgAdd(ui::cfgGroup, ui::refreshEmotLV, ACTT_BUTTON, "Odœwie¿" AP_ICO "702", 0, 0, 0, 75);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
   }
 
@@ -292,12 +302,13 @@ namespace kIEview2 {
         break;
       }
       case cfg::useEmots: {
+        UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::useEmotsInHistory), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
         UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::emotsDir), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
         break;
       }
-      case ui::emotLV: {
-        if (an->code == ACTN_SAVE) {
-          if (EmotLV::isVaildLV(emotLV)) emotLV->saveState();
+      case ui::refreshEmotLV: {
+        if (an->code == ACTN_ACTION) {
+          emotHandler.reloadPackages(emotLV);
         }
         break;
       }
@@ -307,10 +318,11 @@ namespace kIEview2 {
   void Controller::_onCfgChanged() {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
 
-     // reLoadPackages
+    if (EmotLV::isVaildLV(emotLV)) {
+      emotLV->saveState();
+    }
     emotHandler.saveSettings();
-    emotHandler.loadPackages();
-    emotHandler.loadSettings();
+    emotHandler.reloadPackages(emotLV);
   }
 
   void Controller::_msgCtrlView() {
@@ -415,20 +427,23 @@ namespace kIEview2 {
       }
     }
   }
+
   void Controller::_emotLV() {
-    if (getAN()->code == ACTN_CREATEWINDOW) {
-      sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
-      emotLV = new EmotLV(an->x, an->y + 5, 220, 120, an->hwndParent, 0);
-      an->hwnd = emotLV->getHwnd();
+    switch (getAN()->code) {
+      case ACTN_CREATEWINDOW: {
+        sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
+        emotLV = new EmotLV(an->x, an->y + 5, 220, 120, an->hwndParent, 0);
+        an->hwnd = emotLV->getHwnd();
 
-      emotHandler.fillLV(emotLV);
+        emotHandler.fillLV(emotLV);
 
-      an->x += 220;
-      an->y += 125;
+        an->x += 220;
+        an->y += 125;
 
-      an->w += 220;
-      an->h += 125;
-    } else if (getAN()->code == ACTN_DESTROYWINDOW) {
+        an->w += 220;
+        an->h += 125;
+        break;
+      }
     }
   }
 
@@ -962,11 +977,10 @@ namespace kIEview2 {
   }
 
   String Controller::_parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an) {
-    if (!isMsgFromHistory(an) && (an->_message->flag & MF_HIDE)) return "";
-
     // locking
     LockerCS lock(_locker);
 
+    bool inHistory = isMsgFromHistory(an);
     cMessage* msg = an->_message;
     string type = getMsgTypeLabel(msg->type);
     String body = msg->body;
@@ -981,10 +995,10 @@ namespace kIEview2 {
       body = nl2br(body);
     }
     if (!(msg->flag & MF_LEAVEASIS)) {
-      if (config->getInt(cfg::useEmots)) {
+      if (config->getInt(cfg::useEmots) && (!inHistory || config->getInt(cfg::useEmotsInHistory))) {
         body = emotHandler.parse(body, msg->net);
       }
-      if (config->getInt(cfg::linkify)) {
+      if (config->getInt(cfg::linkify) && (!inHistory || config->getInt(cfg::linkifyInHistory))) {
         body = linkify(body);
       }
     }
@@ -1001,6 +1015,10 @@ namespace kIEview2 {
     data.hash_insert_new_var("ext", msg->ext);
     data.hash_insert_new_var("time", date.strftime("%H:%M"));
     data.hash_insert_new_var("body", body);
+
+    if (msg->flag & MF_HIDE) {
+      data.hash_insert_new_var("hidden?", "1");
+    }
 
     if (msgHandlers.find(msg->type) != msgHandlers.end()) {
       msgHandlers[msg->type]->signal(data, an);

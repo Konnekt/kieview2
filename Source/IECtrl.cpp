@@ -13,6 +13,7 @@
 
 #include "stdafx.h"
 #include "IECtrl.h"
+
 #define DISPID_BEFORENAVIGATE2 250
 
 IECtrl::External* IECtrl::m_pExternal = NULL;
@@ -73,6 +74,7 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
     // m_pWebBrowser->put_RegisterAsBrowser(VARIANT_FALSE);
     // m_pWebBrowser->put_RegisterAsDropTarget(VARIANT_FALSE);
     m_pWebBrowser->put_Offline(m_bSandbox ? VARIANT_TRUE : VARIANT_FALSE);
+
     if (SUCCEEDED(m_pWebBrowser->QueryInterface(IID_IOleObject, (void**)&pOleObject))) {
       m_rcClient.left = x;
       m_rcClient.top = y;

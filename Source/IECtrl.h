@@ -128,6 +128,7 @@ public:
   void saveDocument();
   void selectAll();
   bool callJScript(const char* szFunc, Var &args, Var *ret);
+
   bool isReady() {
     return m_bIsReady;
   }

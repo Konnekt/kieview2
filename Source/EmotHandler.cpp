@@ -218,6 +218,7 @@ void EmotHandler::loadSettings() {
 }
 
 void EmotHandler::saveSettings() {
+  if (!emotSets.size()) return;
   String result;
 
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
@@ -231,7 +232,12 @@ string EmotHandler::getKonnektPath() {
 }
 
 string EmotHandler::getEmotDir() {
-  return getKonnektPath() + Controller::getConfig()->getChar(kIEview2::cfg::emotsDir);
+  string emotDir = Controller::getConfig()->getChar(kIEview2::cfg::emotsDir);
+
+  if (emotDir.find(':') == emotDir.npos) {
+    emotDir = getKonnektPath() + emotDir;
+  }
+  return emotDir;
 }
 
 String EmotHandler::prepareBody(const StringRef& body, bool encode, bool html) {
@@ -295,11 +301,12 @@ String EmotHandler::parse(const StringRef& body, int net) {
   RegEx reg;
   reg.setSubject(prepareBody(body));
 
+  /*
   if (emotSetsByNet.find(net) != emotSetsByNet.end() && emotSetsByNet[net].size()) {
     for (list<eMSet*>::iterator it = emotSetsByNet[net].begin(); it != emotSetsByNet[net].end(); it++) {
       parseSet(reg, **it);
     }
-  }
+  } */
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
     parseSet(reg, *it);
   }
@@ -311,7 +318,7 @@ String EmotHandler::parse(const StringRef& body, int net) {
 }
 
 void EmotHandler::loadPackages() {
-  if (emotSets.size()) emotSets.clear();
+  clearPackages();
 
   string emotDir = getEmotDir();
   Dir::tItems emotDirs;

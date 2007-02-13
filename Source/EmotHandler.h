@@ -296,7 +296,6 @@ public:
   }
   String parse(const StringRef& body, int net);
 
-  void loadPackages();
 
   void fillLV(EmotLV* lv) {
     Stamina::UI::oImage img = new Stamina::UI::Icon((HICON) Ctrl->ICMessage(IMI_ICONGET, kIEview2::ico::emots, IML_16), false);
@@ -305,6 +304,20 @@ public:
       lv->addItem(new EmotLV::sEmotPackInfo(it->isEnabled(), &*it, img));
     }
   }
+
+  void clearPackages() {
+    if (emotSets.size()) emotSets.clear();
+  }
+
+  void reloadPackages(EmotLV* lv = 0) {
+    if (!EmotLV::isVaildLV(lv)) lv = 0;
+
+    if (lv) lv->removeAll();
+    loadPackages();
+    loadSettings();
+    if (lv) fillLV(lv);
+  }
+  void loadPackages();
 
   void loadSettings();
   void saveSettings();
@@ -318,7 +331,6 @@ protected:
 
 protected:
   tEmotInsertions emotInsertions;
-  tNetEmotSets emotSetsByNet;
   tEmotSets emotSets;
   tParsers parsers;
 };

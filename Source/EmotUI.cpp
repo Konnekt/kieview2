@@ -112,11 +112,13 @@ bool EmotLV::moveItem(UINT id, int pos) {
     inc = 0;
     while (inc++ < id + 1) it++;
     _items.erase(it);
+
   } else if (pos == _items.size()) {
     _items.push_back(_items[id]);
     while (inc++ < id) it++;
     _items.erase(it);
     pos -= 1;
+
   } else if ((id <= _items.size() - 1) && (pos <= _items.size() - 1)) {
     if (id >= pos) {
       while (inc++ < pos) it++;
@@ -239,11 +241,12 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
     elv->draged = false;
   }
   ReleaseCapture();
-  return 1;
+  return true;
 }
 
 bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
   EmotLV* elv = (EmotLV*)lv;
+
   if (vkey == VK_LBUTTON) {
     if (elv->_tooltip->visible()) elv->_tooltip->hide();
 
@@ -264,19 +267,11 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
     _check->setPos(rccheck.getLT());
 
     if (_check->hitTest(p)) {
-      if (_emotInfo->checked) {
-        _check->setImage(elv->_unchecked.get());
-        this->_emotInfo->checked = false;
-        this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
-      } else {
-        _check->setImage(elv->_checked.get());
-        this->_emotInfo->checked = true;
-        this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
-      }
-      return 0;
+      switchState(lv);
+      return false;
     } else if (_inform->hitTest(p)) {
-        showToolTip(elv, _inform->getPos());
-        return 0;
+      showToolTip(elv, _inform->getPos());
+      return false;
     } else {
       elv->draged = true;
       elv->draged_id = lv->getItemIndex(li);
@@ -284,11 +279,12 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
       SetCapture(lv->getHwnd());
     }
   }
-  return 1;
+  return true;
 }
 
 bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
   EmotLV* elv = (EmotLV*)lv;
+
   if (elv->draged) {
     int id = lv->getItemIndex(li);
     if (elv->mmitem != -1) {
@@ -301,6 +297,7 @@ bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd:
     Rect rc = lv->itemToClient(li->getRect());
     Point p = pos;
     p.y -= lv->getScrollPos().y;
+
     if (elv->draged_id != id) {
       Stamina::UI::oImage gradient = Stamina::UI::createSimpleGradient(RGB(255, 204, 102), RGB(255, 153, 51), Size(rc.width(),rc.height() - 13));
       if (p.y < rc.getCenter().y) {
@@ -332,42 +329,29 @@ bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd:
       }
     }
     lv->releaseDC(dc);
-    return 0;
+    return false;
   }
-  return 1;
+  return true;
 }
+
 bool  EmotLV::EmotPackInfoItem::onMouseDblClk(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
   EmotLV* elv = (EmotLV*)lv;
+
   if (vkey == VK_LBUTTON) {
-    if (_emotInfo->checked) {
-      _check->setImage(elv->_unchecked.get());
-      this->_emotInfo->checked = false;
-      this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
-    } else {
-      _check->setImage(elv->_checked.get());
-      this->_emotInfo->checked = true;
-      this->refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
-    }
-    return 0;
+    switchState(lv);
+    return false;
   }
-  return 1;
+  return true;
 }
 
 bool EmotLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info) {
   EmotLV* elv = (EmotLV*)lv;
+
   if (vkey == VK_SPACE) {
-    if (_emotInfo->checked) {
-      _check->setImage(elv->_unchecked.get());
-      _emotInfo->checked = false;
-      refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
-    } else {
-      _check->setImage(elv->_checked.get());
-      _emotInfo->checked = true;
-      refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
-    }
-    return 0;
+    switchState(lv);
+    return false;
   } else {
-    return 1;
+    return true;
   }
 }
 
@@ -386,19 +370,12 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   SetTextColor(dc, RGB(255, 255, 255));
 
   if (li->isSelected()) {
-    COLORREF colorA = GetSysColor(COLOR_MENUHILIGHT);
-    COLORREF colorB = GetSysColor(COLOR_MENUHILIGHT + 1);
-    gradient = Stamina::UI::createSimpleGradient(colorA, colorB, Size(rc.width(), rc.height()));
+    gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
   } else {
     if (_emotInfo->checked) {
-      //COLORREF colorA = GetSysColor(COLOR_INACTIVECAPTION);
-      COLORREF colorB = GetSysColor(COLOR_GRADIENTACTIVECAPTION);
-      COLORREF colorA = GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
-      gradient = Stamina::UI::createSimpleGradient(colorA, colorB, Size(rc.width(), rc.height()));
+      gradient = Stamina::UI::createSimpleGradient(RGB(96,177,46), RGB(149,217,108), Size(rc.width(), rc.height()));
     } else {
-      COLORREF colorB = GetSysColor(COLOR_BTNFACE);
-      COLORREF colorA = GetSysColor(COLOR_BTNFACE + 1);
-      gradient = Stamina::UI::createSimpleGradient(colorA, colorB, Size(rc.width(), rc.height()));
+      gradient = Stamina::UI::createSimpleGradient(RGB(80,80,80), RGB(140,140,140), Size(rc.width(), rc.height()));
     }
   }
   gradient->draw(dc, rc.getLT());

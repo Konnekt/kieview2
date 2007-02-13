@@ -54,8 +54,10 @@ public:
   virtual sEmotPackInfo* getEPI(UINT id);
 
   virtual void saveState() {
+    if (!itemsCount()) return;
+
     for (UINT i = 0; i < itemsCount(); i++) {
-      sEmotPackInfo* info = ((EmotPackInfoItem*)_items[i]->getEntry().get())->getEmotPackInfo();
+      sEmotPackInfo* info = getEPI(i);
       info->set->setEnabled(info->checked);
     }
   }
@@ -97,6 +99,14 @@ public:
 
     void paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent);
     void showToolTip(EmotLV* elv, Point& pos);
+
+    virtual void switchState(ListWnd::ListView* lv) {
+      EmotLV* elv = (EmotLV*)lv;
+
+      _check->setImage(_emotInfo->checked ? elv->_unchecked.get() : elv->_checked.get());
+      _emotInfo->checked = !_emotInfo->checked;
+      refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
+    }
 
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
     bool onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
