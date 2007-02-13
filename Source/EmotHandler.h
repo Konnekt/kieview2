@@ -312,7 +312,7 @@ public:
   void reloadPackages(EmotLV* lv = 0) {
     if (!EmotLV::isVaildLV(lv)) lv = 0;
 
-    if (lv) lv->removeAll();
+    if (lv) lv->removeAllItems();
     loadPackages();
     loadSettings();
     if (lv) fillLV(lv);

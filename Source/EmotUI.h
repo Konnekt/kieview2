@@ -23,6 +23,9 @@
 
 class EmotLV: public ListWnd::ListView {
 public:
+  STAMINA_OBJECT_CLASS_VERSION(EmotLV, ListWnd::ListView, Version(0,1,0,0));
+
+public:
   typedef vector<EmotLV*> tEmotLVs;
 
 public:
@@ -34,9 +37,10 @@ public:
   struct sEmotPackInfo {
     Stamina::UI::oImage image;
     bool checked;
+    UINT id;
     eMSet* set;
 
-    sEmotPackInfo(bool checked, eMSet* _set, Stamina::UI::oImage img): checked(checked), image(img), set(_set) { }
+    sEmotPackInfo(bool checked, eMSet* _set, Stamina::UI::oImage img): checked(checked), image(img), set(_set), id(-1) { }
     sEmotPackInfo(): checked(false) { }
   };
 
@@ -49,6 +53,7 @@ public:
   virtual UINT addItem(sEmotPackInfo* pack);
   virtual bool moveItem(UINT id, int pos);
   virtual void removeItem(UINT id);
+  virtual void removeAllItems();
   virtual int itemsCount();
   virtual ListWnd::oItem getItem(UINT id);
   virtual sEmotPackInfo* getEPI(UINT id);
@@ -106,6 +111,7 @@ public:
       _check->setImage(_emotInfo->checked ? elv->_unchecked.get() : elv->_checked.get());
       _emotInfo->checked = !_emotInfo->checked;
       refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
+      SendMessage((HWND)UIGroupHandle(sUIAction(0, IMIG_CFGWND)), WM_USER + 18091, 0, 0);
     }
 
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);

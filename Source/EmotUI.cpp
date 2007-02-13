@@ -97,6 +97,7 @@ void EmotLV::setSize(int w, int h) {
 
 UINT EmotLV::addItem(sEmotPackInfo *s) {
   _items.push_back(insertEntry(new EmotPackInfoItem(this, s)).get());
+  getEPI(_items.size() - 1)->id = _items.size() - 1;
   return _items.size() - 1;
 }
 
@@ -147,13 +148,26 @@ bool EmotLV::moveItem(UINT id, int pos) {
   removeEntry(entry, false);
   _items[pos] = insertEntry(entry, pos).get();
 
+  for (int i = 0; i < itemsCount(); i++) {
+    getEPI(i)->id = i;
+  }
+
   return true;
 }
 
 void EmotLV::removeItem(UINT id) {
   removeEntry(_items[id]->getEntry());
+  getEPI(id)->id = -1;
   tItems::iterator it = _items.begin() + id;
   _items.erase(it);
+}
+
+void EmotLV::removeAllItems() {
+  for (int i = 0; i < itemsCount(); i++) {
+    getEPI(i)->id = -1;
+  }
+  removeAll();
+  _items.clear();
 }
 
 int EmotLV::itemsCount() {
@@ -226,14 +240,18 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
     if (elv->draged_id != id) {
       if (p.y < rc.getCenter().y) {
         if (elv->draged_id != id) {
-          elv->moveItem(elv->draged_id, id);
-          elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setSelected(elv, true);
+          if (elv->moveItem(elv->draged_id, id)) {
+            elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setSelected(elv, true);
+            SendMessage((HWND)UIGroupHandle(sUIAction(0, IMIG_CFGWND)), WM_USER + 18091, 0, 0);
+          }
           elv->mmitem = -1;
         }
       } else {
         if (elv->draged_id != id + 1) {
-          elv->moveItem(elv->draged_id, id + 1);
-          elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setSelected(elv, true);
+          if (elv->moveItem(elv->draged_id, id + 1)) {
+            elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setSelected(elv, true);
+            SendMessage((HWND)UIGroupHandle(sUIAction(0, IMIG_CFGWND)), WM_USER + 18091, 0, 0);
+          }
           elv->mmitem = -1;
         }
       }
