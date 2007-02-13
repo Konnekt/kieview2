@@ -222,7 +222,7 @@ void EmotHandler::saveSettings() {
   String result;
 
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-    result += inttostr((int)it->isEnabled()) + "|" + it->getDir() + "\n";
+    result += stringf("%d|%d|%s\n", it->getPos(), (int)it->isEnabled(), it->getDir().c_str());
   }
   Controller::getConfig()->set(cfg::emotPacks, result);
 }

@@ -64,6 +64,7 @@ public:
     for (UINT i = 0; i < itemsCount(); i++) {
       sEmotPackInfo* info = getEPI(i);
       info->set->setEnabled(info->checked);
+      info->set->setPos(info->id);
     }
   }
 
