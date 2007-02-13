@@ -302,8 +302,11 @@ namespace kIEview2 {
         break;
       }
       case cfg::useEmots: {
-        UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::useEmotsInHistory), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
-        UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::emotsDir), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
+        bool useEmots = *UIActionCfgGetValue(an->act, 0, 0) == '1';
+
+        UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::useEmotsInHistory), !useEmots ? -1 : 0, ACTS_DISABLED);
+        UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::emotsDir), !useEmots ? -1 : 0, ACTS_DISABLED);
+        // if (EmotLV::isVaildLV(emotLV)) emotLV->setEnabled(useEmots);
         break;
       }
       case ui::refreshEmotLV: {
@@ -871,28 +874,65 @@ namespace kIEview2 {
     return tplHandler->runFunc("htmlEscape", txt);
   }
 
-  string __stdcall Controller::linkifyDo(RegEx* reg) {
-    RegEx& r = *reg;
-
-    if (r.hasSub(1) && r.hasSub(4)) {
-      return r[0];
-    }
-    return r[1] + "<a href=\"" + ((r[3].find(":") == r[3].npos) ? "http://" : "") + 
-      r[2] + "\" class=\"autolink\" target=\"_blank\">" + r[2] + "</a>" + r[4];
-  }
-
-  string __stdcall Controller::mailifyDo(RegEx* reg) {
+  string __stdcall Controller::eMailInsertion(RegEx* reg) {
+    Controller* ctrl = Controller::getInstance();
     RegEx& r = *reg;
 
     if (r.hasSub(1)) {
       return r[0];
     }
-    return "<a href=\"mailto:" + r[2] + "\" class=\"autolink\">" + r[2] + "</a>";
+
+    sEmailInsertion ei(ctrl->eMailInsertions.size(), r[2]);
+    ctrl->eMailInsertions.push_back(ei);
+
+    return "<kiev2:email:insertion id=\"" + inttostr(ei.id) + "\" />";
   }
 
-  String Controller::linkify(StringRef& txt) {
-    txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-])+@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6})+)~i", &Controller::mailifyDo, txt.c_str());
-    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", &Controller::linkifyDo, txt.c_str());
+  string __stdcall Controller::replaceEmail(RegEx* reg) {
+    sEmailInsertion* ei = &Controller::getInstance()->eMailInsertions.at(atoi(reg->getSub(1).c_str()));
+    IMLOG("[Controller::replaceEmail()] email = %s", ei->email.c_str());
+
+    return "<a href=\"mailto:" + ei->email + "\" class=\"autolink\">" + ei->email + "</a>";
+  }
+
+  string __stdcall Controller::linkInsertion(RegEx* reg) {
+    Controller* ctrl = Controller::getInstance();
+    RegEx& r = *reg;
+
+    if (r.hasSub(1) && r.hasSub(4)) {
+      return r[0];
+    }
+
+    sLinkInsertion li(ctrl->linkInsertions.size());
+    li.url = ((r[3].find(":") == r[3].npos) ? "http://" : "") + r[2];
+    li.name = r[2];
+
+    ctrl->linkInsertions.push_back(li);
+    return r[1] + "<kiev2:link:insertion id=\"" + inttostr(li.id) + "\" />" + r[4];
+  }
+
+  string __stdcall Controller::replaceLink(RegEx* reg) {
+    sLinkInsertion* li = &Controller::getInstance()->linkInsertions.at(atoi(reg->getSub(1).c_str()));
+
+    IMLOG("[Controller::replaceLink()] url = %s, name = %s", li->url.c_str(), li->name.c_str());
+    return "<a href=\"" + li->url + "\" class=\"autolink\" target=\"_blank\">" + li->name + "</a>";
+  }
+
+  String Controller::preLinkify(StringRef& txt) {
+    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", 
+      &Controller::linkInsertion, txt.c_str());
+    txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-])+@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6})+)~i", 
+      &Controller::eMailInsertion, txt.c_str());
+
+    return PassStringRef(txt);
+  }
+
+  String Controller::postLinkify(StringRef& txt) {
+    txt = RegEx::doReplace("#<kiev2:email:insertion id=\"([0-9]+)\" />#", &Controller::replaceEmail, txt.c_str());
+    txt = RegEx::doReplace("#<kiev2:link:insertion id=\"([0-9]+)\" />#", &Controller::replaceLink, txt.c_str());
+
+    eMailInsertions.clear();
+    linkInsertions.clear();
 
     return PassStringRef(txt);
   }
@@ -963,10 +1003,13 @@ namespace kIEview2 {
       info = htmlEscape(info);
 
       if (config->getInt(cfg::linkify)) {
-        info = linkify(info);
+        info = preLinkify(info);
       }
       if (config->getInt(cfg::useEmots)) {
         info = emotHandler.parse(info, config->getInt(CNT_NET, an->act.cnt));
+      }
+      if (config->getInt(cfg::linkify)) {
+        info = postLinkify(info);
       }
       info = normalizeSpaces(info);
       data.hash_insert_new_var("info", info);
@@ -996,11 +1039,14 @@ namespace kIEview2 {
       body = nl2br(body);
     }
     if (!(msg->flag & MF_LEAVEASIS)) {
+      if (config->getInt(cfg::linkify) && (!inHistory || config->getInt(cfg::linkifyInHistory))) {
+        body = preLinkify(body);
+      }
       if (config->getInt(cfg::useEmots) && (!inHistory || config->getInt(cfg::useEmotsInHistory))) {
         body = emotHandler.parse(body, msg->net);
       }
       if (config->getInt(cfg::linkify) && (!inHistory || config->getInt(cfg::linkifyInHistory))) {
-        body = linkify(body);
+        body = postLinkify(body);
       }
     }
     body = normalizeSpaces(body);

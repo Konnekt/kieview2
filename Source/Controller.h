@@ -60,14 +60,34 @@ namespace kIEview2 {
       }
     };
 
-  public:
-    typedef std::map<IECtrl*, sWndObjCollection> tWndObjCollection;
-    typedef std::map<int, sMessageHandler*> tMsgHandlers;
-
     struct sMsg {
       Date64 time;
       tCntId cnt;
     };
+
+    struct sEmailInsertion {
+      string email;
+      UINT id;
+
+      sEmailInsertion(UINT _id, const string& _email): id(_id), email(_email) { }
+      sEmailInsertion() { }
+    };
+
+    struct sLinkInsertion {
+      string name;
+      string url;
+      UINT id;
+
+      sLinkInsertion(UINT _id): id(_id) { }
+      sLinkInsertion(): id(0) { }
+    };
+
+  public:
+    typedef std::map<IECtrl*, sWndObjCollection> tWndObjCollection;
+    typedef std::map<int, sMessageHandler*> tMsgHandlers;
+
+    typedef vector<sEmailInsertion> tEmailInsertions;
+    typedef vector<sLinkInsertion> tLinkInsertions;
 
     enum enMsgFields {
       fieldId, fieldNet, fieldType, fieldFromUid, fieldToUid, fieldBody, 
@@ -101,11 +121,10 @@ namespace kIEview2 {
     string bytesToString(double bytes);
     string timeToString(int time);
 
-    static string __stdcall linkifyDo(RegEx* reg);
-    static string __stdcall mailifyDo(RegEx* reg);
+    String preLinkify(StringRef& txt);
+    String postLinkify(StringRef& txt);
 
     String htmlEscape(StringRef& txt);
-    String linkify(StringRef& txt);
     String normalizeSpaces(StringRef& txt);
     String nl2br(StringRef& txt);
 
@@ -156,6 +175,13 @@ namespace kIEview2 {
     EmotHandler emotHandler;
 
   protected:
+    static string __stdcall linkInsertion(RegEx* reg);
+    static string __stdcall replaceLink(RegEx* reg);
+
+    static string __stdcall eMailInsertion(RegEx* reg);
+    static string __stdcall replaceEmail(RegEx* reg);
+
+  protected:
     tWndObjCollection wndObjCollection;
     tMsgHandlers msgHandlers;
     CriticalSection _locker;
@@ -165,6 +191,9 @@ namespace kIEview2 {
     EmotLV* emotLV;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
+
+    tEmailInsertions eMailInsertions;
+    tLinkInsertions linkInsertions;
   };
 
   namespace JS {

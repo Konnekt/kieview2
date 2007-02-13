@@ -128,6 +128,11 @@ public:
   virtual ~eMSet() { }
 
 public:
+  bool operator < (eMSet& other) {
+    return getPos() < other.getPos();
+  }
+
+public:
   UINT getID() {
     return _id;
   }

@@ -31,9 +31,8 @@ public:
 public:
   EmotLV(int x, int y, int w, int h, HWND parent, HMENU id);
   virtual ~EmotLV();
+
   static bool isVaildLV(EmotLV* lv);
-  virtual void setEnabled(bool enabled);
-  virtual bool isEnabled();
 
 public:
   struct sEmotPackInfo {
@@ -51,6 +50,9 @@ public:
 public:
   virtual void setSize(int w, int h);
   virtual void setPos(int x, int y);
+
+  virtual void setEnabled(bool enabled);
+  virtual bool isEnabled();
 
   virtual UINT addItem(sEmotPackInfo* pack);
   virtual bool moveItem(UINT id, int pos);

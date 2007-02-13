@@ -206,15 +206,19 @@ void EmotHandler::loadSettings() {
   Stamina::split(data, "\n", sets);
 
   for (tStringVector::iterator it = sets.begin(); it != sets.end(); it++) {
-    bool isEnabled = (bool) atoi(it->substr(0,1).c_str());
-    it->erase(0, 2);
+    tStringVector rows;
+    Stamina::split(*it, "|", rows);
 
+    if (rows.size() != 3) continue;
     for (tEmotSets::iterator it2 = emotSets.begin(); it2 != emotSets.end(); it2++) {
-      if (it2->getDir() == *it) {
-        it2->setEnabled(isEnabled); break;
+      if (it2->getDir() == rows[2]) {
+        it2->setEnabled(atoi(rows[1].c_str()));
+        it2->setPos(atoi(rows[0].c_str()));
+        break;
       }
     }
   }
+  emotSets.sort();
 }
 
 void EmotHandler::saveSettings() {
@@ -222,7 +226,7 @@ void EmotHandler::saveSettings() {
   String result;
 
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-    result += stringf("%d|%d|%s\n", it->getPos(), (int)it->isEnabled(), it->getDir().c_str());
+    result += stringf("%d|%d|%s\n", it->getPos(), (int) it->isEnabled(), it->getDir().c_str());
   }
   Controller::getConfig()->set(cfg::emotPacks, result);
 }
