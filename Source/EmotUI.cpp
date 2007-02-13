@@ -95,6 +95,14 @@ void EmotLV::setSize(int w, int h) {
   MoveWindow(getHwnd(), 0, 0, w, h, SWP_NOMOVE);
 }
 
+bool EmotLV::isEnabled() {
+  return IsWindowEnabled(getHwnd());
+}
+
+void EmotLV::setEnabled(bool enabled) {
+  EnableWindow(getHwnd(), enabled);
+}
+
 UINT EmotLV::addItem(sEmotPackInfo *s) {
   _items.push_back(insertEntry(new EmotPackInfoItem(this, s)).get());
   getEPI(_items.size() - 1)->id = _items.size() - 1;
@@ -102,7 +110,7 @@ UINT EmotLV::addItem(sEmotPackInfo *s) {
 }
 
 bool EmotLV::moveItem(UINT id, int pos) {
-  if ((id > _items.size()) || (id == pos)) return false;
+  if (id == -1 || pos == -1 || id == pos || id >= _items.size() || pos > _items.size()) return false;
 
   int inc = 0;
   tItems::iterator it = _items.begin();
@@ -116,6 +124,7 @@ bool EmotLV::moveItem(UINT id, int pos) {
 
   } else if (pos == _items.size()) {
     _items.push_back(_items[id]);
+    it = _items.begin();
     while (inc++ < id) it++;
     _items.erase(it);
     pos -= 1;
