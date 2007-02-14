@@ -14,16 +14,17 @@
 #include "stdafx.h"
 #include "emotUI.h"
 #include "Emots.h"
-#include "Helpers.h"
 
 EmotLV::tEmotLVs EmotLV::_lvs;
 
 EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::ListView(x, y, w, h, parent, id) {
   alwaysShowScrollbars(false, false);
 
-  _checked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
-  _unchecked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
+  _checked = new Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
+  _unchecked = new Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
 
+  hFontBold = CreateFont(-11, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+    CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
   hFont = CreateFont(-11, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
     CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
 
@@ -74,12 +75,13 @@ void EmotLV::onMouseMove(int vkey, const Stamina::Point &pos) {
 
 EmotLV::~EmotLV() {
   removeAll();
+
+  DeleteObject(hFontBold);
   DeleteObject(hFont);
 
   for (tEmotLVs::iterator it = _lvs.begin(); it != _lvs.end(); it++) {
     if ((*it) == this) {
-      _lvs.erase(it);
-      break;
+      _lvs.erase(it); break;
     }
   }
 }
@@ -219,12 +221,9 @@ Size EmotLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd
 void EmotLV::EmotPackInfoItem::drawInfo(EmotLV* elv, Rect& rc) {
   eMSet* set = _emotInfo->set;
   HDC dc = elv->getDC();
-  string textA;
-
+  string textA = getItemText();
   RECT rcz = *rc.ref();
-  if (set->getUrl().length()) textA += "URL: " + set->getUrl() + "\n";
-  if (set->getDescription().length()) textA += "Opis: " + set->getDescription();
-  textA = Helpers::rtrim(textA, "\n");
+
   HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
   DrawText(dc, textA.c_str(), -1, &rcz, DT_WORDBREAK);
   SelectObject(dc, hOldFont);
@@ -234,16 +233,14 @@ void EmotLV::EmotPackInfoItem::drawInfo(EmotLV* elv, Rect& rc) {
 int EmotLV::EmotPackInfoItem::sizeInfo(EmotLV* elv, Rect& rc) {
   eMSet* set = _emotInfo->set;
   HDC dc = elv->getDC();
-  string textA;
-
+  string textA = getItemText();
   RECT rcz = {0, 0, rc.width(), 0};
-  if (set->getUrl().length()) textA += "URL: " + set->getUrl() + "\n";
-  if (set->getDescription().length()) textA += "Opis: " + set->getDescription();
-  textA = Helpers::rtrim(textA, "\n");
+
   HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
   DrawText(dc, textA.c_str(), -1, &rcz, DT_CALCRECT | DT_WORDBREAK);
   SelectObject(dc, hOldFont);
   elv->releaseDC(dc);
+
   return rcz.bottom;
 }
 
@@ -303,19 +300,23 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
     if (_check->hitTest(p)) {
       switchState(lv);
       return false;
+
     } else {
       elv->draged = true;
       elv->draged_id = lv->getItemIndex(li);
       elv->mmitem = elv->draged_id;
       ListWnd::oItem lastItem = lv->getActiveItem();
+
       if (lastItem.isValid()) {
         lastItem->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
       }
+
       lv->setActiveItem(li);
       lv->selectionToActive();
       li->setSelected(lv, true);
       li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
       SetCapture(lv->getHwnd());
+
       return false;
     }
   }
@@ -339,7 +340,7 @@ bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd:
     p.y -= lv->getScrollPos().y;
 
     if (elv->draged_id != id) {
-      Stamina::UI::oImage gradient = Stamina::UI::createSimpleGradient(RGB(255, 204, 102), RGB(255, 153, 51), Size(rc.width(), 10));
+      oImage gradient = createSimpleGradient(RGB(255, 204, 102), RGB(255, 153, 51), Size(rc.width(), 10));
       if (p.y < rc.getCenter().y) {
         if (elv->draged_id != id) {
           Rect rct = rc;
@@ -444,32 +445,61 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   Rect rci = rc;
   rci.left += 25;
   rci.top += 2;
-  Stamina::UI::oImage gradient;
+  oImage gradient;
 
   SetTextColor(dc, RGB(255, 255, 255));
   COLORREF textColor;
 
+  /* // statyczne kolorki
   if (li->isSelected()) {
-    gradient = Stamina::UI::createSimpleGradient(Stamina::UI::blendRGB(GetSysColor(COLOR_HIGHLIGHT), GetSysColor(COLOR_WINDOW), 0xD0), 
-      GetSysColor(COLOR_HIGHLIGHT), Size(rc.width(), rc.height()));
-    textColor = GetSysColor(COLOR_HIGHLIGHTTEXT);
+    gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
   } else {
     if (_emotInfo->checked) {
-      gradient = Stamina::UI::createSimpleGradient(Stamina::UI::blendRGB(GetSysColor(COLOR_HIGHLIGHT), GetSysColor(COLOR_WINDOW), 0x60),
-      Stamina::UI::blendRGB(GetSysColor(COLOR_HIGHLIGHT), GetSysColor(COLOR_WINDOW), 0x80), Size(rc.width(), rc.height()));
-      textColor = GetSysColor(COLOR_HIGHLIGHTTEXT);
+      gradient = Stamina::UI::createSimpleGradient(RGB(96,177,46), RGB(149,217,108), Size(rc.width(), rc.height()));
     } else {
-      gradient = Stamina::UI::createSimpleGradient(GetSysColor(COLOR_BTNFACE),
-        Stamina::UI::blendRGB(GetSysColor(COLOR_WINDOW), GetSysColor(COLOR_BTNFACE), 0x10),
-      Size(rc.width(), rc.height()));
-      textColor = GetSysColor(COLOR_BTNTEXT);
+      gradient = Stamina::UI::createSimpleGradient(RGB(80,80,80), RGB(140,140,140), Size(rc.width(), rc.height()));
+    }
+  }
+  textColor = RGB(255,255,255);
+  */
+
+  COLORREF active = GetSysColor(COLOR_HIGHLIGHT);
+  COLORREF window = GetSysColor(COLOR_WINDOW);
+  COLORREF inactive = GetSysColor(COLOR_INACTIVECAPTION);
+  COLORREF button = GetSysColor(COLOR_BTNFACE);
+
+  COLORREF colorSelectedText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+  COLORREF colorText = GetSysColor(COLOR_WINDOWTEXT);
+
+  /* // kod z Actio
+  brushSelected = createSimpleGradient(blendRGB(active, window, 0xD0), active, Size(10, entryCallHeight), 0, 0x80);
+  brushActive = createSimpleGradient(blendRGB(active, window, 0x30), blendRGB(active, window, 0x80), Size(10, entryCallHeight), 0, 0xA0);
+  brushWaiting = createSimpleGradient(window, blendRGB(active, window, 0x30), Size(10, entryCallHeight), 0, 0xA0);
+
+  brushCollection = createSimpleGradient(button, blendRGB(button, window, 0xA0), Size(10, entryCollectionHeight), 0, 0x40);
+  brushCollectionSelected = createSimpleGradient(blendRGB(active, window, 0x80), active, Size(10, entryCollectionHeight), 0, 0x10);
+
+  brushSelectedEntry = createSimpleGradient(blendRGB(active, window, 0x80), active, Size(10, entryHeight*2), 0, /* 0x10 *\/ 0x0;
+  brushInfoEntry = createSimpleGradient(blendRGB(button, window, 0x40), blendRGB(button, window, 0x10), Size(10, entryInfoMinimum*2), 0, 0xA0);
+  */
+
+  if (li->isSelected()) {
+    gradient = createSimpleGradient(blendRGB(active, window, 0x80), active, Size(rc.width(), rc.height()));
+    textColor = colorSelectedText;
+  } else {
+    if (_emotInfo->checked) {
+      gradient = createSimpleGradient(blendRGB(button, window, 0xA0), button, Size(rc.width(), rc.height()));
+      textColor = colorText;
+    } else {
+      gradient = createSimpleGradient(blendRGB(button, window, 0x10), blendRGB(button, window, 0x40), Size(rc.width(), rc.height()));
+      textColor = colorText;
     }
   }
   gradient->draw(dc, rc.getLT());
 
   Rect rctxt = rc;
-  rctxt.left += 21;
-  rctxt.top += 3;
+  rctxt.left += 25;
+  rctxt.top += 4;
   rctxt.right -= 3 + 16 + 5;
   SetBkMode(dc, TRANSPARENT);
 
@@ -491,13 +521,14 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   _check->setPos(rccheck.getLT());
   _check->draw(dc, p);
 
-  HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
+  HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFontBold);
   COLORREF oldTextColor = SetTextColor(dc, textColor);
-  rctxt.right-= emotX;
+  rctxt.right -= emotX;
   DrawTextA(dc, name.c_str(), -1, rctxt.ref(), DT_NOPREFIX | DT_END_ELLIPSIS | DT_SINGLELINE);
-  rctxt.top+= emotY;
-  rctxt.right+= emotX;
+  rctxt.top += emotY;
+  rctxt.right += emotX;
   SelectObject(dc, hOldFont);
+
   if (li->isSelected()) {
     drawInfo(elv, rctxt);
   }

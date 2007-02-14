@@ -232,13 +232,13 @@ void EmotHandler::saveSettings() {
 }
 
 void EmotHandler::fillLV(EmotLV* lv) {
-  Stamina::UI::oImage img;
+  oImage img;
 
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
     if (!it->getEmots()[0].isVirtual()) {
-      img = Stamina::UI::loadImageFromFile((getEmotDir() + "\\" + it->getDir() + "\\" + it->getEmots()[0].getImgPath()).c_str());
+      img = loadImageFromFile((getEmotDir() + "\\" + it->getDir() + "\\" + it->getEmots()[0].getMenuImgPath()).c_str());
     } else {
-      img = new Stamina::UI::Icon((HICON) Ctrl->ICMessage(IMI_ICONGET, kIEview2::ico::emots, IML_16), false);
+      img = new Icon((HICON) Ctrl->ICMessage(IMI_ICONGET, kIEview2::ico::emots, IML_16), false);
     }
     lv->addItem(new EmotLV::sEmotPackInfo(it->isEnabled(), &*it, img));
   }

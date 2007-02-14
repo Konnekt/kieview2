@@ -197,10 +197,8 @@ namespace kIEview2 {
       "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest "
       "wyœwietlanie emotikon oraz modyfikacja wygl¹du okna przy pomocy styli CSS i skryptów JS.",
       "<span class='note'>Skompilowano: <b>" __DATE__ "</b> [<b>" __TIME__ "</b>]</span><br/>"
-      "Informacje o wtyczce na stronie projektu "
-      "<b>KPlugins</b> (http://kplugins.net/)<br/><br/>"
+      "Podziêkowania za pomoc nale¿a siê dla <b>dulka</b> i <b>ursusa</b> :)<br/><br/>"
       "Copyright © 2006-2007 <b>Sijawusz Pur Rahnama</b><br/>"
-      "Copyright © 2006-2007 <b>Micha³ \"Dulek\" Dulko</b><br/>"
       "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>", Helpers::icon16(ico::logo).a_str(), -3);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
@@ -839,6 +837,9 @@ namespace kIEview2 {
   string Controller::timeToString(int time) {
     char buff[20];
 
+    if (!time) {
+      return "0s";
+    }
     if (time >= (60 * 60 * 24)) {
       int days = int(time / (60 * 60 * 24));
       sprintf(buff, "%dd ", days);
@@ -1106,7 +1107,7 @@ namespace kIEview2 {
       if (groupTime) data.hash_insert_new_var("groupTime", "1");
 
       data.hash_insert_new_var("@lastMsgTime", i64tostr(lastMsg.time.getInt64()));
-      data.hash_insert_new_var("timeFromLastMsg", timeFromLastMsg ? timeToString(timeFromLastMsg) : "0s");
+      data.hash_insert_new_var("timeFromLastMsg", timeToString(timeFromLastMsg));
     }
 
     groupedMsgs.clear();

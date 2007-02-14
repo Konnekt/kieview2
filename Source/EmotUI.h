@@ -17,9 +17,12 @@
 #define __EMOT_UI_H__
 
 #include "stdafx.h"
-
 #include "kIEview2.h"
+
+#include "Helpers.h"
 #include "Emots.h"
+
+using namespace Stamina::UI;
 
 class EmotLV: public ListWnd::ListView {
 public:
@@ -36,12 +39,12 @@ public:
 
 public:
   struct sEmotPackInfo {
-    Stamina::UI::oImage image;
+    oImage image;
     bool checked;
     UINT id;
     eMSet* set;
 
-    sEmotPackInfo(bool checked, eMSet* _set, Stamina::UI::oImage img): checked(checked), image(img), set(_set), id(-1) { }
+    sEmotPackInfo(bool checked, eMSet* _set, oImage img): checked(checked), image(img), set(_set), id(-1) { }
     sEmotPackInfo(): checked(false) { }
   };
 
@@ -77,16 +80,17 @@ protected:
   void onMouseUp(int vkey, const Stamina::Point &pos);
 
 protected:
-  tItems _items;
   static tEmotLVs _lvs;
+  tItems _items;
 
-  Stamina::UI::oImage _checked;
-  Stamina::UI::oImage _unchecked;
+  oImage _checked;
+  oImage _unchecked;
 
   bool draged;
   UINT draged_id;
   int mmitem;
 
+  HFONT hFontBold;
   HFONT hFont;
 
 public:
@@ -95,7 +99,7 @@ public:
     STAMINA_OBJECT_CLASS_VERSION(EmotPackInfoItem, ListWnd::EntryImpl, Version(0,1,0,0));
 
     EmotPackInfoItem(EmotLV* parent, sEmotPackInfo* emotInfo): _emotInfo(emotInfo) {
-      _check = new Stamina::UI::DrawableButtonBasic(Rect(0,0,16,16), emotInfo->checked ? parent->_checked : parent->_unchecked);
+      _check = new DrawableButtonBasic(Rect(0,0,16,16), emotInfo->checked ? parent->_checked : parent->_unchecked);
     }
 
     Size getMinSize();
@@ -106,6 +110,7 @@ public:
     void paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent);
     void drawInfo(EmotLV* elv, Rect& rc);
     int sizeInfo(EmotLV* elv, Rect& rc);
+
     virtual void switchState(ListWnd::ListView* lv) {
       EmotLV* elv = (EmotLV*)lv;
 
@@ -113,6 +118,17 @@ public:
       _emotInfo->checked = !_emotInfo->checked;
       refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
       SendMessage((HWND)UIGroupHandle(sUIAction(0, IMIG_CFGWND)), WM_USER + 18091, 0, 0);
+    }
+
+    string getItemText() {
+      eMSet* set = _emotInfo->set;
+      string text;
+
+      if (set->getUrl().length()) text += "URL: " + set->getUrl() + "\n";
+      if (set->getDescription().length()) text += "Opis: " + set->getDescription();
+      if (text.length()) text = Helpers::rtrim(text, "\n");
+
+      return text;
     }
 
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
@@ -125,8 +141,7 @@ public:
 
   protected:
     sEmotPackInfo* _emotInfo;
-
-    Stamina::UI::oDrawableButton _check;
+    oDrawableButton _check;
   };
 };
 
