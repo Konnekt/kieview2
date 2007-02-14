@@ -373,7 +373,7 @@ namespace kIEview2 {
 
         bool autoScroll = an->_scroll && this->autoScroll(an, ctrl);
         try {
-          args[0] = _parseMsgTpl(an).a_str();
+          args[0] = _parseMsgTpl(ctrl, an).a_str();
         } catch(const exception &e) { 
           args[0] = tplHandler->parseException(e).a_str();
         }
@@ -780,6 +780,9 @@ namespace kIEview2 {
     // locking
     LockerCS lock(_locker);
 
+    // czyscimy wiadomosci grupowania
+    wndObjCollection[ctrl].groupedMsgs.clear();
+
     ctrl->navigate(("file:///" + unifyPath(kPath, false, '/') + "/data/templates/core/__bootstrap.html").c_str());
     // ctrl->clear();
 
@@ -851,9 +854,10 @@ namespace kIEview2 {
       time -= mins * 60;
     }
     if (time > 0) {
-      sprintf(buff, "%ds ", time);
+      int secs = int(time);
+      sprintf(buff, "%ds ", secs);
     }
-    return buff;
+    return Helpers::rtrim(buff);
   }
 
   tCntId Controller::getCntFromMsg(cMessage* msg) {
@@ -1011,7 +1015,7 @@ namespace kIEview2 {
     return tplHandler->parseTpl(&data, "status");
   }
 
-  String Controller::_parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an) {
+  String Controller::_parseMsgTpl(IECtrl* ctrl, Konnekt::UI::Notify::_insertMsg* an) {
     // locking
     LockerCS lock(_locker);
 
@@ -1045,6 +1049,38 @@ namespace kIEview2 {
     if (msg->flag & MF_HIDE) {
       data.hash_insert_new_var("hidden?", "1");
     }
+
+    bool grouped = false;
+    bool groupDisplay = false;
+    bool groupTime = false;
+
+    tCntId senderID = !(msg->flag & MF_SEND) ? Ctrl->ICMessage(IMC_CNT_FIND, msg->net, (int) msg->fromUid) : 0;
+    tGroupedMsgs& groupedMsgs = wndObjCollection[ctrl].groupedMsgs;
+
+    if (groupedMsgs.size()) {
+      int lastMsgTime;
+
+      if (groupedMsgs[0].cnt == senderID) {
+        lastMsgTime = date.getTime64() - groupedMsgs[0].time.getTime64();
+
+        if (lastMsgTime <= 60) {
+          groupTime = true;
+        }
+        groupDisplay = true;
+        grouped = true;
+      }
+
+      if (grouped) data.hash_insert_new_var("grouped", "1");
+      if (groupDisplay) data.hash_insert_new_var("groupDisplay", "1");
+      if (groupTime) {
+        data.hash_insert_new_var("groupTime", "1");
+        data.hash_insert_new_var("@lastMsgTime", i64tostr(groupedMsgs[0].time.getInt64()));
+        data.hash_insert_new_var("lastMsgTime", timeToString(lastMsgTime));
+      }
+    }
+
+    groupedMsgs.clear();
+    groupedMsgs.push_back(sGroupedMsg(senderID, date));
 
     if (msgHandlers.find(msg->type) != msgHandlers.end()) {
       msgHandlers[msg->type]->signal(data, an);

@@ -49,21 +49,14 @@ namespace kIEview2 {
       string label;
     };
 
-    struct sWndObjCollection {
-      JS::WndController* jsWndController;
-      ActionHandler* actionHandler;
-
-      sWndObjCollection(): jsWndController(0), actionHandler(0) { }
-      ~sWndObjCollection() {
-        if (jsWndController) delete jsWndController;
-        if (actionHandler) delete actionHandler;
-      }
-    };
-
-    struct sMsg {
+    struct sGroupedMsg {
       Date64 time;
       tCntId cnt;
+
+      sGroupedMsg(tCntId _cnt, const Date64& _time): cnt(_cnt), time(_time) { }
+      sGroupedMsg() { }
     };
+    typedef vector<sGroupedMsg> tGroupedMsgs;
 
     struct sEmailInsertion {
       string email;
@@ -80,6 +73,18 @@ namespace kIEview2 {
 
       sLinkInsertion(UINT _id): id(_id) { }
       sLinkInsertion(): id(0) { }
+    };
+
+    struct sWndObjCollection {
+      JS::WndController* jsWndController;
+      ActionHandler* actionHandler;
+      tGroupedMsgs groupedMsgs;
+
+      sWndObjCollection(): jsWndController(0), actionHandler(0) { }
+      ~sWndObjCollection() {
+        if (jsWndController) delete jsWndController;
+        if (actionHandler) delete actionHandler;
+      }
     };
 
   public:
@@ -160,7 +165,7 @@ namespace kIEview2 {
     char* getStringCol(Tables::oTable& table, tRowId row, int pos); // do zmiany
 
     String _parseStatusTpl(Konnekt::UI::Notify::_insertStatus* an);
-    String _parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an);
+    String _parseMsgTpl(IECtrl* ctrl, Konnekt::UI::Notify::_insertMsg* an);
 
     /*
      * Message types specific methods
