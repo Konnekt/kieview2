@@ -439,14 +439,22 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   Stamina::UI::oImage gradient;
 
   SetTextColor(dc, RGB(255, 255, 255));
-
+  COLORREF textColor;
   if (li->isSelected()) {
-    gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
+    gradient = Stamina::UI::createSimpleGradient(Stamina::UI::blendRGB(GetSysColor(COLOR_HIGHLIGHT), GetSysColor(COLOR_WINDOW), 0xD0), 
+      GetSysColor(COLOR_HIGHLIGHT), Size(rc.width(), rc.height()));
+    textColor = GetSysColor(COLOR_HIGHLIGHTTEXT);
   } else {
     if (_emotInfo->checked) {
-      gradient = Stamina::UI::createSimpleGradient(RGB(96,177,46), RGB(149,217,108), Size(rc.width(), rc.height()));
+      gradient = Stamina::UI::createSimpleGradient(Stamina::UI::blendRGB(GetSysColor(COLOR_HIGHLIGHT), GetSysColor(COLOR_WINDOW), 0x60),
+      Stamina::UI::blendRGB(GetSysColor(COLOR_HIGHLIGHT), GetSysColor(COLOR_WINDOW), 0x80), Size(rc.width(), rc.height()));
+      textColor = GetSysColor(COLOR_HIGHLIGHTTEXT);
     } else {
-      gradient = Stamina::UI::createSimpleGradient(RGB(80,80,80), RGB(140,140,140), Size(rc.width(), rc.height()));
+      gradient = Stamina::UI::createSimpleGradient(GetSysColor(COLOR_BTNFACE),
+        Stamina::UI::blendRGB(GetSysColor(COLOR_WINDOW), GetSysColor(COLOR_BTNFACE), 0x10),
+      Size(rc.width(), rc.height()));
+      textColor = GetSysColor(COLOR_BTNTEXT);
+
     }
   }
   gradient->draw(dc, rc.getLT());
@@ -459,7 +467,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
 
   Stamina::Point p = Point(0,0);
 
- if (_emotInfo->image.isValid()) {
+  if (_emotInfo->image.isValid()) {
     Rect rcemot = rc;
     rcemot.left = rcemot.right - 3 - 16;
     rcemot.top += 3;
@@ -473,11 +481,13 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   _check->draw(dc, p);
 
   HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
+  COLORREF oldTextColor = SetTextColor(dc, textColor);
   DrawTextA(dc, name.c_str(), -1, rctxt.ref(), DT_NOPREFIX | DT_END_ELLIPSIS | DT_SINGLELINE);
   rctxt.top+= 15;
   SelectObject(dc, hOldFont);
   if (li->isSelected()) {
     drawInfo(elv, rctxt);
   }
+  SetTextColor(dc, oldTextColor);
   lv->releaseDC(dc);
 }
