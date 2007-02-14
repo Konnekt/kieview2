@@ -373,7 +373,7 @@ namespace kIEview2 {
 
         bool autoScroll = an->_scroll && this->autoScroll(an, ctrl);
         try {
-          args[0] = _parseMsgTpl(ctrl, an).a_str();
+          args[0] = _parseMsgTpl(an).a_str();
         } catch(const exception &e) { 
           args[0] = tplHandler->parseException(e).a_str();
         }
@@ -1015,7 +1015,7 @@ namespace kIEview2 {
     return tplHandler->parseTpl(&data, "status");
   }
 
-  String Controller::_parseMsgTpl(IECtrl* ctrl, Konnekt::UI::Notify::_insertMsg* an) {
+  String Controller::_parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an) {
     // locking
     LockerCS lock(_locker);
 
@@ -1050,38 +1050,6 @@ namespace kIEview2 {
       data.hash_insert_new_var("hidden?", "1");
     }
 
-    bool grouped = false;
-    bool groupDisplay = false;
-    bool groupTime = false;
-
-    tCntId senderID = !(msg->flag & MF_SEND) ? Ctrl->ICMessage(IMC_CNT_FIND, msg->net, (int) msg->fromUid) : 0;
-    tGroupedMsgs& groupedMsgs = wndObjCollection[ctrl].groupedMsgs;
-
-    if (groupedMsgs.size()) {
-      int lastMsgTime;
-
-      if (groupedMsgs[0].cnt == senderID) {
-        lastMsgTime = date.getTime64() - groupedMsgs[0].time.getTime64();
-
-        if (lastMsgTime <= 60) {
-          groupTime = true;
-        }
-        groupDisplay = true;
-        grouped = true;
-      }
-
-      if (grouped) data.hash_insert_new_var("grouped", "1");
-      if (groupDisplay) data.hash_insert_new_var("groupDisplay", "1");
-      if (groupTime) {
-        data.hash_insert_new_var("groupTime", "1");
-        data.hash_insert_new_var("@lastMsgTime", i64tostr(groupedMsgs[0].time.getInt64()));
-        data.hash_insert_new_var("lastMsgTime", timeToString(lastMsgTime));
-      }
-    }
-
-    groupedMsgs.clear();
-    groupedMsgs.push_back(sGroupedMsg(senderID, date));
-
     if (msgHandlers.find(msg->type) != msgHandlers.end()) {
       msgHandlers[msg->type]->signal(data, an);
     }
@@ -1101,15 +1069,52 @@ namespace kIEview2 {
   }
 
   void Controller::_handleStdMsgTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
-    string extInfo = GetExtParam(an->_message->ext, MEX_ADDINFO);
-    String title = GetExtParam(an->_message->ext, MEX_TITLE);
-    tCntId cnt = getCntFromMsg(an->_message);
+    cMessage* msg = an->_message;
+    tCntId cnt = getCntFromMsg(msg);
 
-    data.hash_insert_new_var("@net", inttostr(an->_message->net));
+    string extInfo = GetExtParam(msg->ext, MEX_ADDINFO);
+    String title = GetExtParam(msg->ext, MEX_TITLE);
+
+    data.hash_insert_new_var("@net", inttostr(msg->net));
     data.hash_insert_new_var("uid", config->getChar(CNT_UID, cnt));
     data.hash_insert_new_var("nick", config->getChar(CNT_NICK, cnt));
     data.hash_insert_new_var("name", config->getChar(CNT_NAME, cnt));
     data.hash_insert_new_var("surname", config->getChar(CNT_SURNAME, cnt));
+
+    tCntId senderID = !(msg->flag & MF_SEND) ? Ctrl->ICMessage(IMC_CNT_FIND, msg->net, (int) msg->fromUid) : 0;
+    IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+    tGroupedMsgs& groupedMsgs = wndObjCollection[ctrl].groupedMsgs;
+
+    Date64 date;
+    date = msg->time;
+
+    bool groupDisplay = false;
+    bool groupTime = false;
+
+    if (groupedMsgs.size()) {
+      sGroupedMsg& lastMsg = groupedMsgs[0];
+      int timeFromLastMsg = 0;
+
+      if (!lastMsg.time.empty()) {
+        timeFromLastMsg = date.getTime64() - lastMsg.time.getTime64();
+        groupTime = timeFromLastMsg <= 60;
+      }
+      if (lastMsg.cnt == senderID) {
+        groupDisplay = true;
+      }
+
+      if (groupDisplay || groupTime) data.hash_insert_new_var("grouped", "1");
+      if (groupDisplay) data.hash_insert_new_var("groupDisplay", "1");
+      if (groupTime) data.hash_insert_new_var("groupTime", "1");
+
+      if (timeFromLastMsg){
+        data.hash_insert_new_var("@lastMsgTime", i64tostr(lastMsg.time.getInt64()));
+        data.hash_insert_new_var("timeFromLastMsg", timeToString(timeFromLastMsg));
+      }
+    }
+
+    groupedMsgs.clear();
+    groupedMsgs.push_back(sGroupedMsg(senderID, date));
 
     if (extInfo.length()) {
       data.hash_insert_new_var("extInfo", extInfo);
@@ -1120,7 +1125,7 @@ namespace kIEview2 {
     if (isMsgFromHistory(an)) {
       data.hash_insert_new_var("inHistory?", "1");
     }
-    if (an->_message->flag & MF_SEND) {
+    if (msg->flag & MF_SEND) {
       data.hash_insert_new_var("sent?", "1");
     }
   }

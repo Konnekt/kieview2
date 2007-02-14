@@ -236,8 +236,7 @@ void EmotHandler::fillLV(EmotLV* lv) {
 
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
     if (!it->getEmots()[0].isVirtual()) {
-      img = Stamina::UI::loadImageFromFile((getEmotDir() + "\\" + it->getDir() + "\\" + 
-        it->getEmots()[0].getImgPath()).c_str());
+      img = Stamina::UI::loadImageFromFile((getEmotDir() + "\\" + it->getDir() + "\\" + it->getEmots()[0].getImgPath()).c_str());
     } else {
       img = new Stamina::UI::Icon((HICON) Ctrl->ICMessage(IMI_ICONGET, kIEview2::ico::emots, IML_16), false);
     }

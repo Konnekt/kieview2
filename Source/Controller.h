@@ -165,7 +165,7 @@ namespace kIEview2 {
     char* getStringCol(Tables::oTable& table, tRowId row, int pos); // do zmiany
 
     String _parseStatusTpl(Konnekt::UI::Notify::_insertStatus* an);
-    String _parseMsgTpl(IECtrl* ctrl, Konnekt::UI::Notify::_insertMsg* an);
+    String _parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an);
 
     /*
      * Message types specific methods
