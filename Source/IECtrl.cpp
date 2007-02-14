@@ -1466,17 +1466,15 @@ void IECtrl::iObject::setIECtrl(IECtrl* pCtrl) {
 }
 
 IECtrl::iObject::~iObject() {
-  ASSERT(m_cRef == 0);
+  ASSERT(m_cRef <= 0);
 }
 
 STDMETHODIMP_(ULONG) IECtrl::iObject::AddRef(void) {
-  ++m_cRef;
-  return m_cRef;
+  return ++m_cRef;
 }
 
 STDMETHODIMP_(ULONG) IECtrl::iObject::Release(void) {
-  --m_cRef;
-  return m_cRef;
+  return m_cRef--;
 }
 
 STDMETHODIMP IECtrl::iObject::GetTypeInfoCount(UINT *ptr) { 
