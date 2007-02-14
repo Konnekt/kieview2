@@ -206,8 +206,13 @@ Size EmotLV::EmotPackInfoItem::getQuickSize() {
 }
 
 Size EmotLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn) {
-  if (li->isSelected()) return Size(fitIn.w, 22 + this->sizeInfo((EmotLV*)lv, Rect(0, 0, fitIn.w, 0)));
-  return Size(fitIn.w, 22);
+  int addY = 0;
+  if (_emotInfo->image.isValid()) {
+    addY = _emotInfo->image->getSize().h;
+  }
+  if (addY < 16) addY = 16;
+  if (li->isSelected()) return Size(fitIn.w, sizeInfo((EmotLV*)lv, Rect(0, 0, fitIn.w, 0)) + 6 + addY);
+  return Size(fitIn.w, 6 + addY);
 }
 
 void EmotLV::EmotPackInfoItem::drawInfo(EmotLV* elv, Rect& rc) {
@@ -335,7 +340,7 @@ bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd:
     p.y -= lv->getScrollPos().y;
 
     if (elv->draged_id != id) {
-      Stamina::UI::oImage gradient = Stamina::UI::createSimpleGradient(RGB(255, 204, 102), RGB(255, 153, 51), Size(rc.width(),rc.height() - 13));
+      Stamina::UI::oImage gradient = Stamina::UI::createSimpleGradient(RGB(255, 204, 102), RGB(255, 153, 51), Size(rc.width(), 10));
       if (p.y < rc.getCenter().y) {
         if (elv->draged_id != id) {
           Rect rct = rc;
@@ -354,7 +359,7 @@ bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd:
           Rect rct = rc;
           rct.bottom -= rc.height() / 2;
           lv->repaintRect(rct);
-          gradient->draw(dc, Point(rc.left, rc.bottom - (rc.getHeight() - 13)));
+          gradient->draw(dc, Point(rc.left, rc.bottom - 10));
           POINT p[] = {{rc.getCenter().x - 3, rc.bottom - 8}, {rc.getCenter().x, rc.bottom - 2}, {rc.getCenter().x + 3, rc.bottom - 8}};
           HPEN hOldPen = (HPEN)SelectObject(dc, CreatePen(PS_SOLID, 1, RGB(0, 153, 0)));
           HBRUSH hOldBrush = (HBRUSH)SelectObject(dc, CreateSolidBrush(RGB(204, 255, 204)));
@@ -467,11 +472,14 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
 
   Stamina::Point p = Point(0,0);
 
+  int emotY = 0, emotX = 0;
   if (_emotInfo->image.isValid()) {
     Rect rcemot = rc;
-    rcemot.left = rcemot.right - 3 - 16;
+    rcemot.left = rcemot.right - 3 - _emotInfo->image->getSize().w;
     rcemot.top += 3;
     _emotInfo->image->draw(dc, rcemot.getLT());
+    emotY = _emotInfo->image->getSize().h;
+    emotX = _emotInfo->image->getSize().w;
   }
 
   Rect rccheck = rc;
@@ -482,8 +490,10 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
 
   HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
   COLORREF oldTextColor = SetTextColor(dc, textColor);
+  rctxt.right-= emotX;
   DrawTextA(dc, name.c_str(), -1, rctxt.ref(), DT_NOPREFIX | DT_END_ELLIPSIS | DT_SINGLELINE);
-  rctxt.top+= 15;
+  rctxt.top+= emotY;
+  rctxt.right+= emotX;
   SelectObject(dc, hOldFont);
   if (li->isSelected()) {
     drawInfo(elv, rctxt);
