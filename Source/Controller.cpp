@@ -696,9 +696,11 @@ namespace kIEview2 {
     for (int i = table->getRowCount() - 1, s = 0; (i >= 0) && (m < howMany); i--) {
       if (sessionOffset) {
         if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
-          s++;
+          if (++s == sessionOffset) {
+            continue;
+          }
         }
-        if (s <= sessionOffset) {
+        if (s < sessionOffset) {
           continue;
         }
       }
@@ -750,7 +752,6 @@ namespace kIEview2 {
     Tables::oTable table = historyTable;
     loadMsgTable(cnt);
 
-    bool skippedSession = sessionOffset ? false : true;
     int howMany = 0;
 
     for (int i = table->getRowCount() - 1, s = 0; i >= 0; i--) {
@@ -758,18 +759,13 @@ namespace kIEview2 {
         if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
           s++;
         }
-        if (s <= sessionOffset) {
-          if (s == sessionOffset) {
-            howMany++;
-          }
-          continue;
-        } else {
-          skippedSession = true;
+        if (s == sessionOffset) {
+          howMany++;
         }
-      } else {
-        howMany++;
+        continue;
       }
-      if (skippedSession && !table->getInt(i, table->getColIdByPos(fieldSession))) {
+      howMany++;
+      if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
         break;
       }
     }

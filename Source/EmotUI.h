@@ -82,9 +82,6 @@ protected:
 
   Stamina::UI::oImage _checked;
   Stamina::UI::oImage _unchecked;
-  Stamina::UI::oImage _inform;
-
-  Stamina::UI::ToolTipX::ToolTip* _tooltip;
 
   bool draged;
   UINT draged_id;
@@ -99,7 +96,6 @@ public:
 
     EmotPackInfoItem(EmotLV* parent, sEmotPackInfo* emotInfo): _emotInfo(emotInfo) {
       _check = new Stamina::UI::DrawableButtonBasic(Rect(0,0,16,16), emotInfo->checked ? parent->_checked : parent->_unchecked);
-      _inform = new Stamina::UI::DrawableButtonBasic(Rect(0,0,16,16), parent->_inform);
     }
 
     Size getMinSize();
@@ -108,8 +104,8 @@ public:
     Size getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn);
 
     void paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent);
-    void showToolTip(EmotLV* elv, Point& pos);
-
+    void drawInfo(EmotLV* elv, Rect& rc);
+    int sizeInfo(EmotLV* elv, Rect& rc);
     virtual void switchState(ListWnd::ListView* lv) {
       EmotLV* elv = (EmotLV*)lv;
 
@@ -131,7 +127,6 @@ public:
     sEmotPackInfo* _emotInfo;
 
     Stamina::UI::oDrawableButton _check;
-    Stamina::UI::oDrawableButton _inform;
   };
 };
 

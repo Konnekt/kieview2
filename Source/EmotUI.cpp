@@ -14,6 +14,7 @@
 #include "stdafx.h"
 #include "emotUI.h"
 #include "Emots.h"
+#include "Helpers.h"
 
 EmotLV::tEmotLVs EmotLV::_lvs;
 
@@ -23,13 +24,9 @@ EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::List
 
   _checked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
   _unchecked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
-  _inform = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::emotsinfo, IML_16), false);
 
   hFont = CreateFont(-11, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
     CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
-
-  _tooltip = new Stamina::UI::ToolTipX::ToolTip(getHwnd(), 0);
-  _tooltip->setTip(new Stamina::UI::ToolTipX::Tip(), false);
 
   draged = false;
   draged_id = 0;
@@ -77,7 +74,6 @@ void EmotLV::onMouseMove(int vkey, const Stamina::Point &pos) {
 EmotLV::~EmotLV() {
   removeAll();
   DeleteObject(hFont);
-  delete _tooltip;
 
   for (tEmotLVs::iterator it = _lvs.begin(); it != _lvs.end(); it++) {
     if ((*it) == this) {
@@ -210,27 +206,41 @@ Size EmotLV::EmotPackInfoItem::getQuickSize() {
 }
 
 Size EmotLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn) {
+  if (li->isSelected()) return Size(fitIn.w, 22 + this->sizeInfo((EmotLV*)lv, Rect(0, 0, fitIn.w, 0)));
   return Size(fitIn.w, 22);
 }
-void EmotLV::EmotPackInfoItem::showToolTip(EmotLV* elv, Point& pos) {
+
+void EmotLV::EmotPackInfoItem::drawInfo(EmotLV* elv, Rect& rc) {
   eMSet* set = _emotInfo->set;
+  HDC dc = elv->getDC();
+  string textA;
 
-  string tiptext = "Zestaw emot: <b>" + set->getName() + "</b>";
-  if (set->getVersion().length()) tiptext += " (" + set->getVersion() + ")";
-  tiptext += "<br/>\n";
-  if (set->getUrl().length()) tiptext += "URL: " + set->getUrl() + "<br/>\n";
-  if (set->getDescription().length()) tiptext += "Opis: " + set->getDescription();
+  RECT rcz = *rc.ref();
+  if (set->getVersion().length()) textA += "Wersja: (" + set->getVersion() + ")\n";
+  if (set->getUrl().length()) textA += "URL: " + set->getUrl() + "\n";
+  if (set->getDescription().length()) textA += "Opis: " + set->getDescription();
+  textA = Helpers::rtrim(textA, "\n");
+  HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
+  DrawText(dc, textA.c_str(), -1, &rcz, DT_WORDBREAK);
+  SelectObject(dc, hOldFont);
+  elv->releaseDC(dc);
+ }
 
-  Stamina::UI::ToolTipX::oTip tip;
-  if (_emotInfo->image.isValid()) {
-    tip = Stamina::UI::ToolTipX::Tip::textAndImage(tiptext, true, _emotInfo->image);
-  } else {
-    tip = new Stamina::UI::ToolTipX::TipTextRich(tiptext);
-  }
+int EmotLV::EmotPackInfoItem::sizeInfo(EmotLV* elv, Rect& rc) {
+  eMSet* set = _emotInfo->set;
+  HDC dc = elv->getDC();
+  string textA;
 
-  elv->_tooltip->setPos(pos, true, Stamina::UI::ToolTipX::enPositioning::positionFirst, Stamina::UI::ToolTipX::enPlacement::pRightBottom);
-  elv->_tooltip->setTip(tip.get(), false);
-  elv->_tooltip->show();
+  RECT rcz = {0, 0, rc.width(), 0};
+  if (set->getVersion().length()) textA += "Wersja: (" + set->getVersion() + ")\n";
+  if (set->getUrl().length()) textA += "URL: " + set->getUrl() + "\n";
+  if (set->getDescription().length()) textA += "Opis: " + set->getDescription();
+  textA = Helpers::rtrim(textA, "\n");
+  HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
+  DrawText(dc, textA.c_str(), -1, &rcz, DT_CALCRECT | DT_WORDBREAK);
+  SelectObject(dc, hOldFont);
+  elv->releaseDC(dc);
+  return rcz.bottom;
 }
 
 bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
@@ -275,18 +285,11 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
   EmotLV* elv = (EmotLV*)lv;
 
   if (vkey == VK_LBUTTON) {
-    if (elv->_tooltip->visible()) elv->_tooltip->hide();
-
     Point p = pos;
     p.x -= elv->getScrollPos().x;
     p.y -= elv->getScrollPos().y;
 
     Rect rc = lv->itemToClient(li->getRect());
-
-    Rect rcinform = rc;
-    rcinform.left = rcinform.right - 3 - 16;
-    rcinform.top += 3;
-    _inform->setPos(rcinform.getLT());
 
     Rect rccheck = rc;
     rccheck.left += 3;
@@ -296,14 +299,20 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
     if (_check->hitTest(p)) {
       switchState(lv);
       return false;
-    } else if (_inform->hitTest(p)) {
-      showToolTip(elv, _inform->getPos());
-      return false;
     } else {
       elv->draged = true;
       elv->draged_id = lv->getItemIndex(li);
       elv->mmitem = elv->draged_id;
+      ListWnd::oItem lastItem = lv->getActiveItem();
+      if (lastItem.isValid()) {
+        lastItem->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+      }
+      lv->setActiveItem(li);
+      lv->selectionToActive();
+      li->setSelected(lv, true);
+      li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
       SetCapture(lv->getHwnd());
+      return false;
     }
   }
   return true;
@@ -376,10 +385,46 @@ bool EmotLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::o
 
   if (vkey == VK_SPACE) {
     switchState(lv);
-    return false;
-  } else {
-    return true;
+  } else if (vkey == VK_UP){
+    int id = lv->getItemIndex(li);
+    if(--id >= 0) {
+      li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+      lv->setActiveItem(elv->_items[id]);
+      lv->selectionToActive();
+      elv->_items[id]->setSelected(lv, true);
+      elv->_items[id]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+      lv->scrollToActive();
+    }
+  } else if (vkey == VK_DOWN){
+    int id = lv->getItemIndex(li);
+    if(++id < elv->itemsCount()) {
+      li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+      lv->setActiveItem(elv->_items[id]);
+      lv->selectionToActive();
+      elv->_items[id]->setSelected(lv, true);
+      elv->_items[id]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+      lv->scrollToActive();
+    }
+  } else if (vkey == VK_HOME) {
+    if (elv->itemsCount()) {
+      li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+      lv->setActiveItem(elv->_items[0]);
+      lv->selectionToActive();
+      elv->_items[0]->setSelected(lv, true);
+      elv->_items[0]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+      lv->scrollToActive();
+    }
+  } else if (vkey == VK_END) {
+    if (elv->itemsCount()) {
+      li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+      lv->setActiveItem(elv->_items[elv->itemsCount() - 1]);
+      lv->selectionToActive();
+      elv->_items[elv->itemsCount() - 1]->setSelected(lv, true);
+      elv->_items[elv->itemsCount() - 1]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+      lv->scrollToActive();
+    }
   }
+  return false;
 }
 
 void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent) {
@@ -391,7 +436,6 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   Rect rci = rc;
   rci.left += 25;
   rci.top += 2;
-
   Stamina::UI::oImage gradient;
 
   SetTextColor(dc, RGB(255, 255, 255));
@@ -415,11 +459,12 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
 
   Stamina::Point p = Point(0,0);
 
-  Rect rcinform = rc;
-  rcinform.left = rcinform.right - 3 - 16;
-  rcinform.top += 3;
-  _inform->setPos(rcinform.getLT());
-  _inform->draw(dc, p);
+ if (_emotInfo->image.isValid()) {
+    Rect rcemot = rc;
+    rcemot.left = rcemot.right - 3 - 16;
+    rcemot.top += 3;
+    _emotInfo->image->draw(dc, rcemot.getLT());
+  }
 
   Rect rccheck = rc;
   rccheck.left += 3;
@@ -429,7 +474,10 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
 
   HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
   DrawTextA(dc, name.c_str(), -1, rctxt.ref(), DT_NOPREFIX | DT_END_ELLIPSIS | DT_SINGLELINE);
+  rctxt.top+= 15;
   SelectObject(dc, hOldFont);
-
+  if (li->isSelected()) {
+    drawInfo(elv, rctxt);
+  }
   lv->releaseDC(dc);
 }
