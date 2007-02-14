@@ -59,6 +59,9 @@
 #pragma comment(lib, "ComCtl32.lib")
 #pragma comment(lib, "Msimg32.lib")
 
+#pragma comment(lib, "DevIL.lib")
+#pragma comment(lib, "DevILU.lib")
+
 #ifdef _DEBUG
   #pragma comment(lib, "stamina_d.lib")
   #pragma comment(lib, "stamina_ui_d.lib")
@@ -88,6 +91,7 @@
 #include <Stamina/ListWnd/ListView.h>
 #include <Stamina/UI/DrawableButton.h>
 #include <Stamina/UI/ToolTipX.h>
+#include <Stamina/UI/ImageIL.h>
 
 using namespace Stamina;
 using namespace std;

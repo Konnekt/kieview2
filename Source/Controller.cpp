@@ -919,7 +919,7 @@ namespace kIEview2 {
   }
 
   String Controller::preLinkify(StringRef& txt) {
-    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", 
+    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%;]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", 
       &Controller::linkInsertion, txt.c_str());
     txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-])+@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6})+)~i", 
       &Controller::eMailInsertion, txt.c_str());
@@ -1131,10 +1131,10 @@ namespace kIEview2 {
       data.hash_insert_new_var("name", name);
     }
     if (filePath.length()) {
-      int pos = filePath.find_last_of('\\');
-      if (pos != -1) {
-        data.hash_insert_new_var("fileName", filePath.substr(pos + 1));
-        data.hash_insert_new_var("path", filePath.substr(0, pos + 1));
+      int pos = filePath.find_last_of('\\') + 1;
+      if (pos > 0) {
+        data.hash_insert_new_var("fileName", filePath.substr(pos));
+        data.hash_insert_new_var("path", filePath.substr(0, pos));
       } else {
         data.hash_insert_new_var("fileName", filePath);
       }

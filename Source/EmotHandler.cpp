@@ -231,6 +231,19 @@ void EmotHandler::saveSettings() {
   Controller::getConfig()->set(cfg::emotPacks, result);
 }
 
+void EmotHandler::fillLV(EmotLV* lv) {
+  Stamina::UI::oImage img;
+
+  for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
+    if (!it->getEmots()[0].isVirtual()) {
+      img = Stamina::UI::loadImageFromFile((getEmotDir() + "\\" + it->getEmots()[0].getImgPath()).c_str(), Stamina::UI::loadImageParams(16, 32));
+    } else {
+      img = new Stamina::UI::Icon((HICON) Ctrl->ICMessage(IMI_ICONGET, kIEview2::ico::emots, IML_16), false);
+    }
+    lv->addItem(new EmotLV::sEmotPackInfo(it->isEnabled(), &*it, img));
+  }
+}
+
 string EmotHandler::getKonnektPath() {
   return Controller::getInstance()->kPath;
 }
