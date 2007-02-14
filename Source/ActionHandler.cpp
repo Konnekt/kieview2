@@ -116,7 +116,7 @@ namespace kIEview2 {
       }
       case act::popup::clear: {
         if (cntId) {
-          Controller::getInstance()->clearWnd(ctrl);
+          Controller::getInstance()->initWnd(ctrl);
         }
         break;
       }

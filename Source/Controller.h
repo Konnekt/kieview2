@@ -172,17 +172,18 @@ namespace kIEview2 {
 
   public:
     bool autoScroll(sUIActionNotify_base* an, IECtrl* ctrl);
-    void clearWnd(IECtrl* ctrl);
+    void initWnd(IECtrl* ctrl);
+
+    EmotHandler* getEmotHandler() {
+      return &emotHandler;
+    }
 
     static DWORD CALLBACK streamOut(DWORD, LPBYTE, LONG, LONG*);
     static LRESULT CALLBACK msgWndProc(HWND, UINT, WPARAM, LPARAM);
     
   public:
-    WNDPROC oldMsgWndProc;
     UINT ieVersion;
     string kPath;
-
-    EmotHandler emotHandler;
 
   protected:
     static string __stdcall linkInsertion(RegEx* reg);
@@ -197,7 +198,8 @@ namespace kIEview2 {
     CriticalSection _locker;
     Tables::oTable historyTable;
     JS::Controller* jsController;
-    // EmotHandler emotHandler;
+    EmotHandler emotHandler;
+    WNDPROC oldMsgWndProc;
     EmotLV* emotLV;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
@@ -224,7 +226,7 @@ namespace kIEview2 {
 
         eM* emot;
         try {
-          emot = pCtrl->emotHandler.getEmot(args[0].getInteger());
+          emot = pCtrl->getEmotHandler()->getEmot(args[0].getInteger());
         } catch (const Exception& e) {
           throw IECtrl::JSException(e.getReason());
         }

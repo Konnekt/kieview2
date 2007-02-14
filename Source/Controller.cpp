@@ -340,14 +340,14 @@ namespace kIEview2 {
         IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
         an->hwnd = ctrl->getHWND();
 
-        oldMsgWndProc = (WNDPROC)SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
+        oldMsgWndProc = (WNDPROC) SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
         SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
         SetProp(an->hwndParent, "MsgSend", false);
 
         wndObjCollection[ctrl].actionHandler = new ActionHandler(ctrl, an->act.cnt);
 
         ctrl->enableSandbox(false);
-        this->clearWnd(ctrl);
+        this->initWnd(ctrl);
         break;
       }
 
@@ -421,7 +421,7 @@ namespace kIEview2 {
       case Konnekt::UI::Notify::clear: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
         IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
-        this->clearWnd(ctrl);
+        this->initWnd(ctrl);
         break;
       }
 
@@ -776,13 +776,14 @@ namespace kIEview2 {
     return msgCount;
   }
 
-  void Controller::clearWnd(IECtrl* ctrl) {
+  void Controller::initWnd(IECtrl* ctrl) {
     // locking
     LockerCS lock(_locker);
 
     ctrl->navigate(("file:///" + unifyPath(kPath, false, '/') + "/data/templates/core/__bootstrap.html").c_str());
     // ctrl->clear();
 
+    SetProp(GetParent(ctrl->getHWND()), "MsgSession", (HANDLE) 0);
     SetProp(GetParent(ctrl->getHWND()), "MsgSend", false);
   }
 
@@ -991,6 +992,10 @@ namespace kIEview2 {
     // We create structure of the data
     param_data data(param_data::HASH);
     data.hash_insert_new_var("@time", i64tostr(date.getInt64()));
+    data.hash_insert_new_var("display", strlen(config->getChar(CNT_DISPLAY, an->act.cnt)) ? 
+      config->getChar(CNT_DISPLAY, an->act.cnt) : 
+      config->getChar(CNT_UID, an->act.cnt)
+    );
     data.hash_insert_new_var("time", date.strftime("%H:%M"));
     data.hash_insert_new_var("status", getStatusLabel(an->_status));
 
