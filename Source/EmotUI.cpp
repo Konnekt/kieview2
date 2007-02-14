@@ -19,7 +19,6 @@
 EmotLV::tEmotLVs EmotLV::_lvs;
 
 EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::ListView(x, y, w, h, parent, id) {
-  _lvs.push_back(this);
   alwaysShowScrollbars(false, false);
 
   _checked = new Stamina::UI::Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
@@ -31,6 +30,8 @@ EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::List
   draged = false;
   draged_id = 0;
   mmitem = -1;
+
+  _lvs.push_back(this);
 }
 
 bool EmotLV::isVaildLV(EmotLV* lv) {
@@ -221,7 +222,6 @@ void EmotLV::EmotPackInfoItem::drawInfo(EmotLV* elv, Rect& rc) {
   string textA;
 
   RECT rcz = *rc.ref();
-  if (set->getVersion().length()) textA += "Wersja: (" + set->getVersion() + ")\n";
   if (set->getUrl().length()) textA += "URL: " + set->getUrl() + "\n";
   if (set->getDescription().length()) textA += "Opis: " + set->getDescription();
   textA = Helpers::rtrim(textA, "\n");
@@ -237,7 +237,6 @@ int EmotLV::EmotPackInfoItem::sizeInfo(EmotLV* elv, Rect& rc) {
   string textA;
 
   RECT rcz = {0, 0, rc.width(), 0};
-  if (set->getVersion().length()) textA += "Wersja: (" + set->getVersion() + ")\n";
   if (set->getUrl().length()) textA += "URL: " + set->getUrl() + "\n";
   if (set->getDescription().length()) textA += "Opis: " + set->getDescription();
   textA = Helpers::rtrim(textA, "\n");
@@ -436,7 +435,11 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   EmotLV* elv = (EmotLV*)lv;
   HDC dc = lv->getDC();
   Rect rc = lv->itemToClient(li->getRect());
+
   string name = _emotInfo->set->getName();
+  if (_emotInfo->set->getVersion().length()) {
+    name += " (" + _emotInfo->set->getVersion() + ")";
+  }
 
   Rect rci = rc;
   rci.left += 25;
@@ -445,6 +448,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
 
   SetTextColor(dc, RGB(255, 255, 255));
   COLORREF textColor;
+
   if (li->isSelected()) {
     gradient = Stamina::UI::createSimpleGradient(Stamina::UI::blendRGB(GetSysColor(COLOR_HIGHLIGHT), GetSysColor(COLOR_WINDOW), 0xD0), 
       GetSysColor(COLOR_HIGHLIGHT), Size(rc.width(), rc.height()));
@@ -459,7 +463,6 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
         Stamina::UI::blendRGB(GetSysColor(COLOR_WINDOW), GetSysColor(COLOR_BTNFACE), 0x10),
       Size(rc.width(), rc.height()));
       textColor = GetSysColor(COLOR_BTNTEXT);
-
     }
   }
   gradient->draw(dc, rc.getLT());

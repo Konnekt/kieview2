@@ -139,7 +139,7 @@ namespace kIEview2 {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
     kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
 
-    //emotHandler.addParser(new JispParser);
+    // emotHandler.addParser(new JispParser);
     emotHandler.addParser(new GGParser);
 
     emotHandler.loadPackages();
@@ -302,6 +302,7 @@ namespace kIEview2 {
         break;
       }
       case cfg::useEmots: {
+        if (an->code == ACTN_DESTROY) break;
         bool useEmots = *UIActionCfgGetValue(an->act, 0, 0) == '1';
 
         UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::useEmotsInHistory), !useEmots ? -1 : 0, ACTS_DISABLED);
@@ -1093,13 +1094,10 @@ namespace kIEview2 {
 
     if (groupedMsgs.size()) {
       sGroupedMsg& lastMsg = groupedMsgs[0];
-      int timeFromLastMsg = 0;
+      int timeFromLastMsg = date.getTime64() - lastMsg.time.getTime64();
 
-      if (!lastMsg.time.empty()) {
-        timeFromLastMsg = date.getTime64() - lastMsg.time.getTime64();
-        groupTime = timeFromLastMsg <= 60;
-      }
       if (lastMsg.cnt == senderID) {
+        groupTime = timeFromLastMsg <= 60;
         groupDisplay = true;
       }
 
@@ -1107,10 +1105,8 @@ namespace kIEview2 {
       if (groupDisplay) data.hash_insert_new_var("groupDisplay", "1");
       if (groupTime) data.hash_insert_new_var("groupTime", "1");
 
-      if (timeFromLastMsg){
-        data.hash_insert_new_var("@lastMsgTime", i64tostr(lastMsg.time.getInt64()));
-        data.hash_insert_new_var("timeFromLastMsg", timeToString(timeFromLastMsg));
-      }
+      data.hash_insert_new_var("@lastMsgTime", i64tostr(lastMsg.time.getInt64()));
+      data.hash_insert_new_var("timeFromLastMsg", timeFromLastMsg ? timeToString(timeFromLastMsg) : "0s");
     }
 
     groupedMsgs.clear();
