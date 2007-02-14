@@ -121,6 +121,16 @@ namespace kIEview2 {
     string bytesToString(double bytes);
     string timeToString(int time);
 
+    String parseBody(StringRef& txt, bool escape, bool _nl2br, bool linkify, bool emots) {
+      if (escape) txt = htmlEscape(txt);
+      if (_nl2br) txt = nl2br(txt);
+      if (linkify) txt = preLinkify(txt);
+      if (emots) txt = emotHandler.parse(txt, /* config->getInt(CNT_NET, an->act.cnt) */ 0);
+      if (linkify) txt = postLinkify(txt);
+
+      return normalizeSpaces(txt);
+    }
+
     String preLinkify(StringRef& txt);
     String postLinkify(StringRef& txt);
 

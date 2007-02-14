@@ -296,11 +296,14 @@ public:
   }
   String parse(const StringRef& body, int net);
 
-
   void fillLV(EmotLV* lv) {
     Stamina::UI::oImage img = new Stamina::UI::Icon((HICON) Ctrl->ICMessage(IMI_ICONGET, kIEview2::ico::emots, IML_16), false);
 
     for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
+      if (!it->getEmots()[0].isVirtual()) {
+        // @todo ³adowanie pierwszej emotki z seta
+        // img = new Stamina::UI::Icon(getEmotDir() + "\\" + it->getEmots()[0].getImgPath().c_str(), 16)
+      }
       lv->addItem(new EmotLV::sEmotPackInfo(it->isEnabled(), &*it, img));
     }
   }

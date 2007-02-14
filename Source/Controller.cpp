@@ -913,8 +913,8 @@ namespace kIEview2 {
 
   string __stdcall Controller::replaceLink(RegEx* reg) {
     sLinkInsertion* li = &Controller::getInstance()->linkInsertions.at(atoi(reg->getSub(1).c_str()));
-
     IMLOG("[Controller::replaceLink()] url = %s, name = %s", li->url.c_str(), li->name.c_str());
+
     return "<a href=\"" + li->url + "\" class=\"autolink\" target=\"_blank\">" + li->name + "</a>";
   }
 
@@ -1000,18 +1000,8 @@ namespace kIEview2 {
 
     if (an->_info) {
       String info = an->_info;
-      info = htmlEscape(info);
+      info = parseBody(info, true, false, config->getInt(cfg::linkify), config->getInt(cfg::useEmots));
 
-      if (config->getInt(cfg::linkify)) {
-        info = preLinkify(info);
-      }
-      if (config->getInt(cfg::useEmots)) {
-        info = emotHandler.parse(info, config->getInt(CNT_NET, an->act.cnt));
-      }
-      if (config->getInt(cfg::linkify)) {
-        info = postLinkify(info);
-      }
-      info = normalizeSpaces(info);
       data.hash_insert_new_var("info", info);
     }
     if (an->_status & ST_IGNORED) {
@@ -1024,7 +1014,6 @@ namespace kIEview2 {
     // locking
     LockerCS lock(_locker);
 
-    bool inHistory = isMsgFromHistory(an);
     cMessage* msg = an->_message;
     string type = getMsgTypeLabel(msg->type);
     String body = msg->body;
@@ -1032,24 +1021,13 @@ namespace kIEview2 {
     Date64 date;
     date = msg->time;
 
-    if (msg->flag & MF_HTML) {
-      // body = makeSafeHtml(body);
-    } else {
-      body = htmlEscape(body);
-      body = nl2br(body);
-    }
-    if (!(msg->flag & MF_LEAVEASIS)) {
-      if (config->getInt(cfg::linkify) && (!inHistory || config->getInt(cfg::linkifyInHistory))) {
-        body = preLinkify(body);
-      }
-      if (config->getInt(cfg::useEmots) && (!inHistory || config->getInt(cfg::useEmotsInHistory))) {
-        body = emotHandler.parse(body, msg->net);
-      }
-      if (config->getInt(cfg::linkify) && (!inHistory || config->getInt(cfg::linkifyInHistory))) {
-        body = postLinkify(body);
-      }
-    }
-    body = normalizeSpaces(body);
+    bool leaveAsIs = msg->flag & MF_LEAVEASIS;
+    bool inHistory = isMsgFromHistory(an);
+    bool isHtml = msg->flag & MF_HTML;
+
+    body = parseBody(body, !isHtml, !isHtml, 
+      !leaveAsIs && config->getInt(cfg::linkify) && (!inHistory || config->getInt(cfg::linkifyInHistory)), 
+      !leaveAsIs && config->getInt(cfg::useEmots) && (!inHistory || config->getInt(cfg::useEmotsInHistory)));
 
     // We create structure of the data
     param_data data(param_data::HASH);
@@ -1060,7 +1038,7 @@ namespace kIEview2 {
     data.hash_insert_new_var("display", getDisplayFromMsg(an));
     data.hash_insert_new_var("type", type);
     data.hash_insert_new_var("ext", msg->ext);
-    data.hash_insert_new_var("time", date.strftime("%H:%M"));
+    data.hash_insert_new_var("time", date.strftime(!inHistory ? "%H:%M" : "%A, %d.%m.%Y - %H:%M"));
     data.hash_insert_new_var("body", body);
 
     if (msg->flag & MF_HIDE) {

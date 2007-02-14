@@ -119,7 +119,7 @@ protected:
 class eMSet {
 public:
   typedef list<eMAuthor> tAuthors;
-  typedef list<eM> tEmots;
+  typedef vector<eM> tEmots;
 
 public:
   eMSet(const StringRef& name, const string& version = "", const StringRef& description = ""):
