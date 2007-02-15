@@ -124,7 +124,7 @@ public:
     string getItemText() {
       eMSet* set = _emotInfo->set;
       string text;
-      set->setUrl("fsdfdffkfhdfsd\ndggfgdfg\n\gfdgdfg\n");
+
       if (set->getUrl().length()) text += "URL: " + set->getUrl() + "\n";
       if (set->getDescription().length()) text += "Opis: " + set->getDescription();
       if (text.length()) text = Helpers::rtrim(text, "\n");
