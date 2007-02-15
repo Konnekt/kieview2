@@ -485,14 +485,15 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   */
   if (li->isSelected()) {
     gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
+    textColor = RGB(255,255,255);
   } else {
     if (_emotInfo->checked) {
-      gradient = Stamina::UI::createSimpleGradient(RGB(117,215,19), RGB(174,241,107), Size(rc.width(), rc.height()));
+      gradient = Stamina::UI::createSimpleGradient(RGB(190,252,122), RGB(219,253,181), Size(rc.width(), rc.height()));
     } else {
-      gradient = Stamina::UI::createSimpleGradient(RGB(80,80,80), RGB(140,140,140), Size(rc.width(), rc.height()));
+      gradient = Stamina::UI::createSimpleGradient(RGB(220,220,220), RGB(240,240,240), Size(rc.width(), rc.height()));
     }
+    textColor = RGB(40,40,40);
   }
-  textColor = RGB(255,255,255);
 
   COLORREF active = GetSysColor(COLOR_HIGHLIGHT);
   COLORREF window = GetSysColor(COLOR_WINDOW);

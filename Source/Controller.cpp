@@ -184,8 +184,7 @@ namespace kIEview2 {
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Automatycznie przewijaj okno rozmowy", cfg::autoScroll);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Stosuj czas relatywny (jeœli siê da)" AP_TIPRICH 
-      "<b>Uwaga!</b> wyd³u¿a czas ³adowania rozmowy", cfg::relativeTime);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Stosuj czas relatywny (jeœli siê da)", cfg::relativeTime);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SPINNER | ACTSC_INLINE, AP_MINIMUM "0" AP_MAXIMUM "1000", cfg::lastMsgCount, 0, 0, 65);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Iloœæ ostatnich wiadomoœci do wczytania");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
