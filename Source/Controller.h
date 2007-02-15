@@ -191,6 +191,9 @@ namespace kIEview2 {
       UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline), !showFormat ? -1 : 0, ACTS_HIDDEN);
       UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic), !showFormat ? -1 : 0, ACTS_HIDDEN);
       UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold), !showFormat ? -1 : 0, ACTS_HIDDEN);
+
+      UIActionSetStatus(sUIAction(IMIG_MSGBAR, act::formatTb::formatTb), 
+        !(showEmot || showAutoScroll || showFormat || showColor) ? -1 : 0, ACTS_HIDDEN);
     }
 
     void handleTextFlag(int flag, int mask);
