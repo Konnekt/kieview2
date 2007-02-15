@@ -104,13 +104,14 @@ namespace kIEview2 {
       }
       case act::popup::lastMsgs: {
         if (cntId) {
-          Controller::getInstance()->readMsgs(cntId, 10, GetProp(GetParent(ctrl->getHWND()), "MsgSend") ? 1 : 0);
+          Controller::getInstance()->readMsgs(cntId, Controller::getConfig()->getInt(cfg::lastMsgCount), 
+            GetProp(GetParent(ctrl->getHWND()), "MsgSession") ? 1 : 0);
         }
         break;
       }
       case act::popup::lastSession: {
         if (cntId) {
-          Controller::getInstance()->readLastMsgSession(cntId, GetProp(GetParent(ctrl->getHWND()), "MsgSend") ? 1 : 0);
+          Controller::getInstance()->readLastMsgSession(cntId, GetProp(GetParent(ctrl->getHWND()), "MsgSession") ? 1 : 0);
         }
         break;
       }

@@ -161,6 +161,28 @@ namespace kIEview2 {
     bool isMsgFromHistory(sUIActionNotify_base* an);
     bool loadMsgTable(tCntId cnt);
 
+    void clearGroupedMsgs(sUIActionNotify_base* an) {
+      IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+      tGroupedMsgs& groupedMsgs = wndObjCollection[ctrl].groupedMsgs;
+
+      groupedMsgs.clear();
+    }
+
+    void setActionsStatus() {
+      bool showEmot = config->getInt(cfg::useEmots) && config->getInt(cfg::showEmotChooser);
+      bool showAutoScroll = config->getInt(cfg::showAutoScroll);
+      bool showFormat = config->getInt(cfg::showFormattingBtns);
+      bool showColor = config->getInt(cfg::showColorChooser);
+
+      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::autoScroll), !showAutoScroll ? -1 : 0, ACTS_HIDDEN);
+      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::emots), !showEmot ? -1 : 0, ACTS_HIDDEN);
+      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::color), !showColor ? -1 : 0, ACTS_HIDDEN);
+
+      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline), !showFormat ? -1 : 0, ACTS_HIDDEN);
+      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic), !showFormat ? -1 : 0, ACTS_HIDDEN);
+      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold), !showFormat ? -1 : 0, ACTS_HIDDEN);
+    }
+
     void handleTextFlag(int flag, int mask);
     char* getStringCol(Tables::oTable& table, tRowId row, int pos); // do zmiany
 

@@ -23,6 +23,7 @@
 #include "Emots.h"
 
 using namespace Stamina::UI;
+using namespace Helpers;
 
 class EmotLV: public ListWnd::ListView {
 public:
@@ -117,7 +118,7 @@ public:
       _check->setImage(_emotInfo->checked ? elv->_unchecked.get() : elv->_checked.get());
       _emotInfo->checked = !_emotInfo->checked;
       refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
-      SendMessage((HWND)UIGroupHandle(sUIAction(0, IMIG_CFGWND)), WM_USER + 18091, 0, 0);
+      touchConfigWnd();
     }
 
     string getItemText() {

@@ -65,6 +65,7 @@ namespace Helpers {
   const char * getPlugName(int plugID);
 
   void UIActionCall(int group, int act, int cntID = 0);
+  void touchConfigWnd();
 
   #ifdef SHARED_TABLETKA_H
   bool isMsgWndOpen(int cntID);

@@ -262,7 +262,7 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
         if (elv->draged_id != id) {
           if (elv->moveItem(elv->draged_id, id)) {
             elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setSelected(elv, true);
-            SendMessage((HWND)UIGroupHandle(sUIAction(0, IMIG_CFGWND)), WM_USER + 18091, 0, 0);
+            touchConfigWnd();
           }
           elv->mmitem = -1;
         }
@@ -270,7 +270,7 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
         if (elv->draged_id != id + 1) {
           if (elv->moveItem(elv->draged_id, id + 1)) {
             elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setSelected(elv, true);
-            SendMessage((HWND)UIGroupHandle(sUIAction(0, IMIG_CFGWND)), WM_USER + 18091, 0, 0);
+            touchConfigWnd();
           }
           elv->mmitem = -1;
         }

@@ -18,6 +18,13 @@
 #include "TplUdf.h"
 #include "EmotUI.h"
 
+/*
+@todo {
+  * bridge JS -> udf
+  * {{if true ? expr : expr}}
+}
+*/
+
 void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
   unsigned int ksize = strlen((char*)key);
   unsigned int ki = 0;
@@ -73,14 +80,22 @@ namespace kIEview2 {
     this->registerActionObserver(ui::emotLV, bind(resolve_cast0(&Controller::_emotLV), this));
 
     /* Configuration columns */
-    config->setColumn(DTCFG, cfg::showFormatTb, DT_CT_INT, 1, "kIEview2/showFormatTb");
+    config->setColumn(DTCFG, cfg::lastMsgCount, DT_CT_INT, 10, "kIEview2/lastMsgCount");
+    config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 1, "kIEview2/autoScroll");
+
+    config->setColumn(DTCFG, cfg::showFormattingBtns, DT_CT_INT, 1, "kIEview2/showFormattingBtns");
+    config->setColumn(DTCFG, cfg::showEmotChooser, DT_CT_INT, 1, "kIEview2/showEmotChooser");
+    config->setColumn(DTCFG, cfg::showColorChooser, DT_CT_INT, 1, "kIEview2/showColorChooser");
+    config->setColumn(DTCFG, cfg::showAutoScroll, DT_CT_INT, 1, "kIEview2/showAutoScroll");
+
     config->setColumn(DTCFG, cfg::linkify, DT_CT_INT, 1, "kIEview2/linkify/use");
     config->setColumn(DTCFG, cfg::linkifyInHistory, DT_CT_INT, 1, "kIEview2/linkify/useInHistory");
+
     config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEview2/emots/use");
     config->setColumn(DTCFG, cfg::useEmotsInHistory, DT_CT_INT, 1, "kIEview2/emots/useInHistory");
+
     config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots", "kIEview2/emots/dir");
     config->setColumn(DTCFG, cfg::emotPacks, DT_CT_STR, "", "kIEview2/emots/packs");
-    config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 1, "kIEview2/autoScroll");
 
     this->subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_MSGWND);
     this->subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
@@ -182,14 +197,15 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::clearSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
 
-    if (config->getInt(cfg::showFormatTb)) {
+    if (true) {
       UIGroupAdd(IMIG_MSGBAR, act::formatTb::formatTb);
-      UIActionAdd(act::formatTb::formatTb, act::formatTb::emots, config->getInt(cfg::useEmots) ? 0 : ACTS_HIDDEN, "Emotikony", ico::emots);
+      UIActionAdd(act::formatTb::formatTb, act::formatTb::emots, 0, "Emotikony", ico::emots);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::bold, ACTT_CHECK, "Pogrubienie", ico::bold);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::italic, ACTT_CHECK, "Kursywa", ico::italic);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::underline, ACTT_CHECK, "Podkreœlenie", ico::underline);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::color, ACTT_CHECK, "Kolor", ico::color);
       UIActionAdd(act::formatTb::formatTb, act::formatTb::autoScroll, ACTR_INIT, "Przewijaj", ico::autoScroll);
+      setActionsStatus();
     }
 
     UIGroupAdd(IMIG_CFG_PLUGS, ui::cfgGroup, 0, "kIEview2", ico::logo);
@@ -197,18 +213,26 @@ namespace kIEview2 {
       "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest "
       "wyœwietlanie emotikon oraz modyfikacja wygl¹du okna przy pomocy styli CSS i skryptów JS.",
       "<span class='note'>Skompilowano: <b>" __DATE__ "</b> [<b>" __TIME__ "</b>]</span><br/>"
-      "Podziêkowania za pomoc nale¿a siê dla <b>dulka</b> i <b>ursusa</b> :)<br/><br/>"
+      "Du¿e podziêkowania za pomoc nale¿¹ siê dla <b>dulka</b> i <b>ursusa</b> :)<br/><br/>"
       "Copyright © 2006-2007 <b>Sijawusz Pur Rahnama</b><br/>"
       "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>", Helpers::icon16(ico::logo).a_str(), -3);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Automatycznie przewijaj okno rozmowy", cfg::autoScroll);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_NEEDRESTART, "Wyœwietlaj toolbar w oknie rozmowy", cfg::showFormatTb);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SPINNER | ACTSC_INLINE, AP_MINIMUM "0" AP_MAXIMUM "500", cfg::lastMsgCount);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Iloœæ ostatnich wiadomoœci do wczytania");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
+
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Formatowanie");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przyciski formatowania", cfg::showFormattingBtns);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przycisk wyboru emotikon", cfg::showEmotChooser);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przycisk wyboru koloru", cfg::showColorChooser);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przycisk przewijania", cfg::showAutoScroll);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Linki");
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Zamieniaj linki na 'klikalne'", cfg::linkify);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "+ równie¿ w historii" AP_TIPRICH 
+    UIActionCfgAdd(ui::cfgGroup, cfg::linkify, ACTT_CHECK | ACTR_INIT, "Zamieniaj linki na 'klikalne'", cfg::linkify);
+    UIActionCfgAdd(ui::cfgGroup, cfg::linkifyInHistory, ACTT_CHECK, "+ równie¿ w historii" AP_TIPRICH 
       "<b>Uwaga!</b> wyd³u¿a czas ³adowania rozmowy", cfg::linkifyInHistory);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
@@ -300,12 +324,20 @@ namespace kIEview2 {
         break;
       }
       case cfg::useEmots: {
-        if (an->code == ACTN_DESTROY) break;
-        bool useEmots = *UIActionCfgGetValue(an->act, 0, 0) == '1';
+        if (an->code == ACTN_CREATE || an->code == ACTN_ACTION) {
+          bool useEmots = *UIActionCfgGetValue(an->act, 0, 0) == '1';
 
-        UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::useEmotsInHistory), !useEmots ? -1 : 0, ACTS_DISABLED);
-        UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::emotsDir), !useEmots ? -1 : 0, ACTS_DISABLED);
-        // if (EmotLV::isVaildLV(emotLV)) emotLV->setEnabled(useEmots);
+          UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::useEmotsInHistory), !useEmots ? -1 : 0, ACTS_DISABLED);
+          UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::emotsDir), !useEmots ? -1 : 0, ACTS_DISABLED);
+          // UIActionSetStatus(sUIAction(ui::cfgGroup, ui::refreshEmotLV), !useEmots ? -1 : 0, ACTS_DISABLED);
+          // if (EmotLV::isVaildLV(emotLV)) emotLV->setEnabled(useEmots);
+        }
+        break;
+      }
+      case cfg::linkify: {
+        if (an->code == ACTN_CREATE || an->code == ACTN_ACTION) {
+          UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::linkifyInHistory), *UIActionCfgGetValue(an->act, 0, 0) == '0' ? -1 : 0, ACTS_DISABLED);
+        }
         break;
       }
       case ui::refreshEmotLV: {
@@ -318,9 +350,8 @@ namespace kIEview2 {
   }
 
   void Controller::_onCfgChanged() {
-    UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::emots), 
-      !config->getInt(cfg::useEmots) ? -1 : 0, ACTS_HIDDEN);
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
+    setActionsStatus();
 
     if (EmotLV::isVaildLV(emotLV)) {
       emotLV->saveState();
@@ -341,7 +372,6 @@ namespace kIEview2 {
 
         oldMsgWndProc = (WNDPROC) SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
         SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
-        SetProp(an->hwndParent, "MsgSend", false);
 
         wndObjCollection[ctrl].actionHandler = new ActionHandler(ctrl, an->act.cnt);
 
@@ -500,8 +530,6 @@ namespace kIEview2 {
 
         strcpy(an->_message->body, text.a_str());
         an->_message->flag |= MF_HTML;
-
-        SetProp(GetParent((HWND)UIActionHandleDirect(an->act)), "MsgSend", (HANDLE) true);
         return;
       }
     }
@@ -786,7 +814,6 @@ namespace kIEview2 {
     // ctrl->clear();
 
     SetProp(GetParent(ctrl->getHWND()), "MsgSession", (HANDLE) 0);
-    SetProp(GetParent(ctrl->getHWND()), "MsgSend", false);
   }
 
   DWORD CALLBACK Controller::streamOut(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) {
@@ -1055,6 +1082,7 @@ namespace kIEview2 {
     if (msgHandlers.find(msg->type) != msgHandlers.end()) {
       msgHandlers[msg->type]->signal(data, an);
     }
+
     return tplHandler->parseTpl(&data, ("content-types/" + type).c_str());
   }
 
@@ -1068,6 +1096,7 @@ namespace kIEview2 {
     if (!(an->_message->flag & MF_QE_NORMAL)) {
       data.hash_insert_new_var("warning?", "1");
     }
+    clearGroupedMsgs(an);
   }
 
   void Controller::_handleStdMsgTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
@@ -1098,7 +1127,7 @@ namespace kIEview2 {
       int timeFromLastMsg = date.getTime64() - lastMsg.time.getTime64();
 
       if (lastMsg.cnt == senderID) {
-        groupTime = timeFromLastMsg <= 60;
+        groupTime = timeFromLastMsg < 60;
         groupDisplay = true;
       }
 

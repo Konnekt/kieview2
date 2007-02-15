@@ -96,14 +96,22 @@ namespace kIEview2 {
   namespace cfg {
     const unsigned int cfg = net * 1000 + 500;
 
-    const unsigned int showFormatTb = cfg + 1;
+    const unsigned int showFormattingBtns = cfg + 1;
+    const unsigned int showEmotChooser = cfg + 10;
+    const unsigned int showColorChooser = cfg + 11;
+    const unsigned int showAutoScroll = cfg + 12;
+
     const unsigned int linkify = cfg + 2;
     const unsigned int linkifyInHistory = cfg + 3;
+
     const unsigned int useEmots = cfg + 4;
     const unsigned int useEmotsInHistory = cfg + 5;
+
     const unsigned int emotsDir = cfg + 6;
     const unsigned int emotPacks = cfg + 7;
+
     const unsigned int autoScroll = cfg + 8;
+    const unsigned int lastMsgCount = cfg + 9;
   }
 }
 

@@ -140,6 +140,10 @@ namespace Helpers {
       (int) &sUIActionNotify_2params(sUIAction(group, act, cntID), ACTN_ACTION, 0, 0), 0);
   }
 
+  void touchConfigWnd() {
+    SendMessage((HWND)UIGroupHandle(sUIAction(0, IMIG_CFGWND)), WM_USER + 18091, 0, 0);
+  }
+
 #ifdef SHARED_TABLETKA_H
   bool isMsgWndOpen(int cnt) {
     return Tabs::GetWindowState(cnt) != 0;
