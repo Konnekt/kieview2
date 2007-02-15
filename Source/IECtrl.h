@@ -128,11 +128,8 @@ public:
   void saveDocument();
   void selectAll();
   bool callJScript(const char* szFunc, Var &args, Var *ret);
+  bool isReady();
 
-  bool isReady() {
-    return m_bIsReady;
-  }
-  bool ready();
   static std::string humanize(const char* text);
 
   static void setAutoCopySel(bool autoCopy) {

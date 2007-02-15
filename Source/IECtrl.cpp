@@ -57,7 +57,6 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
   m_bClosed = false;
   m_bSandbox = true;
   m_bGetSelection = false;
-  m_bIsReady = false;
   m_pDropTarget = new DropTarget(this);
 
   m_pAnchorClickListener = NULL;
@@ -264,7 +263,7 @@ IHTMLDocument2* IECtrl::getDocument() {
   return document;
 }
 
-bool IECtrl::ready() {
+bool IECtrl::isReady() {
   READYSTATE state;
   m_pWebBrowser->get_ReadyState(&state);
   return (state & READYSTATE_COMPLETE) || (state & READYSTATE_LOADED);
@@ -912,7 +911,6 @@ void IECtrl::EventSink::NavigateComplete(IDispatch* pDisp, VARIANT* url) {
 }
 
 void IECtrl::EventSink::DocumentComplete(IDispatch* pDisp, VARIANT* url) {
-  m_pCtrl->m_bIsReady = true;
 }
 
 void IECtrl::EventSink::OnQuit() {

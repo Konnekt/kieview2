@@ -89,10 +89,10 @@ namespace kIEview2 {
     config->setColumn(DTCFG, cfg::showAutoScroll, DT_CT_INT, 1, "kIEview2/showAutoScroll");
 
     config->setColumn(DTCFG, cfg::linkify, DT_CT_INT, 1, "kIEview2/linkify/use");
-    config->setColumn(DTCFG, cfg::linkifyInHistory, DT_CT_INT, 1, "kIEview2/linkify/useInHistory");
+    config->setColumn(DTCFG, cfg::linkifyInHistory, DT_CT_INT, 1, "kIEview2/linkify/inHistory");
 
     config->setColumn(DTCFG, cfg::useEmots, DT_CT_INT, 1, "kIEview2/emots/use");
-    config->setColumn(DTCFG, cfg::useEmotsInHistory, DT_CT_INT, 1, "kIEview2/emots/useInHistory");
+    config->setColumn(DTCFG, cfg::useEmotsInHistory, DT_CT_INT, 1, "kIEview2/emots/inHistory");
 
     config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots", "kIEview2/emots/dir");
     config->setColumn(DTCFG, cfg::emotPacks, DT_CT_STR, "", "kIEview2/emots/packs");
@@ -407,7 +407,11 @@ namespace kIEview2 {
           args[0] = tplHandler->parseException(e).a_str();
         }
 
-        Ctrl->Sleep(1000);
+        if (!ctrl->isReady()) {
+          while (!ctrl->isReady()) {
+            Ctrl->Sleep(100);
+          }
+        }
         ctrl->callJScript("addMessage", args, &ret);
         if (autoScroll) ctrl->scrollToBottom();
         break;
@@ -427,7 +431,11 @@ namespace kIEview2 {
           args[0] = tplHandler->parseException(e).a_str();
         }
 
-        Ctrl->Sleep(1000);
+        if (!ctrl->isReady()) {
+          while (!ctrl->isReady()) {
+            Ctrl->Sleep(100);
+          }
+        }
         ctrl->callJScript("addStatus", args, &ret);
         if (autoScroll) ctrl->scrollToBottom();
         break;
