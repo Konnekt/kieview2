@@ -481,8 +481,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   SetTextColor(dc, RGB(255, 255, 255));
   COLORREF textColor;
 
-  /* // statyczne kolorki
-  */
+  /* predefiniowane kolorki */
   if (li->isSelected()) {
     gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
     textColor = RGB(255,255,255);
@@ -495,15 +494,8 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
     textColor = RGB(40,40,40);
   }
 
-  COLORREF active = GetSysColor(COLOR_HIGHLIGHT);
-  COLORREF window = GetSysColor(COLOR_WINDOW);
-  COLORREF inactive = GetSysColor(COLOR_INACTIVECAPTION);
-  COLORREF button = GetSysColor(COLOR_BTNFACE);
-
-  COLORREF colorSelectedText = GetSysColor(COLOR_HIGHLIGHTTEXT);
-  COLORREF colorText = GetSysColor(COLOR_WINDOWTEXT);
-
-  /* // kod z Actio
+  /*
+  // kod z Actio
   brushSelected = createSimpleGradient(blendRGB(active, window, 0xD0), active, Size(10, entryCallHeight), 0, 0x80);
   brushActive = createSimpleGradient(blendRGB(active, window, 0x30), blendRGB(active, window, 0x80), Size(10, entryCallHeight), 0, 0xA0);
   brushWaiting = createSimpleGradient(window, blendRGB(active, window, 0x30), Size(10, entryCallHeight), 0, 0xA0);
@@ -513,6 +505,15 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
 
   brushSelectedEntry = createSimpleGradient(blendRGB(active, window, 0x80), active, Size(10, entryHeight*2), 0, /* 0x10 *\/ 0x0;
   brushInfoEntry = createSimpleGradient(blendRGB(button, window, 0x40), blendRGB(button, window, 0x10), Size(10, entryInfoMinimum*2), 0, 0xA0);
+
+  // kolorki z palety systemowej
+  COLORREF active = GetSysColor(COLOR_HIGHLIGHT);
+  COLORREF window = GetSysColor(COLOR_WINDOW);
+  COLORREF inactive = GetSysColor(COLOR_INACTIVECAPTION);
+  COLORREF button = GetSysColor(COLOR_BTNFACE);
+
+  COLORREF colorSelectedText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+  COLORREF colorText = GetSysColor(COLOR_WINDOWTEXT);
 
   if (li->isActive()) {
     gradient = createSimpleGradient(blendRGB(active, window, 0x80), active, Size(rc.width(), rc.height()));

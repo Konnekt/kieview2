@@ -173,14 +173,22 @@ namespace kIEview2 {
     UIActionAdd(act::formatTb::formatTb, act::formatTb::autoScroll, ACTR_INIT, "Przewijaj", ico::autoScroll);
     setActionsStatus();
 
-    UIGroupAdd(IMIG_CFG_PLUGS, ui::cfgGroup, 0, "kIEview2", ico::logo);
-    UIActionCfgAddPluginInfoBox2(ui::cfgGroup, 
-      "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest "
-      "wyœwietlanie emotikon oraz modyfikacja wygl¹du okna przy pomocy styli CSS i skryptów JS.",
+    char desc[] = 
       "<span class='note'>Skompilowano: <b>" __DATE__ "</b> [<b>" __TIME__ "</b>]</span><br/>"
       "Du¿e podziêkowania za pomoc nale¿¹ siê dla <b>dulka</b> i <b>ursusa</b> :)<br/><br/>"
       "Copyright © 2006-2007 <b>Sijawusz Pur Rahnama</b><br/>"
-      "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>", icon16(ico::logo).a_str(), -3);
+      "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>";
+
+    UIGroupAdd(IMIG_CFG_PLUGS, ui::cfgGroup, 0, "kIEview2", ico::logo);
+    UIGroupAdd(ui::cfgGroup, ui::emotCfgGroup, 0, "Emotikony", ico::emots);
+
+    UIActionCfgAddPluginInfoBox2(ui::cfgGroup, 
+      "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest "
+      "wyœwietlanie emotikon oraz modyfikacja wygl¹du okna przy pomocy styli CSS i skryptów JS.",
+      desc, icon16(ico::logo).a_str(), -3);
+    UIActionCfgAddPluginInfoBox2(ui::emotCfgGroup, 
+      "Poni¿ej znajduj¹ siê opcje dotycz¹ce emotikon. Wybór zestawów emotikon oraz ustawienia menu emotikon.",
+      desc, icon16(ico::emots).a_str(), -3);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Automatycznie przewijaj okno rozmowy", cfg::autoScroll);
@@ -189,29 +197,38 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Iloœæ ostatnich wiadomoœci do wczytania");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Interfejs");
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przyciski formatowania", cfg::showFormattingBtns);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przycisk wyboru emotikon", cfg::showEmotChooser);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przycisk wyboru koloru", cfg::showColorChooser);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przycisk przewijania", cfg::showAutoScroll);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
-
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Linki");
     UIActionCfgAdd(ui::cfgGroup, cfg::linkify, ACTT_CHECK | ACTR_INIT, "Zamieniaj linki na 'klikalne'", cfg::linkify);
     UIActionCfgAdd(ui::cfgGroup, cfg::linkifyInHistory, ACTT_CHECK, "+ równie¿ w historii" AP_TIPRICH 
       "<b>Uwaga!</b> wyd³u¿a czas ³adowania rozmowy", cfg::linkifyInHistory);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Emotikony");
-    UIActionCfgAdd(ui::cfgGroup, cfg::useEmots, ACTT_CHECK | ACTR_INIT, "Wyœwietlaj emotikony", cfg::useEmots);
-    UIActionCfgAdd(ui::cfgGroup, cfg::useEmotsInHistory, ACTT_CHECK, "+ równie¿ w historii" AP_TIPRICH 
-      "<b>Uwaga!</b> wyd³u¿a czas ³adowania rozmowy", cfg::useEmotsInHistory);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê \"pakiety\" emotikon");
-    UIActionCfgAdd(ui::cfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SEPARATOR, "Wybierz pakiety emotikon:");
-    UIActionCfgAdd(ui::cfgGroup, ui::emotLV, ACTT_HWND | ACTSC_INLINE);
-    UIActionCfgAdd(ui::cfgGroup, ui::refreshEmotLV, ACTT_BUTTON, "Odœwie¿" AP_ICO "702", 0, 0, 0, 75);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Toolbar formatowania");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_INLINE, "Przyciski formatowania", cfg::showFormattingBtns);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE | ACTSC_INLINE, icon16(ico::bold).a_str());
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE | ACTSC_INLINE, icon16(ico::italic).a_str());
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE, icon16(ico::underline).a_str());
+
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_INLINE, "Przycisk wyboru emotikon", cfg::showEmotChooser);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE, icon16(ico::emots).a_str());
+
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_INLINE, "Przycisk wyboru koloru", cfg::showColorChooser);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE, icon16(ico::color).a_str());
+
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_INLINE, "Przycisk przewijania", cfg::showAutoScroll);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE, icon16(ico::autoScroll).a_str());
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
+
+    UIActionCfgAdd(ui::emotCfgGroup, 0, ACTT_GROUP, "Emotikony");
+    UIActionCfgAdd(ui::emotCfgGroup, cfg::useEmots, ACTT_CHECK | ACTR_INIT, "Wyœwietlaj emotikony", cfg::useEmots);
+    UIActionCfgAdd(ui::emotCfgGroup, cfg::useEmotsInHistory, ACTT_CHECK, "+ równie¿ w historii" AP_TIPRICH 
+      "<b>Uwaga!</b> wyd³u¿a czas ³adowania rozmowy", cfg::useEmotsInHistory);
+    UIActionCfgAdd(ui::emotCfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê \"pakiety\" emotikon");
+    UIActionCfgAdd(ui::emotCfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
+    UIActionCfgAdd(ui::emotCfgGroup, 0, ACTT_SEPARATOR, "Wybierz pakiety emotikon:");
+    UIActionCfgAdd(ui::emotCfgGroup, ui::emotLV, ACTT_HWND | ACTSC_INLINE);
+    UIActionCfgAdd(ui::emotCfgGroup, ui::refreshEmotLV, ACTT_BUTTON, "Odœwie¿" AP_ICO "702", 0, 0, 0, 75);
+    UIActionCfgAdd(ui::emotCfgGroup, 0, ACTT_GROUPEND);
   }
 
   void Controller::_onAction() {
@@ -293,9 +310,9 @@ namespace kIEview2 {
         if (an->code == ACTN_CREATE || an->code == ACTN_ACTION) {
           bool useEmots = *UIActionCfgGetValue(an->act, 0, 0) == '1';
 
-          UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::useEmotsInHistory), !useEmots ? -1 : 0, ACTS_DISABLED);
-          UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::emotsDir), !useEmots ? -1 : 0, ACTS_DISABLED);
-          // UIActionSetStatus(sUIAction(ui::cfgGroup, ui::refreshEmotLV), !useEmots ? -1 : 0, ACTS_DISABLED);
+          UIActionSetStatus(sUIAction(ui::emotCfgGroup, cfg::useEmotsInHistory), !useEmots ? -1 : 0, ACTS_DISABLED);
+          UIActionSetStatus(sUIAction(ui::emotCfgGroup, cfg::emotsDir), !useEmots ? -1 : 0, ACTS_DISABLED);
+          // UIActionSetStatus(sUIAction(ui::emotCfgGroup, ui::refreshEmotLV), !useEmots ? -1 : 0, ACTS_DISABLED);
           // if (EmotLV::isVaildLV(emotLV)) emotLV->setEnabled(useEmots);
         }
         break;
