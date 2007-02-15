@@ -209,12 +209,14 @@ Size EmotLV::EmotPackInfoItem::getQuickSize() {
 }
 
 Size EmotLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn) {
+  LockerCS locker(_lock);
+
   int addY = 0;
   if (_emotInfo->image.isValid()) {
     addY = _emotInfo->image->getSize().h;
   }
   if (addY < 16) addY = 16;
-  if (li->isSelected()) return Size(fitIn.w, sizeInfo((EmotLV*)lv, Rect(0, 0, fitIn.w, 0)) + 6 + addY);
+  if (li->isActive()) return Size(fitIn.w, sizeInfo((EmotLV*)lv, Rect(0, 0, fitIn.w, 0)) + 6 + addY);
   return Size(fitIn.w, 6 + addY);
 }
 
@@ -245,6 +247,8 @@ int EmotLV::EmotPackInfoItem::sizeInfo(EmotLV* elv, Rect& rc) {
 }
 
 bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
+  LockerCS locker(_lock);
+
   EmotLV* elv = (EmotLV*)lv;
 
   if (elv->draged) {
@@ -261,7 +265,15 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
       if (p.y < rc.getCenter().y) {
         if (elv->draged_id != id) {
           if (elv->moveItem(elv->draged_id, id)) {
-            elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setSelected(elv, true);
+            //elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setSelected(elv, true);
+            ListWnd::oItem lastItem = lv->getActiveItem();
+            if (lastItem.isValid()) {
+              lastItem->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+            }
+            lv->setActiveItem(elv->_items[id - (id > elv->draged_id ? 1 : 0)]);
+            lv->selectionToActive();
+            elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setSelected(lv, true);
+            elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
             touchConfigWnd();
           }
           elv->mmitem = -1;
@@ -269,7 +281,16 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
       } else {
         if (elv->draged_id != id + 1) {
           if (elv->moveItem(elv->draged_id, id + 1)) {
-            elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setSelected(elv, true);
+            //elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setSelected(elv, true);
+
+            ListWnd::oItem lastItem = lv->getActiveItem();
+            if (lastItem.isValid()) {
+              lastItem->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+            }
+            lv->setActiveItem(elv->_items[id + (id < elv->draged_id ? 1 : 0)]);
+            lv->selectionToActive();
+            elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setSelected(lv, true);
+            elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
             touchConfigWnd();
           }
           elv->mmitem = -1;
@@ -279,10 +300,12 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
     elv->draged = false;
   }
   ReleaseCapture();
-  return true;
+  return false;
 }
 
 bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
+  LockerCS locker(_lock);
+
   EmotLV* elv = (EmotLV*)lv;
 
   if (vkey == VK_LBUTTON) {
@@ -324,6 +347,8 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
 }
 
 bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
+  LockerCS locker(_lock);
+
   EmotLV* elv = (EmotLV*)lv;
 
   if (elv->draged) {
@@ -376,6 +401,8 @@ bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd:
 }
 
 bool  EmotLV::EmotPackInfoItem::onMouseDblClk(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
+  LockerCS locker(_lock);
+
   EmotLV* elv = (EmotLV*)lv;
 
   if (vkey == VK_LBUTTON) {
@@ -386,6 +413,8 @@ bool  EmotLV::EmotPackInfoItem::onMouseDblClk(ListWnd::ListView* lv, const ListW
 }
 
 bool EmotLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info) {
+  LockerCS locker(_lock);
+
   EmotLV* elv = (EmotLV*)lv;
 
   if (vkey == VK_SPACE) {
@@ -433,6 +462,8 @@ bool EmotLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::o
 }
 
 void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent) {
+  LockerCS locker(_lock);
+
   EmotLV* elv = (EmotLV*)lv;
   HDC dc = lv->getDC();
   Rect rc = lv->itemToClient(li->getRect());
@@ -483,7 +514,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   brushInfoEntry = createSimpleGradient(blendRGB(button, window, 0x40), blendRGB(button, window, 0x10), Size(10, entryInfoMinimum*2), 0, 0xA0);
   */
 
-  if (li->isSelected()) {
+  if (li->isActive()) {
     gradient = createSimpleGradient(blendRGB(active, window, 0x80), active, Size(rc.width(), rc.height()));
     textColor = colorSelectedText;
   } else {
@@ -514,6 +545,8 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
     emotY = _emotInfo->image->getSize().h;
     emotX = _emotInfo->image->getSize().w;
   }
+
+  if (emotY < 16) emotY = 16;
 
   Rect rccheck = rc;
   rccheck.left += 3;

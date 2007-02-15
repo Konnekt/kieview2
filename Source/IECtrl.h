@@ -132,7 +132,7 @@ public:
   bool isReady() {
     return m_bIsReady;
   }
-
+  bool ready();
   static std::string humanize(const char* text);
 
   static void setAutoCopySel(bool autoCopy) {
