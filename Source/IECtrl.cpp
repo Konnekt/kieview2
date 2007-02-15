@@ -802,7 +802,7 @@ IECtrl::EventSink::EventSink(IECtrl * pCtrl) {
 }
 
 IECtrl::EventSink::~EventSink() {
-  _ASSERT(m_cRef == 0);
+  _ASSERT(m_cRef <= 0);
 }
 
 STDMETHODIMP IECtrl::EventSink::QueryInterface(REFIID riid, PVOID *ppv) {
@@ -971,7 +971,7 @@ IECtrl::ClientSite::ClientSite(IECtrl * pCtrl) {
 }
 
 IECtrl::ClientSite::~ClientSite() {
-  _ASSERT(m_cRef == 0);
+  _ASSERT(m_cRef <= 0);
 }
 
 // IUnknown
@@ -1329,7 +1329,7 @@ IECtrl::DropTarget::DropTarget(IECtrl * pCtrl) {
 }
 
 IECtrl::DropTarget::~DropTarget() {
-  _ASSERT(m_cRef == 0);
+  _ASSERT(m_cRef <= 0);
 }
 
 // IUnknown
