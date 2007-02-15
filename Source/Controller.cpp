@@ -121,7 +121,7 @@ namespace kIEview2 {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
     kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
 
-    emotHandler.addParser(new JispParser);
+    // emotHandler.addParser(new JispParser);
     emotHandler.addParser(new GGParser);
 
     emotHandler.loadPackages();
@@ -922,15 +922,19 @@ namespace kIEview2 {
   }
 
   String Controller::preLinkify(StringRef& txt) {
+    if (txt.length() > 20480) return PassStringRef(txt);
+
     txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%;]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", 
       &Controller::linkInsertion, txt.c_str());
-    txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-])+@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6})+)~i", 
+    txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-]+)@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6}))~i", 
       &Controller::eMailInsertion, txt.c_str());
 
     return PassStringRef(txt);
   }
 
   String Controller::postLinkify(StringRef& txt) {
+    if (txt.length() > 20480) return PassStringRef(txt);
+
     txt = RegEx::doReplace("#<kiev2:email:insertion id=\"([0-9]+)\" />#", &Controller::replaceEmail, txt.c_str());
     txt = RegEx::doReplace("#<kiev2:link:insertion id=\"([0-9]+)\" />#", &Controller::replaceLink, txt.c_str());
 

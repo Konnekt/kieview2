@@ -143,7 +143,7 @@ public:
   protected:
     sEmotPackInfo* _emotInfo;
     oDrawableButton _check;
-    CriticalSection_w32 _lock;
+    CriticalSection _lock;
   };
 };
 
