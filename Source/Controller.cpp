@@ -154,7 +154,7 @@ namespace kIEview2 {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
     kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
 
-    // emotHandler.addParser(new JispParser);
+    emotHandler.addParser(new JispParser);
     emotHandler.addParser(new GGParser);
 
     emotHandler.loadPackages();

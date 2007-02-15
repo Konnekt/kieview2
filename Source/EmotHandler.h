@@ -190,7 +190,8 @@ public:
       throw NotFound("Cannot find file " + path);
     }
 
-    char* buff = new char[entry.unc_size];
+    char* buff = new char[entry.unc_size + 1];
+    buff[entry.unc_size] = '\0';
     String str;
 
     ZRESULT result = UnzipItem(_handle, index, buff, entry.unc_size);

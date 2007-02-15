@@ -127,6 +127,7 @@ eMSet JispParser::parse(const string& filePath, const string& fileDir) {
   }
 
   result.setDir(fileDir);
+  zip.close();
   return result;
 }
 
