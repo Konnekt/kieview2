@@ -172,9 +172,12 @@ namespace kIEview2 {
     }
 
     void waitForIECtrlReady(IECtrl* ctrl, UINT sleepTime = 100) {
-      if (ctrl->isReady()) return;
-      while (!ctrl->isReady()) {
-        Ctrl->Sleep(sleepTime);
+      Ctrl->WMProcess();
+      if (!ctrl->isReady()) {
+        do {
+          Ctrl->WMProcess();
+          Ctrl->Sleep(sleepTime);
+        } while (!ctrl->isReady());
       }
     }
 
