@@ -482,17 +482,17 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   COLORREF textColor;
 
   /* // statyczne kolorki
+  */
   if (li->isSelected()) {
     gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
   } else {
     if (_emotInfo->checked) {
-      gradient = Stamina::UI::createSimpleGradient(RGB(96,177,46), RGB(149,217,108), Size(rc.width(), rc.height()));
+      gradient = Stamina::UI::createSimpleGradient(RGB(117,215,19), RGB(174,241,107), Size(rc.width(), rc.height()));
     } else {
       gradient = Stamina::UI::createSimpleGradient(RGB(80,80,80), RGB(140,140,140), Size(rc.width(), rc.height()));
     }
   }
   textColor = RGB(255,255,255);
-  */
 
   COLORREF active = GetSysColor(COLOR_HIGHLIGHT);
   COLORREF window = GetSysColor(COLOR_WINDOW);
@@ -512,7 +512,6 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
 
   brushSelectedEntry = createSimpleGradient(blendRGB(active, window, 0x80), active, Size(10, entryHeight*2), 0, /* 0x10 *\/ 0x0;
   brushInfoEntry = createSimpleGradient(blendRGB(button, window, 0x40), blendRGB(button, window, 0x10), Size(10, entryInfoMinimum*2), 0, 0xA0);
-  */
 
   if (li->isActive()) {
     gradient = createSimpleGradient(blendRGB(active, window, 0x80), active, Size(rc.width(), rc.height()));
@@ -526,6 +525,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
       textColor = colorText;
     }
   }
+  */
   gradient->draw(dc, rc.getLT());
 
   Rect rctxt = rc;

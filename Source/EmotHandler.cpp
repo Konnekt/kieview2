@@ -199,7 +199,7 @@ eMSet GGParser::parse(const string& filePath, const string& fileDir) {
 
 void EmotHandler::loadSettings() {
   string data = Controller::getConfig()->getChar(cfg::emotPacks);
-  data = Helpers::trim(data, "\n");
+  data = trim(data, "\n");
 
   if (!data.length()) return;
 

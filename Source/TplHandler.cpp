@@ -13,7 +13,6 @@
 
 #include "stdafx.h"
 #include "TplHandler.h"
-#include "Helpers.h"
 
 TplHandler::TplHandler(const string& tplExt) {
   setTplExt(tplExt);
@@ -24,7 +23,7 @@ void TplHandler::addTplDir(const string& dir, bool asInclude) {
 
   string tplDir = dir;
   tplDir = unifyPath(tplDir);
-  tplDir = Helpers::ltrim(tplDir, ".\\");
+  tplDir = ltrim(tplDir, ".\\");
 
   if (asInclude) {
     addIncludeDir(tplDir);

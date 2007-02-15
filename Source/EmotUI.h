@@ -127,7 +127,7 @@ public:
 
       if (set->getUrl().length()) text += "URL: " + set->getUrl() + "\n";
       if (set->getDescription().length()) text += "Opis: " + set->getDescription();
-      if (text.length()) text = Helpers::rtrim(text, "\n");
+      if (text.length()) text = rtrim(text, "\n");
 
       return text;
     }

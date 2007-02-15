@@ -80,6 +80,38 @@ void logDebug(const char * format, ...) {
  */
 
 namespace Helpers {
+  void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
+    unsigned int ksize = strlen((char*)key);
+    unsigned int ki = 0;
+
+    if (!size) {
+      size = strlen((char*)data);
+    }
+
+    int j = 0;
+    for (unsigned int p = 0; p < size; p++) {
+      *data = (*data ^ key[ki]) + (unsigned char)((j) & 0xFF); // | (j * 2);
+      data++;
+      ki++;
+      if (ki >= ksize) ki = 0;
+      j++;
+    }
+  }
+
+  void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
+    unsigned int ksize = strlen((char*)key);
+    unsigned int ki = 0;
+
+    int j = 0;
+    for (unsigned int p = 0; p < size; p++) {
+      *data = (*data - (unsigned char)((j) & 0xFF)) ^ key[ki]; // | (j * 2);
+      data++;
+      ki++;
+      if (ki >= ksize) ki = 0;
+      j++;
+    }
+  }
+
   String icon16(int ico) {
     return "reg://IML16/" + inttostr(ico) + ".ico";
   }
@@ -108,7 +140,7 @@ namespace Helpers {
   string rtrim(string txt, const string& chars) {
     if (!txt.size() || !chars.size()) return "";
 
-    for (string::const_iterator it = chars.begin(); it != chars.end(); it++) {
+    for (string::const_reverse_iterator it = chars.rbegin(); it != chars.rend(); it++) {
       while (txt[txt.size() - 1] == (*it)) txt.erase(--txt.end());
     }
     return txt;
@@ -117,7 +149,7 @@ namespace Helpers {
   string ltrim(string txt, const string& chars) {
     if (!txt.size() || !chars.size()) return "";
 
-    for (string::const_iterator it = chars.begin(); it != chars.end(); it++) {
+    for (string::const_reverse_iterator it = chars.rbegin(); it != chars.rend(); it++) {
       while (txt[0] == (*it)) txt.erase(txt.begin());
     }
     return txt;

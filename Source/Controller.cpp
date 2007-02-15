@@ -18,45 +18,6 @@
 #include "TplUdf.h"
 #include "EmotUI.h"
 
-/*
-@todo {
-  * bridge JS -> udf
-  * {{if true ? expr : expr}}
-}
-*/
-
-void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
-  unsigned int ksize = strlen((char*)key);
-  unsigned int ki = 0;
-
-  if (!size) {
-    size = strlen((char*)data);
-  }
-
-  int j = 0;
-  for (unsigned int p = 0; p < size; p++) {
-    *data = (*data ^ key[ki]) + (unsigned char)((j) & 0xFF); // | (j * 2);
-    data++;
-    ki++;
-    if (ki >= ksize) ki = 0;
-    j++;
-  }
-}
-
-void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
-  unsigned int ksize = strlen((char*)key);
-  unsigned int ki = 0;
-
-  int j = 0;
-  for (unsigned int p = 0; p < size; p++) {
-    *data = (*data - (unsigned char)((j) & 0xFF)) ^ key[ki]; // | (j * 2);
-    data++;
-    ki++;
-    if (ki >= ksize) ki = 0;
-    j++;
-  }
-}
-
 namespace kIEview2 {
   // initialization
   Controller::Controller(): jsController(0), emotLV(0), ieVersion(getIEVersion()) {
@@ -81,6 +42,7 @@ namespace kIEview2 {
 
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::lastMsgCount, DT_CT_INT, 10, "kIEview2/lastMsgCount");
+    config->setColumn(DTCFG, cfg::relativeTime, DT_CT_INT, 1, "kIEview2/relativeTime");
     config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 1, "kIEview2/autoScroll");
 
     config->setColumn(DTCFG, cfg::showFormattingBtns, DT_CT_INT, 1, "kIEview2/showFormattingBtns");
@@ -145,6 +107,11 @@ namespace kIEview2 {
       Ctrl->IMessage(&sIMessage_plugOut(Ctrl->ID(), "kIEview2 potrzebuje do dzia³ania conajmniej IE6.",
         sIMessage_plugOut::erNo, sIMessage_plugOut::euNowAndOnNextStart));
       return setFailure();
+    }
+    if (int oldId = pluginExists(plugsNET::kieview)) {
+      Ctrl->IMessage(&sIMessage_plugOut(oldId, "Wykryto starsz¹ wersjê wtyczki, od³¹czanie...",
+        sIMessage_plugOut::erNo, sIMessage_plugOut::euNowAndOnNextStart));
+      return this->setFailure();
     }
     setSuccess();
   }
@@ -215,15 +182,16 @@ namespace kIEview2 {
       "<span class='note'>Skompilowano: <b>" __DATE__ "</b> [<b>" __TIME__ "</b>]</span><br/>"
       "Du¿e podziêkowania za pomoc nale¿¹ siê dla <b>dulka</b> i <b>ursusa</b> :)<br/><br/>"
       "Copyright © 2006-2007 <b>Sijawusz Pur Rahnama</b><br/>"
-      "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>", Helpers::icon16(ico::logo).a_str(), -3);
+      "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>", icon16(ico::logo).a_str(), -3);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Automatycznie przewijaj okno rozmowy", cfg::autoScroll);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Stosuj czas relatywny (jeœli siê da)", cfg::relativeTime);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SPINNER | ACTSC_INLINE, AP_MINIMUM "0" AP_MAXIMUM "500", cfg::lastMsgCount);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Iloœæ ostatnich wiadomoœci do wczytania");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Formatowanie");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Interfejs");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przyciski formatowania", cfg::showFormattingBtns);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przycisk wyboru emotikon", cfg::showEmotChooser);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Wyœwietlaj przycisk wyboru koloru", cfg::showColorChooser);
@@ -407,11 +375,7 @@ namespace kIEview2 {
           args[0] = tplHandler->parseException(e).a_str();
         }
 
-        if (!ctrl->isReady()) {
-          while (!ctrl->isReady()) {
-            Ctrl->Sleep(100);
-          }
-        }
+        waitForIECtrlReady(ctrl);
         ctrl->callJScript("addMessage", args, &ret);
         if (autoScroll) ctrl->scrollToBottom();
         break;
@@ -431,11 +395,7 @@ namespace kIEview2 {
           args[0] = tplHandler->parseException(e).a_str();
         }
 
-        if (!ctrl->isReady()) {
-          while (!ctrl->isReady()) {
-            Ctrl->Sleep(100);
-          }
-        }
+        waitForIECtrlReady(ctrl);
         ctrl->callJScript("addStatus", args, &ret);
         if (autoScroll) ctrl->scrollToBottom();
         break;
@@ -870,31 +830,36 @@ namespace kIEview2 {
   }
 
   string Controller::timeToString(int time) {
-    char buff[20];
+    string result;
 
     if (!time) {
       return "0s";
     }
+    if (time >= (60 * 60 * 24 * 7)) {
+      int weeks = int(time / (60 * 60 * 24 * 7));
+      result += stringf("%dw, ", weeks);
+      time -= weeks * 60 * 60 * 24 * 7;
+    }
     if (time >= (60 * 60 * 24)) {
       int days = int(time / (60 * 60 * 24));
-      sprintf(buff, "%dd ", days);
+      result += stringf("%dd, ", days);
       time -= days * 60 * 60 * 24;
     }
     if (time >= (60 * 60)) {
       int hours = int(time / (60 * 60));
-      sprintf(buff, "%dh ", hours);
+      result += stringf("%dh, ", hours);
       time -= hours * 60 * 60;
     }
     if (time >= 60) {
       int mins = int(time / 60);
-      sprintf(buff, "%dm ", mins);
+      result += stringf("%dm, ", mins);
       time -= mins * 60;
     }
-    if (time > 0) {
+    if (!result.length() && time > 0) {
       int secs = int(time);
-      sprintf(buff, "%ds ", secs);
+      result += stringf("%ds, ", secs);
     }
-    return Helpers::rtrim(buff);
+    return rtrim(result, ", ");
   }
 
   tCntId Controller::getCntFromMsg(cMessage* msg) {
@@ -1133,9 +1098,10 @@ namespace kIEview2 {
     if (groupedMsgs.size()) {
       sGroupedMsg& lastMsg = groupedMsgs[0];
       int timeFromLastMsg = date.getTime64() - lastMsg.time.getTime64();
+      bool relativeTime = config->getInt(cfg::relativeTime);
 
       if (lastMsg.cnt == senderID) {
-        groupTime = timeFromLastMsg < 60;
+        groupTime = timeFromLastMsg <= (relativeTime ? (60 * 60 * 24 * 21) : (60 * 60));
         groupDisplay = true;
       }
 
@@ -1143,6 +1109,10 @@ namespace kIEview2 {
       if (groupDisplay) data.hash_insert_new_var("groupDisplay", "1");
       if (groupTime) data.hash_insert_new_var("groupTime", "1");
 
+      if (groupTime) {
+        data.hash_erase_var("time");
+        data.hash_insert_new_var("time", timeToString(timeFromLastMsg) + " póŸniej");
+      }
       data.hash_insert_new_var("@lastMsgTime", i64tostr(lastMsg.time.getInt64()));
       data.hash_insert_new_var("timeFromLastMsg", timeToString(timeFromLastMsg));
     }

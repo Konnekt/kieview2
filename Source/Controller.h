@@ -28,6 +28,7 @@
 #include "EmotUI.h"
 
 using namespace kIEview2;
+using namespace Helpers;
 
 namespace kIEview2 {
   namespace JS {
@@ -162,10 +163,19 @@ namespace kIEview2 {
     bool loadMsgTable(tCntId cnt);
 
     void clearGroupedMsgs(sUIActionNotify_base* an) {
-      IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
-      tGroupedMsgs& groupedMsgs = wndObjCollection[ctrl].groupedMsgs;
+      getWndObjects(an)->groupedMsgs.clear();
+    }
 
-      groupedMsgs.clear();
+    sWndObjCollection* getWndObjects(sUIActionNotify_base* an) {
+      IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+      return ctrl ? &wndObjCollection[ctrl] : NULL;
+    }
+
+    void waitForIECtrlReady(IECtrl* ctrl, UINT sleepTime = 100) {
+      if (ctrl->isReady()) return;
+      while (!ctrl->isReady()) {
+        Ctrl->Sleep(sleepTime);
+      }
     }
 
     void setActionsStatus() {

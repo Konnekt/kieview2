@@ -112,6 +112,7 @@ namespace kIEview2 {
 
     const unsigned int autoScroll = cfg + 8;
     const unsigned int lastMsgCount = cfg + 9;
+    const unsigned int relativeTime = cfg + 13;
   }
 }
 

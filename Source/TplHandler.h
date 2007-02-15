@@ -18,12 +18,14 @@
 
 #include <ctpp/ctpp.hpp>
 #include <functions/std_fn_list.hpp>
+#include "Helpers.h"
 
 #pragma comment(lib, "ctpp.lib")
 
 using namespace template_parser_ns;
 using namespace Stamina;
 using namespace boost;
+using namespace Helpers;
 
 class TplHandler : public SharedObject<iSharedObject> {
 public:
