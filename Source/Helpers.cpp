@@ -131,12 +131,32 @@ namespace Helpers {
     return PassStringRef(txt);
   }
 
-  string trim(string txt, const string& chars) {
-    txt = ltrim(txt, chars);
-    txt = rtrim(txt, chars);
+  string rtrim(const char* txt, const char *chars) {
+    if (!txt || !chars) return "";
+    int nChars = strlen(chars);
+    int nTxt = strlen(txt);
+
+    if (!nTxt || !nChars || nChars >= nTxt) return "";
+     
+     int r = 0;
+     while(!strncmp(&txt[nTxt - nChars - r], chars, nChars) && r < nTxt) {
+       r+=nChars;
+     }
+     if (r) {
+      string s;
+      s.assign(txt, nTxt - nChars - r);
+      return s;
+    }
     return txt;
   }
 
+  string trim(string txt, const string& chars) {
+    txt = ltrim(txt.c_str(), chars.c_str());
+    txt = rtrim(txt.c_str(), chars.c_str());
+    return txt;
+  }
+
+/*
   string rtrim(string txt, const string& chars) {
     if (!txt.size() || !chars.size()) return "";
 
@@ -145,7 +165,28 @@ namespace Helpers {
     }
     return txt;
   }
+*/
 
+  string ltrim(const char* txt, const char *chars) {
+    if (!txt || !chars) return "";
+    int nChars = strlen(chars);
+    int nTxt = strlen(txt);
+
+    if (!nTxt || !nChars || nChars >= nTxt) return "";
+    
+     int r = 0;
+     while(!strncmp(&txt[0 + r], chars, nChars) && r < nTxt) {
+       r+=nChars;
+     }
+     if (r) {
+      string s;
+      s.assign(txt, nChars + r, nTxt - (nChars + r));
+      return s;
+    } 
+    return txt;
+  }
+
+/*
   string ltrim(string txt, const string& chars) {
     if (!txt.size() || !chars.size()) return "";
 
@@ -154,6 +195,7 @@ namespace Helpers {
     }
     return txt;
   }
+*/
 
   int getPluginsGroup() {
     return Ctrl->ICMessage(IMI_GETPLUGINSGROUP);
@@ -229,5 +271,51 @@ namespace Helpers {
 
   void chgBtn(int group, int id, const char * name, int ico, int flags) {
     UIActionSet(sUIActionInfo(group, id, 0, flags, (char*) name, ico));
+  }
+
+  Stamina::UI::oImage loadGif(const char* path, Size& size) {
+    LPPICTURE pic;
+
+    HANDLE hFile = CreateFile(path, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    DWORD fSize = GetFileSize(hFile, NULL);
+    if (fSize == -1) return NULL;
+
+    LPVOID pvData = NULL;
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, fSize);
+    if (!hGlobal ) return NULL;
+    pvData = GlobalLock(hGlobal);
+    DWORD dwBytesRead = 0;
+
+    BOOL read = ReadFile(hFile, pvData, fSize, &dwBytesRead, NULL);
+    if (!read) {
+      GlobalUnlock(hGlobal);
+      CloseHandle(hFile);
+    }
+
+    LPSTREAM pstm = NULL;
+    HRESULT hr = CreateStreamOnHGlobal(hGlobal, TRUE, &pstm);
+
+    hr = OleLoadPicture(pstm, fSize, FALSE, IID_IPicture, (LPVOID *)&pic);
+    pstm->Release();
+
+    long px, py;
+    pic->get_Width(&px);
+    pic->get_Height(&py);
+
+    HDC dc = GetDC(0);
+    HDC tdc = CreateCompatibleDC(dc);
+    HBITMAP hBitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
+    SelectObject(tdc, hBitmap);
+    RECT rc = {0, 0,  size.cx, size.cy};
+    pic->Render(dc, 0, 0, size.cx, size.cy, 0, px, py, -px, &rc);
+    Stamina::UI::oImage gif = Stamina::UI::Bitmap(hBitmap, false);
+    pic->Release();
+    ReleaseDC(0, dc);
+
+    CloseHandle(hFile);
+    GlobalUnlock(hGlobal);
+    GlobalFree(hGlobal);
+
+    return gif;
   }
 }

@@ -111,7 +111,7 @@ public:
     void paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent);
     void drawInfo(EmotLV* elv, Rect& rc);
     int sizeInfo(EmotLV* elv, Rect& rc);
-
+    void resizeItems(EmotLV* elv, ListWnd::Item* item);
     virtual void switchState(ListWnd::ListView* lv) {
       EmotLV* elv = (EmotLV*)lv;
 
@@ -127,7 +127,7 @@ public:
 
       if (set->getUrl().length()) text += "URL: " + set->getUrl() + "\n";
       if (set->getDescription().length()) text += "Opis: " + set->getDescription();
-      if (text.length()) text = rtrim(text, "\n");
+      if (text.length()) text = rtrim(text.c_str(), "\n");
 
       return text;
     }

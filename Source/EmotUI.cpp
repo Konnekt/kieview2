@@ -216,7 +216,8 @@ Size EmotLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd
     addY = _emotInfo->image->getSize().h;
   }
   if (addY < 16) addY = 16;
-  if (li->isActive()) return Size(fitIn.w, sizeInfo((EmotLV*)lv, Rect(0, 0, fitIn.w, 0)) + 6 + addY);
+  if (li->isActive()) 
+    return Size(fitIn.w, sizeInfo((EmotLV*)lv, Rect(0, 0, fitIn.w, 0)) + 6 + addY);
   return Size(fitIn.w, 6 + addY);
 }
 
@@ -246,6 +247,18 @@ int EmotLV::EmotPackInfoItem::sizeInfo(EmotLV* elv, Rect& rc) {
   return rcz.bottom;
 }
 
+void EmotLV::EmotPackInfoItem::resizeItems(EmotLV* elv, ListWnd::Item* item) {
+  elv->scrollTo(Point(0, 0));
+  ListWnd::oItem lastItem = elv->getActiveItem();
+  elv->setActiveItem((ListWnd::Item*)item);
+  if (lastItem.isValid()) {
+    lastItem->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+  }
+  item->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+  elv->refreshItems();
+  elv->updateScrollbars();
+}
+
 bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
   LockerCS locker(_lock);
 
@@ -265,15 +278,7 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
       if (p.y < rc.getCenter().y) {
         if (elv->draged_id != id) {
           if (elv->moveItem(elv->draged_id, id)) {
-            //elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setSelected(elv, true);
-            ListWnd::oItem lastItem = lv->getActiveItem();
-            if (lastItem.isValid()) {
-              lastItem->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
-            }
-            lv->setActiveItem(elv->_items[id - (id > elv->draged_id ? 1 : 0)]);
-            lv->selectionToActive();
-            elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setSelected(lv, true);
-            elv->_items[id - (id > elv->draged_id ? 1 : 0)]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+            resizeItems(elv, elv->_items[id - (id > elv->draged_id ? 1 : 0)]);
             touchConfigWnd();
           }
           elv->mmitem = -1;
@@ -281,16 +286,7 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
       } else {
         if (elv->draged_id != id + 1) {
           if (elv->moveItem(elv->draged_id, id + 1)) {
-            //elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setSelected(elv, true);
-
-            ListWnd::oItem lastItem = lv->getActiveItem();
-            if (lastItem.isValid()) {
-              lastItem->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
-            }
-            lv->setActiveItem(elv->_items[id + (id < elv->draged_id ? 1 : 0)]);
-            lv->selectionToActive();
-            elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setSelected(lv, true);
-            elv->_items[id + (id < elv->draged_id ? 1 : 0)]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+            resizeItems(elv, elv->_items[id + (id < elv->draged_id ? 1 : 0)]);
             touchConfigWnd();
           }
           elv->mmitem = -1;
@@ -325,19 +321,13 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
       return false;
 
     } else {
-      elv->draged = true;
-      elv->draged_id = lv->getItemIndex(li);
-      elv->mmitem = elv->draged_id;
-      ListWnd::oItem lastItem = lv->getActiveItem();
-
-      if (lastItem.isValid()) {
-        lastItem->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+      if (li->isActive()) {
+        elv->draged = true;
+        elv->draged_id = lv->getItemIndex(li);
+        elv->mmitem = elv->draged_id;
+      } else {
+        resizeItems(elv, li.get());
       }
-
-      lv->setActiveItem(li);
-      lv->selectionToActive();
-      li->setSelected(lv, true);
-      li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
       SetCapture(lv->getHwnd());
 
       return false;
@@ -422,40 +412,20 @@ bool EmotLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::o
   } else if (vkey == VK_UP){
     int id = lv->getItemIndex(li);
     if(--id >= 0) {
-      li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
-      lv->setActiveItem(elv->_items[id]);
-      lv->selectionToActive();
-      elv->_items[id]->setSelected(lv, true);
-      elv->_items[id]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
-      lv->scrollToActive();
+      resizeItems(elv, elv->_items[id]);
     }
   } else if (vkey == VK_DOWN){
     int id = lv->getItemIndex(li);
     if(++id < elv->itemsCount()) {
-      li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
-      lv->setActiveItem(elv->_items[id]);
-      lv->selectionToActive();
-      elv->_items[id]->setSelected(lv, true);
-      elv->_items[id]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
-      lv->scrollToActive();
+      resizeItems(elv, elv->_items[id]);
     }
   } else if (vkey == VK_HOME) {
     if (elv->itemsCount()) {
-      li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
-      lv->setActiveItem(elv->_items[0]);
-      lv->selectionToActive();
-      elv->_items[0]->setSelected(lv, true);
-      elv->_items[0]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
-      lv->scrollToActive();
+      resizeItems(elv, elv->_items[0]);
     }
   } else if (vkey == VK_END) {
     if (elv->itemsCount()) {
-      li->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
-      lv->setActiveItem(elv->_items[elv->itemsCount() - 1]);
-      lv->selectionToActive();
-      elv->_items[elv->itemsCount() - 1]->setSelected(lv, true);
-      elv->_items[elv->itemsCount() - 1]->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
-      lv->scrollToActive();
+      resizeItems(elv, elv->_items[elv->itemsCount() - 1]);
     }
   }
   return false;
@@ -482,7 +452,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   COLORREF textColor;
 
   /* predefiniowane kolorki */
-  if (li->isSelected()) {
+  if (li->isActive()) {
     gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
     textColor = RGB(255,255,255);
   } else {
@@ -564,7 +534,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   rctxt.right += emotX;
   SelectObject(dc, hOldFont);
 
-  if (li->isSelected()) {
+  if (li->isActive()) {
     drawInfo(elv, rctxt);
   }
   SetTextColor(dc, oldTextColor);

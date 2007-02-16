@@ -60,8 +60,12 @@ namespace Helpers {
   String trunc(StringRef txt, int limit, const StringRef& suffix = "...");
 
   string trim(string txt, const string& chars = " ");
+  string rtrim(const char* txt, const char* chars = " ");
+  string ltrim(const char* txt, const char* chars = " ");
+  /*
   string rtrim(string txt, const string& chars = " ");
   string ltrim(string txt, const string& chars = " ");
+  */
 
   int getPluginsGroup();
   int pluginExists(int net, int type = IMT_ALL);
@@ -85,6 +89,8 @@ namespace Helpers {
 
   void chgBtn(int group, int id, int cnt, const char * name = 0, int ico = 0, int flags = -1);
   void chgBtn(int group, int id, const char * name, int ico = 0, int flags = 0);
+
+  Stamina::UI::oImage loadGif(const char* path, Size& size);
 }
 
 #endif // __HELPERS_H__
