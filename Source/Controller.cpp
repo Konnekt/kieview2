@@ -159,8 +159,8 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::selectAll, 0, "Zaznacz wszystko");
     UIActionAdd(act::popup::popup, act::popup::showSource, 0, "Poka¿ Ÿród³o", ico::source);
     UIActionAdd(act::popup::popup, act::popup::historySep, ACTT_SEP);
-    UIActionAdd(act::popup::popup, act::popup::lastMsgs, 0, "Wczytaj z historii");
     UIActionAdd(act::popup::popup, act::popup::lastSession, 0, "Wczytaj ostatni¹ sesjê");
+    UIActionAdd(act::popup::popup, act::popup::lastMsgs, 0, "Wczytaj ostatnie wiad.");
     UIActionAdd(act::popup::popup, act::popup::clearSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
 
@@ -183,8 +183,8 @@ namespace kIEview2 {
     UIGroupAdd(ui::cfgGroup, ui::emotCfgGroup, 0, "Emotikony", ico::emots);
 
     UIActionCfgAddPluginInfoBox2(ui::cfgGroup, 
-      "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest "
-      "wyœwietlanie emotikon oraz modyfikacja wygl¹du okna przy pomocy styli CSS i skryptów JS.",
+      "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest wyœwietlanie "
+      "emotikon oraz modyfikacja wygl¹du okna przy pomocy szablonów, styli <b>CSS</b> i <b>J</b>ava<b>S</b>cript-u.",
       desc, icon16(ico::logo).a_str(), -3);
     UIActionCfgAddPluginInfoBox2(ui::emotCfgGroup, 
       "Poni¿ej znajduj¹ siê opcje dotycz¹ce emotikon. Wybór zestawów emotikon oraz ustawienia menu emotikon.",
@@ -204,18 +204,18 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Toolbar formatowania");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_INLINE, "Przycisk wyboru emotikon", cfg::showEmotChooser);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE, icon16(ico::emots).a_str());
+
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_INLINE, "Przyciski formatowania", cfg::showFormattingBtns);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE | ACTSC_INLINE, icon16(ico::bold).a_str());
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE | ACTSC_INLINE, icon16(ico::italic).a_str());
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE, icon16(ico::underline).a_str());
 
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_INLINE, "Przycisk wyboru emotikon", cfg::showEmotChooser);
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE, icon16(ico::emots).a_str());
-
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_INLINE, "Przycisk wyboru koloru", cfg::showColorChooser);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE, icon16(ico::color).a_str());
 
-    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_INLINE, "Przycisk przewijania", cfg::showAutoScroll);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK | ACTSC_INLINE, "Przycisk przewijania okna", cfg::showAutoScroll);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_IMAGE, icon16(ico::autoScroll).a_str());
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 

@@ -146,6 +146,21 @@ namespace kIEview2 {
 
     int getIEVersion();
 
+    sWndObjCollection* getWndObjects(sUIActionNotify_base* an) {
+      IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+      return ctrl ? &wndObjCollection[ctrl] : NULL;
+    }
+    sWndObjCollection* getWndObjects(IECtrl* ctrl) {
+      return ctrl ? &wndObjCollection[ctrl] : NULL;
+    }
+
+    void clearGroupedMsgs(sUIActionNotify_base* an) {
+      getWndObjects(an)->groupedMsgs.clear();
+    }
+    void clearGroupedMsgs(IECtrl* ctrl) {
+      getWndObjects(ctrl)->groupedMsgs.clear();
+    }
+
   protected:
     void _onPluginsLoaded();
     void _onPrepare();
@@ -161,15 +176,6 @@ namespace kIEview2 {
 
     bool isMsgFromHistory(sUIActionNotify_base* an);
     bool loadMsgTable(tCntId cnt);
-
-    void clearGroupedMsgs(sUIActionNotify_base* an) {
-      getWndObjects(an)->groupedMsgs.clear();
-    }
-
-    sWndObjCollection* getWndObjects(sUIActionNotify_base* an) {
-      IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
-      return ctrl ? &wndObjCollection[ctrl] : NULL;
-    }
 
     void waitForIECtrlReady(IECtrl* ctrl, UINT sleepTime = 100) {
       Ctrl->WMProcess();
@@ -317,7 +323,9 @@ namespace kIEview2 {
 
     class WndController : public IECtrl::iObject {
     public:
-      WndController(IECtrl* ieCtrl, IECtrl::Var& args): iObject(ieCtrl, true), pCtrl(::Controller::getInstance()) {
+      WndController(IECtrl* ctrl, IECtrl::Var& args): iObject(ctrl, true), pCtrl(::Controller::getInstance()) {
+        bindMethod("breakGrouping", bind(resolve_cast0(&WndController::breakGrouping), this));
+
         bindMethod("minimized", bind(resolve_cast0(&WndController::minimized), this));
         bindMethod("visible", bind(resolve_cast0(&WndController::visible), this));
 
@@ -326,28 +334,34 @@ namespace kIEview2 {
         bindMethod("close", bind(resolve_cast0(&WndController::close), this));
 
         setProperty("name", "oWindow");
+        // hWndWnd = GetParent(ctrl->getHWND());
       }
 
     public:
+      IECtrl::Var breakGrouping() {
+        pCtrl->clearGroupedMsgs(m_pCtrl);
+        return true;
+      }
+
       IECtrl::Var minimized() {
-        return !IsIconic(m_pCtrl->getHWND());
+        return !IsIconic(hWndWnd);
       }
       IECtrl::Var visible() {
-        return IsWindowVisible(m_pCtrl->getHWND());
+        return IsWindowVisible(hWndWnd);
       }
 
       IECtrl::Var minimize() {
         if (!minimized().getBool()) {
-          return ShowWindow(m_pCtrl->getHWND(), SW_MINIMIZE);
+          return ShowWindow(hWndWnd, SW_MINIMIZE);
         }
         return false;
       }
       IECtrl::Var restore() {
         if (minimized().getBool()) {
-          ShowWindow(m_pCtrl->getHWND(), SW_RESTORE);
+          ShowWindow(hWndWnd, SW_RESTORE);
         }
         if (visible().getBool()) {
-          SetWindowPos(m_pCtrl->getHWND(), HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+          SetWindowPos(hWndWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         }
         return true;
       }
@@ -357,6 +371,7 @@ namespace kIEview2 {
 
     protected:
       ::Controller* pCtrl;
+      HWND hWndWnd;
     };
   }
 }
