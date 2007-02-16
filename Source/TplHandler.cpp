@@ -68,7 +68,7 @@ std::string TplHandler::getTplDir(const char* tplName) {
   for (tTplDirs::iterator it = tplDirs.begin(); it != tplDirs.end(); it++) {
     if (fileExists(((*it) + "/" + fileName).c_str())) return *it;
   }
-  throw std::logic_error("Cannot find file '" + fileName + "'.");
+  throw std::logic_error("Cannot find file '" + fileName + "'");
 }
 
 std::string TplHandler::getTplPath(const char* tplName) {

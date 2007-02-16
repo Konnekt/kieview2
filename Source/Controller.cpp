@@ -874,7 +874,7 @@ namespace kIEview2 {
       int secs = int(time);
       result += stringf("%ds, ", secs);
     }
-    return result.substr(0, result.length() - 2);
+    return rtrim(result, ", ");
   }
 
   tCntId Controller::getCntFromMsg(cMessage* msg) {
