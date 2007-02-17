@@ -21,8 +21,8 @@
 namespace kIEview2 {
   // initialization
   Controller::Controller(): jsController(0), emotLV(0), ieVersion(getIEVersion()) {
-    IECtrl::getExternal()->bindMethod("oController", bind(&Controller::getJSController, this, _1, _2), true);
-    IECtrl::getExternal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2), true);
+    IECtrl::getGlobal()->bindMethod("oController", bind(&Controller::getJSController, this, _1, _2), true);
+    IECtrl::getGlobal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2), false);
 
     /* Static values like net, type or version */
     this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
@@ -559,11 +559,17 @@ namespace kIEview2 {
   }
 
   IECtrl::Var Controller::getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj) {
-    IECtrl* ctrl = obj->getIECtrl();
-    if (!wndObjCollection[ctrl].jsWndController) {
-      wndObjCollection[ctrl].jsWndController = new JS::WndController(ctrl, args);
+    if (args.length() > 0) {
+      IECtrl* ctrl = IECtrl::get((HWND)args[0].getInteger());
+      if (ctrl) {
+        if (!wndObjCollection[ctrl].jsWndController) {
+          wndObjCollection[ctrl].jsWndController = new JS::WndController(ctrl, args);
+        }
+        return wndObjCollection[ctrl].jsWndController;
+      }
     }
-    return wndObjCollection[ctrl].jsWndController;
+    throw IECtrl::JSException("Invalid IE Control ref ID", 123);
+    return IECtrl::Var();
   }
 
   IECtrl::Var Controller::getJSController(IECtrl::Var& args, IECtrl::iObject* obj) {

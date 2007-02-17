@@ -47,6 +47,7 @@ protected:
   class ClientSite;
   class EventSink;
   class External;
+  class Global;
 
 public:
   class Var;
@@ -145,8 +146,9 @@ public:
   static bool getOnCopyEmptySel() {
     return m_bOnCopyEmptySel;
   }
-  static External* getExternal();
+  static Global* getGlobal();
 
+  External* getExternal();
   char* getSelection(bool gettext = false);
   bool copySelection(bool gettext = false);
 
@@ -188,7 +190,7 @@ protected:
   HWND m_hWnd;
 
   static CRITICAL_SECTION m_mutex;
-  static External* m_pExternal;
+  static Global* m_pGlobal;
   static IECtrl * m_pList;
   IECtrl * m_pPrev;
   IECtrl * m_pNext;
@@ -198,6 +200,7 @@ protected:
   DWORD m_dwCookie;
   IConnectionPoint * m_pConnectionPoint;
   EventSink * m_pEventSink;
+  External * m_pExternal;
   ClientSite * m_pClientSite;
   IDropTarget * m_pDropTarget;
   IWebBrowser2 * m_pWebBrowser;
@@ -651,6 +654,18 @@ protected:
   class External : public iObject {
   public:
     External(): iObject(NULL, true) {
+      setProperty("name", "sweet, cosy and full of surprises: JS <-> C++ connectivity bridge, exclusively by kIEview2 ;>");
+      bindMethod("oGlobal", bind(&External::getGlobal, this, _1, _2), true);
+      bindMethod("getRefID", bind(&External::getRefID, this, _1, _2), true);
+    }
+
+    Var getGlobal(Var& args, iObject* obj);
+    Var getRefID(Var& args, iObject* obj);
+  };
+
+  class Global : public iObject {
+  public:
+    Global(): iObject(NULL, true) {
       setProperty("name", "sweet, cosy and full of surprises: JS <-> C++ connectivity bridge, exclusively by kIEview2 ;>");
     }
   };

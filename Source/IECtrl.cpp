@@ -16,7 +16,7 @@
 
 #define DISPID_BEFORENAVIGATE2 250
 
-IECtrl::External* IECtrl::m_pExternal = NULL;
+IECtrl::Global* IECtrl::m_pGlobal = NULL;
 IECtrl* IECtrl::m_pList = NULL;
 CRITICAL_SECTION IECtrl::m_mutex;
 
@@ -39,7 +39,7 @@ void IECtrl::deinit() {
   while (m_pList != NULL) {
     delete m_pList;
   }
-  delete m_pExternal;
+  delete m_pGlobal;
   DeleteCriticalSection(&m_mutex);
   m_bInited = false;
 }
@@ -113,6 +113,9 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
     setUserWndProc((WNDPROC)SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG) IECtrl::IECtrlWindowProcedure));
   }
 
+  m_pExternal = new External;
+  getExternal()->setIECtrl(this);
+
   EnterCriticalSection(&m_mutex);
   m_pNext = m_pList;
   if (m_pNext != NULL) {
@@ -162,6 +165,9 @@ IECtrl::~IECtrl() {
   }
   if (m_pDropTarget != NULL) {
     delete m_pDropTarget;
+  }
+  if (m_pExternal != NULL) {
+    delete m_pExternal;
   }
 }
 
@@ -595,10 +601,14 @@ IECtrl* IECtrl::get(HWND hwnd) {
 }
 
 IECtrl::External* IECtrl::getExternal() {
-  if (!m_pExternal) {
-    m_pExternal = new External;
-  }
   return m_pExternal;
+}
+
+IECtrl::Global* IECtrl::getGlobal() {
+  if (!m_pGlobal) {
+    m_pGlobal = new Global;
+  }
+  return m_pGlobal;
 }
 
 HWND IECtrl::getHWND() {
@@ -1859,4 +1869,12 @@ STDMETHODIMP IECtrl::iObject::GetNextDispID(DWORD grfdex, DISPID id, DISPID *pid
 STDMETHODIMP IECtrl::iObject::GetNameSpaceParent(IUnknown **ppunk) {
   *ppunk = NULL;
   return S_FALSE;
+}
+
+IECtrl::Var IECtrl::External::getGlobal(Var& args, iObject* obj) {
+  return IECtrl::getGlobal();
+}
+
+IECtrl::Var IECtrl::External::getRefID(Var& args, iObject* obj) {
+  return (int)getIECtrl()->getHWND();
 }

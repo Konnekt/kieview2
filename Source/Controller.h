@@ -347,7 +347,12 @@ namespace kIEview2 {
         bindMethod("close", bind(resolve_cast0(&WndController::close), this));
 
         setProperty("name", "oWindow");
-        // hWndWnd = GetParent(ctrl->getHWND());
+
+        if (ICMessage(IMC_FINDPLUG, Tabs::net, IMT_ALL)) {
+          hWndWnd = (HWND)IMessage(Tabs::IM::GetTabWindow, Tabs::net);
+        } else {
+          hWndWnd = GetParent(GetParent(ctrl->getHWND()));
+        }
       }
 
     public:
