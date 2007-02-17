@@ -43,7 +43,7 @@ namespace kIEview2 {
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::lastMsgCount, DT_CT_INT, 10, "kIEview2/lastMsgCount");
     config->setColumn(DTCFG, cfg::relativeTime, DT_CT_INT, 1, "kIEview2/relativeTime");
-    config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 1, "kIEview2/autoScroll");
+    config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 0, "kIEview2/autoScroll");
 
     config->setColumn(DTCFG, cfg::showFormattingBtns, DT_CT_INT, 1, "kIEview2/showFormattingBtns");
     config->setColumn(DTCFG, cfg::showEmotChooser, DT_CT_INT, 1, "kIEview2/showEmotChooser");
@@ -487,7 +487,7 @@ namespace kIEview2 {
         text.replaceChars(sla, xsla);
         text = htmlEscape(text);
         text.replaceChars(xsla, sla);
-        text = rtfHtml->rtfParse((char*)text.a_str(), text.size());
+        text = text.substr(29, text.length() - 29 - 13); // @debug chwilowe obejscie buga z przymusowym kolorem wysylanego tekstu
 
         return setReturnCode(text.size());
       }
@@ -510,6 +510,7 @@ namespace kIEview2 {
         text = htmlEscape(text);
         text.replaceChars(xsla, sla);
         text = rtfHtml->rtfParse((char*)text.a_str(), text.size());
+        text = text.substr(29, text.length() - 29 - 13); // @debug chwilowe obejscie buga z przymusowym kolorem wysylanego tekstu
 
         strcpy(an->_message->body, text.a_str());
         an->_message->flag |= MF_HTML;
@@ -534,21 +535,15 @@ namespace kIEview2 {
               cf.dwMask = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_COLOR;
               SendMessage(hEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
-              if ((cf.dwEffects & CFE_BOLD) && (cf.dwMask & CFM_BOLD)) {
-                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold, cntID), -1, ACTS_CHECKED);
-              } else {
-                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold, cntID), 0, ACTS_CHECKED);
-              }
-              if ((cf.dwEffects & CFE_ITALIC) && (cf.dwMask & CFM_ITALIC)) {
-                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic, cntID), -1, ACTS_CHECKED);
-              } else {
-                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic, cntID), 0, ACTS_CHECKED);
-              }
-              if ((cf.dwEffects & CFE_UNDERLINE) && (cf.dwMask & CFM_UNDERLINE)) {
-                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline, cntID), -1, ACTS_CHECKED);
-              } else {
-                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline, cntID), 0, ACTS_CHECKED);
-              }
+              UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold, cntID), 
+                ((cf.dwEffects & CFE_BOLD) && (cf.dwMask & CFM_BOLD)) ? -1 : 0, ACTS_CHECKED
+              );
+              UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic, cntID), 
+                ((cf.dwEffects & CFE_ITALIC) && (cf.dwMask & CFM_ITALIC)) ? -1 : 0, ACTS_CHECKED
+              );
+              UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline, cntID), 
+                ((cf.dwEffects & CFE_UNDERLINE) && (cf.dwMask & CFM_UNDERLINE)) ? -1 : 0, ACTS_CHECKED
+              );
               break;
             }
           }
@@ -759,6 +754,9 @@ namespace kIEview2 {
   }
 
   int Controller::readLastMsgSession(tCntId cnt, int sessionOffset) {
+    // locking
+    LockerCS lock(_locker);
+
     Tables::oTable table = historyTable;
     loadMsgTable(cnt);
 
@@ -1124,8 +1122,7 @@ namespace kIEview2 {
         groupDisplay = true;
       }
 
-      if (groupDisplay || groupTime) data.hash_insert_new_var("grouped", "1");
-      if (groupDisplay) data.hash_insert_new_var("groupDisplay", "1");
+      if (groupDisplay) data.hash_insert_new_var("grouped", "1");
       if (groupTime) data.hash_insert_new_var("groupTime", "1");
 
       if (groupTime) {

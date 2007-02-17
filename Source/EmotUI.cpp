@@ -248,7 +248,6 @@ int EmotLV::EmotPackInfoItem::sizeInfo(EmotLV* elv, Rect& rc) {
 }
 
 void EmotLV::EmotPackInfoItem::resizeItems(EmotLV* elv, ListWnd::Item* item) {
-  elv->scrollTo(Point(0, 0));
   ListWnd::oItem lastItem = elv->getActiveItem();
   elv->setActiveItem((ListWnd::Item*)item);
   if (lastItem.isValid()) {

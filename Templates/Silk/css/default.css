@@ -1,0 +1,223 @@
+/*****************************************
+ Silked
+   Silk-based chat style for konnekt
+------------------------------------------
+   by zimaq  ~  zimaq@may10.ca 
+   &  Sija   ~  sija@khrone.pl
+   dated 15th October 2006
+*****************************************/
+
+body {
+  background: #fefefe;
+  padding: 0;
+  margin: 0;
+  line-height: 1.2em;
+  font-family: "Frutiger Linotype", Tahoma, Verdana, sans-serif;
+  font-weight: normal;
+  font-size: 10px;
+}
+
+.message, .sms, .file {
+  background: #fff;
+  padding: 0; 
+}
+
+span.value, .sms .body, 
+.message .body,
+.file, .file .path,
+.file .filesize,
+.file .filetransfered,
+.file .filetransfertime,
+.file .filetransfer,
+.file .fileerror  {
+  color: #000 !important;
+  background: #fff !important;
+  font-family: "Frutiger Linotype", Tahoma, Verdana, sans-serif !important;
+  font-size: 11px !important;
+}
+
+.file {
+  line-height: 14px;
+}
+
+.file .timestamp {
+  border-bottom: 0 !important;
+}
+
+.messageReceived .header,
+.messageSent .header,
+.file .header,
+.sms .header {
+  width: 100%;
+  height: 20px;
+  background: #f0f4ec;
+}
+
+.messageReceived .nick,
+.messageSent .nick,
+.file .header,
+.sms .header {
+  font-family: "Frutiger Linotype", Tahoma, Verdana, sans-serif;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 0 0 0 24px;
+  height: 20px;
+  float: left;
+  margin: 0;
+  line-height: 20px;
+  color: #4c4c4c;
+}
+
+.messageReceived .header .nick { background: url('img/user_red.png') no-repeat 4px 2px #f0f4ec; }
+.messageSent .header .nick { background: url('img/user_blue.png') no-repeat 4px 2px #f0f4ec; }
+
+.fileReceived .header { background: url('img/transmit_in.png') no-repeat 4px 2px #f0f4ec; }
+.fileSent .header { background: url('img/transmit_out.png') no-repeat 4px 2px #f0f4ec; }
+
+.sms .header { background: url('img/phone.png') no-repeat 4px 2px #f0f4ec; }
+
+.messageReceived .timestamp,
+.messageSent .timestamp {
+  font-family: "Frutiger Linotype", Tahoma, Verdana, sans-serif;
+  text-align: right;
+  display: block;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  padding-right: 5px;
+  line-height: 20px;
+  color: #aaa;
+  font-size: 10px;
+  /* background: url('img/time.png') no-repeat left center #f0f4ec; */
+}
+
+.file .timestamp {
+  color: #aaa !important;
+  font-size: 10px;
+  /* background: url('img/time.png') no-repeat right center #f0f4ec; */
+  padding-right: 20px;
+}
+
+.sms .header span,
+.file .header span  {
+  font-family: "Frutiger Linotype", Tahoma, Verdana, sans-serif !important;
+  color: #000;
+  border-bottom: 1px solid #ddd;
+}
+
+.messageReceived .extinfo,
+.messageSent .extinfo {
+  display: block;
+  font-weight: bold;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  padding: .2em 10px;
+}
+
+.file .header  {
+  margin-bottom: 3px;
+}
+
+.file {
+  padding-bottom: 5px;
+}
+
+.message .body, .sms .body {
+  padding: 3px 10px 5px 10px;
+  background: url('img/gradient.gif') repeat-x top #FEFEFE;
+}
+
+.file .rest {
+  padding: 3px 10px 5px 10px;
+}
+
+.file .rest span.value {
+  font-weight: bold;
+}
+
+.messageGrouped .body {
+  padding: 3px 10px 3px 10px;
+  border-top: 1px solid #eee;
+}
+
+.messageGrouped .extinfo {
+  display: block;
+  font-weight: bold;
+  background-color: #fff;
+  border-top: 1px solid #eee;
+  padding: .2em 10px;
+}
+
+.messageGrouped .timestamp {
+  font-family: "Frutiger Linotype", Tahoma, Verdana, sans-serif;
+  position: relative;
+  padding-right: 5px;
+  margin-top: .3em;
+  float: right;
+  clear: both;
+  color: #666;
+  font-size: 10px;
+}
+
+.body {
+  margin: 0;
+}
+
+.quickevent, .status, .exception {
+  display: block;
+  padding: 5px 7px 4px 24px;
+  color: #000;
+  font-family: "Frutiger Linotype", Tahoma, Verdana, sans-serif;
+  font-size: 11px;
+  background: #F0F4EC;
+  border-bottom: 1px solid #dadada;
+}
+
+.quickevent {
+  background: url('img/info.png') no-repeat 4px 3px #f0f4ec;
+}
+
+/* .quickevent.warning {
+  background: url('img/warning.png') no-repeat 4px 3px #f0f4ec;
+} */
+
+.status {
+  background: url('img/tag_comm.png') no-repeat 4px 3px #f0f4ec;
+}
+
+.exception {
+  background: url('img/delete.png') no-repeat 4px 3px #f0f4ec;
+}
+
+.quickevent:first-line {
+  font-weight: bold;
+}
+
+.quickevent .timestamp, 
+.status .timestamp,
+.status .name {
+  font-weight: bold;
+}
+
+.exception,
+.quickevent .body, 
+.status .body {
+  color: #000;
+}
+
+a, a:visited {
+  color: #333 !important;
+  border-bottom: 1px dotted #ddd;
+  text-decoration: none !important;
+}
+
+a:hover {
+  color: #000 !important;
+  border-bottom: 1px solid #ddd;
+}
+
+img.aqqimage, img.AQQImage, img.ggimage {
+  border: 1px solid #999;
+}
+
+/* Got Silk? */
