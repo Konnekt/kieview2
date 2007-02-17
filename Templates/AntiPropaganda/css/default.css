@@ -33,12 +33,10 @@ a:hover {
 .row .header span {
   padding: 3px 5px 3px 5px;
   margin: 0 4px 0 0;
-  position: relative;
   color: #fff;
 }
 
 .row .context-grouped span.floating {
-  position: relative;
   padding: 3px 4px;
   line-height: 1.0em;
   margin: 0 4px 2px 0;
@@ -54,11 +52,23 @@ a:hover {
   color: #383838;
 }
 
+.row .closer {
+  background: #000;
+  display: block;
+  float: right;
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
 /*
  * normal message
  */
  
-.outgoing { background: #e3e3e3; }
+.outgoing { background: #ebebeb; }
 .incoming { background: #eef7d2; }
 
 .outgoing .header { background: #bdbdbd; border-top: solid 5px #999; }
@@ -161,6 +171,9 @@ a:hover {
   background: #e8fcfd;
 }
 
+.sms .context-grouped {
+  border-top: 1px solid #B9F5F9;
+}
 .sms .header { 
   background: #12a4af;
   border-top: solid 5px #0d737b;

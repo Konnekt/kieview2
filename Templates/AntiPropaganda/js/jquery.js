@@ -1879,7 +1879,7 @@ jQuery.fn.extend({
 				jQuery.getScript( this.src );
 			else
 				jQuery.globalEval( this.text || this.textContent || this.innerHTML || "" );
-		}).end();
+		}).remove().end();
 	}
 
 });
