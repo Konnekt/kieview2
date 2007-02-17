@@ -1,0 +1,187 @@
+body {
+  background: #323232 url(img/background.png) fixed;
+  font-size: 12px;
+  font-family: "Lucida Grande";
+  margin: 10px 0;
+  word-wrap: break-word;
+}
+
+img.emoticon {
+  vertical-align: middle;
+}
+
+a { 
+  color: #3d82af;
+  text-decoration: none;
+  padding: 0 1px;
+}
+a:hover {
+  background: #3d82af;
+  color: #fff;
+}
+
+/*
+ * base classes
+ */
+.row { margin: 0 10px 10px 10px; }
+.row .context { zoom: 1; }
+
+.row .header { padding: 7px 7px 8px 7px; font-size: 0.8em; }
+.row .header span {
+  padding: 3px 5px 3px 5px;
+  margin: 0 4px 0 0;
+  position: relative;
+  color: #fff;
+}
+
+.row .context div.body {
+  line-height: 1.6em;
+  padding: 0 7px;
+  font-size: .9em;
+  color: #383838;
+}
+
+/*
+ * normal message
+ */
+ 
+.outgoing { background: #e3e3e3; }
+.incoming { background: #eef7d2; }
+
+.outgoing .header { background: #bdbdbd; border-top: solid 5px #999; }
+.incoming .header { background: #c1e146; border-top: solid 5px #799915; }
+
+.outgoing .context .time, .outgoing .context .sender, .outgoing .context .ext { background: #999; }
+.incoming .context .time, .incoming .context .sender, .incoming .context .ext { background: #799915; }
+
+/*
+ * grouped message
+ */
+
+.context-grouped {
+  line-height: 1.6em;
+  padding: 0 7px;
+  font-size: .9em;
+  color: #383838;
+}
+
+.context-grouped .time {
+  position: relative;
+  padding: 3px 4px;
+  line-height: 1.0em;
+  font-size: .8em;
+  float: right;
+  clear: both;
+}
+.outgoing .context-grouped { border-top: 1px solid #d4d4d4; }
+.incoming .context-grouped { border-top: 1px solid #c1e146; }
+
+.outgoing .context-grouped .time { background: #d4d4d4; color: #666; }
+.incoming .context-grouped .time { background: #cfeaaa; color: #799915; }
+.context-grouped .body { color: #383838; }
+
+/*
+ * status
+ */
+ 
+.status { 
+  background: #eef7d2;
+}
+
+.status .header { 
+  background: #e4dc43;
+  border-top: solid 5px #9b8013;
+}
+
+.status .header span {
+  background: #9b8013;
+}
+
+/*
+ * exception
+ */
+ 
+.exception .header { 
+  background: #9b2f13;
+  border-top: solid 5px #65200c;
+}
+
+.exception .what {
+  font-weight: bold;
+}
+
+.exception .header span {
+  background: #65200c;
+}
+
+/*
+ * quickevent
+ */
+ 
+.quickevent { 
+  background: #efefef;
+}
+
+.quickevent .header { 
+  background: #6a6a6a;
+  border-top: solid 5px #262626;
+}
+
+.quickevent .type {
+  font-weight: bold;
+}
+
+.quickevent .header span {
+  background: #262626;
+}
+
+/*
+ * sms
+ */
+ 
+.sms { 
+  background: #e8fcfd;
+}
+
+.sms .header { 
+  background: #12a4af;
+  border-top: solid 5px #0d737b;
+}
+
+.sms .to {
+  font-weight: bold;
+}
+
+.sms .gate {
+  text-transform: lowercase;
+}
+
+.sms .header span {
+  background: #0d737b;
+}
+
+/*
+ * file
+ */
+ 
+.file { 
+  background: #f1fdee;
+}
+
+.file .header { 
+  background: #37ae15;
+  border-top: solid 5px #27790f;
+}
+
+/*
+.file .name, .file .nick {
+  font-weight: bold;
+} */
+
+.file .body .value {
+  font-weight: bold;
+}
+
+.file .header span {
+  background: #27790f;
+}

@@ -1,3 +1,4 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
 <html xml:lang="pl" lang="pl" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <base href="{{$tplPath}}/" />
@@ -15,30 +16,7 @@
         oController = window.external.oController;
         oWindow = window.external.oWindow;
 
-        //Coontroller.ieVersion = function() { return 9 + 1; };
-        //oController.ieVersion = 9;
-        //oController.justSS = function() { return "blaa"; };
-        //alert($H(oController).inspect());
-        //oWindow.minimize();
-        //insertString(oController.getPluginVersion('xkAway2'));
-        //alert(oController.getEmot(4716));
-        
-        /*
-        x.wazaa = 'tak';
-        insertString(x.wazaa() + ' | ');
-        insertString(x.inspect() + '<br/>');
-        insertString(typeof x.xxx);
-        insertString(x.zzz.inspect());
-        if (typeof(someFuckinVar) != 'undefined') insertString(9);
-        insertString(x.yyy(10, 3));
-        insertString(someFuckinVar);
-        insertString(x[6].test('xxxorg'));
-        insertString('xxx2' in x);
-        insertString('<br/><br/>' + x.ieVer);
-        */
-
       } catch(e) {
-        alert($H(e).inspect());
         insertString('<b>Exception</b> (<b>' + e.name + '</b>): ' + e.message);
       }
     }
