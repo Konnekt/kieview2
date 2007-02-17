@@ -1,3 +1,11 @@
+{{if grouped}}
+<div class="row quickevent" style="margin-top: -10px">
+  <div class="context-grouped">
+    {{if showTime?}}<span class="floating time">{{if groupTime}}<b>{{$timeFromLastSt}}</b> póŸniej{{else}}{{$time}}{{/if}}</span>{{/if}}
+    <div class="body">{{$body}}</div>
+  </div>
+</div>
+{{else}}
 <div class="row quickevent">
   <div class="context">
     <div class="header">
@@ -12,3 +20,4 @@
     {{/unless}}
   </div>
 </div>
+{{/if}}

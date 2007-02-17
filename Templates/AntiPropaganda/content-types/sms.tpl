@@ -1,3 +1,11 @@
+{{if grouped}}
+<div class="row sms" style="margin-top: -10px">
+  <div class="context-grouped">
+    <span class="floating time">{{if groupTime}}<b>{{$timeFromLastSt}}</b> póŸniej{{else}}{{$time}}{{/if}}</span>
+    <div class="body">{{$body}}</div>
+  </div>
+</div>
+{{else}}
 <div class="row sms">
   <div class="context">
     <div class="header">
@@ -9,3 +17,4 @@
     <div class="body">{{$body}}</div>
   </div>
 </div>
+{{/if}}

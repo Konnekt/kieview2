@@ -289,8 +289,8 @@ string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
   EmotHandler* handler = static_cast<EmotHandler*>(param);
   sEmotInsertion* ei = &handler->emotInsertions.at(atoi(reg->getSub(1).c_str()));
 
-  IMLOG("[EmotHandler::replaceEmot()] match = %s, img_path = %s, emot = %s, set = %s", ei->match.c_str(), ei->emot->getImgPath().c_str(),
-    ei->emot->getText().c_str(), ei->emotSet->getName().c_str());
+  IMLOG("[EmotHandler::replaceEmot()] match = %s, img_path = %s, emot = %s, set = %s", ei->match.c_str(), 
+    ei->emot->getImgPath().c_str(), ei->emot->getText().c_str(), ei->emotSet->getName().c_str());
 
   return "<img src=\"" + 
     (ei->emot->isVirtual() ? 

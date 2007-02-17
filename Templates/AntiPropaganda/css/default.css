@@ -24,9 +24,12 @@ a:hover {
  * base classes
  */
 .row { margin: 0 10px 10px 10px; }
-.row .context { zoom: 1; }
+.row .context, .row .context-grouped { zoom: 1; }
 
-.row .header { padding: 7px 7px 8px 7px; font-size: 0.8em; }
+.row .header {
+  padding: 7px 7px 8px 7px;
+  font-size: .8em;
+}
 .row .header span {
   padding: 3px 5px 3px 5px;
   margin: 0 4px 0 0;
@@ -34,6 +37,16 @@ a:hover {
   color: #fff;
 }
 
+.row .context-grouped span.floating {
+  position: relative;
+  padding: 3px 4px;
+  line-height: 1.0em;
+  margin: 0 4px 2px 0;
+  font-size: .75em;
+  float: right;
+}
+
+.row .context-grouped div.body,
 .row .context div.body {
   line-height: 1.6em;
   padding: 0 7px;
@@ -51,28 +64,13 @@ a:hover {
 .outgoing .header { background: #bdbdbd; border-top: solid 5px #999; }
 .incoming .header { background: #c1e146; border-top: solid 5px #799915; }
 
-.outgoing .context .time, .outgoing .context .sender, .outgoing .context .ext { background: #999; }
-.incoming .context .time, .incoming .context .sender, .incoming .context .ext { background: #799915; }
+.outgoing .header span { background: #999; }
+.incoming .header span { background: #799915; }
 
 /*
  * grouped message
  */
 
-.context-grouped {
-  line-height: 1.6em;
-  padding: 0 7px;
-  font-size: .9em;
-  color: #383838;
-}
-
-.context-grouped .time {
-  position: relative;
-  padding: 3px 4px;
-  line-height: 1.0em;
-  font-size: .8em;
-  float: right;
-  clear: both;
-}
 .outgoing .context-grouped { border-top: 1px solid #d4d4d4; }
 .incoming .context-grouped { border-top: 1px solid #c1e146; }
 
@@ -88,9 +86,21 @@ a:hover {
   background: #eef7d2;
 }
 
+.status .context-grouped {
+  border-top: 1px solid #e4dc43;
+}
+.status .context-grouped .floating {
+  background: #e4dc43;
+  color: #56530c;
+}
+
 .status .header { 
   background: #e4dc43;
   border-top: solid 5px #9b8013;
+}
+
+.status .context-grouped .name {
+  font-weight: bold;
 }
 
 .status .header span {
@@ -120,6 +130,14 @@ a:hover {
  
 .quickevent { 
   background: #efefef;
+}
+
+.quickevent .context-grouped {
+  border-top: 1px solid #ddd;
+}
+.quickevent .context-grouped .floating {
+  background: #6a6a6a;
+  color: #eee;
 }
 
 .quickevent .header { 

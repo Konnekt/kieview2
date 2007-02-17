@@ -386,8 +386,10 @@ namespace kIEview2 {
         bool autoScroll = an->_scroll && this->autoScroll(an, ctrl);
         try {
           args[0] = _parseMsgTpl(an).a_str();
-        } catch(const exception &e) { 
+        } catch(const exception& e) { 
           args[0] = tplHandler->parseException(e).a_str();
+        } catch(const Exception& e) {
+          break;
         }
 
         waitForIECtrlReady(ctrl);
@@ -406,8 +408,10 @@ namespace kIEview2 {
         bool autoScroll = this->autoScroll(an, ctrl);
         try {
           args[0] = _parseStatusTpl(an).a_str();
-        } catch(const exception &e) { 
+        } catch(const exception& e) { 
           args[0] = tplHandler->parseException(e).a_str();
+        } catch(const Exception& e) {
+          break;
         }
 
         waitForIECtrlReady(ctrl);
@@ -789,7 +793,8 @@ namespace kIEview2 {
     LockerCS lock(_locker);
 
     // czyscimy wiadomosci grupowania
-    wndObjCollection[ctrl].groupedMsgs.clear();
+    getWndObjects(ctrl)->groupedMsgs.clear();
+    getWndObjects(ctrl)->groupedSt.clear();
 
     ctrl->navigate(("file:///" + unifyPath(kPath, false, '/') + "/data/templates/core/__bootstrap.html").c_str());
     // ctrl->clear();
@@ -1015,6 +1020,8 @@ namespace kIEview2 {
     // We create structure of the data
     param_data data(param_data::HASH);
     data.hash_insert_new_var("@time", i64tostr(date.getInt64()));
+    data.hash_insert_new_var("@status", inttostr(an->_status));
+
     data.hash_insert_new_var("display", strlen(config->getChar(CNT_DISPLAY, an->act.cnt)) ? 
       config->getChar(CNT_DISPLAY, an->act.cnt) : 
       config->getChar(CNT_UID, an->act.cnt)
@@ -1028,6 +1035,45 @@ namespace kIEview2 {
 
       data.hash_insert_new_var("info", info);
     }
+
+    tGroupedSt& groupedSt = getWndObjects(an)->groupedSt;
+
+    bool groupStatus = false;
+    bool groupTime = false;
+    bool groupInfo = false;
+
+    if (groupedSt.size()) {
+      sGroupedSt& lastSt = groupedSt[0];
+
+      int timeFromLastSt = date.getTime64() - lastSt.time.getTime64();
+      bool relativeTime = config->getInt(cfg::relativeTime);
+
+      groupTime = timeFromLastSt <= (relativeTime ? (60 * 60 * 24) : (60 * 60));
+      groupStatus = lastSt.status == an->_status;
+      groupInfo = lastSt.info == an->_info;
+
+      // @debug dodac opcje w konfiguracjis
+      if (groupStatus && groupInfo) {
+        throw ExceptionString("Duplicated status change notification");
+      }
+      if (groupStatus) data.hash_insert_new_var("groupStatus", "1");
+      if (groupTime) data.hash_insert_new_var("groupTime", "1");
+      if (groupInfo) data.hash_insert_new_var("groupInfo", "1");
+
+      if (groupStatus && groupTime) {
+        data.hash_erase_var("time");
+        data.hash_insert_new_var("time", timeToString(timeFromLastSt) + " póŸniej");
+      }
+      data.hash_insert_new_var("@lastStTime", i64tostr(lastSt.time.getInt64()));
+      data.hash_insert_new_var("timeFromLastSt", timeToString(timeFromLastSt));
+      data.hash_insert_new_var("grouped", "1");
+    }
+
+    getWndObjects(an)->groupedMsgs.clear();
+    getWndObjects(an)->groupedSt.clear();
+
+    groupedSt.push_back(sGroupedSt(an->_status, date, an->_info));
+
     if (an->_status & ST_IGNORED) {
       data.hash_insert_new_var("ignored?", "1");
     }
@@ -1069,51 +1115,15 @@ namespace kIEview2 {
       data.hash_insert_new_var("hidden?", "1");
     }
 
-    if (msgHandlers.find(msg->type) != msgHandlers.end()) {
-      msgHandlers[msg->type]->signal(data, an);
-    }
-
-    return tplHandler->parseTpl(&data, ("content-types/" + type).c_str());
-  }
-
-  /*
-   * Message types specific methods
-   */
-  void Controller::_handleQuickEventTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
-    if (an->_message->flag & MF_QE_SHOWTIME) {
-      data.hash_insert_new_var("showTime?", "1");
-    }
-    if (!(an->_message->flag & MF_QE_NORMAL)) {
-      data.hash_insert_new_var("warning?", "1");
-    }
-    clearGroupedMsgs(an);
-  }
-
-  void Controller::_handleStdMsgTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
-    cMessage* msg = an->_message;
-    tCntId cnt = getCntFromMsg(msg);
-
-    string extInfo = GetExtParam(msg->ext, MEX_ADDINFO);
-    String title = GetExtParam(msg->ext, MEX_TITLE);
-
-    data.hash_insert_new_var("@net", inttostr(msg->net));
-    data.hash_insert_new_var("uid", config->getChar(CNT_UID, cnt));
-    data.hash_insert_new_var("nick", config->getChar(CNT_NICK, cnt));
-    data.hash_insert_new_var("name", config->getChar(CNT_NAME, cnt));
-    data.hash_insert_new_var("surname", config->getChar(CNT_SURNAME, cnt));
-
     tCntId senderID = !(msg->flag & MF_SEND) ? Ctrl->ICMessage(IMC_CNT_FIND, msg->net, (int) msg->fromUid) : 0;
-    IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
-    tGroupedMsgs& groupedMsgs = wndObjCollection[ctrl].groupedMsgs;
-
-    Date64 date;
-    date = msg->time;
+    tGroupedMsgs& groupedMsgs = getWndObjects(an)->groupedMsgs;
 
     bool groupDisplay = false;
     bool groupTime = false;
 
-    if (groupedMsgs.size()) {
+    if (groupedMsgs.size() && groupedMsgs[0].type == msg->type) {
       sGroupedMsg& lastMsg = groupedMsgs[0];
+
       int timeFromLastMsg = date.getTime64() - lastMsg.time.getTime64();
       bool relativeTime = config->getInt(cfg::relativeTime);
 
@@ -1133,8 +1143,42 @@ namespace kIEview2 {
       data.hash_insert_new_var("timeFromLastMsg", timeToString(timeFromLastMsg));
     }
 
-    groupedMsgs.clear();
-    groupedMsgs.push_back(sGroupedMsg(senderID, date));
+    if (msgHandlers.find(msg->type) != msgHandlers.end()) {
+      msgHandlers[msg->type]->signal(data, an);
+    }
+
+    getWndObjects(an)->groupedMsgs.clear();
+    getWndObjects(an)->groupedSt.clear();
+
+    groupedMsgs.push_back(sGroupedMsg(senderID, msg->type, date));
+
+    return tplHandler->parseTpl(&data, ("content-types/" + type).c_str());
+  }
+
+  /*
+   * Message types specific methods
+   */
+  void Controller::_handleQuickEventTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
+    if (an->_message->flag & MF_QE_SHOWTIME) {
+      data.hash_insert_new_var("showTime?", "1");
+    }
+    if (!(an->_message->flag & MF_QE_NORMAL)) {
+      data.hash_insert_new_var("warning?", "1");
+    }
+  }
+
+  void Controller::_handleStdMsgTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
+    cMessage* msg = an->_message;
+    tCntId cnt = getCntFromMsg(msg);
+
+    string extInfo = GetExtParam(msg->ext, MEX_ADDINFO);
+    String title = GetExtParam(msg->ext, MEX_TITLE);
+
+    data.hash_insert_new_var("@net", inttostr(msg->net));
+    data.hash_insert_new_var("uid", config->getChar(CNT_UID, cnt));
+    data.hash_insert_new_var("nick", config->getChar(CNT_NICK, cnt));
+    data.hash_insert_new_var("name", config->getChar(CNT_NAME, cnt));
+    data.hash_insert_new_var("surname", config->getChar(CNT_SURNAME, cnt));
 
     if (extInfo.length()) {
       data.hash_insert_new_var("extInfo", extInfo);

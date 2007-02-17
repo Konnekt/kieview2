@@ -1,7 +1,7 @@
 {{if grouped}}
 <div class="row {{if sent?}}outgoing{{else}}incoming{{/if}}" style="margin-top: -10px">
   <div class="context-grouped">
-    <span class="time">{{if groupTime}}<b>{{$timeFromLastMsg}}</b> póŸniej{{else}}{{$time}}{{/if}}</span>
+    <span class="floating time">{{if groupTime}}<b>{{$timeFromLastMsg}}</b> póŸniej{{else}}{{$time}}{{/if}}</span>
     <div class="body">{{$body}}</div>
   </div>
 </div>

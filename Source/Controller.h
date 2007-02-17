@@ -53,18 +53,29 @@ namespace kIEview2 {
     struct sGroupedMsg {
       Date64 time;
       tCntId cnt;
+      int type;
 
-      sGroupedMsg(tCntId _cnt, const Date64& _time): cnt(_cnt), time(_time) { }
-      sGroupedMsg() { }
+      sGroupedMsg(tCntId _cnt, int _type, const Date64& _time): cnt(_cnt), type(_type), time(_time) { }
+      sGroupedMsg(): cnt(0), type(0) { }
     };
     typedef vector<sGroupedMsg> tGroupedMsgs;
+
+    struct sGroupedSt {
+      String info;
+      Date64 time;
+      int status;
+
+      sGroupedSt(int _status, const Date64& _time, const StringRef& _info = ""): status(_status), time(_time), info(_info) { }
+      sGroupedSt(): status(0) { }
+    };
+    typedef vector<sGroupedSt> tGroupedSt;
 
     struct sEmailInsertion {
       string email;
       UINT id;
 
       sEmailInsertion(UINT _id, const string& _email): id(_id), email(_email) { }
-      sEmailInsertion() { }
+      sEmailInsertion(): id(0) { }
     };
 
     struct sLinkInsertion {
@@ -79,7 +90,9 @@ namespace kIEview2 {
     struct sWndObjCollection {
       JS::WndController* jsWndController;
       ActionHandler* actionHandler;
+
       tGroupedMsgs groupedMsgs;
+      tGroupedSt groupedSt;
 
       sWndObjCollection(): jsWndController(0), actionHandler(0) { }
       ~sWndObjCollection() {
