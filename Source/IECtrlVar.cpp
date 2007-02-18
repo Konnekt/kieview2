@@ -53,6 +53,14 @@ IECtrl::Var::Var(Date64 &v) {
   setValue(v);
 }
 
+IECtrl::Var::Var(Stamina::String &v) {
+  setValue(v);
+}
+
+IECtrl::Var::Var(string &v) {
+  setValue(v);
+}
+
 IECtrl::Var::Var(IECtrl::Object &v) {
   setValue(v);
 }
@@ -107,6 +115,16 @@ IECtrl::Var & IECtrl::Var::operator=(VARIANT &value) {
 }
 
 IECtrl::Var & IECtrl::Var::operator=(Date64 &value) {
+  setValue(value);
+  return *this;
+}
+
+IECtrl::Var & IECtrl::Var::operator=(Stamina::String &value) {
+  setValue(value);
+  return *this;
+}
+
+IECtrl::Var & IECtrl::Var::operator=(string &value) {
   setValue(value);
   return *this;
 }
@@ -169,6 +187,10 @@ const char * IECtrl::Var::getString() {
     return m_iValue ? "true" : "false";
   else if (m_eType == Type::Real)
     return _gcvt(m_dValue, 12, buff);
+  else if (m_eType == Type::StaminaString)
+    return m_ssValue->a_str();
+  else if (m_eType == Type::StdString)
+    return m_sValue->c_str();
   else if (m_eType == Type::String)
     return m_szValue;
   else if (m_eType == Type::Array)
@@ -189,6 +211,14 @@ const char * IECtrl::Var::getString() {
   return "";
 }
 
+String IECtrl::Var::getStaminaString() {
+  return getString();
+}
+
+string IECtrl::Var::getStdString() {
+  return getString();
+}
+
 VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
   if (v == NULL) {
     v = new VARIANT;
@@ -205,9 +235,9 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
   } else if (m_eType == Type::Real) {
     v->vt = VT_R8;
     v->dblVal = m_dValue;
-  } else if (m_eType == Type::String) {
+  } else if (isString()) {
     v->vt = VT_BSTR;
-    v->bstrVal = _com_util::ConvertStringToBSTR(m_szValue);
+    v->bstrVal = _com_util::ConvertStringToBSTR(getString());
   } else if (m_eType == Type::Date) {
     v->vt = VT_DATE;
     TIME_ZONE_INFORMATION time_zone;
@@ -271,7 +301,7 @@ IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
     return IECtrl::Object(ctrl, false, "Number", args);
   } else if (m_eType == Type::Date) {
     return IECtrl::Object(ctrl, false, "Date", args);
-  } else if (m_eType == Type::String) {
+  } else if (isString()) {
     return IECtrl::Object(ctrl, false, "String", args);
   } else if (m_eType == Type::Boolean) {
     return IECtrl::Object(ctrl, false, "Boolean", args);
@@ -292,7 +322,7 @@ bool IECtrl::Var::isReal() {
   return m_eType == Type::Real;
 }
 bool IECtrl::Var::isString() {
-  return m_eType == Type::String;
+  return m_eType == Type::String || m_eType == Type::StdString || m_eType == Type::StaminaString;
 }
 bool IECtrl::Var::isDate() {
   return m_eType == Type::Date;
@@ -333,6 +363,8 @@ bool IECtrl::Var::empty() {
     case Type::Real:
       if (!getInteger()) return true;
       break;
+    case Type::StaminaString:
+    case Type::StdString:
     case Type::String:
       if (!strlen(getString())) return true;
       break;
@@ -401,6 +433,16 @@ void IECtrl::Var::operator+=(IECtrl::Var & var) {
       break;
     }
 
+    case Type::StaminaString: {
+      *m_ssValue += var.getString();
+      break;
+    }
+
+    case Type::StdString: {
+      *m_sValue += var.getString();
+      break;
+    }
+
     case Type::Date: {
       if (m_dtValue) {
         (*m_dtValue) = m_dtValue->getInt64() + var.getDate().getInt64();
@@ -428,6 +470,14 @@ void IECtrl::Var::operator+=(Date64& var) {
   *this += IECtrl::Var(var);
 }
 
+void IECtrl::Var::operator+=(Stamina::String& var) {
+  *this += IECtrl::Var(var);
+}
+
+void IECtrl::Var::operator+=(string& var) {
+  *this += IECtrl::Var(var);
+}
+
 // private
 void IECtrl::Var::clear() {
   if (m_eType == Type::String && m_szValue != NULL) {
@@ -442,6 +492,10 @@ void IECtrl::Var::clear() {
     delete m_dtValue;
   } else if (m_eType == Type::Object) {
     delete m_objValue;
+  } else if (m_eType == Type::StaminaString) {
+    delete m_ssValue;
+  } else if (m_eType == Type::StdString) {
+    delete m_sValue;
   }
   m_eType = Type::Unknown;
   m_nLength = 0;
@@ -461,6 +515,12 @@ void IECtrl::Var::copy(IECtrl::Var& copy) {
       break;
     case Type::String:
       setValue(copy.m_szValue);
+      break;
+    case Type::StaminaString:
+      setValue(copy.m_ssValue);
+      break;
+    case Type::StdString:
+      setValue(copy.m_sValue);
       break;
     case Type::Array:
       setValue(copy.m_aValue, copy.m_nLength);
@@ -610,6 +670,18 @@ void IECtrl::Var::setValue(Date64 &v) {
   m_eType = Type::Date;
 }
 
+void IECtrl::Var::setValue(Stamina::String &v) {
+  clear();
+  m_ssValue = new Stamina::String(v);
+  m_eType = Type::StaminaString;
+}
+
+void IECtrl::Var::setValue(string &v) {
+  clear();
+  m_sValue = new string(v);
+  m_eType = Type::StdString;
+}
+
 void IECtrl::Var::setValue(IECtrl::Object &v) {
   clear();
   m_objValue = new IECtrl::Object(v);
@@ -686,6 +758,18 @@ IECtrl::Var IECtrl::Var::operator+(const char *var) {
 }
 
 IECtrl::Var IECtrl::Var::operator+(Date64 &var) {
+  IECtrl::Var ret(*this);
+  ret += IECtrl::Var(var);
+  return ret;
+}
+
+IECtrl::Var IECtrl::Var::operator+(Stamina::String &var) {
+  IECtrl::Var ret(*this);
+  ret += IECtrl::Var(var);
+  return ret;
+}
+
+IECtrl::Var IECtrl::Var::operator+(string &var) {
   IECtrl::Var ret(*this);
   ret += IECtrl::Var(var);
   return ret;

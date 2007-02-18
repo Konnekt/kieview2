@@ -396,6 +396,8 @@ public:
     Var(Var & copy);
     Var(VARIANT &v);
     Var(Date64 &v);
+    Var(String &v);
+    Var(string &v);
     Var(Object &v);
     Var(IDispatch *v);
     Var(IDispatch **v);
@@ -405,6 +407,8 @@ public:
     bool getBool();
     double getReal();
     const char * getString();
+    String getStaminaString();
+    string getStdString();
     VARIANT * getVariant(VARIANT *v = NULL);
     Date64 getDate();
     Object getObject(IECtrl* ctrl = NULL);
@@ -428,6 +432,8 @@ public:
     void setValue(Var* value[], unsigned int count);
     void setValue(VARIANT &v);
     void setValue(Date64 &value);
+    void setValue(String &value);
+    void setValue(string &value);
     void setValue(Object &value);
     void setValue(IDispatch* value);
     void setValue(IDispatch** value);
@@ -444,6 +450,8 @@ public:
     Var & operator=(const char * value);
     Var & operator=(VARIANT &v);
     Var & operator=(Date64 &value);
+    Var & operator=(String &value);
+    Var & operator=(string &value);
     Var & operator=(Object &value);
     Var & operator=(IDispatch* value);
     Var & operator=(IDispatch** value);
@@ -453,12 +461,16 @@ public:
     void operator+=(double var);
     void operator+=(const char* var);
     void operator+=(Date64 &var);
+    void operator+=(String &var);
+    void operator+=(string &var);
 
     Var operator+(Var & var2);
     Var operator+(int var2);
     Var operator+(double var2);
     Var operator+(const char *var2);
     Var operator+(Date64 &var);
+    Var operator+(String &var);
+    Var operator+(string &var);
 
   protected:
     void clear();
@@ -473,6 +485,8 @@ public:
       char * m_szValue;
       Var ** m_aValue;
       Date64 * m_dtValue;
+      String * m_ssValue;
+      string * m_sValue;
       Object * m_objValue;
       IDispatch * m_dispValue;
       IDispatch ** m_pdispValue;
@@ -486,6 +500,8 @@ public:
       Boolean,
       Real,
       String,
+      StdString,
+      StaminaString,
       Array,
       Date,
       Object,

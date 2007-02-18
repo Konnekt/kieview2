@@ -272,7 +272,8 @@ IHTMLDocument2* IECtrl::getDocument() {
 bool IECtrl::isReady() {
   READYSTATE state;
   m_pWebBrowser->get_ReadyState(&state);
-  return (state & READYSTATE_COMPLETE) || (state & READYSTATE_LOADED);
+
+  return state & READYSTATE_COMPLETE;
 }
 
 void IECtrl::setWindowPos(int x, int y, int cx, int cy)  {

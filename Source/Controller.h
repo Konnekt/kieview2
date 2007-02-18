@@ -341,14 +341,14 @@ namespace kIEview2 {
       WndController(IECtrl* ctrl, IECtrl::Var& args): iObject(ctrl, true), pCtrl(::Controller::getInstance()) {
         bindMethod("breakGrouping", bind(resolve_cast0(&WndController::breakGrouping), this));
 
-        bindMethod("minimized", bind(resolve_cast0(&WndController::minimized), this));
-        bindMethod("visible", bind(resolve_cast0(&WndController::visible), this));
+        bindMethod("minimized", bind(resolve_cast0(&WndController::minimized), this), true);
+        bindMethod("visible", bind(resolve_cast0(&WndController::visible), this), true);
 
         bindMethod("minimize", bind(resolve_cast0(&WndController::minimize), this));
         bindMethod("restore", bind(resolve_cast0(&WndController::restore), this));
         bindMethod("close", bind(resolve_cast0(&WndController::close), this));
 
-        bindMethod("tabbedWindow", bind(resolve_cast0(&WndController::tabbedWindow), this));
+        bindMethod("tabbedWindow", bind(resolve_cast0(&WndController::tabbedWindow), this), true);
         bindMethod("reloadParent", bind(resolve_cast0(&WndController::reloadParent), this));
 
         setProperty("name", "oWindow");

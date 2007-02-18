@@ -548,6 +548,9 @@ namespace kIEview2 {
               UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline, cntID), 
                 ((cf.dwEffects & CFE_UNDERLINE) && (cf.dwMask & CFM_UNDERLINE)) ? -1 : 0, ACTS_CHECKED
               );
+              UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::color, cntID), 
+                ((cf.dwEffects & CFE_AUTOCOLOR) && (cf.dwMask & CFM_COLOR)) ? -1 : 0, ACTS_CHECKED
+              );
               break;
             }
           }
