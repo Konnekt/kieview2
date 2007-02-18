@@ -45,12 +45,22 @@ bool EmotLV::isVaildLV(EmotLV* lv) {
 void EmotLV::onMouseUp(int vkey, const Stamina::Point &pos) {
   ReleaseCapture();
   ListWnd::ListView::onMouseUp(vkey, pos);
+  scrollToActive();
   draged = false;
+
+  this->refreshItems();
 
   if (mmitem != -1) {
     _items[mmitem]->repaint(this);
+    getRootItem()->setRefreshFlag(ListWnd::refreshSize, true);
   }
   mmitem = -1;
+}
+
+void EmotLV::onMouseDown(int vkey, const Stamina::Point &pos) {
+  ListWnd::ListView::onMouseDown(vkey, pos);
+  getRootItem()->setFlag(ListWnd::flagSubitemsChanged, true, this);
+  refreshItems();
 }
 
 void EmotLV::onMouseMove(int vkey, const Stamina::Point &pos) {
@@ -62,7 +72,7 @@ void EmotLV::onMouseMove(int vkey, const Stamina::Point &pos) {
   if (rc.top > pt.y) {
     Point d = this->getScrollPos();
     d.y -= rc.top - pt.y;
-    scrollTo(d);
+    scrollTo(d);;
     Sleep(100);
   } else if (pos.y > getClientRect().bottom){
     Point d = this->getScrollPos();
@@ -71,6 +81,13 @@ void EmotLV::onMouseMove(int vkey, const Stamina::Point &pos) {
     Sleep(100);
   }
   ListWnd::ListView::onMouseMove(vkey, pos);
+}
+
+void EmotLV::onKeyDown(int vkey, int info) {
+  ListWnd::ListView::onKeyDown(vkey, info);
+  getRootItem()->setFlag(ListWnd::flagSubitemsChanged, true, this);
+  refreshItems();
+  scrollToActive();
 }
 
 EmotLV::~EmotLV() {
@@ -151,10 +168,9 @@ bool EmotLV::moveItem(UINT id, int pos) {
     return false;
   }
 
-  ListWnd::Item* item = _items[pos];
-  ListWnd::oEntry entry = item->getEntry();
-  removeEntry(entry, false);
-  _items[pos] = insertEntry(entry, pos).get();
+  sEmotPackInfo* s = getEPI(pos);
+  removeEntry(_items[pos]->getEntry());
+  _items[pos] = insertEntry(new EmotPackInfoItem(this, s), pos).get();
 
   for (int i = 0; i < itemsCount(); i++) {
     getEPI(i)->id = i;
@@ -231,7 +247,7 @@ void EmotLV::EmotPackInfoItem::drawInfo(EmotLV* elv, Rect& rc) {
   DrawText(dc, textA.c_str(), -1, &rcz, DT_WORDBREAK);
   SelectObject(dc, hOldFont);
   elv->releaseDC(dc);
- }
+}
 
 int EmotLV::EmotPackInfoItem::sizeInfo(EmotLV* elv, Rect& rc) {
   eMSet* set = _emotInfo->set;
@@ -253,7 +269,12 @@ void EmotLV::EmotPackInfoItem::resizeItems(EmotLV* elv, ListWnd::Item* item) {
   if (lastItem.isValid()) {
     lastItem->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
   }
+  item->setFlag(ListWnd::ItemFlags::flagResize, true);
+  item->setFlag(ListWnd::ItemFlags::flagRepos, true);
   item->setRefreshFlag(ListWnd::RefreshFlags::refreshAll);
+  elv->getRootItem()->setFlag(ListWnd::ItemFlags::flagSubitemsChanged, true);
+  elv->getRootItem()->needResize();
+
   elv->refreshItems();
   elv->updateScrollbars();
 }
@@ -277,7 +298,9 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
       if (p.y < rc.getCenter().y) {
         if (elv->draged_id != id) {
           if (elv->moveItem(elv->draged_id, id)) {
-            resizeItems(elv, elv->_items[id - (id > elv->draged_id ? 1 : 0)]);
+            elv->refreshItems();
+            ListWnd::oItem item = elv->getEntryItem(elv->_items[id - (id > elv->draged_id ? 1 : 0)]->getEntry());
+            resizeItems(elv, item.get());
             touchConfigWnd();
           }
           elv->mmitem = -1;
@@ -285,7 +308,9 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
       } else {
         if (elv->draged_id != id + 1) {
           if (elv->moveItem(elv->draged_id, id + 1)) {
-            resizeItems(elv, elv->_items[id + (id < elv->draged_id ? 1 : 0)]);
+            elv->refreshItems();
+            ListWnd::oItem item = elv->getEntryItem(elv->_items[id + (id < elv->draged_id ? 1 : 0)]->getEntry());
+            resizeItems(elv, item.get());
             touchConfigWnd();
           }
           elv->mmitem = -1;
@@ -295,7 +320,7 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
     elv->draged = false;
   }
   ReleaseCapture();
-  return false;
+  return true;
 }
 
 bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
@@ -326,10 +351,11 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
         elv->mmitem = elv->draged_id;
       } else {
         resizeItems(elv, li.get());
+        return false;
       }
       SetCapture(lv->getHwnd());
 
-      return false;
+      return true;
     }
   }
   return true;
@@ -405,9 +431,12 @@ bool EmotLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::o
   LockerCS locker(_lock);
 
   EmotLV* elv = (EmotLV*)lv;
+  elv->getRootItem()->needResize();
+  elv->refreshItems();
 
   if (vkey == VK_SPACE) {
     switchState(lv);
+    return false;
   } else if (vkey == VK_UP){
     int id = lv->getItemIndex(li);
     if(--id >= 0) {
@@ -427,6 +456,8 @@ bool EmotLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::o
       resizeItems(elv, elv->_items[elv->itemsCount() - 1]);
     }
   }
+  elv->getRootItem()->setFlag(ListWnd::flagSubitemsChanged, true, lv);
+  elv->refreshItems();
   return false;
 }
 

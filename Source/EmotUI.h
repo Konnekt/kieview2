@@ -79,7 +79,8 @@ public:
 protected:
   void onMouseMove(int vkey, const Stamina::Point &pos);
   void onMouseUp(int vkey, const Stamina::Point &pos);
-
+  void onMouseDown(int vkey, const Stamina::Point &pos);
+  void onKeyDown(int vkey, int info);
 protected:
   static tEmotLVs _lvs;
   tItems _items;
