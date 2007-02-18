@@ -169,9 +169,11 @@ namespace kIEview2 {
 
     void clearGroupedMsgs(sUIActionNotify_base* an) {
       getWndObjects(an)->groupedMsgs.clear();
+      getWndObjects(an)->groupedSt.clear();
     }
     void clearGroupedMsgs(IECtrl* ctrl) {
       getWndObjects(ctrl)->groupedMsgs.clear();
+      getWndObjects(ctrl)->groupedSt.clear();
     }
 
   protected:
@@ -351,11 +353,8 @@ namespace kIEview2 {
 
         setProperty("name", "oWindow");
 
-        if (ICMessage(IMC_FINDPLUG, Tabs::net, IMT_ALL) && GetProp(GetParent(ctrl->getHWND()), "TABBED")) {
-          hWndWnd = (HWND)IMessage(Tabs::IM::GetTabWindow, Tabs::net);
-        } else {
-          hWndWnd = GetParent(ctrl->getHWND());
-        }
+        haveTabs = pluginExists(plugsNET::tabletka);
+        reloadParent();
       }
 
     public:
@@ -391,21 +390,22 @@ namespace kIEview2 {
       }
 
       IECtrl::Var tabbedWindow() {
-        return GetProp(GetParent(ctrl->getHWND()), "TABBED");
+        return (bool) GetProp(GetParent(m_pCtrl->getHWND()), "TABBED");
       }
 
       IECtrl::Var reloadParent() {
-        if (ICMessage(IMC_FINDPLUG, Tabs::net, IMT_ALL) && GetProp(GetParent(ctrl->getHWND()), "TABBED")) {
-          hWndWnd = (HWND)IMessage(Tabs::IM::GetTabWindow, Tabs::net);
-          return 1;
+        if (haveTabs && tabbedWindow().getBool()) {
+          hWndWnd = (HWND) Ctrl->IMessage(Tabs::IM::GetTabWindow, plugsNET::tabletka);
         } else {
-          hWndWnd = GetParent(ctrl->getHWND());
-          return 0;
+          hWndWnd = GetParent(m_pCtrl->getHWND());
         }
+        return true;
       }
 
     protected:
       ::Controller* pCtrl;
+
+      bool haveTabs;
       HWND hWndWnd;
     };
   }

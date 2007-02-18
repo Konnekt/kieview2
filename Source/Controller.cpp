@@ -568,8 +568,7 @@ namespace kIEview2 {
         return wndObjCollection[ctrl].jsWndController;
       }
     }
-    throw IECtrl::JSException("Invalid IE Control ref ID", 123);
-    return IECtrl::Var();
+    throw IECtrl::JSException("Invalid IE Control ref ID");
   }
 
   IECtrl::Var Controller::getJSController(IECtrl::Var& args, IECtrl::iObject* obj) {
@@ -799,8 +798,7 @@ namespace kIEview2 {
     LockerCS lock(_locker);
 
     // czyscimy wiadomosci grupowania
-    getWndObjects(ctrl)->groupedMsgs.clear();
-    getWndObjects(ctrl)->groupedSt.clear();
+    clearGroupedMsgs(ctrl);
 
     ctrl->navigate(("file:///" + unifyPath(kPath, false, '/') + "/data/templates/core/__bootstrap.html").c_str());
     // ctrl->clear();
@@ -948,7 +946,7 @@ namespace kIEview2 {
   String Controller::preLinkify(StringRef& txt) {
     if (txt.length() > 20480) return PassStringRef(txt);
 
-    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%;]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", 
+    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%;]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", 
       &Controller::linkInsertion, txt.c_str());
     txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-]+)@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6}))~i", 
       &Controller::eMailInsertion, txt.c_str());
@@ -1075,9 +1073,7 @@ namespace kIEview2 {
       data.hash_insert_new_var("grouped", "1");
     }
 
-    getWndObjects(an)->groupedMsgs.clear();
-    getWndObjects(an)->groupedSt.clear();
-
+    clearGroupedMsgs(an);
     groupedSt.push_back(sGroupedSt(an->_status, date, an->_info));
 
     if (an->_status & ST_IGNORED) {
@@ -1153,9 +1149,7 @@ namespace kIEview2 {
       msgHandlers[msg->type]->signal(data, an);
     }
 
-    getWndObjects(an)->groupedMsgs.clear();
-    getWndObjects(an)->groupedSt.clear();
-
+    clearGroupedMsgs(an);
     groupedMsgs.push_back(sGroupedMsg(senderID, msg->type, date));
 
     return tplHandler->parseTpl(&data, ("content-types/" + type).c_str());

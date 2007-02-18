@@ -4,8 +4,8 @@
 
   <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript">
-    var oController = window.external.oController;
-    var oWindow = window.external.oWindow;
+    var oController = window.external.oGlobal.oController;
+    var oWindow = window.external.oGlobal.oWindow(window.external.refID);
 
     jQuery.fn.hideThread = function(speed) {
       this.each(function() {

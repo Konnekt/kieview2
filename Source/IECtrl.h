@@ -110,6 +110,9 @@ public:
   static void deinit();
   static IECtrl * get(HWND);
 
+  static Global* getGlobal();
+  External* getExternal();
+
   static LRESULT CALLBACK IECtrlServerWindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK IECtrlDocWindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK IECtrlWindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -146,9 +149,7 @@ public:
   static bool getOnCopyEmptySel() {
     return m_bOnCopyEmptySel;
   }
-  static Global* getGlobal();
 
-  External* getExternal();
   char* getSelection(bool gettext = false);
   bool copySelection(bool gettext = false);
 
@@ -645,18 +646,18 @@ public:
     tProperties _properties;
     tCallbacks _callbacks;
 
-    bool _extModificate;
-
     static EXCEPINFO _excepInfo;
+    bool _extModificate;
   };
 
 protected:
   class External : public iObject {
   public:
     External(): iObject(NULL, true) {
-      setProperty("name", "sweet, cosy and full of surprises: JS <-> C++ connectivity bridge, exclusively by kIEview2 ;>");
       bindMethod("oGlobal", bind(&External::getGlobal, this, _1, _2), true);
-      bindMethod("getRefID", bind(&External::getRefID, this, _1, _2), true);
+      bindMethod("refID", bind(&External::getRefID, this, _1, _2), true);
+
+      setProperty("name", IECtrl::getGlobal()->getProperty("name")->var);
     }
 
     Var getGlobal(Var& args, iObject* obj);

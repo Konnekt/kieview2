@@ -1876,5 +1876,5 @@ IECtrl::Var IECtrl::External::getGlobal(Var& args, iObject* obj) {
 }
 
 IECtrl::Var IECtrl::External::getRefID(Var& args, iObject* obj) {
-  return (int)getIECtrl()->getHWND();
+  return (int) getIECtrl()->getHWND();
 }
