@@ -346,12 +346,15 @@ namespace kIEview2 {
         bindMethod("restore", bind(resolve_cast0(&WndController::restore), this));
         bindMethod("close", bind(resolve_cast0(&WndController::close), this));
 
+        bindMethod("tabbedWindow", bind(resolve_cast0(&WndController::tabbedWindow), this));
+        bindMethod("reloadParent", bind(resolve_cast0(&WndController::reloadParent), this));
+
         setProperty("name", "oWindow");
 
-        if (ICMessage(IMC_FINDPLUG, Tabs::net, IMT_ALL)) {
+        if (ICMessage(IMC_FINDPLUG, Tabs::net, IMT_ALL) && GetProp(GetParent(ctrl->getHWND()), "TABBED")) {
           hWndWnd = (HWND)IMessage(Tabs::IM::GetTabWindow, Tabs::net);
         } else {
-          hWndWnd = GetParent(GetParent(ctrl->getHWND()));
+          hWndWnd = GetParent(ctrl->getHWND());
         }
       }
 
@@ -362,7 +365,7 @@ namespace kIEview2 {
       }
 
       IECtrl::Var minimized() {
-        return !IsIconic(hWndWnd);
+        return IsIconic(hWndWnd);
       }
       IECtrl::Var visible() {
         return IsWindowVisible(hWndWnd);
@@ -384,7 +387,21 @@ namespace kIEview2 {
         return true;
       }
       IECtrl::Var close() {
-        return "@implement";
+        return CloseWindow(hWndWnd);
+      }
+
+      IECtrl::Var tabbedWindow() {
+        return GetProp(GetParent(ctrl->getHWND()), "TABBED");
+      }
+
+      IECtrl::Var reloadParent() {
+        if (ICMessage(IMC_FINDPLUG, Tabs::net, IMT_ALL) && GetProp(GetParent(ctrl->getHWND()), "TABBED")) {
+          hWndWnd = (HWND)IMessage(Tabs::IM::GetTabWindow, Tabs::net);
+          return 1;
+        } else {
+          hWndWnd = GetParent(ctrl->getHWND());
+          return 0;
+        }
       }
 
     protected:
