@@ -385,7 +385,8 @@ namespace kIEview2 {
         if (minimized().getBool()) {
           return restore();
         }
-        return SetForegroundWindow(hWndWnd);
+        bool success = SetActiveWindow(hWndWnd);
+        return success && SetForegroundWindow(hWndWnd);
       }
       IECtrl::Var close() {
         return CloseWindow(hWndWnd);
