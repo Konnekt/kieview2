@@ -339,16 +339,17 @@ namespace kIEview2 {
     class WndController : public IECtrl::iObject {
     public:
       WndController(IECtrl* ctrl, IECtrl::Var& args): iObject(ctrl, true), pCtrl(::Controller::getInstance()) {
-        bindMethod("breakGrouping", bind(resolve_cast0(&WndController::breakGrouping), this));
-
         bindMethod("minimized", bind(resolve_cast0(&WndController::minimized), this), true);
         bindMethod("visible", bind(resolve_cast0(&WndController::visible), this), true);
+        bindMethod("tabbed", bind(resolve_cast0(&WndController::tabbed), this), true);
 
         bindMethod("minimize", bind(resolve_cast0(&WndController::minimize), this));
         bindMethod("restore", bind(resolve_cast0(&WndController::restore), this));
+        bindMethod("show", bind(resolve_cast0(&WndController::show), this));
         bindMethod("close", bind(resolve_cast0(&WndController::close), this));
+        bindMethod("destroy", bind(resolve_cast0(&WndController::destroy), this));
 
-        bindMethod("tabbedWindow", bind(resolve_cast0(&WndController::tabbedWindow), this), true);
+        bindMethod("breakGrouping", bind(resolve_cast0(&WndController::breakGrouping), this));
         bindMethod("reloadParent", bind(resolve_cast0(&WndController::reloadParent), this));
 
         setProperty("name", "oWindow");
@@ -358,16 +359,14 @@ namespace kIEview2 {
       }
 
     public:
-      IECtrl::Var breakGrouping() {
-        pCtrl->clearGroupedMsgs(m_pCtrl);
-        return true;
-      }
-
       IECtrl::Var minimized() {
         return IsIconic(hWndWnd);
       }
       IECtrl::Var visible() {
         return IsWindowVisible(hWndWnd) && GetForegroundWindow() == hWndWnd;
+      }
+      IECtrl::Var tabbed() {
+        return (bool) GetProp(GetParent(m_pCtrl->getHWND()), "TABBED");
       }
 
       IECtrl::Var minimize() {
@@ -378,20 +377,29 @@ namespace kIEview2 {
       }
       IECtrl::Var restore() {
         if (minimized().getBool()) {
-          return ShowWindow(hWndWnd, SW_RESTORE) && SetForegroundWindow(hWndWnd);
+          return ShowWindow(hWndWnd, SW_RESTORE) && show().getBool();
         }
         return false;
+      }
+      IECtrl::Var show() {
+        if (minimized().getBool()) {
+          return restore();
+        }
+        return SetForegroundWindow(hWndWnd);
       }
       IECtrl::Var close() {
         return CloseWindow(hWndWnd);
       }
-
-      IECtrl::Var tabbedWindow() {
-        return (bool) GetProp(GetParent(m_pCtrl->getHWND()), "TABBED");
+      IECtrl::Var destroy() {
+        return DestroyWindow(hWndWnd);
       }
 
+      IECtrl::Var breakGrouping() {
+        pCtrl->clearGroupedMsgs(m_pCtrl);
+        return true;
+      }
       IECtrl::Var reloadParent() {
-        if (haveTabs && tabbedWindow().getBool()) {
+        if (haveTabs && tabbed().getBool()) {
           hWndWnd = (HWND) Ctrl->IMessage(Tabs::IM::GetTabWindow, plugsNET::tabletka);
         } else {
           hWndWnd = GetParent(m_pCtrl->getHWND());
