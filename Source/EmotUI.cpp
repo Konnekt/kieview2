@@ -17,8 +17,10 @@
 
 EmotLV::tEmotLVs EmotLV::_lvs;
 
-EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::ListView(x, y, w, h, parent, id) {
+EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::ListView(x, y, w, h, parent, id), _enabled(true) {
   alwaysShowScrollbars(false, false);
+
+  _lastProc = (WNDPROC)SetWindowLong(getHwnd(), GWL_WNDPROC, (LONG) eMsgProc);
 
   _checked = new Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
   _unchecked = new Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
@@ -35,6 +37,24 @@ EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): ListWnd::List
   _lvs.push_back(this);
 }
 
+LRESULT CALLBACK EmotLV::eMsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  EmotLV* elv = (EmotLV*)ListWnd::ListView::fromHWND(hwnd);
+  switch(msg) {
+    case WM_ENABLE:
+      elv->_enabled = (bool)wParam;
+      if (IsWindowVisible(hwnd)) {
+        elv->repaintClient();
+      }
+    break;
+    case WM_DESTROY:
+      WNDPROC proc = elv->_lastProc;
+      SetWindowLong(elv->getHwnd(), GWL_WNDPROC, (LONG) proc);
+      return CallWindowProc(proc, hwnd, msg, wParam, lParam);
+    break;
+  }
+  return CallWindowProc(elv->_lastProc, hwnd, msg, wParam, lParam);
+}
+
 bool EmotLV::isVaildLV(EmotLV* lv) {
   for (tEmotLVs::iterator it = _lvs.begin(); it != _lvs.end(); it++) {
     if ((*it) == lv) return true;
@@ -45,7 +65,7 @@ bool EmotLV::isVaildLV(EmotLV* lv) {
 void EmotLV::onMouseUp(int vkey, const Stamina::Point &pos) {
   ReleaseCapture();
   ListWnd::ListView::onMouseUp(vkey, pos);
-  scrollToActive();
+  scrollToActive(false);
   draged = false;
 
   this->refreshItems();
@@ -87,7 +107,7 @@ void EmotLV::onKeyDown(int vkey, int info) {
   ListWnd::ListView::onKeyDown(vkey, info);
   getRootItem()->setFlag(ListWnd::flagSubitemsChanged, true, this);
   refreshItems();
-  scrollToActive();
+  scrollToActive(false);
 }
 
 EmotLV::~EmotLV() {
@@ -482,16 +502,21 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   COLORREF textColor;
 
   /* predefiniowane kolorki */
-  if (li->isActive()) {
-    gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
-    textColor = RGB(255,255,255);
-  } else {
-    if (_emotInfo->checked) {
-      gradient = Stamina::UI::createSimpleGradient(RGB(190,252,122), RGB(219,253,181), Size(rc.width(), rc.height()));
+  if (elv->_enabled) {
+    if (li->isActive()) {
+      gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
+      textColor = RGB(255,255,255);
     } else {
-      gradient = Stamina::UI::createSimpleGradient(RGB(220,220,220), RGB(240,240,240), Size(rc.width(), rc.height()));
+      if (_emotInfo->checked) {
+        gradient = Stamina::UI::createSimpleGradient(RGB(190,252,122), RGB(219,253,181), Size(rc.width(), rc.height()));
+      } else {
+       gradient = Stamina::UI::createSimpleGradient(RGB(220,220,220), RGB(240,240,240), Size(rc.width(), rc.height()));
+      }
+      textColor = RGB(40,40,40);
     }
-    textColor = RGB(40,40,40);
+  } else {
+      gradient = Stamina::UI::createSimpleGradient(0xC0C0C0, 0xC4C4C4, Size(rc.width(), rc.height()));
+      textColor = 0xF0F0F0;
   }
 
   /*
@@ -539,7 +564,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   Stamina::Point p = Point(0,0);
 
   int emotY = 0, emotX = 0;
-  if (_emotInfo->image.isValid()) {
+  if (_emotInfo->image.isValid() && elv->_enabled) {
     Rect rcemot = rc;
     rcemot.left = rcemot.right - 3 - _emotInfo->image->getSize().w;
     rcemot.top += 3;

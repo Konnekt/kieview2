@@ -36,6 +36,7 @@ public:
   EmotLV(int x, int y, int w, int h, HWND parent, HMENU id);
   virtual ~EmotLV();
 
+  static LRESULT CALLBACK eMsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
   static bool isVaildLV(EmotLV* lv);
 
 public:
@@ -81,7 +82,10 @@ protected:
   void onMouseUp(int vkey, const Stamina::Point &pos);
   void onMouseDown(int vkey, const Stamina::Point &pos);
   void onKeyDown(int vkey, int info);
+
 protected:
+  WNDPROC _lastProc;
+
   static tEmotLVs _lvs;
   tItems _items;
 
@@ -94,6 +98,8 @@ protected:
 
   HFONT hFontBold;
   HFONT hFont;
+
+  bool _enabled;
 
 public:
   class EmotPackInfoItem: public ListWnd::EntryImpl {
