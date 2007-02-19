@@ -515,8 +515,8 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
       textColor = RGB(40,40,40);
     }
   } else {
-      gradient = Stamina::UI::createSimpleGradient(0xC0C0C0, 0xC4C4C4, Size(rc.width(), rc.height()));
-      textColor = 0xF0F0F0;
+    gradient = Stamina::UI::createSimpleGradient(RGB(193,193,193), RGB(223,223,223), Size(rc.width(), rc.height()));
+    textColor = RGB(40,40,40);
   }
 
   /*

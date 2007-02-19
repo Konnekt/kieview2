@@ -367,7 +367,7 @@ namespace kIEview2 {
         return IsIconic(hWndWnd);
       }
       IECtrl::Var visible() {
-        return IsWindowVisible(hWndWnd);
+        return IsWindowVisible(hWndWnd) && GetForegroundWindow() == hWndWnd;
       }
 
       IECtrl::Var minimize() {
@@ -378,12 +378,9 @@ namespace kIEview2 {
       }
       IECtrl::Var restore() {
         if (minimized().getBool()) {
-          ShowWindow(hWndWnd, SW_RESTORE);
+          return ShowWindow(hWndWnd, SW_RESTORE) && SetForegroundWindow(hWndWnd);
         }
-        if (visible().getBool()) {
-          SetWindowPos(hWndWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-        }
-        return true;
+        return false;
       }
       IECtrl::Var close() {
         return CloseWindow(hWndWnd);

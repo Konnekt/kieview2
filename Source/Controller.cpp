@@ -312,8 +312,8 @@ namespace kIEview2 {
 
           UIActionSetStatus(sUIAction(ui::emotCfgGroup, cfg::useEmotsInHistory), !useEmots ? -1 : 0, ACTS_DISABLED);
           UIActionSetStatus(sUIAction(ui::emotCfgGroup, cfg::emotsDir), !useEmots ? -1 : 0, ACTS_DISABLED);
-          // UIActionSetStatus(sUIAction(ui::emotCfgGroup, ui::refreshEmotLV), !useEmots ? -1 : 0, ACTS_DISABLED);
-          // if (EmotLV::isVaildLV(emotLV)) emotLV->setEnabled(useEmots);
+          UIActionSetStatus(sUIAction(ui::emotCfgGroup, ui::refreshEmotLV), !useEmots ? -1 : 0, ACTS_DISABLED);
+          if (EmotLV::isVaildLV(emotLV)) emotLV->setEnabled(useEmots);
         }
         break;
       }
@@ -453,6 +453,7 @@ namespace kIEview2 {
     if (getAN()->code == ACTN_CREATEWINDOW) {
       sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
       emotLV = new EmotLV(an->x, an->y + 5, 220, 120, an->hwndParent, 0);
+      emotLV->setEnabled(config->getInt(cfg::useEmots));
       an->hwnd = emotLV->getHwnd();
 
       emotHandler.fillLV(emotLV);

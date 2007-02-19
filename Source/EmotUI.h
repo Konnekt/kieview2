@@ -85,6 +85,7 @@ protected:
 
 protected:
   WNDPROC _lastProc;
+  bool _enabled;
 
   static tEmotLVs _lvs;
   tItems _items;
@@ -98,8 +99,6 @@ protected:
 
   HFONT hFontBold;
   HFONT hFont;
-
-  bool _enabled;
 
 public:
   class EmotPackInfoItem: public ListWnd::EntryImpl {
@@ -119,6 +118,7 @@ public:
     void drawInfo(EmotLV* elv, Rect& rc);
     int sizeInfo(EmotLV* elv, Rect& rc);
     void resizeItems(EmotLV* elv, ListWnd::Item* item);
+
     virtual void switchState(ListWnd::ListView* lv) {
       EmotLV* elv = (EmotLV*)lv;
 

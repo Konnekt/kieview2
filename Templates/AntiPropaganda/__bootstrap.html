@@ -4,8 +4,9 @@
 
   <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript">
-    var oController = window.external.oGlobal.oController;
-    var oWindow = window.external.oGlobal.oWindow(window.external.refID);
+    var oExternal = window.external;
+    var oController = oExternal.oGlobal.oController;
+    var oWindow = oExternal.oGlobal.oWindow(oExternal.refID);
 
     jQuery.fn.hideThread = function(speed) {
       this.each(function() {
@@ -19,6 +20,10 @@
           }
           thread.push(this);
         });
+        var lastMsg = thread.length ? thread[thread.length - 1] : this;
+        if (all.length && lastMsg == all[all.length - 1]) {
+          oWindow.breakGrouping();
+        }
         $(thread).hide(speed);
         return $(this).hide(speed);
       });
