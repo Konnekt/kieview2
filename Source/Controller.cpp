@@ -360,7 +360,7 @@ namespace kIEview2 {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
     setActionsStatus();
 
-    if (StyleLV::isVaildLV(styleLV)) {
+    if (StyleLV::isValidLV(styleLV)) {
       styleLV->saveState();
     }
     styleHandler.saveSettings();
@@ -481,17 +481,9 @@ namespace kIEview2 {
 
   void Controller::_styleLV() {
     if (getAN()->code == ACTN_CREATEWINDOW) {
-      sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
-      styleLV = new StyleLV(an->x, an->y + 5, 220, 120, an->hwndParent, 0);
-      an->hwnd = styleLV->getHwnd();
-
+      styleLV = new StyleLV((sUIActionNotify_createWindow*) getAN(), 220, 120);
+     // styleLV->setEnabled(config->getInt(cfg::useS));
       styleHandler.fillLV(styleLV);
-
-      an->x += 220;
-      an->y += 125;
-
-      an->w += 220;
-      an->h += 125;
     }
   }
 

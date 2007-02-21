@@ -18,26 +18,22 @@
 
 #include "stdafx.h"
 #include "kIEview2.h"
-#include "Emots.h"
 
+#include "iLV.h"
+#include "Emots.h"
 #include "Helpers.h"
 
 using namespace Stamina::UI;
 using namespace Helpers;
+using namespace kIEview2;
 
-class StyleLV: public ListWnd::ListView {
+class StyleLV: public iLV {
 public:
-  STAMINA_OBJECT_CLASS_VERSION(StyleLV, ListWnd::ListView, Version(0,1,0,0));
-
-public:
-  typedef vector<StyleLV*> tStyleLVs;
+  STAMINA_OBJECT_CLASS_VERSION(StyleLV, iLV, Version(0,1,0,0));
 
 public:
-  StyleLV(int x, int y, int w, int h, HWND parent, HMENU id);
+  StyleLV(sUIActionNotify_createWindow* an, int w, int h);
   virtual ~StyleLV();
-
-  static LRESULT CALLBACK sMsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-  static bool isVaildLV(StyleLV* lv);
 
 public:
   struct sStylePackInfo {
@@ -52,11 +48,6 @@ public:
   typedef std::vector<ListWnd::Item*> tItems;
 
 public:
-  virtual void setSize(int w, int h);
-  virtual void setPos(int x, int y);
-
-  virtual void setEnabled(bool enabled);
-  virtual bool isEnabled();
 
   virtual UINT addItem(sStylePackInfo* pack);
   virtual void removeItem(UINT id);
@@ -76,17 +67,6 @@ public:
   }
 
 protected:
-  void onMouseUp(int vkey, const Stamina::Point &pos);
-  void onMouseDown(int vkey, const Stamina::Point &pos);
-  void onKeyDown(int vkey, int info);
-
-protected:
-  WNDPROC _lastProc;
-  bool _enabled;
-
-  static tStyleLVs _lvs;
-  tItems _items;
-
   oImage _checked;
   oImage _unchecked;
   UINT _last_checked;
