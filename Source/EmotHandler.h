@@ -305,7 +305,7 @@ public:
   }
 
   void reloadPackages(EmotLV* lv = 0) {
-    if (!EmotLV::isVaildLV(lv)) lv = 0;
+    if (!EmotLV::isValidLV(lv)) lv = 0;
 
     if (lv) lv->removeAllItems();
     loadPackages();

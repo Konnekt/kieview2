@@ -19,25 +19,21 @@
 #include "stdafx.h"
 #include "kIEview2.h"
 
+#include "BaseUILV.h"
+
 #include "Helpers.h"
 #include "Emots.h"
 
 using namespace Stamina::UI;
 using namespace Helpers;
 
-class EmotLV: public ListWnd::ListView {
+class EmotLV: public BaseUILV {
 public:
-  STAMINA_OBJECT_CLASS_VERSION(EmotLV, ListWnd::ListView, Version(0,1,0,0));
-
-public:
-  typedef vector<EmotLV*> tEmotLVs;
+  STAMINA_OBJECT_CLASS_VERSION(EmotLV, BaseUILV, Version(0,1,0,0));
 
 public:
   EmotLV(int x, int y, int w, int h, HWND parent, HMENU id);
   virtual ~EmotLV();
-
-  static LRESULT CALLBACK eMsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-  static bool isVaildLV(EmotLV* lv);
 
 public:
   struct sEmotPackInfo {
@@ -53,12 +49,6 @@ public:
   typedef std::vector<ListWnd::Item*> tItems;
 
 public:
-  virtual void setSize(int w, int h);
-  virtual void setPos(int x, int y);
-
-  virtual void setEnabled(bool enabled);
-  virtual bool isEnabled();
-
   virtual UINT addItem(sEmotPackInfo* pack);
   virtual bool moveItem(UINT id, int pos);
   virtual void removeItem(UINT id);
@@ -84,10 +74,6 @@ protected:
   void onKeyDown(int vkey, int info);
 
 protected:
-  WNDPROC _lastProc;
-  bool _enabled;
-
-  static tEmotLVs _lvs;
   tItems _items;
 
   oImage _checked;
