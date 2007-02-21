@@ -230,6 +230,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\iLV.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\kIEview2.cpp"
 				>
 			</File>
@@ -260,6 +264,10 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\Source\StyleUI.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\Source\TplHandler.cpp"
@@ -328,6 +336,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\iLV.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\IMController.h"
 				>
 			</File>
@@ -353,6 +365,10 @@
 			</File>
 			<File
 				RelativePath="..\Source\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Source\StyleUI.h"
 				>
 			</File>
 			<File
@@ -382,6 +398,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Res\checked.ico"
+				>
+			</File>
+			<File
 				RelativePath="..\Res\color.ico"
 				>
 			</File>
@@ -391,6 +411,10 @@
 			</File>
 			<File
 				RelativePath="..\Res\emots.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\infoe.ico"
 				>
 			</File>
 			<File
@@ -419,6 +443,14 @@
 			</File>
 			<File
 				RelativePath="..\Res\source.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\styles.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\unchecked.ico"
 				>
 			</File>
 			<File

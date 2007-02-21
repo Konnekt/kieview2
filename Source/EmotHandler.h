@@ -24,6 +24,7 @@
 #include "Helpers.h"
 #include "EmotUI.h"
 #include "Emots.h"
+#include "StyleUI.h"
 
 /*
  * Base emot definition parser
@@ -239,6 +240,41 @@ public:
     return "emots.txt";
   }
   eMSet parse(const string& filePath, const string& fileDir);
+};
+
+/*
+ * Style parsing class
+ */
+class StyleHandler : public SharedObject<iSharedObject> {
+public:
+  /* Class version */
+  STAMINA_OBJECT_CLASS_VERSION(StyleHandler, iSharedObject, Version(0,1,0,0));
+
+public:
+  typedef list<TplSet> tStyleSets;
+
+public:
+  void fillLV(StyleLV* lv);
+
+  void clearPackages() {
+    if (styleSets.size()) styleSets.clear();
+  }
+
+  void reloadPackages(StyleLV* lv = 0) {
+    if (!StyleLV::isVaildLV(lv)) lv = 0;
+
+    if (lv) lv->removeAllItems();
+    loadPackages();
+    loadSettings();
+    if (lv) fillLV(lv);
+  }
+  void loadPackages();
+
+  void loadSettings();
+  void saveSettings();
+
+protected:
+  tStyleSets styleSets;
 };
 
 /*

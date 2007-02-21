@@ -192,7 +192,7 @@ Size StyleLV::StyleInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd::
 }
 
 void StyleLV::StyleInfoItem::drawInfo(StyleLV* slv, Rect& rc) {
-  sSet* set = _styleInfo->set;
+  TplSet* set = _styleInfo->set;
   HDC dc = slv->getDC();
   string textA = getItemText();
   RECT rcz = *rc.ref();
@@ -204,7 +204,7 @@ void StyleLV::StyleInfoItem::drawInfo(StyleLV* slv, Rect& rc) {
 }
 
 int StyleLV::StyleInfoItem::sizeInfo(StyleLV* slv, Rect& rc) {
-  sSet* set = _styleInfo->set;
+  TplSet* set = _styleInfo->set;
   HDC dc = slv->getDC();
   string textA = getItemText();
   RECT rcz = {0, 0, rc.width(), 0};

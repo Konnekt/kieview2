@@ -21,10 +21,13 @@
 #include "PlugController.h"
 #include "Helpers.h"
 #include "IECtrl.h"
+#include "RtfHtml.h"
+
 #include "ActionHandler.h"
 #include "TplHandler.h"
 #include "EmotHandler.h"
-#include "RtfHtml.h"
+
+#include "StyleUI.h"
 #include "EmotUI.h"
 
 using namespace kIEview2;
@@ -184,6 +187,8 @@ namespace kIEview2 {
 
     void _msgCtrlView();
     void _msgCtrlSend();
+
+    void _styleLV();
     void _emotLV();
 
     tCntId getCntFromMsg(cMessage* msg);
@@ -242,6 +247,10 @@ namespace kIEview2 {
       return &emotHandler;
     }
 
+    TplHandler* getTplHandler() {
+      return tplHandler;
+    }
+
     static DWORD CALLBACK streamOut(DWORD, LPBYTE, LONG, LONG*);
     static LRESULT CALLBACK msgWndProc(HWND, UINT, WPARAM, LPARAM);
     
@@ -262,8 +271,10 @@ namespace kIEview2 {
     CriticalSection _locker;
     Tables::oTable historyTable;
     JS::Controller* jsController;
+    StyleHandler styleHandler;
     EmotHandler emotHandler;
     WNDPROC oldMsgWndProc;
+    StyleLV* styleLV;
     EmotLV* emotLV;
     TplHandler* tplHandler;
     RtfHtmlTag* rtfHtml;
@@ -347,7 +358,7 @@ namespace kIEview2 {
         bindMethod("restore", bind(resolve_cast0(&WndController::restore), this));
         bindMethod("show", bind(resolve_cast0(&WndController::show), this));
         bindMethod("close", bind(resolve_cast0(&WndController::close), this));
-        bindMethod("destroy", bind(resolve_cast0(&WndController::destroy), this));
+        bindMethod("flash", bind(&WndController::flash, this, _1, _2));
 
         bindMethod("breakGrouping", bind(resolve_cast0(&WndController::breakGrouping), this));
         bindMethod("reloadParent", bind(resolve_cast0(&WndController::reloadParent), this));
@@ -385,14 +396,23 @@ namespace kIEview2 {
         if (minimized().getBool()) {
           return restore();
         }
-        bool success = SetActiveWindow(hWndWnd);
-        return success && SetForegroundWindow(hWndWnd);
+        return SetForegroundWindow(hWndWnd);
       }
       IECtrl::Var close() {
         return CloseWindow(hWndWnd);
       }
-      IECtrl::Var destroy() {
-        return DestroyWindow(hWndWnd);
+      IECtrl::Var flash(IECtrl::Var& args, IECtrl::iObject* obj) {
+        /*
+        FLASHWINFO info;
+        info.cbSize = sizeof(FLASHWINFO)
+        info.dwFlags = FLASHW_ALL;
+        info.hwnd = hWndWnd;
+        info.dwTimeout = args[1].getInteger();
+        info.uCount = args[0].getInteger();
+
+        return FlashWindowEx(&info);
+        */
+        return false;
       }
 
       IECtrl::Var breakGrouping() {

@@ -15,9 +15,7 @@
 #include "emotUI.h"
 #include "Emots.h"
 
-EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): BaseUILV(x, y, w, h, parent, id) {
-  alwaysShowScrollbars(false, false);
-
+EmotLV::EmotLV(sUIActionNotify_createWindow* an, int w, int h): iLV(an, w, h) {
   _checked = new Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
   _unchecked = new Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
 
@@ -30,7 +28,6 @@ EmotLV::EmotLV(int x, int y, int w, int h, HWND parent, HMENU id): BaseUILV(x, y
   draged_id = 0;
   mmitem = -1;
 }
-
 
 void EmotLV::onMouseUp(int vkey, const Stamina::Point &pos) {
   ReleaseCapture();

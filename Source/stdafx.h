@@ -48,7 +48,6 @@
 #include <OleIdl.h>
 #include <richole.h>
 #include <shellapi.h>
-#pragma comment(lib, "shell32.lib")
 
 #include <map>
 #include <list>
@@ -56,6 +55,7 @@
 #include <stdstring.h>
 #include <string>
 
+#pragma comment(lib, "Shell32.lib")
 #pragma comment(lib, "ComCtl32.lib")
 #pragma comment(lib, "Msimg32.lib")
 

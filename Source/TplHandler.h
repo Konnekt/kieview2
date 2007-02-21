@@ -44,6 +44,11 @@ public:
   }
   void addTplDir(const string& dir, bool asInclude = true);
 
+  void clearDirs() {
+    includeDirs.clear();
+    tplDirs.clear();
+  }
+
   inline void setKonnektPath(const string& path) {
     kPath = path;
   }

@@ -19,20 +19,21 @@
 #include "stdafx.h"
 #include "kIEview2.h"
 
-#include "BaseUILV.h"
+#include "iLV.h"
 
 #include "Helpers.h"
 #include "Emots.h"
 
 using namespace Stamina::UI;
 using namespace Helpers;
+using namespace kIEview2;
 
-class EmotLV: public BaseUILV {
+class EmotLV: public iLV {
 public:
-  STAMINA_OBJECT_CLASS_VERSION(EmotLV, BaseUILV, Version(0,1,0,0));
+  STAMINA_OBJECT_CLASS_VERSION(EmotLV, iLV, Version(0,1,0,0));
 
 public:
-  EmotLV(int x, int y, int w, int h, HWND parent, HMENU id);
+  EmotLV(sUIActionNotify_createWindow* an, int w, int h);
   virtual ~EmotLV();
 
 public:

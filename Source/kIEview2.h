@@ -35,30 +35,38 @@ namespace kIEview2 {
     const unsigned int ui = net * 1000;
 
     const unsigned int cfgGroup = ui + 1;
-    const unsigned int emotCfgGroup = ui + 2;
+    const unsigned int styleCfgGroup = ui + 2;
+    const unsigned int emotCfgGroup = ui + 3;
 
-    const unsigned int emotLV = ui + 3;
-    const unsigned int refreshEmotLV = ui + 4;
+    const unsigned int emotLV = ui + 4;
+    const unsigned int refreshEmotLV = ui + 5;
+
+    const unsigned int styleLV = ui + 6;
+    const unsigned int refreshStyleLV = ui + 7;
   }
 
   namespace ico {
     const unsigned int ico = net * 1000 + 100;
-
     const unsigned int logo = ico + 1;
+
     const unsigned int link = ico + 2;
     const unsigned int copy = ico + 3;
     const unsigned int save = ico + 4;
-    const unsigned int emots = ico + 5;
-    const unsigned int bold = ico + 6;
-    const unsigned int italic = ico + 7;
-    const unsigned int underline = ico + 8;
-    const unsigned int color = ico + 9;
-    const unsigned int print = ico + 10;
-    const unsigned int source = ico + 11;
+    const unsigned int print = ico + 5;
+    const unsigned int source = ico + 6;
+
+    const unsigned int emots = ico + 7;
+    const unsigned int bold = ico + 9;
+    const unsigned int italic = ico + 9;
+    const unsigned int underline = ico + 10;
+    const unsigned int color = ico + 11;
     const unsigned int autoScroll = ico + 12;
+
     const unsigned int checked = ico + 13;
     const unsigned int unchecked = ico + 14;
     const unsigned int emotsinfo = ico + 15;
+
+    const unsigned int styles = ico + 16;
   }
 
   namespace act {
@@ -111,6 +119,9 @@ namespace kIEview2 {
 
     const unsigned int emotsDir = cfg + 6;
     const unsigned int emotPacks = cfg + 7;
+
+    const unsigned int currentStyle = cfg + 14;
+    const unsigned int stylesDir = cfg + 15;
 
     const unsigned int autoScroll = cfg + 8;
     const unsigned int lastMsgCount = cfg + 9;

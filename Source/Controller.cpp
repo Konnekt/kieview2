@@ -20,7 +20,7 @@
 
 namespace kIEview2 {
   // initialization
-  Controller::Controller(): jsController(0), emotLV(0), ieVersion(getIEVersion()) {
+  Controller::Controller(): jsController(0), styleLV(0), emotLV(0), ieVersion(getIEVersion()) {
     IECtrl::getGlobal()->bindMethod("oController", bind(&Controller::getJSController, this, _1, _2), true);
     IECtrl::getGlobal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2), false);
 
@@ -38,6 +38,8 @@ namespace kIEview2 {
     this->registerObserver(IM_CFG_CHANGED, bind(resolve_cast0(&Controller::_onCfgChanged), this));
     this->registerActionObserver(Konnekt::UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
     this->registerActionObserver(Konnekt::UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
+
+    this->registerActionObserver(ui::styleLV, bind(resolve_cast0(&Controller::_styleLV), this));
     this->registerActionObserver(ui::emotLV, bind(resolve_cast0(&Controller::_emotLV), this));
 
     /* Configuration columns */
@@ -58,6 +60,9 @@ namespace kIEview2 {
 
     config->setColumn(DTCFG, cfg::emotsDir, DT_CT_STR, "emots", "kIEview2/emots/dir");
     config->setColumn(DTCFG, cfg::emotPacks, DT_CT_STR, "", "kIEview2/emots/packs");
+
+    config->setColumn(DTCFG, cfg::stylesDir, DT_CT_STR, "templates", "kIEview2/styles/dir");
+    config->setColumn(DTCFG, cfg::currentStyle, DT_CT_STR, "", "kIEview2/styles/current");
 
     this->subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_MSGWND);
     this->subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
@@ -119,22 +124,22 @@ namespace kIEview2 {
   void Controller::_onPrepare() {
     historyTable = Tables::registerTable(Ctrl, tableNotFound, optPrivate);
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
-    kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
+    tplHandler->setKonnektPath(kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR));
 
     // emotHandler.addParser(new JispParser);
     emotHandler.addParser(new GGParser);
 
+    styleHandler.loadPackages();
+    styleHandler.loadSettings();
+
     emotHandler.loadPackages();
     emotHandler.loadSettings();
-
-    // @debug replace with user selected tpl directory
-    tplHandler->setKonnektPath(kPath);
-    tplHandler->addTplDir("/data/templates/core/");
 
     IconRegister(IML_16, ico::logo, Ctrl->hDll(), IDI_LOGO);
     IconRegister(IML_16, ico::link, Ctrl->hDll(), IDI_LINK);
     IconRegister(IML_16, ico::copy, Ctrl->hDll(), IDI_COPY);
     IconRegister(IML_16, ico::save, Ctrl->hDll(), IDI_SAVE);
+    IconRegister(IML_16, ico::styles, Ctrl->hDll(), IDI_STYLES);
     IconRegister(IML_16, ico::emots, Ctrl->hDll(), IDI_EMOTS);
     IconRegister(IML_16, ico::bold, Ctrl->hDll(), IDI_BOLD);
     IconRegister(IML_16, ico::italic, Ctrl->hDll(), IDI_ITALIC);
@@ -143,6 +148,7 @@ namespace kIEview2 {
     IconRegister(IML_16, ico::print, Ctrl->hDll(), IDI_PRINT);
     IconRegister(IML_16, ico::source, Ctrl->hDll(), IDI_SOURCE);
     IconRegister(IML_16, ico::autoScroll, Ctrl->hDll(), IDI_AUTOSCROLL);
+
     IconRegister(IML_16, ico::checked, Ctrl->hDll(), IDI_CHECKED);
     IconRegister(IML_16, ico::unchecked, Ctrl->hDll(), IDI_UNCHECKED);
     IconRegister(IML_16, ico::emotsinfo, Ctrl->hDll(), IDI_EMOTSINFO);
@@ -180,12 +186,16 @@ namespace kIEview2 {
       "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>";
 
     UIGroupAdd(IMIG_CFG_PLUGS, ui::cfgGroup, 0, "kIEview2", ico::logo);
+    UIGroupAdd(ui::cfgGroup, ui::styleCfgGroup, 0, "Szablony", ico::styles);
     UIGroupAdd(ui::cfgGroup, ui::emotCfgGroup, 0, "Emotikony", ico::emots);
 
     UIActionCfgAddPluginInfoBox2(ui::cfgGroup, 
       "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest wyœwietlanie "
       "emotikon oraz modyfikacja wygl¹du okna przy pomocy szablonów, styli <b>CSS</b> i <b>J</b>ava<b>S</b>cript-u.",
       desc, icon16(ico::logo).a_str(), -3);
+    UIActionCfgAddPluginInfoBox2(ui::styleCfgGroup, 
+      "Szablony",
+      desc, icon16(ico::styles).a_str(), -3);
     UIActionCfgAddPluginInfoBox2(ui::emotCfgGroup, 
       "Poni¿ej znajduj¹ siê opcje dotycz¹ce emotikon. Wybór zestawów emotikon oraz ustawienia menu emotikon.",
       desc, icon16(ico::emots).a_str(), -3);
@@ -229,7 +239,15 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::emotCfgGroup, ui::emotLV, ACTT_HWND | ACTSC_INLINE);
     UIActionCfgAdd(ui::emotCfgGroup, ui::refreshEmotLV, ACTT_BUTTON, "Odœwie¿" AP_ICO "702", 0, 0, 0, 75);
     UIActionCfgAdd(ui::emotCfgGroup, 0, ACTT_GROUPEND);
-  }
+
+    UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_GROUP, "Style");
+    UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê \"pakiety\" styli");
+    UIActionCfgAdd(ui::styleCfgGroup, cfg::stylesDir, ACTT_DIR, "", cfg::stylesDir);
+    UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_SEPARATOR, "Wybierz aktywny styl:");
+    UIActionCfgAdd(ui::styleCfgGroup, ui::styleLV, ACTT_HWND | ACTSC_INLINE);
+    UIActionCfgAdd(ui::styleCfgGroup, ui::refreshStyleLV, ACTT_BUTTON, "Odœwie¿" AP_ICO "702", 0, 0, 0, 75);
+    UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_GROUPEND);
+}
 
   void Controller::_onAction() {
     // locking
@@ -313,7 +331,7 @@ namespace kIEview2 {
           UIActionSetStatus(sUIAction(ui::emotCfgGroup, cfg::useEmotsInHistory), !useEmots ? -1 : 0, ACTS_DISABLED);
           UIActionSetStatus(sUIAction(ui::emotCfgGroup, cfg::emotsDir), !useEmots ? -1 : 0, ACTS_DISABLED);
           UIActionSetStatus(sUIAction(ui::emotCfgGroup, ui::refreshEmotLV), !useEmots ? -1 : 0, ACTS_DISABLED);
-          if (EmotLV::isVaildLV(emotLV)) emotLV->setEnabled(useEmots);
+          if (EmotLV::isValidLV(emotLV)) emotLV->setEnabled(useEmots);
         }
         break;
       }
@@ -329,6 +347,12 @@ namespace kIEview2 {
         }
         break;
       }
+      case ui::refreshStyleLV: {
+        if (an->code == ACTN_ACTION) {
+          styleHandler.reloadPackages(styleLV);
+        }
+        break;
+      }
     }
   }
 
@@ -336,7 +360,13 @@ namespace kIEview2 {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
     setActionsStatus();
 
-    if (EmotLV::isVaildLV(emotLV)) {
+    if (StyleLV::isVaildLV(styleLV)) {
+      styleLV->saveState();
+    }
+    styleHandler.saveSettings();
+    styleHandler.reloadPackages(styleLV);
+
+    if (EmotLV::isValidLV(emotLV)) {
       emotLV->saveState();
     }
     emotHandler.saveSettings();
@@ -449,20 +479,27 @@ namespace kIEview2 {
     }
   }
 
-  void Controller::_emotLV() {
+  void Controller::_styleLV() {
     if (getAN()->code == ACTN_CREATEWINDOW) {
       sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*) getAN();
-      emotLV = new EmotLV(an->x, an->y + 5, 220, 120, an->hwndParent, 0);
-      emotLV->setEnabled(config->getInt(cfg::useEmots));
-      an->hwnd = emotLV->getHwnd();
+      styleLV = new StyleLV(an->x, an->y + 5, 220, 120, an->hwndParent, 0);
+      an->hwnd = styleLV->getHwnd();
 
-      emotHandler.fillLV(emotLV);
+      styleHandler.fillLV(styleLV);
 
       an->x += 220;
       an->y += 125;
 
       an->w += 220;
       an->h += 125;
+    }
+  }
+
+  void Controller::_emotLV() {
+    if (getAN()->code == ACTN_CREATEWINDOW) {
+      emotLV = new EmotLV((sUIActionNotify_createWindow*) getAN(), 220, 120);
+      emotLV->setEnabled(config->getInt(cfg::useEmots));
+      emotHandler.fillLV(emotLV);
     }
   }
 

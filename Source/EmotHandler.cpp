@@ -197,6 +197,55 @@ eMSet GGParser::parse(const string& filePath, const string& fileDir) {
   return result;
 }
 
+void StyleHandler::loadSettings() {
+  string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
+  string stylesDir = Controller::getConfig()->getChar(cfg::stylesDir);
+
+  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
+    if (it->getDir() == currentStyle) {
+      it->setEnabled(true); break;
+    }
+  }
+  Controller::getInstance()->getTplHandler()->clearDirs();
+  Controller::getInstance()->getTplHandler()->addTplDir("/" + stylesDir + "/" + currentStyle + "/");
+  Controller::getInstance()->getTplHandler()->addTplDir("/data/templates/core/");
+}
+
+void StyleHandler::saveSettings() {
+  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
+    if (it->isEnabled()) {
+      Controller::getConfig()->set(cfg::currentStyle, it->getDir()); break;
+    }
+  }
+}
+
+void StyleHandler::fillLV(StyleLV* lv) {
+  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
+    lv->addItem(new StyleLV::sStylePackInfo(it->isEnabled(), &*it));
+  }
+}
+
+void StyleHandler::loadPackages() {
+  clearPackages();
+
+  string tplDir = Controller::getConfig()->getChar(cfg::stylesDir);
+  Dir::tItems tplDirs;
+
+  try {
+    tplDirs = Dir::getDirs(tplDir + "\\*");
+  } catch (const Exception& e) {
+    IMLOG("[StyleHandler::loadPackages()] Nie znaleziono katalogu z szablonami (%s) !", e.getReason().a_str());
+    return;
+  }
+  if (!tplDirs.size()) {
+    IMLOG("[StyleHandler::loadPackages()] Brak katalogów z pakietami !");
+    return;
+  }
+
+  for (Dir::tItems::iterator it = tplDirs.begin(); it != tplDirs.end(); it++) {
+    if (!Dir::isDot(*it)) styleSets.push_back(TplSet(it->cFileName, it->cFileName));
+  }
+}
 void EmotHandler::loadSettings() {
   string data = Controller::getConfig()->getChar(cfg::emotPacks);
   data = trim(data, "\n");

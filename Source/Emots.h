@@ -224,4 +224,62 @@ protected:
   int _pos;
 };
 
+class TplSet {
+public:
+  TplSet(const StringRef& name, const string& dir, const string& version = "", const StringRef& description = ""):
+    _id(random()), _enabled(false), _name(name), _dir(dir), _version(version), _description(description) { }
+  TplSet(): _enabled(false) { }
+  virtual ~TplSet() { }
+
+public:
+  UINT getID() {
+    return _id;
+  }
+
+  virtual bool isEnabled() {
+    return _enabled;
+  }
+  virtual void setEnabled(bool value) {
+    _enabled = value;
+  }
+
+  virtual String getName() {
+    return _name;
+  }
+  virtual void setName(const StringRef& name) {
+    _name = name;
+  }
+
+  virtual string getVersion() {
+    return _version;
+  }
+  virtual void setVersion(const string& version) {
+    _version = version;
+  }
+
+  virtual String getDescription() {
+    return _description;
+  }
+  virtual void setDescription(const StringRef& desc) {
+    _description = desc;
+  }
+
+  virtual string getDir() {
+    return _dir;
+  }
+  virtual void setDir(const string& dir) {
+    _dir = dir;
+  }
+
+protected:
+  UINT _id;
+
+  String _name;
+  string _version;
+  String _description;
+
+  bool _enabled;
+  string _dir;
+};
+
 #endif // __EMOTS_H__

@@ -18,22 +18,12 @@
 
 #include "stdafx.h"
 #include "kIEview2.h"
+#include "Emots.h"
 
 #include "Helpers.h"
 
 using namespace Stamina::UI;
 using namespace Helpers;
-
-struct sSet {
-  string url;
-  string desc;
-  string name;
-  string version;
-  string getVersion() {return version;}
-  string getName() {return name;}
-  string getUrl() {return url;}
-  string getDescription() {return desc;}
-};
 
 class StyleLV: public ListWnd::ListView {
 public:
@@ -51,11 +41,11 @@ public:
 
 public:
   struct sStylePackInfo {
+    TplSet* set;
     bool used;
     UINT id;
-    sSet* set;
 
-    sStylePackInfo(bool used, sSet* _set): used(used), set(_set), id(-1) { }
+    sStylePackInfo(bool used, TplSet* _set): used(used), set(_set), id(-1) { }
     sStylePackInfo(): used(false) { }
   };
 
@@ -75,6 +65,15 @@ public:
   virtual ListWnd::oItem getItem(UINT id);
   virtual sStylePackInfo* getSPI(UINT id);
   virtual void selectRadio(UINT id);
+
+  virtual void saveState() {
+    if (!itemsCount()) return;
+
+    for (UINT i = 0; i < itemsCount(); i++) {
+      sStylePackInfo* info = getSPI(i);
+      info->set->setEnabled(info->used);
+    }
+  }
 
 protected:
   void onMouseUp(int vkey, const Stamina::Point &pos);
@@ -118,10 +117,9 @@ public:
     void resizeItems(StyleLV* slv, ListWnd::Item* item);
 
     string getItemText() {
-      sSet* set = _styleInfo->set;
+      TplSet* set = _styleInfo->set;
       string text;
 
-      if (set->getUrl().length()) text += "URL: " + set->getUrl() + "\n";
       if (set->getDescription().length()) text += "Opis: " + set->getDescription();
       if (text.length()) text = rtrim(text.c_str(), "\n");
 

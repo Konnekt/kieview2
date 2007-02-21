@@ -96,7 +96,7 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
 
     if (staticEdge) {
       LONG style = GetWindowLong(m_hWnd, GWL_EXSTYLE);
-      style |= (WS_EX_STATICEDGE);
+      style |= WS_EX_STATICEDGE;
       SetWindowLong(m_hWnd, GWL_EXSTYLE, style);
     }
 
