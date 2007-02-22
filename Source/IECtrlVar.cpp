@@ -283,11 +283,13 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
     v->vt = VT_BSTR;
     v->bstrVal = _com_util::ConvertStringToBSTR(getString());
   } else if (isByteBuffer()) {
-    BLOB b;
-    b.cbSize = m_bbValue->getLength();
-    b.pBlobData = m_bbValue->getBuffer();
-    v->vt = VT_BLOB;
-    memcpy(&v->llVal, &b, sizeof(b)); //nie ma gdzie wsadzic struktury blob
+    v->vt = VT_ARRAY | VT_UI1;
+    BYTE *buffer;
+    SAFEARRAY* psa = SafeArrayCreateVector(VT_UI1, 0, m_bbValue->getLength());
+    SafeArrayAccessData(psa, (LPVOID *)&buffer);
+    memcpy(buffer, m_bbValue->getBuffer(), m_bbValue->getLength());
+    SafeArrayUnaccessData(psa);
+    v->parray = psa;
   } else if (m_eType == Type::Date) {
     v->vt = VT_DATE;
     TIME_ZONE_INFORMATION time_zone;
@@ -701,10 +703,13 @@ void IECtrl::Var::setValue(VARIANT &v) {
       setValue(Date64(date64));
       break;
     }
-    case VT_BLOB: {
-      BLOB b;
-      memcpy(&b, &v.llVal, sizeof(b));
-      setValue(Stamina::ByteBuffer(b.pBlobData, b.cbSize));
+    case VT_ARRAY | VT_UI1: {
+      if (v.parray->cDims != 1 || (SafeArrayLock(v.parray) < 0)) return;
+
+      BYTE* buffer = (BYTE*) v.parray->pvData;
+      setValue(Stamina::ByteBuffer(buffer, v.parray->rgsabound[0].cElements));
+      SafeArrayUnlock(v.parray);
+      break;
     }
     case VT_ARRAY: {
       if (v.parray->cDims != 1 || (SafeArrayLock(v.parray) < 0)) return;
