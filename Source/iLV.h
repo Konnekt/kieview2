@@ -134,7 +134,7 @@ namespace kIEview2 {
         touchConfigWnd();
       }
       virtual void switchState(iLV* lv) {
-        setSelected(lv, !_selected);
+        lv->selectItem(lv->getItemIndex(lv->getEntryItem(this)), !_selected);
       }
 
       virtual bool onMouseDblClk(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {

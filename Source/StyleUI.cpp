@@ -133,7 +133,7 @@ void StyleLV::StyleInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oI
   COLORREF textColor;
 
   /* predefiniowane kolorki */
-  if (slv->_enabled) {
+  if (slv->isEnabled()) {
     if (li->isActive()) {
       gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
       textColor = RGB(255,255,255);

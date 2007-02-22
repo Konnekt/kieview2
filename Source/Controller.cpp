@@ -185,7 +185,7 @@ namespace kIEview2 {
       "Copyright © 2006-2007 <b>Sijawusz Pur Rahnama</b><br/>"
       "Copyright © 2005 <b>Kuba \"nix\" Niegowski</b>";
 
-    UIGroupAdd(IMIG_CFG_PLUGS, ui::cfgGroup, 0, "kIEview2", ico::logo);
+    UIGroupAdd(IMIG_CFG_UI, ui::cfgGroup, 0, "Okno rozmowy", ico::logo);
     UIGroupAdd(ui::cfgGroup, ui::styleCfgGroup, 0, "Szablony", ico::styles);
     UIGroupAdd(ui::cfgGroup, ui::emotCfgGroup, 0, "Emotikony", ico::emots);
 
@@ -194,7 +194,7 @@ namespace kIEview2 {
       "emotikon oraz modyfikacja wygl¹du okna przy pomocy szablonów, styli <b>CSS</b> i <b>J</b>ava<b>S</b>cript-u.",
       desc, icon16(ico::logo).a_str(), -3);
     UIActionCfgAddPluginInfoBox2(ui::styleCfgGroup, 
-      "Szablony",
+      "{{<b>Szablony</b>}}",
       desc, icon16(ico::styles).a_str(), -3);
     UIActionCfgAddPluginInfoBox2(ui::emotCfgGroup, 
       "Poni¿ej znajduj¹ siê opcje dotycz¹ce emotikon. Wybór zestawów emotikon oraz ustawienia menu emotikon.",

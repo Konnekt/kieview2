@@ -87,21 +87,6 @@ public:
 
       return text;
     }
-    void setSelected(iLV* lv, bool value = true) {
-      iEntry::setSelected(lv, value);
-      this->_styleInfo->used = value;
-
-      UINT id = lv->getItemIndex(lv->getEntryItem(this));
-
-      StyleLV* slv = (StyleLV*) lv;
-
-      if (slv->_last_checked != - 1 && slv->_last_checked != id) {
-        StyleInfoItem* e = (StyleInfoItem*) lv->getItem(slv->_last_checked)->getEntry().get();
-        e->setSelected(lv, false);
-      }
-
-      slv->_last_checked = id;
-    }
 
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
 
