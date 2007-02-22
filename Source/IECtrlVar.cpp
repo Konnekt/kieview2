@@ -27,6 +27,9 @@ IECtrl::Var::Var(int value) {
   setValue(value);
 }
 
+IECtrl::Var::Var(UINT value) {
+  setValue(value);
+}
 IECtrl::Var::Var(double value) {
   setValue(value);
 }
@@ -58,6 +61,10 @@ IECtrl::Var::Var(Stamina::String &v) {
 }
 
 IECtrl::Var::Var(string &v) {
+  setValue(v);
+}
+
+IECtrl::Var::Var(Stamina::ByteBuffer &v) {
   setValue(v);
 }
 
@@ -129,6 +136,11 @@ IECtrl::Var & IECtrl::Var::operator=(string &value) {
   return *this;
 }
 
+IECtrl::Var & IECtrl::Var::operator=(Stamina::ByteBuffer &value) {
+  setValue(value);
+  return *this;
+}
+
 IECtrl::Var & IECtrl::Var::operator=(IECtrl::Object &value) {
   setValue(value);
   return *this;
@@ -146,10 +158,25 @@ IECtrl::Var & IECtrl::Var::operator=(IDispatch** value) {
 int IECtrl::Var::getInteger() {
   if (m_eType == Type::Integer || m_eType == Type::Boolean)
     return m_iValue;
+  else if (m_eType == Type::Uint)
+    return m_uValue;
   else if (m_eType == Type::Real)
     return (int) m_dValue;
   else if (m_eType == Type::String)
     return atoi(m_szValue);
+
+  return 0;
+}
+
+UINT IECtrl::Var::getUint() {
+  if (m_eType == Type::Uint)
+    return m_uValue;
+  else if (m_eType == Type::Integer || m_eType == Type::Boolean)
+    return m_iValue;
+  else if (m_eType == Type::Real)
+    return (UINT) m_dValue;
+  else if (m_eType == Type::String)
+    return atol(m_szValue);
 
   return 0;
 }
@@ -170,6 +197,8 @@ bool IECtrl::Var::getBool() {
 double IECtrl::Var::getReal() {
   if (m_eType == Type::Integer || m_eType == Type::Boolean)
     return (double)m_iValue;
+  else if (m_eType == Type::Uint)
+    return (double)m_uValue;
   else if (m_eType == Type::Real)
     return m_dValue;
   else if (m_eType == Type::String)
@@ -183,6 +212,8 @@ const char * IECtrl::Var::getString() {
 
   if (m_eType == Type::Integer)
     return itoa(m_iValue, buff, 10);
+  if (m_eType == Type::Uint)
+    return ltoa(m_uValue, buff, 10);
   else if (m_eType == Type::Boolean)
     return m_iValue ? "true" : "false";
   else if (m_eType == Type::Real)
@@ -193,6 +224,8 @@ const char * IECtrl::Var::getString() {
     return m_sValue->c_str();
   else if (m_eType == Type::String)
     return m_szValue;
+  else if (m_eType == Type::ByteBuffer)
+    return "ByteBuffer";
   else if (m_eType == Type::Array)
     return "Array";
   else if (m_eType == Type::Object)
@@ -219,6 +252,14 @@ string IECtrl::Var::getStdString() {
   return getString();
 }
 
+Stamina::ByteBuffer IECtrl::Var::getByteBuffer() {
+  if (isByteBuffer()) {
+    return *m_bbValue;
+  } else {
+    return Stamina::ByteBuffer((unsigned char *)getString(), strlen(getString()));
+  }
+}
+
 VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
   if (v == NULL) {
     v = new VARIANT;
@@ -229,6 +270,9 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
   if (m_eType == Type::Integer) {
     v->vt = VT_INT;
     v->intVal = m_iValue;
+  } else if (m_eType == Type::Uint) {
+    v->vt = VT_UINT;
+    v->uintVal = m_uValue;
   } else if (m_eType == Type::Boolean) {
     v->vt = VT_BOOL;
     v->boolVal = (bool) m_iValue;
@@ -238,6 +282,12 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
   } else if (isString()) {
     v->vt = VT_BSTR;
     v->bstrVal = _com_util::ConvertStringToBSTR(getString());
+  } else if (isByteBuffer()) {
+    BLOB b;
+    b.cbSize = m_bbValue->getLength();
+    b.pBlobData = m_bbValue->getBuffer();
+    v->vt = VT_BLOB;
+    memcpy(&v->llVal, &b, sizeof(b)); //nie ma gdzie wsadzic struktury blob
   } else if (m_eType == Type::Date) {
     v->vt = VT_DATE;
     TIME_ZONE_INFORMATION time_zone;
@@ -297,7 +347,7 @@ IECtrl::Object IECtrl::Var::getObject(IECtrl* ctrl) {
   Var args;
   args[-1] = Var(*this);
 
-  if (m_eType == Type::Integer || m_eType == Type::Real) {
+  if (m_eType == Type::Integer || m_eType == Type::Real || m_eType == Type::Uint) {
     return IECtrl::Object(ctrl, false, "Number", args);
   } else if (m_eType == Type::Date) {
     return IECtrl::Object(ctrl, false, "Date", args);
@@ -315,6 +365,9 @@ bool IECtrl::Var::isUnknown() {
 bool IECtrl::Var::isInteger() {
   return m_eType == Type::Integer;
 }
+bool IECtrl::Var::isUint() {
+  return m_eType == Type::Integer;
+}
 bool IECtrl::Var::isBool() {
   return m_eType == Type::Boolean;
 }
@@ -323,6 +376,9 @@ bool IECtrl::Var::isReal() {
 }
 bool IECtrl::Var::isString() {
   return m_eType == Type::String || m_eType == Type::StdString || m_eType == Type::StaminaString;
+}
+bool IECtrl::Var::isByteBuffer() {
+  return m_eType == Type::ByteBuffer;
 }
 bool IECtrl::Var::isDate() {
   return m_eType == Type::Date;
@@ -363,10 +419,16 @@ bool IECtrl::Var::empty() {
     case Type::Real:
       if (!getInteger()) return true;
       break;
+    case Type::Uint:
+      if (!getUint()) return true;
+      break;
     case Type::StaminaString:
     case Type::StdString:
     case Type::String:
       if (!strlen(getString())) return true;
+      break;
+    case Type::ByteBuffer:
+      if (!m_bbValue->getLength()) return true;
       break;
   }
   return false;
@@ -375,6 +437,8 @@ bool IECtrl::Var::empty() {
 int IECtrl::Var::length() {
   if (m_eType == Type::Array) {
     return m_nLength;
+  } else if (isByteBuffer()) {
+    return m_bbValue->getLength();
   }
   return 0;
 }
@@ -387,6 +451,10 @@ void IECtrl::Var::operator+=(IECtrl::Var & var) {
   switch (m_eType) {
     case Type::Integer:
       m_iValue += var.getInteger();
+      break;
+
+    case Type::Uint:
+      m_uValue += var.getUint();
       break;
 
     case Type::Real:
@@ -443,6 +511,11 @@ void IECtrl::Var::operator+=(IECtrl::Var & var) {
       break;
     }
 
+    case Type::ByteBuffer: {
+      Stamina::ByteBuffer& bb = var.getByteBuffer();
+      m_bbValue->append(bb.getBuffer(), bb.getLength());
+    }
+
     case Type::Date: {
       if (m_dtValue) {
         (*m_dtValue) = m_dtValue->getInt64() + var.getDate().getInt64();
@@ -455,6 +528,10 @@ void IECtrl::Var::operator+=(IECtrl::Var & var) {
 }
 
 void IECtrl::Var::operator+=(int var) {
+  *this += IECtrl::Var(var);
+}
+
+void IECtrl::Var::operator+=(UINT var) {
   *this += IECtrl::Var(var);
 }
 
@@ -478,6 +555,9 @@ void IECtrl::Var::operator+=(string& var) {
   *this += IECtrl::Var(var);
 }
 
+void IECtrl::Var::operator+=(Stamina::ByteBuffer& var) {
+  *this += IECtrl::Var(var);
+}
 // private
 void IECtrl::Var::clear() {
   if (m_eType == Type::String && m_szValue != NULL) {
@@ -496,6 +576,8 @@ void IECtrl::Var::clear() {
     delete m_ssValue;
   } else if (m_eType == Type::StdString) {
     delete m_sValue;
+  } else if (isByteBuffer()) {
+    delete m_bbValue;
   }
   m_eType = Type::Unknown;
   m_nLength = 0;
@@ -505,6 +587,9 @@ void IECtrl::Var::copy(IECtrl::Var& copy) {
   clear();
   switch (copy.m_eType) {
     case Type::Integer:
+      setValue(copy.m_iValue);
+      break;
+    case Type::Uint:
       setValue(copy.m_iValue);
       break;
     case Type::Boolean:
@@ -521,6 +606,9 @@ void IECtrl::Var::copy(IECtrl::Var& copy) {
       break;
     case Type::StdString:
       setValue(copy.m_sValue);
+      break;
+    case Type::ByteBuffer:
+      setValue(*copy.m_bbValue);
       break;
     case Type::Array:
       setValue(copy.m_aValue, copy.m_nLength);
@@ -546,6 +634,12 @@ void IECtrl::Var::copy(IECtrl::Var& copy) {
 void IECtrl::Var::setValue(int value) {
   clear();
   m_eType = Type::Integer;
+  m_iValue = value;
+}
+
+void IECtrl::Var::setValue(UINT value) {
+  clear();
+  m_eType = Type::Uint;
   m_iValue = value;
 }
 
@@ -581,11 +675,11 @@ void IECtrl::Var::setValue(IECtrl::Var* value[], unsigned int count) {
 void IECtrl::Var::setValue(VARIANT &v) {
   switch (v.vt) {
     case VT_INT: setValue((int)v.intVal); break;
+    case VT_UINT: setValue(v.uintVal); break;
     case VT_BOOL: setValue((bool)v.boolVal); break;
     case VT_I1: setValue((int)v.cVal); break;
     case VT_I2: setValue((int)v.iVal); break;
     case VT_I4: setValue((int)v.lVal); break;
-    case VT_UINT: setValue((int)v.uintVal); break;
     case VT_UI1: setValue((int)v.bVal); break;
     case VT_UI2: setValue((int)v.uiVal); break;
     case VT_UI4: setValue((int)v.ulVal); break;
@@ -606,6 +700,11 @@ void IECtrl::Var::setValue(VARIANT &v) {
 
       setValue(Date64(date64));
       break;
+    }
+    case VT_BLOB: {
+      BLOB b;
+      memcpy(&b, &v.llVal, sizeof(b));
+      setValue(Stamina::ByteBuffer(b.pBlobData, b.cbSize));
     }
     case VT_ARRAY: {
       if (v.parray->cDims != 1 || (SafeArrayLock(v.parray) < 0)) return;
@@ -682,6 +781,12 @@ void IECtrl::Var::setValue(string &v) {
   m_eType = Type::StdString;
 }
 
+void IECtrl::Var::setValue(Stamina::ByteBuffer &v) {
+  clear();
+  m_bbValue = new Stamina::ByteBuffer(v);
+  m_eType = Type::ByteBuffer;
+}
+
 void IECtrl::Var::setValue(IECtrl::Object &v) {
   clear();
   m_objValue = new IECtrl::Object(v);
@@ -745,6 +850,12 @@ IECtrl::Var IECtrl::Var::operator+(int var) {
   return ret;
 }
 
+IECtrl::Var IECtrl::Var::operator+(UINT var) {
+  IECtrl::Var ret(*this);
+  ret += IECtrl::Var(var);
+  return ret;
+}
+
 IECtrl::Var IECtrl::Var::operator+(double var) {
   IECtrl::Var ret(*this);
   ret += IECtrl::Var(var);
@@ -770,6 +881,12 @@ IECtrl::Var IECtrl::Var::operator+(Stamina::String &var) {
 }
 
 IECtrl::Var IECtrl::Var::operator+(string &var) {
+  IECtrl::Var ret(*this);
+  ret += IECtrl::Var(var);
+  return ret;
+}
+
+IECtrl::Var IECtrl::Var::operator+(Stamina::ByteBuffer &var) {
   IECtrl::Var ret(*this);
   ret += IECtrl::Var(var);
   return ret;

@@ -65,18 +65,18 @@ bool EmotLV::moveItem(UINT id, int pos) {
     return false;
   }
   int inc = 0;
-  ListWnd::ItemList _items = getItemList();
-  tItems::iterator it = _items.begin();
+  ListWnd::ItemList& _items = getItemList();
+  ListWnd::ItemList::iterator it = _items.begin();
 
   if (pos == 0) {
-    _items.insert(it, _items[id]);
+    _items.insert(it, getItem(id));
     it = _items.begin();
     inc = 0;
     while (inc++ < id + 1) it++;
     _items.erase(it);
 
   } else if (pos == _items.size()) {
-    _items.push_back(_items[id]);
+    _items.push_back(getItem(id));
     it = _items.begin();
     while (inc++ < id) it++;
     _items.erase(it);
@@ -85,7 +85,7 @@ bool EmotLV::moveItem(UINT id, int pos) {
   } else if ((id <= _items.size() - 1) && (pos <= _items.size() - 1)) {
     if (id >= pos) {
       while (inc++ < pos) it++;
-      _items.insert(it, _items[id]);
+      _items.insert(it, getItem(id));
 
       it = _items.begin();
       inc = 0;
@@ -93,7 +93,7 @@ bool EmotLV::moveItem(UINT id, int pos) {
       _items.erase(it);
     } else {
       while (inc++ < pos) it++;
-      _items.insert(it, _items[id]);
+      _items.insert(it, getItem(id));
 
       it = _items.begin();
       inc = 0;
@@ -106,8 +106,8 @@ bool EmotLV::moveItem(UINT id, int pos) {
   }
 
   sEmotPackInfo* s = getEPI(pos);
-  removeEntry(_items[pos]->getEntry());
-  _items[pos] = insertEntry(new EmotPackInfoItem(this, s), pos).get();
+  removeEntry(getItem(pos)->getEntry());
+  getItem(pos) = insertEntry(new EmotPackInfoItem(this, s), pos).get();
 
   for (int i = 0; i < itemsCount(); i++) {
     getEPI(i)->id = i;
@@ -119,8 +119,8 @@ EmotLV::sEmotPackInfo* EmotLV::getEPI(UINT id) {
   ListWnd::oItem item = this->getItem(id);
 
   if (item) {
-    sEmotPackInfo* si = (sEmotPackInfo*) item->getEntry().get();
-    return si->getEmotPackInfo();
+    EmotPackInfoItem* ei = (EmotPackInfoItem*) item->getEntry().get();
+    return ei->getEmotPackInfo();
   }
   return NULL;
 }
@@ -162,7 +162,7 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
 
   if (elv->draged) {
     if (elv->mmitem != -1) {
-      elv->_items[elv->mmitem]->repaint(lv);
+      elv->getItem(elv->mmitem)->repaint(lv);
     }
 
     Point p = pos;
@@ -174,8 +174,7 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
       if (p.y < rc.getCenter().y) {
         if (elv->draged_id != id) {
           if (elv->moveItem(elv->draged_id, id)) {
-            ListWnd::oItem item = elv->getEntryItem(elv->_items[id - (id > elv->draged_id ? 1 : 0)]->getEntry());
-            elv->setActiveItem((ListWnd::Item*)item);
+            elv->setActiveItem(elv->getItem(id - (id > elv->draged_id ? 1 : 0)));
             touchConfigWnd();
           }
           elv->mmitem = -1;
@@ -183,8 +182,7 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
       } else {
         if (elv->draged_id != id + 1) {
           if (elv->moveItem(elv->draged_id, id + 1)) {
-            ListWnd::oItem item = elv->getEntryItem(elv->_items[id + (id < elv->draged_id ? 1 : 0)]->getEntry());
-            elv->setActiveItem((ListWnd::Item*)item);
+            elv->setActiveItem(elv->getItem(id + (id < elv->draged_id ? 1 : 0)));
             touchConfigWnd();
           }
           elv->mmitem = -1;
@@ -239,7 +237,7 @@ bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd:
     int id = lv->getItemIndex(li);
     if (elv->mmitem != -1) {
       if (elv->mmitem != id) {
-        elv->_items[elv->mmitem]->repaint(lv);
+        elv->getItem(elv->mmitem)->repaint(lv);
         elv->mmitem = id;
       }
     }

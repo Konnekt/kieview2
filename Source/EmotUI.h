@@ -94,6 +94,10 @@ public:
 
       return text;
     }
+    void setSelected(iLV* lv, bool value = true) {
+      iEntry::setSelected(lv, value);
+      _emotInfo->checked = value;
+    }
 
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
     bool onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);

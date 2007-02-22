@@ -138,7 +138,7 @@ void StyleLV::StyleInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oI
       gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
       textColor = RGB(255,255,255);
     } else {
-      if (_styleInfo->used) {
+      if (isSelected()) {
         gradient = Stamina::UI::createSimpleGradient(RGB(190,252,122), RGB(219,253,181), Size(rc.width(), rc.height()));
       } else {
        gradient = Stamina::UI::createSimpleGradient(RGB(220,220,220), RGB(240,240,240), Size(rc.width(), rc.height()));

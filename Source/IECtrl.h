@@ -390,6 +390,7 @@ public:
     Var();
     Var(bool value);
     Var(int value);
+    Var(UINT value);
     Var(double value);
     Var(const char * value);
     Var(const Var & copy);
@@ -398,17 +399,20 @@ public:
     Var(Date64 &v);
     Var(String &v);
     Var(string &v);
+    Var(ByteBuffer &v);
     Var(Object &v);
     Var(IDispatch *v);
     Var(IDispatch **v);
     ~Var();
 
     int getInteger();
+    UINT getUint();
     bool getBool();
     double getReal();
     const char * getString();
     String getStaminaString();
     string getStdString();
+    ByteBuffer getByteBuffer();
     VARIANT * getVariant(VARIANT *v = NULL);
     Date64 getDate();
     Object getObject(IECtrl* ctrl = NULL);
@@ -417,9 +421,11 @@ public:
 
     bool isUnknown();
     bool isInteger();
+    bool isUint();
     bool isBool();
     bool isReal();
     bool isString();
+    bool isByteBuffer();
     bool isDate();
     bool isObject();
     bool isDispatch();
@@ -427,6 +433,7 @@ public:
 
     void setValue(bool value);
     void setValue(int value);
+    void setValue(UINT value);
     void setValue(double value);
     void setValue(const char * value);
     void setValue(Var* value[], unsigned int count);
@@ -434,6 +441,7 @@ public:
     void setValue(Date64 &value);
     void setValue(String &value);
     void setValue(string &value);
+    void setValue(ByteBuffer &value);
     void setValue(Object &value);
     void setValue(IDispatch* value);
     void setValue(IDispatch** value);
@@ -446,31 +454,37 @@ public:
     Var & operator=(Var &copy);
     Var & operator=(bool value);
     Var & operator=(int value);
+    Var & operator=(UINT value);
     Var & operator=(double value);
     Var & operator=(const char * value);
     Var & operator=(VARIANT &v);
     Var & operator=(Date64 &value);
     Var & operator=(String &value);
     Var & operator=(string &value);
+    Var & operator=(ByteBuffer &value);
     Var & operator=(Object &value);
     Var & operator=(IDispatch* value);
     Var & operator=(IDispatch** value);
 
     void operator+=(Var & var);
     void operator+=(int var);
+    void operator+=(UINT var);
     void operator+=(double var);
     void operator+=(const char* var);
     void operator+=(Date64 &var);
     void operator+=(String &var);
     void operator+=(string &var);
+    void operator+=(ByteBuffer &var);
 
     Var operator+(Var & var2);
     Var operator+(int var2);
+    Var operator+(UINT var2);
     Var operator+(double var2);
     Var operator+(const char *var2);
     Var operator+(Date64 &var);
     Var operator+(String &var);
     Var operator+(string &var);
+    Var operator+(ByteBuffer &var);
 
   protected:
     void clear();
@@ -481,12 +495,14 @@ public:
   protected:
     union {
       int m_iValue;
+      UINT m_uValue;
       double m_dValue;
       char * m_szValue;
       Var ** m_aValue;
       Date64 * m_dtValue;
       String * m_ssValue;
       string * m_sValue;
+      ByteBuffer * m_bbValue;
       Object * m_objValue;
       IDispatch * m_dispValue;
       IDispatch ** m_pdispValue;
@@ -497,11 +513,13 @@ public:
     enum Type {
       Unknown,
       Integer,
+      Uint,
       Boolean,
       Real,
       String,
       StdString,
       StaminaString,
+      ByteBuffer,
       Array,
       Date,
       Object,

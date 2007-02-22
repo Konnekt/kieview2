@@ -128,7 +128,7 @@ namespace kIEview2 {
         return _selected;
       }
       virtual void setSelected(iLV* lv, bool value = true) {
-        _selectBtn->setImage(value ? lv->_unChecked.get() : lv->_checked.get());
+        _selectBtn->setImage(value ? lv->_checked : lv->_unChecked);
         _selected = value;
         refreshEntry(lv, ListWnd::RefreshFlags::refreshPaint);
         touchConfigWnd();
