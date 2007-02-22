@@ -285,11 +285,22 @@ VARIANT * IECtrl::Var::getVariant(VARIANT *v) {
   } else if (isByteBuffer()) {
     v->vt = VT_ARRAY | VT_UI1;
     BYTE *buffer;
-    SAFEARRAY* psa = SafeArrayCreateVector(VT_UI1, 0, m_bbValue->getLength());
-    SafeArrayAccessData(psa, (LPVOID *)&buffer);
-    memcpy(buffer, m_bbValue->getBuffer(), m_bbValue->getLength());
-    SafeArrayUnaccessData(psa);
+
+    SAFEARRAY *pSA;
+    SAFEARRAYBOUND dim[1];
+    dim[0].lLbound= 0;
+    dim[0].cElements= m_bbValue->getLength();
+
+    SAFEARRAY* psa = SafeArrayCreate(VT_UI1, 1, dim);
     v->parray = psa;
+
+    unsigned char* bb = m_bbValue->getBuffer();
+    SafeArrayAccessData(psa,(void **)&buffer);
+    for (int i = 0; i < m_bbValue->getLength(); i++) {
+      buffer[i] = bb[i];
+    }
+    SafeArrayUnaccessData(psa);
+
   } else if (m_eType == Type::Date) {
     v->vt = VT_DATE;
     TIME_ZONE_INFORMATION time_zone;
