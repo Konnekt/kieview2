@@ -48,7 +48,6 @@ public:
 
 public:
   virtual UINT addItem(sEmotPackInfo* pack);
-  virtual bool moveItem(UINT id, int pos);
   virtual sEmotPackInfo* getEPI(UINT id);
 
   virtual void saveState() {
@@ -58,6 +57,11 @@ public:
       sEmotPackInfo* info = getEPI(i);
       info->set->setEnabled(info->checked);
       info->set->setPos(info->id);
+    }
+  }
+  virtual void refreshEPIID() {
+    for (int i = 0; i < itemsCount(); i++) {
+      getEPI(i)->id = i;
     }
   }
 

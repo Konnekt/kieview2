@@ -25,7 +25,9 @@ void EmotLV::onMouseUp(int vkey, const Stamina::Point &pos) {
   ReleaseCapture();
   ListWnd::ListView::onMouseUp(vkey, pos);
   draged = false;
-
+  if (mmitem != -1) {
+    getItem(mmitem)->repaint(this);
+  }
   mmitem = -1;
 }
 
@@ -58,61 +60,6 @@ UINT EmotLV::addItem(sEmotPackInfo *s) {
     selectItem(id, true);
   }
   return id;
-}
-
-bool EmotLV::moveItem(UINT id, int pos) {
-  if (id == -1 || pos == -1 || id == pos || id >= itemsCount() || pos > itemsCount()) {
-    return false;
-  }
-  int inc = 0;
-  ListWnd::ItemList& _items = getItemList();
-  ListWnd::ItemList::iterator it = _items.begin();
-
-  if (pos == 0) {
-    _items.insert(it, getItem(id));
-    it = _items.begin();
-    inc = 0;
-    while (inc++ < id + 1) it++;
-    _items.erase(it);
-
-  } else if (pos == _items.size()) {
-    _items.push_back(getItem(id));
-    it = _items.begin();
-    while (inc++ < id) it++;
-    _items.erase(it);
-    pos -= 1;
-
-  } else if ((id <= _items.size() - 1) && (pos <= _items.size() - 1)) {
-    if (id >= pos) {
-      while (inc++ < pos) it++;
-      _items.insert(it, getItem(id));
-
-      it = _items.begin();
-      inc = 0;
-      while (inc++ < id + 1) it++;
-      _items.erase(it);
-    } else {
-      while (inc++ < pos) it++;
-      _items.insert(it, getItem(id));
-
-      it = _items.begin();
-      inc = 0;
-      while (inc++ < id) it++;
-      _items.erase(it);
-      pos -=1;
-    }
-  } else {
-    return false;
-  }
-
-  sEmotPackInfo* s = getEPI(pos);
-  removeEntry(getItem(pos)->getEntry());
-  getItem(pos) = insertEntry(new EmotPackInfoItem(this, s), pos).get();
-
-  for (int i = 0; i < itemsCount(); i++) {
-    getEPI(i)->id = i;
-  }
-  return true;
 }
 
 EmotLV::sEmotPackInfo* EmotLV::getEPI(UINT id) {
@@ -173,16 +120,16 @@ bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::o
     if (elv->draged_id != id) {
       if (p.y < rc.getCenter().y) {
         if (elv->draged_id != id) {
-          if (elv->moveItem(elv->draged_id, id)) {
-            elv->setActiveItem(elv->getItem(id - (id > elv->draged_id ? 1 : 0)));
+          if (elv->getRootItem()->moveItem(elv, elv->getItem(elv->draged_id), elv->getItem(id), true)) {
+            elv->refreshEPIID();
             touchConfigWnd();
           }
           elv->mmitem = -1;
         }
       } else {
         if (elv->draged_id != id + 1) {
-          if (elv->moveItem(elv->draged_id, id + 1)) {
-            elv->setActiveItem(elv->getItem(id + (id < elv->draged_id ? 1 : 0)));
+          if (elv->getRootItem()->moveItem(elv, elv->getItem(elv->draged_id), elv->getItem(id + 1), true)) {
+            elv->refreshEPIID();
             touchConfigWnd();
           }
           elv->mmitem = -1;
