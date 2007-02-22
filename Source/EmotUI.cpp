@@ -16,14 +16,6 @@
 #include "Emots.h"
 
 EmotLV::EmotLV(sUIActionNotify_createWindow* an, int w, int h): iLV(an, w, h) {
-  _checked = new Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
-  _unchecked = new Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
-
-  hFontBold = CreateFont(-11, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
-  hFont = CreateFont(-11, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
-
   draged = false;
   draged_id = 0;
   mmitem = -1;
@@ -35,10 +27,6 @@ void EmotLV::onMouseUp(int vkey, const Stamina::Point &pos) {
   draged = false;
 
   mmitem = -1;
-}
-
-void EmotLV::onMouseDown(int vkey, const Stamina::Point &pos) {
-  ListWnd::ListView::onMouseDown(vkey, pos);
 }
 
 void EmotLV::onMouseMove(int vkey, const Stamina::Point &pos) {
@@ -61,29 +49,23 @@ void EmotLV::onMouseMove(int vkey, const Stamina::Point &pos) {
   ListWnd::ListView::onMouseMove(vkey, pos);
 }
 
-void EmotLV::onKeyDown(int vkey, int info) {
-  ListWnd::ListView::onKeyDown(vkey, info);
-}
-
-EmotLV::~EmotLV() {
-  removeAll();
-
-  DeleteObject(hFontBold);
-  DeleteObject(hFont);
-
-  removeValidLV(this);
-}
-
 UINT EmotLV::addItem(sEmotPackInfo *s) {
-  _items.push_back(insertEntry(new EmotPackInfoItem(this, s)).get());
-  getEPI(_items.size() - 1)->id = _items.size() - 1;
-  return _items.size() - 1;
+  ListWnd::oItem item = insertEntry(new EmotPackInfoItem(this, s));
+  UINT id = getItemIndex(item);
+  getEPI(getItemIndex(item))->id = id;
+
+  if (getEPI(id)->checked) {
+    selectItem(id, true);
+  }
+  return id;
 }
 
 bool EmotLV::moveItem(UINT id, int pos) {
-  if (id == -1 || pos == -1 || id == pos || id >= _items.size() || pos > _items.size()) return false;
-
+  if (id == -1 || pos == -1 || id == pos || id >= itemsCount() || pos > itemsCount()) {
+    return false;
+  }
   int inc = 0;
+  ListWnd::ItemList _items = getItemList();
   tItems::iterator it = _items.begin();
 
   if (pos == 0) {
@@ -130,37 +112,17 @@ bool EmotLV::moveItem(UINT id, int pos) {
   for (int i = 0; i < itemsCount(); i++) {
     getEPI(i)->id = i;
   }
-
   return true;
 }
 
-void EmotLV::removeItem(UINT id) {
-  removeEntry(_items[id]->getEntry());
-  getEPI(id)->id = -1;
-  tItems::iterator it = _items.begin() + id;
-  _items.erase(it);
-}
-
-void EmotLV::removeAllItems() {
-  for (int i = 0; i < itemsCount(); i++) {
-    getEPI(i)->id = -1;
-  }
-  removeAll();
-  _items.clear();
-}
-
-int EmotLV::itemsCount() {
-  return _items.size();
-}
-
-ListWnd::oItem EmotLV::getItem(UINT id) {
-  if (id > _items.size()) return NULL;
-  return _items[id];
-}
-
 EmotLV::sEmotPackInfo* EmotLV::getEPI(UINT id) {
-  if (id > _items.size()) return NULL;
-  return ((EmotPackInfoItem*)_items[id]->getEntry().get())->getEmotPackInfo();
+  ListWnd::oItem item = this->getItem(id);
+
+  if (item) {
+    sEmotPackInfo* si = (sEmotPackInfo*) item->getEntry().get();
+    return si->getEmotPackInfo();
+  }
+  return NULL;
 }
 
 EmotLV::sEmotPackInfo* EmotLV::EmotPackInfoItem::getEmotPackInfo() {
@@ -187,38 +149,10 @@ Size EmotLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd
     addY = _emotInfo->image->getSize().h;
   }
   if (addY < 16) addY = 16;
-  if (li->isActive()) 
+  if (li->isActive()) {
     return Size(fitIn.w, sizeInfo((EmotLV*)lv, Rect(0, 0, fitIn.w, 0)) + 6 + addY);
+  }
   return Size(fitIn.w, 6 + addY);
-}
-
-void EmotLV::EmotPackInfoItem::drawInfo(EmotLV* elv, Rect& rc) {
-  eMSet* set = _emotInfo->set;
-  HDC dc = elv->getDC();
-  string textA = getItemText();
-  RECT rcz = *rc.ref();
-
-  HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
-  DrawText(dc, textA.c_str(), -1, &rcz, DT_WORDBREAK);
-  SelectObject(dc, hOldFont);
-  elv->releaseDC(dc);
-}
-
-int EmotLV::EmotPackInfoItem::sizeInfo(EmotLV* elv, Rect& rc) {
-  eMSet* set = _emotInfo->set;
-  HDC dc = elv->getDC();
-  string textA = getItemText();
-  RECT rcz = {0, 0, rc.width(), 0};
-
-  HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFont);
-  DrawText(dc, textA.c_str(), -1, &rcz, DT_CALCRECT | DT_WORDBREAK);
-  SelectObject(dc, hOldFont);
-  elv->releaseDC(dc);
-
-  return rcz.bottom;
-}
-
-void EmotLV::EmotPackInfoItem::resizeItems(EmotLV* elv, ListWnd::Item* item) {
 }
 
 bool EmotLV::EmotPackInfoItem::onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
@@ -278,10 +212,10 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
     Rect rccheck = rc;
     rccheck.left += 3;
     rccheck.top += 3;
-    _check->setPos(rccheck.getLT());
+    _selectBtn->setPos(rccheck.getLT());
 
-    if (_check->hitTest(p)) {
-      switchState(lv);
+    if (_selectBtn->hitTest(p)) {
+      switchState(elv);
       return false;
 
     } else {
@@ -289,7 +223,6 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
         elv->draged = true;
         elv->draged_id = lv->getItemIndex(li);
         elv->mmitem = elv->draged_id;
-
       }
       SetCapture(lv->getHwnd());
     }
@@ -351,26 +284,6 @@ bool EmotLV::EmotPackInfoItem::onMouseMove(ListWnd::ListView* lv, const ListWnd:
   return true;
 }
 
-bool  EmotLV::EmotPackInfoItem::onMouseDblClk(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
-  LockerCS locker(_lock);
-
-  if (vkey == VK_LBUTTON) {
-    switchState(lv);
-    return false;
-  }
-  return true;
-}
-
-bool EmotLV::EmotPackInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info) {
-  LockerCS locker(_lock);
-
-  if (vkey == VK_SPACE) {
-    switchState(lv);
-    return false;
-  }
-  return true;
-}
-
 void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent) {
   LockerCS locker(_lock);
 
@@ -397,7 +310,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
       gradient = Stamina::UI::createSimpleGradient(RGB(0,0,0), RGB(60,60,60), Size(rc.width(), rc.height()));
       textColor = RGB(255,255,255);
     } else {
-      if (_emotInfo->checked) {
+      if (isSelected()) {
         gradient = Stamina::UI::createSimpleGradient(RGB(190,252,122), RGB(219,253,181), Size(rc.width(), rc.height()));
       } else {
        gradient = Stamina::UI::createSimpleGradient(RGB(220,220,220), RGB(240,240,240), Size(rc.width(), rc.height()));
@@ -434,7 +347,7 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
     gradient = createSimpleGradient(blendRGB(active, window, 0x80), active, Size(rc.width(), rc.height()));
     textColor = colorSelectedText;
   } else {
-    if (_emotInfo->checked) {
+    if (isSelected()) {
       gradient = createSimpleGradient(blendRGB(button, window, 0xA0), button, Size(rc.width(), rc.height()));
       textColor = colorText;
     } else {
@@ -468,16 +381,16 @@ void EmotLV::EmotPackInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::
   Rect rccheck = rc;
   rccheck.left += 3;
   rccheck.top += 3;
-  _check->setPos(rccheck.getLT());
-  _check->draw(dc, p);
+  _selectBtn->setPos(rccheck.getLT());
+  _selectBtn->draw(dc, p);
 
-  HFONT hOldFont = (HFONT)SelectObject(dc, elv->hFontBold);
+  HFONT oldFont = (HFONT)SelectObject(dc, elv->_fontBold);
   COLORREF oldTextColor = SetTextColor(dc, textColor);
   rctxt.right -= emotX;
   DrawTextA(dc, name.c_str(), -1, rctxt.ref(), DT_NOPREFIX | DT_END_ELLIPSIS | DT_SINGLELINE);
   rctxt.top += emotY;
   rctxt.right += emotX;
-  SelectObject(dc, hOldFont);
+  SelectObject(dc, oldFont);
 
   if (li->isActive()) {
     drawInfo(elv, rctxt);

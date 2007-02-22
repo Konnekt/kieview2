@@ -343,7 +343,7 @@ string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
 
   return "<img src=\"" + 
     (ei->emot->isVirtual() ? 
-      "javascript:window.external.oController.getEmot(" + inttostr(ei->emot->getID()) + ");" :
+      "javascript:oController.getEmot(" + inttostr(ei->emot->getID()) + ");" :
       unifyPath(handler->getEmotDir() + "/" + ei->emotSet->getDir() + "/" + ei->emot->getImgPath())
     ) + "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
 }

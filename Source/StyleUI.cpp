@@ -16,93 +16,45 @@
 #include "iLV.h"
 
 StyleLV::StyleLV(sUIActionNotify_createWindow* an, int w, int h): iLV(an, w, h) {
-  _checked = new Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
-  _unchecked = new Icon((HICON)ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
-
-  hFontBold = CreateFont(-11, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
-  hFont = CreateFont(-11, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
-
   _last_checked = -1;
-}
-
-
-StyleLV::~StyleLV() {
-  removeAll();
-
-  DeleteObject(hFontBold);
-  DeleteObject(hFont);
-
-  removeValidLV(this);
 }
 
 UINT StyleLV::addItem(sStylePackInfo *s) {
   ListWnd::oItem item = insertEntry(new StyleInfoItem(this, s));
   UINT id = getItemIndex(item);
   getSPI(getItemIndex(item))->id = id;
+
   if (getSPI(id)->used) {
-    selectRadio(id);
+    selectItem(id);
   }
   return id;
 }
 
-ListWnd::oItem StyleLV::getItem(UINT id) {
-  if (id >= itemsCount()) return ListWnd::oItem(NULL);
-  int i = 0;
-
-  for (ListWnd::ItemList::iterator it = getItemList().begin(); it != getItemList().end(); it++, i++) { 
-    if (i == id) {
-      return *it;
-    }
-  }
-
-  return ListWnd::oItem(NULL);
-}
-
-void StyleLV::removeItem(UINT id) {
-  if (id >= itemsCount()) return;
-
-  getSPI(id)->id = -1;
-
-  ListWnd::oItem item = getItem(id);
-  removeEntry(item->getEntry());
-}
-
-void StyleLV::removeAllItems() {
-  for (int i = 0; i < itemsCount(); i++) {
-    getSPI(i)->id = -1;
-  }
-  removeAll();
-}
-
-int StyleLV::itemsCount() {
-  return this->getItemList().count();
-}
-
-void StyleLV::selectRadio(UINT id) {
+bool StyleLV::selectItem(UINT id, bool value) {
   ListWnd::oItem item = getItem(id);
   ListWnd::oItem lastItem = getItem(_last_checked);
+  StyleInfoItem* si;
+
   if (item) {
     if (_last_checked != -1 && lastItem) {
       getSPI(_last_checked)->used = false;
-      StyleInfoItem* s = (StyleInfoItem*)lastItem->getEntry().get();
-      s->_radio->setImage(_unchecked);
-      lastItem->getEntry()->refreshEntry(this, Stamina::ListWnd::RefreshFlags::refreshPaint);
+      si = (StyleInfoItem*) lastItem->getEntry().get();
+      si->setSelected(this, false);
     }
 
     getSPI(id)->used = true;
-    StyleInfoItem* s = (StyleInfoItem*)item->getEntry().get();
-    s->_radio->setImage(_checked);
-    item->getEntry()->refreshEntry(this, Stamina::ListWnd::RefreshFlags::refreshPaint);
     _last_checked = id;
 
+    si = (StyleInfoItem*) item->getEntry().get();
+    si->setSelected(this, true);
     touchConfigWnd();
   }
+  return false;
 }
 
 StyleLV::sStylePackInfo* StyleLV::getSPI(UINT id) {
   ListWnd::oItem item = this->getItem(id);
+
   if (item) {
     StyleInfoItem* si = (StyleInfoItem*) item->getEntry().get();
     return si->getStylePackInfo();
@@ -129,35 +81,10 @@ Size StyleLV::StyleInfoItem::getQuickSize() {
 Size StyleLV::StyleInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn) {
   LockerCS locker(_lock);
 
-  if (li->isActive()) 
+  if (li->isActive()) {
     return Size(fitIn.w, sizeInfo((StyleLV*)lv, Rect(0, 0, fitIn.w, 0)) + 22);
+  }
   return Size(fitIn.w, 22);
-}
-
-void StyleLV::StyleInfoItem::drawInfo(StyleLV* slv, Rect& rc) {
-  TplSet* set = _styleInfo->set;
-  HDC dc = slv->getDC();
-  string textA = getItemText();
-  RECT rcz = *rc.ref();
-
-  HFONT hOldFont = (HFONT)SelectObject(dc, slv->hFont);
-  DrawText(dc, textA.c_str(), -1, &rcz, DT_WORDBREAK);
-  SelectObject(dc, hOldFont);
-  slv->releaseDC(dc);
-}
-
-int StyleLV::StyleInfoItem::sizeInfo(StyleLV* slv, Rect& rc) {
-  TplSet* set = _styleInfo->set;
-  HDC dc = slv->getDC();
-  string textA = getItemText();
-  RECT rcz = {0, 0, rc.width(), 0};
-
-  HFONT hOldFont = (HFONT)SelectObject(dc, slv->hFont);
-  DrawText(dc, textA.c_str(), -1, &rcz, DT_CALCRECT | DT_WORDBREAK);
-  SelectObject(dc, hOldFont);
-  slv->releaseDC(dc);
-
-  return rcz.bottom;
 }
 
 bool StyleLV::StyleInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
@@ -175,36 +102,12 @@ bool StyleLV::StyleInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::o
     Rect rcradio = rc;
     rcradio.left += 3;
     rcradio.top += 3;
-    _radio->setPos(rcradio.getLT());
+    _selectBtn->setPos(rcradio.getLT());
 
-    if (_radio->hitTest(p)) {
-      slv->selectRadio(slv->getItemIndex(li));
+    if (_selectBtn->hitTest(p)) {
+      slv->selectItem(slv->getItemIndex(li));
       return false;
     }
-  }
-  return true;
-}
-
-bool StyleLV::StyleInfoItem::onMouseDblClk(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos) {
-  LockerCS locker(_lock);
-
-  StyleLV* slv = (StyleLV*) lv;
-
-  if (vkey == VK_LBUTTON) {
-    slv->selectRadio(slv->getItemIndex(li));
-    return false;
-  }
-  return true;
-}
-
-bool StyleLV::StyleInfoItem::onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info) {
-  LockerCS locker(_lock);
-
-  StyleLV* slv = (StyleLV*) lv;
-
-  if (vkey == VK_SPACE) {
-    slv->selectRadio(slv->getItemIndex(li));
-    return false;
   }
   return true;
 }
@@ -294,13 +197,13 @@ void StyleLV::StyleInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oI
   Rect rcradio = rc;
   rcradio.left += 3;
   rcradio.top += 3;
-  _radio->setPos(rcradio.getLT());
-  _radio->draw(dc, p);
+  _selectBtn->setPos(rcradio.getLT());
+  _selectBtn->draw(dc, p);
 
-  HFONT hOldFont = (HFONT)SelectObject(dc, slv->hFontBold);
+  HFONT oldFont = (HFONT)SelectObject(dc, slv->_fontBold);
   COLORREF oldTextColor = SetTextColor(dc, textColor);
   DrawTextA(dc, name.c_str(), -1, rctxt.ref(), DT_NOPREFIX | DT_END_ELLIPSIS | DT_SINGLELINE);
-  SelectObject(dc, hOldFont);
+  SelectObject(dc, oldFont);
   rctxt.top += 16;
 
   if (li->isActive()) {

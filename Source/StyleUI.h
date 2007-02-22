@@ -33,7 +33,6 @@ public:
 
 public:
   StyleLV(sUIActionNotify_createWindow* an, int w, int h);
-  virtual ~StyleLV();
 
 public:
   struct sStylePackInfo {
@@ -45,19 +44,12 @@ public:
     sStylePackInfo(): used(false) { }
   };
 
-  typedef std::vector<ListWnd::Item*> tItems;
-
 public:
+  UINT addItem(sStylePackInfo* pack);
+  sStylePackInfo* getSPI(UINT id);
+  bool selectItem(UINT id, bool value = true);
 
-  virtual UINT addItem(sStylePackInfo* pack);
-  virtual void removeItem(UINT id);
-  virtual void removeAllItems();
-  virtual int itemsCount();
-  virtual ListWnd::oItem getItem(UINT id);
-  virtual sStylePackInfo* getSPI(UINT id);
-  virtual void selectRadio(UINT id);
-
-  virtual void saveState() {
+  void saveState() {
     if (!itemsCount()) return;
 
     for (UINT i = 0; i < itemsCount(); i++) {
@@ -67,24 +59,17 @@ public:
   }
 
 protected:
-  oImage _checked;
-  oImage _unchecked;
   UINT _last_checked;
 
-  HFONT hFontBold;
-  HFONT hFont;
-
 public:
-  class StyleInfoItem: public ListWnd::EntryImpl {
+  class StyleInfoItem: public iLV::iEntry {
   public:
-    friend StyleLV;
+    friend class StyleLV;
 
   public:
-    STAMINA_OBJECT_CLASS_VERSION(StyleInfoItem, ListWnd::EntryImpl, Version(0,1,0,0));
+    STAMINA_OBJECT_CLASS_VERSION(StyleInfoItem, iLV::iEntry, Version(0,1,0,0));
 
-    StyleInfoItem(StyleLV* parent, sStylePackInfo* styleInfo): _styleInfo(styleInfo) {
-      _radio = new DrawableButtonBasic(Rect(0,0,16,16), styleInfo->used ? parent->_checked : parent->_unchecked);
-    }
+    StyleInfoItem(StyleLV* parent, sStylePackInfo* styleInfo): _styleInfo(styleInfo), iLV::iEntry(parent, styleInfo->used) { }
 
     Size getMinSize();
     Size getMaxSize();
@@ -92,11 +77,8 @@ public:
     Size getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn);
 
     void paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent);
-    void drawInfo(StyleLV* slv, Rect& rc);
-    int sizeInfo(StyleLV* slv, Rect& rc);
-    void resizeItems(StyleLV* slv, ListWnd::Item* item);
 
-    string getItemText() {
+    string getText() {
       TplSet* set = _styleInfo->set;
       string text;
 
@@ -107,15 +89,11 @@ public:
     }
 
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
-    bool onMouseDblClk(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
-    bool onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info);
 
     sStylePackInfo* getStylePackInfo();
 
   protected:
-    oDrawableButton _radio;
     sStylePackInfo* _styleInfo;
-    CriticalSection _lock;
   };
 };
 

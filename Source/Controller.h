@@ -131,7 +131,7 @@ namespace kIEview2 {
       signals::connect_position pos = signals::at_back, bool overwrite = true);
 
     IECtrl::Var getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj);
-    IECtrl::Var getJSController(IECtrl::Var& args, IECtrl::iObject* obj);
+    IECtrl::Var getJSController();
 
     int readMsgs(tCntId cnt, int howMany, int sessionOffset = 0);
     int readLastMsgSession(tCntId cnt, int sessionOffset = 0);
@@ -286,7 +286,7 @@ namespace kIEview2 {
   namespace JS {
     class Controller : public IECtrl::iObject {
     public:
-      Controller(IECtrl::Var& args): iObject(NULL, true), pCtrl(::Controller::getInstance()) {
+      Controller(): iObject(NULL, true), pCtrl(::Controller::getInstance()) {
         bindMethod("getPluginVersion", bind(&Controller::getPluginVersion, this, _1, _2));
         bindMethod("getPluginName", bind(&Controller::getPluginName, this, _1, _2));
         bindMethod("getEmot", bind(&Controller::getEmot, this, _1, _2));
@@ -306,7 +306,7 @@ namespace kIEview2 {
           throw IECtrl::JSException(e.getReason());
         }
         if (emot->isVirtual()) {
-          return (char*) emot->getRawData().getString();
+          return emot->getRawData();
         }
         // wczytujemy plik z img_path i zwracamy
         return "ssaj";

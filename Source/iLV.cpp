@@ -18,6 +18,14 @@ namespace kIEview2 {
   iLV::tInstances iLV::_instances;
 
   iLV::iLV(sUIActionNotify_createWindow* an, int w, int h): ListWnd::ListView(an->x, an->y + 5, w, h, an->hwndParent, 0) {
+    _unChecked = new Icon((HICON) ICMessage(IMI_ICONGET, kIEview2::ico::unchecked, IML_16), false);
+    _checked = new Icon((HICON) ICMessage(IMI_ICONGET, kIEview2::ico::checked, IML_16), false);
+
+    _fontNormal = CreateFont(-11, 0, 0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
+    _fontBold = CreateFont(-11, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma");
+
     alwaysShowScrollbars(false, false);
     addValidLV(this);
 
@@ -31,6 +39,9 @@ namespace kIEview2 {
   }
 
   iLV::~iLV() {
+    DeleteObject(_fontNormal);
+    DeleteObject(_fontBold);
+
     removeValidLV(this);
   }
 

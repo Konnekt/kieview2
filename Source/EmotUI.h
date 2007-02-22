@@ -34,7 +34,6 @@ public:
 
 public:
   EmotLV(sUIActionNotify_createWindow* an, int w, int h);
-  virtual ~EmotLV();
 
 public:
   struct sEmotPackInfo {
@@ -47,15 +46,9 @@ public:
     sEmotPackInfo(): checked(false) { }
   };
 
-  typedef std::vector<ListWnd::Item*> tItems;
-
 public:
   virtual UINT addItem(sEmotPackInfo* pack);
   virtual bool moveItem(UINT id, int pos);
-  virtual void removeItem(UINT id);
-  virtual void removeAllItems();
-  virtual int itemsCount();
-  virtual ListWnd::oItem getItem(UINT id);
   virtual sEmotPackInfo* getEPI(UINT id);
 
   virtual void saveState() {
@@ -71,30 +64,18 @@ public:
 protected:
   void onMouseMove(int vkey, const Stamina::Point &pos);
   void onMouseUp(int vkey, const Stamina::Point &pos);
-  void onMouseDown(int vkey, const Stamina::Point &pos);
-  void onKeyDown(int vkey, int info);
 
 protected:
-  tItems _items;
-
-  oImage _checked;
-  oImage _unchecked;
-
   bool draged;
   UINT draged_id;
   int mmitem;
 
-  HFONT hFontBold;
-  HFONT hFont;
-
 public:
-  class EmotPackInfoItem: public ListWnd::EntryImpl {
+  class EmotPackInfoItem: public iLV::iEntry {
   public:
-    STAMINA_OBJECT_CLASS_VERSION(EmotPackInfoItem, ListWnd::EntryImpl, Version(0,1,0,0));
+    STAMINA_OBJECT_CLASS_VERSION(EmotPackInfoItem, iLV::iEntry, Version(0,1,0,0));
 
-    EmotPackInfoItem(EmotLV* parent, sEmotPackInfo* emotInfo): _emotInfo(emotInfo) {
-      _check = new DrawableButtonBasic(Rect(0,0,16,16), emotInfo->checked ? parent->_checked : parent->_unchecked);
-    }
+    EmotPackInfoItem(EmotLV* parent, sEmotPackInfo* emotInfo): _emotInfo(emotInfo), iLV::iEntry(parent, emotInfo->checked) { }
 
     Size getMinSize();
     Size getMaxSize();
@@ -102,20 +83,8 @@ public:
     Size getEntrySize(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent, Size fitIn);
 
     void paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent);
-    void drawInfo(EmotLV* elv, Rect& rc);
-    int sizeInfo(EmotLV* elv, Rect& rc);
-    void resizeItems(EmotLV* elv, ListWnd::Item* item);
 
-    virtual void switchState(ListWnd::ListView* lv) {
-      EmotLV* elv = (EmotLV*)lv;
-
-      _check->setImage(_emotInfo->checked ? elv->_unchecked.get() : elv->_checked.get());
-      _emotInfo->checked = !_emotInfo->checked;
-      refreshEntry(lv, Stamina::ListWnd::RefreshFlags::refreshPaint);
-      touchConfigWnd();
-    }
-
-    string getItemText() {
+    string getText() {
       eMSet* set = _emotInfo->set;
       string text;
 
@@ -129,15 +98,11 @@ public:
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
     bool onMouseUp(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
     bool onMouseMove(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
-    bool onMouseDblClk(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);
-    bool onKeyDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, int info);
 
     sEmotPackInfo* getEmotPackInfo();
 
   protected:
     sEmotPackInfo* _emotInfo;
-    oDrawableButton _check;
-    CriticalSection _lock;
   };
 };
 

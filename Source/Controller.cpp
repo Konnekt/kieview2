@@ -21,8 +21,8 @@
 namespace kIEview2 {
   // initialization
   Controller::Controller(): jsController(0), styleLV(0), emotLV(0), ieVersion(getIEVersion()) {
-    IECtrl::getGlobal()->bindMethod("oController", bind(&Controller::getJSController, this, _1, _2), true);
-    IECtrl::getGlobal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2), false);
+    IECtrl::getGlobal()->bindMethod("oController", bind(resolve_cast0(&Controller::getJSController), this), true);
+    IECtrl::getGlobal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2));
 
     /* Static values like net, type or version */
     this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
@@ -126,7 +126,7 @@ namespace kIEview2 {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
     tplHandler->setKonnektPath(kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR));
 
-    // emotHandler.addParser(new JispParser);
+    emotHandler.addParser(new JispParser);
     emotHandler.addParser(new GGParser);
 
     styleHandler.loadPackages();
@@ -482,7 +482,6 @@ namespace kIEview2 {
   void Controller::_styleLV() {
     if (getAN()->code == ACTN_CREATEWINDOW) {
       styleLV = new StyleLV((sUIActionNotify_createWindow*) getAN(), 220, 120);
-     // styleLV->setEnabled(config->getInt(cfg::useS));
       styleHandler.fillLV(styleLV);
     }
   }
@@ -604,9 +603,9 @@ namespace kIEview2 {
     throw IECtrl::JSException("Invalid IE Control ref ID");
   }
 
-  IECtrl::Var Controller::getJSController(IECtrl::Var& args, IECtrl::iObject* obj) {
+  IECtrl::Var Controller::getJSController() {
     if (!jsController) {
-      jsController = new JS::Controller(args);
+      jsController = new JS::Controller;
     }
     return jsController;
   }
@@ -979,10 +978,8 @@ namespace kIEview2 {
   String Controller::preLinkify(StringRef& txt) {
     if (txt.length() > 20480) return PassStringRef(txt);
 
-    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%;]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", 
-      &Controller::linkInsertion, txt.c_str());
-    txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-]+)@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6}))~i", 
-      &Controller::eMailInsertion, txt.c_str());
+    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/:?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%-]+(?:=[a-z0-9_.%:/+-]*)?(?:&[a-z0-9_.%-;]+(?:=[a-z0-9_.%:/+-]*)?)*)?(?:#[a-z0-9_%.]+)?)(\\1)?~i", &Controller::linkInsertion, txt.c_str());
+    txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-]+)@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6}))~i", &Controller::eMailInsertion, txt.c_str());
 
     return PassStringRef(txt);
   }

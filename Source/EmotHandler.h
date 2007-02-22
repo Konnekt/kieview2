@@ -261,9 +261,9 @@ public:
   }
 
   void reloadPackages(StyleLV* lv = 0) {
-    if (!StyleLV::isVaildLV(lv)) lv = 0;
+    if (!StyleLV::isValidLV(lv)) lv = 0;
 
-    if (lv) lv->removeAllItems();
+    if (lv) lv->removeAll();
     loadPackages();
     loadSettings();
     if (lv) fillLV(lv);
@@ -343,7 +343,7 @@ public:
   void reloadPackages(EmotLV* lv = 0) {
     if (!EmotLV::isValidLV(lv)) lv = 0;
 
-    if (lv) lv->removeAllItems();
+    if (lv) lv->removeAll();
     loadPackages();
     loadSettings();
     if (lv) fillLV(lv);
