@@ -194,6 +194,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\EmotParser.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\EmotUI.cpp"
 				>
 			</File>
@@ -254,6 +258,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\Source\StyleHandler.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\StyleUI.cpp"
 				>
 			</File>
@@ -304,6 +312,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\EmotParser.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\Emots.h"
 				>
 			</File>
@@ -348,6 +360,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\oZip.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\PlugController.h"
 				>
 			</File>
@@ -361,6 +377,10 @@
 			</File>
 			<File
 				RelativePath="..\Source\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Source\StyleHandler.h"
 				>
 			</File>
 			<File

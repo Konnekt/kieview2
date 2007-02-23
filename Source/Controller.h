@@ -25,6 +25,8 @@
 
 #include "ActionHandler.h"
 #include "TplHandler.h"
+
+#include "StyleHandler.h"
 #include "EmotHandler.h"
 
 #include "StyleUI.h"

@@ -5,7 +5,6 @@
   *
   *  @filesource
   *  @copyright    Copyright (c) 2006-2007 Sijawusz Pur Rahnama
-  *  @copyright    Copyright (c) 2006-2007 Micha³ "Dulek" Dulko
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
   *  @version      $Revision: 43 $
   *  @modifiedby   $LastChangedBy: sija $

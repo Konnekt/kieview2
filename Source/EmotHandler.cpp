@@ -1,11 +1,10 @@
 /**
-  *  kIEview2 Emot parsers
+  *  kIEview2 Emot handler class
   *
   *  Any modifications or reusing strictly prohibited!
   *
   *  @filesource
   *  @copyright    Copyright (c) 2006-2007 Sijawusz Pur Rahnama
-  *  @copyright    Copyright (c) 2006-2007 Micha³ "Dulek" Dulko
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
   *  @version      $Revision: 19 $
   *  @modifiedby   $LastChangedBy: sija $
@@ -18,244 +17,6 @@
 #include "EmotHandler.h"
 #include "Controller.h"
 
-eMSet JispParser::parse(const string& filePath, const string& fileDir) {
-  String code;
-  Zip zip;
-
-  try {
-    zip.open(filePath);
-    code = zip.getFile(fileDir + "/icondef.xml");
-  } catch(const Exception& e) {
-    throw CannotOpen(e.getReason());
-  }
-
-  xmlpp::DomParser parser;
-  parser.set_substitute_entities();
-
-  xmlpp::Node* rootNode;
-  xmlpp::Node* metaNode;
-  xmlpp::Node::NodeList icons;
-  xmlpp::Node::NodeList nodes;
-  xmlpp::Attribute* attrib;
-  eMSet result;
-
-  try {
-    parser.parse_memory(code.c_str());
-  } catch (const xmlpp::exception& e) {
-    throw XMLParserException(e.what());
-  }
-
-  rootNode = parser.get_document()->get_root_node();
-  if (rootNode->get_name() != "icondef") throw WrongFormat("Z³a nazwa korzenia dokumentu (z³y format ?)");
-
-  nodes = rootNode->get_children("meta");
-  if (nodes.size() != 1) throw WrongFormat("Nie ma dok³adnie jednego elementu 'meta'");
-  metaNode = *nodes.begin();
-  if (!metaNode) throw WrongFormat("Element 'meta' nie zawiera dzieci");
-
-  nodes = metaNode->get_children("name");
-  if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.setName(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
-  }
-
-  nodes = metaNode->get_children("version");
-  if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.setVersion(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
-  }
-
-  nodes = metaNode->get_children("description");
-  if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.setDescription(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
-  }
-
-  nodes = metaNode->get_children("author");
-  for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
-    if (dynamic_cast<xmlpp::Element*>(*it)) {
-      attrib = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("jid");
-      result.addAuthor(eMAuthor(dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str(),
-        attrib ? attrib->get_value().c_str() : ""));
-    }
-  }
-
-  nodes = metaNode->get_children("creation");
-  if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    // result.setCTime(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
-  }
-
-  nodes = metaNode->get_children("home");
-  if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.setUrl(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
-  }
-  
-  icons = rootNode->get_children("icon");
-  for (xmlpp::Node::NodeList::iterator it = icons.begin(); it != icons.end(); it++) {
-    eM emot(true, false, true);
-    string mime;
-
-    nodes = (*it)->get_children("object");
-    for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
-      if (dynamic_cast<xmlpp::Element*>(*it) && dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")) {
-        mime = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")->get_value();
-        if (mime == "image/png" || mime == "image/gif" || mime == "image/jpeg") {
-          // emot.menu_img_path = emot.img_path = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content();
-
-          try {
-            emot.setRawData(zip.getBinaryFile(fileDir + "/" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content()));
-          } catch(const Exception& e) {
-            throw CannotOpen(e.getReason());
-          }
-          break;
-        }
-        mime.clear();
-      }
-    }
-
-    if (mime.empty()) continue;
-
-    nodes = (*it)->get_children("text");
-    if (nodes.empty()) throw WrongFormat("Brak tekstu do zamiany");
-
-    for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
-      if (dynamic_cast<xmlpp::Element*>(*it)) {
-        emot.setText(dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str());
-        attrib = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("regexp");
-        if (attrib) {
-          emot.setPreg((bool) atoi(attrib->get_value().c_str()));
-        }
-        result.addEmot(emot);
-      }
-    }
-  }
-
-  result.setDir(fileDir);
-  zip.close();
-  return result;
-}
-
-eMSet GGParser::parse(const string& filePath, const string& fileDir) {
-  ifstream file(filePath.c_str());
-  string code, buff;
-
-  if (!file.is_open()) {
-    throw CannotOpen("Cannot open file " + filePath);
-  }
-
-  while (!file.eof()) {
-    getline(file, buff);
-    code += buff + "\n";
-  }
-  file.close();
-
-  eMSet result;
-  tStringVector strings;
-  bool inMenu;
-
-  Stamina::split(code, "\n", strings);
-  RegEx reg;
-
-  for (tStringVector::iterator it = strings.begin(); it != strings.end(); it++) {
-    eMSet::tEmots emots;
-
-    if ((*it)[0] == '*') {
-      inMenu = false;
-      (*it).erase(0);
-    } else {
-      inMenu = true;
-    }
-
-    reg.setSubject(*it);
-    reg.setPattern("/,?\"(.+?)\",?/");
-
-    while (reg.match_global()) {
-      eM emot(inMenu, reg[1][0] == '/');
-      emot.setText(reg[1].c_str());
-      emots.push_back(emot);
-
-      if (reg.getSubject()[reg.getStart()] == ')' || (*it)[0] != '(') {
-        string img_path;
-        string menu_img_path;
-
-        if (reg.match_global()) {
-          img_path = reg[1];
-          menu_img_path = reg.match_global() ? reg[1] : img_path;
-
-          for (eMSet::tEmots::iterator it = emots.begin(); it != emots.end(); it++) {
-            it->setMenuImgPath(menu_img_path);
-            it->setImgPath(img_path);
-          }
-        } else {
-          throw WrongFormat("Brak œcie¿ki do obrazka");
-        }
-        break;
-      }
-    }
-    result.getEmots().insert(result.getEmots().end(), emots.begin(), emots.end());
-  }
-
-  result.setName(fileDir);
-  result.setDir(fileDir);
-
-  return result;
-}
-
-string StyleHandler::getCurrentStyleDir() {
-  string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
-
-  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
-    if (it->getDir() == currentStyle) return getDir() + "\\" + it->getDir();
-  }
-  return getKonnektPath() + "data\\templates\\core";
-}
-
-void StyleHandler::loadSettings() {
-  string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
-
-  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
-    if (it->getDir() == currentStyle) {
-      it->setEnabled(true); break;
-    }
-  }
-  Controller::getInstance()->getTplHandler()->clearDirs();
-  Controller::getInstance()->getTplHandler()->addTplDir(getDir() + "/" + currentStyle + "/");
-  Controller::getInstance()->getTplHandler()->addTplDir("data/templates/core/");
-}
-
-void StyleHandler::saveSettings() {
-  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
-    if (it->isEnabled()) {
-      Controller::getConfig()->set(cfg::currentStyle, it->getDir()); break;
-    }
-  }
-}
-
-void StyleHandler::fillLV(iLV* _lv) {
-  StyleLV* lv = (StyleLV*) _lv;
-  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
-    lv->addItem(new StyleLV::sStylePackInfo(it->isEnabled(), &*it));
-  }
-}
-
-void StyleHandler::loadPackages() {
-  clearPackages();
-
-  string tplDir = Controller::getConfig()->getChar(cfg::stylesDir);
-  Dir::tItems tplDirs;
-
-  try {
-    tplDirs = Dir::getDirs(tplDir + "\\*");
-  } catch (const Exception& e) {
-    IMLOG("[StyleHandler::loadPackages()] Nie znaleziono katalogu z szablonami (%s) !", e.getReason().a_str());
-    return;
-  }
-  if (!tplDirs.size()) {
-    IMLOG("[StyleHandler::loadPackages()] Brak katalogów z pakietami !");
-    return;
-  }
-
-  for (Dir::tItems::iterator it = tplDirs.begin(); it != tplDirs.end(); it++) {
-    styleSets.push_back(TplSet(it->cFileName, it->cFileName));
-  }
-}
 void EmotHandler::loadSettings() {
   string data = Controller::getConfig()->getChar(cfg::emotPacks);
   data = trim(data, "\n");
@@ -386,12 +147,15 @@ void EmotHandler::loadPackages() {
   clearPackages();
 
   string emotDir = getDir();
-  Dir::tItems emotDirs;
 
-  try {
-    emotDirs = Dir::getDirs(emotDir + "\\*");
-  } catch (const Exception& e) {
-    IMLOG("[EmotHandler::loadPackages()] Nie znaleziono katalogu z emotami (%s) !", e.getReason().a_str());
+  FindFile find;
+  find.setMask(emotDir + "\\*");
+  find.setDirOnly();
+
+  FindFile::tFoundFiles emotDirs = find.makeList();
+
+  if (find.nothingFound()) {
+    IMLOG("[EmotHandler::loadPackages()] Nie znaleziono katalogu z emotami !");
     return;
   }
   if (!emotDirs.size()) {
@@ -399,16 +163,16 @@ void EmotHandler::loadPackages() {
     return;
   }
 
-  for (Dir::tItems::iterator it = emotDirs.begin(); it != emotDirs.end(); it++) {
+  for (FindFile::tFoundFiles::iterator it = emotDirs.begin(); it != emotDirs.end(); it++) {
     for (tParsers::iterator it2 = parsers.begin(); it2 != parsers.end(); it2++) {
 
-      string fileName = unifyPath(emotDir + "/" + it->cFileName + "/" + (*it2)->getDefFileName(it->cFileName));
+      string fileName = unifyPath(emotDir + "/" + it->getFileName() + "/" + (*it2)->getDefFileName(it->getFileName()));
       if (!fileExists(fileName.c_str())) continue;
 
       try {
-        emotSets.push_back((*it2)->parse(fileName, it->cFileName));
-      } catch (const EmotParserException& e) {
-        IMLOG("[EmotHandler::loadPackages()] b³¹d podczas parsowania paczki emot (%s): %s", it->cFileName, e.getReason().a_str());
+        emotSets.push_back((*it2)->parse(fileName, it->getFileName()));
+      } catch (const Exception& e) {
+        IMLOG("[EmotHandler::loadPackages()] b³¹d podczas parsowania paczki emot (%s): %s", it->getFileName(), e.getReason().a_str());
       }
       break;
     }
