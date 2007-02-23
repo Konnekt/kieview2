@@ -25,53 +25,53 @@ public:
     virtual ~eM() { }
 
 public:
-  UINT getID() {
+  inline UINT getID() const {
     return _id;
   }
 
-  virtual ByteBuffer getRawData() {
+  virtual const ByteBuffer& getRawData() const {
     return _img_data;
   }
   virtual void setRawData(const ByteBuffer& new_data) {
     _img_data.assign(new_data);
   }
 
-  virtual string getImgPath() {
+  virtual string getImgPath() const {
     return _img_path;
   }
   virtual void setImgPath(const StringRef& new_path) {
     _img_path = new_path;
   }
 
-  virtual string getMenuImgPath() {
+  virtual string getMenuImgPath() const {
     return _img_path;
   }
   virtual void setMenuImgPath(const StringRef& new_path) {
     _menu_img_path = new_path;
   }
 
-  virtual String getText() {
+  virtual String getText() const {
     return _text;
   }
   virtual void setText(const StringRef& new_text) {
     _text = new_text;
   }
 
-  virtual bool isVirtual() {
+  virtual bool isVirtual() const {
     return _virtual;
   }
   virtual void setVirtual(bool value) {
     _virtual = value;
   }
 
-  virtual bool isPreg() {
+  virtual bool isPreg() const {
     return _preg;
   }
   virtual void setPreg(bool value) {
     _preg = value;
   }
 
-  virtual bool inMenu() {
+  virtual bool inMenu() const {
     return _in_menu;
   }
   virtual void setInMenu(bool value) {
@@ -98,14 +98,14 @@ public:
   virtual ~eMAuthor() { }
 
 public:
-  virtual String getName() {
+  virtual String getName() const {
     return _name;
   }
   virtual void setName(const StringRef& name) {
     _name = name;
   }
 
-  virtual String getJid() {
+  virtual String getJid() const {
     return _jid;
   }
   virtual void setJid(const StringRef& jid) {
@@ -128,33 +128,33 @@ public:
   virtual ~eMSet() { }
 
 public:
-  bool operator < (eMSet& other) {
+  bool operator < (eMSet& other) const {
     return getPos() < other.getPos();
   }
 
 public:
-  virtual Date64 getCTime() {
+  virtual const Date64& getCTime() const {
     return _creationTime;
   }
   virtual void setCTime(const Date64& cTime) {
     _creationTime = cTime;
   }
 
-  virtual String getUrl() {
+  virtual String getUrl() const {
     return _url;
   }
   virtual void setUrl(const StringRef& url) {
     _url = url;
   }
 
-  virtual int getPos() {
+  virtual int getPos() const {
     return _pos;
   }
   virtual void setPos(int value) {
     _pos = value;
   }
 
-  virtual tAuthors& getAuthors() {
+  virtual const tAuthors& getAuthors() const {
     return _authors;
   }
   virtual void addAuthor(const eMAuthor& author) {

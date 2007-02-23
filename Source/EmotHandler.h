@@ -42,9 +42,19 @@ public:
 
 public:
   typedef vector<sEmotInsertion> tEmotInsertions;
-  typedef map<int, list<eMSet*>> tNetEmotSets;
   typedef list<eMParser*> tParsers;
   typedef list<eMSet> tEmotSets;
+
+public:
+  EmotHandler& operator << (eMParser* parser) {
+    addParser(parser);
+    return *this;
+  }
+
+  EmotHandler& operator >> (StringRef& body) {
+    body = parse(body);
+    return *this;
+  }
 
 public:
   EmotHandler() {
@@ -74,7 +84,7 @@ public:
   void addParser(eMParser* parser) {
     parsers.push_back(parser);
   }
-  String parse(const StringRef& body, int net);
+  String parse(const StringRef& body);
 
   void fillLV(iLV* lv);
 

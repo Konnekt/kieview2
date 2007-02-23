@@ -123,16 +123,10 @@ void EmotHandler::parseSet(RegEx& reg, eMSet& set) {
   }
 }
 
-String EmotHandler::parse(const StringRef& body, int net) {
+String EmotHandler::parse(const StringRef& body) {
   RegEx reg;
   reg.setSubject(prepareBody(body));
 
-  /*
-  if (emotSetsByNet.find(net) != emotSetsByNet.end() && emotSetsByNet[net].size()) {
-    for (list<eMSet*>::iterator it = emotSetsByNet[net].begin(); it != emotSetsByNet[net].end(); it++) {
-      parseSet(reg, **it);
-    }
-  } */
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
     parseSet(reg, *it);
   }
@@ -146,10 +140,8 @@ String EmotHandler::parse(const StringRef& body, int net) {
 void EmotHandler::loadPackages() {
   clearPackages();
 
-  string emotDir = getDir();
-
   FindFile find;
-  find.setMask(emotDir + "\\*");
+  find.setMask(getDir() + "\\*");
   find.setDirOnly();
 
   FindFile::tFoundFiles emotDirs = find.makeList();
@@ -166,7 +158,7 @@ void EmotHandler::loadPackages() {
   for (FindFile::tFoundFiles::iterator it = emotDirs.begin(); it != emotDirs.end(); it++) {
     for (tParsers::iterator it2 = parsers.begin(); it2 != parsers.end(); it2++) {
 
-      string fileName = unifyPath(emotDir + "/" + it->getFileName() + "/" + (*it2)->getDefFileName(it->getFileName()));
+      string fileName = unifyPath(it->getDirectory() + "/" + (*it2)->getDefFileName(it->getFileName()));
       if (!fileExists(fileName.c_str())) continue;
 
       try {

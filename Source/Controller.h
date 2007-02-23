@@ -20,6 +20,7 @@
 #include "kIEview2.h"
 #include "PlugController.h"
 #include "Helpers.h"
+
 #include "IECtrl.h"
 #include "RtfHtml.h"
 
@@ -149,7 +150,7 @@ namespace kIEview2 {
       if (escape) txt = htmlEscape(txt);
       if (_nl2br) txt = nl2br(txt);
       if (linkify) txt = preLinkify(txt);
-      if (emots) txt = emotHandler.parse(txt, /* config->getInt(CNT_NET, an->act.cnt) */ 0);
+      if (emots) emotHandler >> txt;
       if (linkify) txt = postLinkify(txt);
 
       return normalizeSpaces(txt);
@@ -308,7 +309,7 @@ namespace kIEview2 {
           throw IECtrl::JSException(e.getReason());
         }
         if (emot->isVirtual()) {
-          return emot->getRawData();
+          return (ByteBuffer) emot->getRawData();
         }
         // wczytujemy plik z img_path i zwracamy
         return "ssaj";
@@ -317,8 +318,8 @@ namespace kIEview2 {
       IECtrl::Var getPluginName(IECtrl::Var& args, IECtrl::iObject* obj) {
         if (args.empty() || !args[0].isInteger()) return false;
 
-        if (int plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL)) {
-          return SAFECHAR((char*) Ctrl->IMessageDirect(IM_PLUG_NAME, plugID));
+        if (int plugID = pluginExists(args[0].getInteger())) {
+          return getPlugName(plugID);
         }
         throw IECtrl::JSException("Plugin not found");
       }
