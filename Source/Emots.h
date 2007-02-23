@@ -162,12 +162,4 @@ protected:
   int _pos;
 };
 
-class TplSet : public iPackage {
-public:
-  TplSet(const StringRef& name, const string& dir, const string& version = "", const StringRef& description = ""):
-    iPackage(name, dir, version, description) { }
-  TplSet() { }
-  virtual ~TplSet() { }
-};
-
 #endif // __EMOTS_H__

@@ -19,22 +19,40 @@
 #include "iPackage.h"
 #include "iLV.h"
 
+class iPackageParser {
+public:
+  virtual void setDefinitionFilter(FindFileFiltered& files) = 0;
+  virtual iPackage* parse(const FindFile::Found& defFile) = 0;
+};
+
 class iPackageHandler : public iObject {
 public:
   /* Class version */
   STAMINA_OBJECT_CLASS_VERSION(iPackageHandler, iObject, Version(0,1,0,0));
 
 public:
+  typedef list<iPackageParser*> tParsers;
   typedef list<iPackage*> tPackages;
 
 public:
   iPackageHandler(): _dirColID(0) { }
   virtual ~iPackageHandler() {
-    /*
     for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
       delete *it;
     }
-    */
+    for (tParsers::iterator it = _parsers.begin(); it != _parsers.end(); it++) {
+      delete *it;
+    }
+  }
+
+public:
+  iPackageHandler& operator << (iPackageParser* parser) {
+    addParser(parser);
+    return *this;
+  }
+  iPackageHandler& operator << (iPackage* package) {
+    addPackage(package);
+    return *this;
   }
 
 public:
@@ -43,12 +61,16 @@ public:
   virtual string getKonnektPath();
   virtual string getDir();
 
-  virtual void clearPackages() = 0;
-  /*
+  virtual void addParser(iPackageParser* parser) {
+    _parsers.push_back(parser);
+  }
+  virtual void addPackage(iPackage* package) {
+    _packages.push_back(package);
+  }
+
   virtual void clearPackages() {
     if (_packages.size()) _packages.clear();
   }
-  */
   virtual void reloadPackages(iLV* lv = 0) {
     bool validLV = iLV::isValidLV(lv);
 
@@ -57,14 +79,15 @@ public:
     loadSettings();
     if (validLV) fillLV(lv);
   }
-  virtual void loadPackages() = 0;
+  virtual void loadPackages();
 
   virtual void loadSettings() = 0;
   virtual void saveSettings() = 0;
 
 protected:
   Tables::tColId _dirColID;
-  // tPackages _packages;
+  tPackages _packages;
+  tParsers _parsers;
 };
 
 #endif // __IPACKAGEHANDLER_H__

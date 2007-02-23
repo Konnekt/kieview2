@@ -16,18 +16,20 @@
 #ifndef __STYLEHANDLER_H__
 #define __STYLEHANDLER_H__
 
-#include <stamina/findfile.h>
-
 #include "iPackageHandler.h"
-#include "Emots.h"
+
+class TplSet : public iPackage {
+public:
+  TplSet(const StringRef& name, const string& dir, const string& version = "", const StringRef& description = ""):
+    iPackage(name, dir, version, description) { }
+  TplSet() { }
+  virtual ~TplSet() { }
+};
 
 class StyleHandler : public iPackageHandler {
 public:
   /* Class version */
   STAMINA_OBJECT_CLASS_VERSION(StyleHandler, iPackageHandler, Version(0,1,0,0));
-
-public:
-  typedef list<TplSet> tStyleSets;
 
 public:
   StyleHandler() {
@@ -37,18 +39,10 @@ public:
 public:
   void fillLV(iLV* lv);
 
-  void clearPackages() {
-    if (styleSets.size()) styleSets.clear();
-  }
-  void loadPackages();
-
   void loadSettings();
   void saveSettings();
 
   string getCurrentStyleDir();
-
-protected:
-  tStyleSets styleSets;
 };
 
 #endif // __STYLEHANDLER_H__

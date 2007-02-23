@@ -19,6 +19,7 @@
 
 #include <fstream>
 
+#include "iPackageHandler.h"
 #include "Emots.h"
 #include "oZip.h"
 
@@ -34,16 +35,10 @@ public:
   WrongFormat(const StringRef& reason): EmotParserException(reason) { }
 };
 
-class eMParser {
-public:
-  virtual string getDefFileName(const string& fileDir) = 0;
-  virtual eMSet parse(const string& filePath, const string& fileDir) = 0;
-};
-
 /*
  * JISP emot definition parser
  */
-class JispParser: public eMParser {
+class JispParser: public iPackageParser {
 public:
   class XMLParserException: public EmotParserException {
   public:
@@ -51,21 +46,21 @@ public:
   };
 
 public:
-  string getDefFileName(const string& fileDir) {
-    return fileDir + ".jisp";
+  void setDefinitionFilter(FindFileFiltered& files) {
+    files.setMask(files.found().getDirectory() + "*.jisp");
   }
-  eMSet parse(const string& filePath, const string& fileDir);
+  iPackage* parse(const FindFile::Found& defFile);
 };
 
 /*
  * GG emot definition parser
  */
-class GGParser: public eMParser {
+class GGParser: public iPackageParser {
 public:
-  string getDefFileName(const string& fileDir) {
-    return "emots.txt";
+  void setDefinitionFilter(FindFileFiltered& files) {
+    files.setMask(files.found().getDirectory() + "emots.txt");
   }
-  eMSet parse(const string& filePath, const string& fileDir);
+  iPackage* parse(const FindFile::Found& defFile);
 };
 
 #endif // __EMOTPARSER_H__

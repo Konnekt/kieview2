@@ -85,6 +85,8 @@
 #include <stamina/time64.h>
 #include <stamina/regex.h>
 #include <stamina/timer.h>
+#include <stamina/findfile.h>
+#include <stamina/findfilefiltered.h>
 #include <stamina/DataTable/Crypt.h>
 
 #include <Stamina/ListWnd/ListWnd.h>

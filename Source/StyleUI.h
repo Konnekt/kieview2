@@ -19,7 +19,7 @@
 #include "kIEview2.h"
 #include "iLV.h"
 #include "iEntry.h"
-#include "Emots.h"
+#include "StyleHandler.h"
 #include "Helpers.h"
 
 using namespace Stamina::UI;

@@ -20,8 +20,9 @@
 string StyleHandler::getCurrentStyleDir() {
   string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
 
-  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
-    if (it->getDir() == currentStyle) return getDir() + "\\" + it->getDir();
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    TplSet* set = (TplSet*) *it;
+    if (set->getDir() == currentStyle) return getDir() + "\\" + set->getDir();
   }
   return getKonnektPath() + "data\\templates\\core";
 }
@@ -29,9 +30,10 @@ string StyleHandler::getCurrentStyleDir() {
 void StyleHandler::loadSettings() {
   string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
 
-  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
-    if (it->getDir() == currentStyle) {
-      it->setEnabled(true); break;
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    TplSet* set = (TplSet*) *it;
+    if (set->getDir() == currentStyle) {
+      set->setEnabled(true); break;
     }
   }
   Controller::getInstance()->getTplHandler()->clearDirs();
@@ -40,39 +42,18 @@ void StyleHandler::loadSettings() {
 }
 
 void StyleHandler::saveSettings() {
-  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
-    if (it->isEnabled()) {
-      Controller::getConfig()->set(cfg::currentStyle, it->getDir()); break;
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    TplSet* set = (TplSet*) *it;
+    if (set->isEnabled()) {
+      Controller::getConfig()->set(cfg::currentStyle, set->getDir()); break;
     }
   }
 }
 
 void StyleHandler::fillLV(iLV* _lv) {
   StyleLV* lv = (StyleLV*) _lv;
-  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
-    lv->addItem(new StyleLV::sStylePackInfo(it->isEnabled(), &*it));
-  }
-}
-
-void StyleHandler::loadPackages() {
-  clearPackages();
-
-  FindFile find;
-  find.setMask(getDir() + "\\*");
-  find.setDirOnly();
-
-  FindFile::tFoundFiles tplDirs = find.makeList();
-
-  if (find.nothingFound()) {
-    IMLOG("[StyleHandler::loadPackages()] Nie znaleziono katalogu z szablonami !");
-    return;
-  }
-  if (!tplDirs.size()) {
-    IMLOG("[StyleHandler::loadPackages()] Brak katalogów z szablonami !");
-    return;
-  }
-
-  for (FindFile::tFoundFiles::iterator it = tplDirs.begin(); it != tplDirs.end(); it++) {
-    styleSets.push_back(TplSet(it->getFileName(), it->getFileName()));
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    TplSet* set = (TplSet*) *it;
+    lv->addItem(new StyleLV::sStylePackInfo(set->isEnabled(), &*set));
   }
 }

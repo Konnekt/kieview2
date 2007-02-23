@@ -31,23 +31,25 @@ void EmotHandler::loadSettings() {
     Stamina::split(*it, "|", rows);
 
     if (rows.size() != 3) continue;
-    for (tEmotSets::iterator it2 = emotSets.begin(); it2 != emotSets.end(); it2++) {
-      if (it2->getDir() == rows[2]) {
-        it2->setEnabled(atoi(rows[1].c_str()));
-        it2->setPos(atoi(rows[0].c_str()));
+    for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+      eMSet* set = (eMSet*) *it;
+      if (set->getDir() == rows[2]) {
+        set->setEnabled(atoi(rows[1].c_str()));
+        set->setPos(atoi(rows[0].c_str()));
         break;
       }
     }
   }
-  emotSets.sort();
+  _packages.sort(&EmotHandler::sort);
 }
 
 void EmotHandler::saveSettings() {
-  if (!emotSets.size()) return;
+  if (!_packages.size()) return;
   String result;
 
-  for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-    result += stringf("%d|%d|%s\n", it->getPos(), (int) it->isEnabled(), it->getDir().c_str());
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    eMSet* set = (eMSet*) *it;
+    result += stringf("%d|%d|%s\n", set->getPos(), (int) set->isEnabled(), set->getDir().c_str());
   }
   Controller::getConfig()->set(cfg::emotPacks, result);
 }
@@ -56,11 +58,12 @@ void EmotHandler::fillLV(iLV* _lv) {
   EmotLV* lv = (EmotLV*) _lv;
   oImage img;
 
-  for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-    if (!it->getEmots().size()) continue;
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    eMSet* set = (eMSet*) *it;
+    if (!set->getEmots().size()) continue;
 
-    img = loadImageFromFile((getDir() + "\\" + it->getDir() + "\\" + it->getEmots()[0].getMenuImgPath()).c_str());
-    lv->addItem(new EmotLV::sEmotPackInfo(it->isEnabled(), &*it, img));
+    img = loadImageFromFile((getDir() + "\\" + set->getDir() + "\\" + set->getEmots()[0].getMenuImgPath()).c_str());
+    lv->addItem(new EmotLV::sEmotPackInfo(set->isEnabled(), &*set, img));
   }
 }
 
@@ -122,46 +125,12 @@ String EmotHandler::parse(const StringRef& body) {
   RegEx reg;
   reg.setSubject(prepareBody(body));
 
-  for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-    parseSet(reg, *it);
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    parseSet(reg, (eMSet&) **it);
   }
 
   reg.replaceItself("#<kiev2:emot:insertion id=\"([0-9]+)\" />#", &EmotHandler::replaceEmot, 0, (void*) this);
   emotInsertions.clear();
 
   return prepareBody(reg.getSubject(), false);
-}
-
-void EmotHandler::loadPackages() {
-  clearPackages();
-
-  FindFile find;
-  find.setMask(getDir() + "\\*");
-  find.setDirOnly();
-
-  FindFile::tFoundFiles emotDirs = find.makeList();
-
-  if (find.nothingFound()) {
-    IMLOG("[EmotHandler::loadPackages()] Nie znaleziono katalogu z emotami !");
-    return;
-  }
-  if (!emotDirs.size()) {
-    IMLOG("[EmotHandler::loadPackages()] Brak katalogów z pakietami !");
-    return;
-  }
-
-  for (FindFile::tFoundFiles::iterator it = emotDirs.begin(); it != emotDirs.end(); it++) {
-    for (tParsers::iterator it2 = parsers.begin(); it2 != parsers.end(); it2++) {
-
-      string fileName = it->getFilePath() + "\\" + (*it2)->getDefFileName(it->getFileName());
-      if (!fileExists(fileName.c_str())) continue;
-
-      try {
-        emotSets.push_back((*it2)->parse(fileName, it->getFileName()));
-      } catch (const Exception& e) {
-        IMLOG("[EmotHandler::loadPackages()] b³¹d podczas parsowania paczki emot (%s): %s", it->getFileName(), e.getReason().a_str());
-      }
-      break;
-    }
-  }
 }

@@ -126,7 +126,7 @@ namespace kIEview2 {
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
     tplHandler->setKonnektPath(kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR));
 
-    // emotHandler << new JispParser;
+    emotHandler << new JispParser;
     emotHandler << new GGParser;
 
     styleHandler.loadPackages();
@@ -247,7 +247,7 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::styleCfgGroup, ui::styleLV, ACTT_HWND | ACTSC_INLINE);
     UIActionCfgAdd(ui::styleCfgGroup, ui::refreshStyleLV, ACTT_BUTTON, "Odœwie¿" AP_ICO "702", 0, 0, 0, 75);
     UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_GROUPEND);
-}
+  }
 
   void Controller::_onAction() {
     // locking

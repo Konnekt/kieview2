@@ -15,18 +15,18 @@
 #include "stdafx.h"
 #include "EmotParser.h"
 
-eMSet JispParser::parse(const string& filePath, const string& fileDir) {
+iPackage* JispParser::parse(const FindFile::Found& defFile) {
   String code;
   Zip zip;
 
-  string localPath = filePath.substr(0, filePath.find_last_of("\\")) + "\\~local";
-  string icondefPath = localPath + "\\" + fileDir + "\\icondef.xml";
+  string localPath = defFile.getDirectory() + "~local";
+  string icondefPath = localPath + "\\" + defFile.getDirectoryName() + "\\icondef.xml";
 
   DWORD c = GetFileAttributes(icondefPath.c_str());
 
   if (c == -1 || c & FILE_ATTRIBUTE_DIRECTORY) {
     try {
-      zip.open(filePath);
+      zip.open(defFile.getFilePath());
       zip.unzip(localPath);
       zip.close();
     } catch(const Exception& e) {
@@ -117,15 +117,9 @@ eMSet JispParser::parse(const string& filePath, const string& fileDir) {
       if (dynamic_cast<xmlpp::Element*>(*it) && dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")) {
         mime = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")->get_value();
         if (mime == "image/png" || mime == "image/gif" || mime == "image/jpeg") {
-          emot.setImgPath("~local\\" + fileDir + "\\" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content());
+          emot.setImgPath("~local\\" + defFile.getDirectoryName() + "\\" + 
+            (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content());
           emot.setMenuImgPath(emot.getImgPath());
-          /*
-          try {
-            // emot.setRawData(zip.getBinaryFile(fileDir + "/" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content()));
-          } catch(const Exception& e) {
-            throw CannotOpen(e.getReason());
-          }
-          */
           break;
         }
         mime.clear();
@@ -149,16 +143,16 @@ eMSet JispParser::parse(const string& filePath, const string& fileDir) {
     }
   }
 
-  result.setDir(fileDir);
-  return result;
+  result.setDir(defFile.getDirectoryName());
+  return new eMSet(result);
 }
 
-eMSet GGParser::parse(const string& filePath, const string& fileDir) {
-  ifstream file(filePath.c_str());
+iPackage* GGParser::parse(const FindFile::Found& defFile) {
+  ifstream file(defFile.getFilePath().c_str());
   string code, buff;
 
   if (!file.is_open()) {
-    throw CannotOpen("Cannot open file " + filePath);
+    throw CannotOpen("Cannot open file " + defFile.getFilePath());
   }
 
   while (!file.eof()) {
@@ -213,8 +207,8 @@ eMSet GGParser::parse(const string& filePath, const string& fileDir) {
     result.getEmots().insert(result.getEmots().end(), emots.begin(), emots.end());
   }
 
-  result.setName(fileDir);
-  result.setDir(fileDir);
+  result.setName(defFile.getDirectoryName());
+  result.setDir(defFile.getDirectoryName());
 
-  return result;
+  return new eMSet(result);
 }

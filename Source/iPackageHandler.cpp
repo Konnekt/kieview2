@@ -27,3 +27,47 @@ string iPackageHandler::getDir() {
   }
   return "";
 }
+
+void iPackageHandler::loadPackages() {
+  clearPackages();
+
+  FindFile::tFoundFiles dirs;
+  FindFile find;
+
+  find.setMask(getDir() + "\\*");
+  find.setDirOnly();
+
+  dirs = find.makeList();
+
+  if (find.nothingFound()) {
+    IMLOG("[iPackageHandler::loadPackages()] Nie znaleziono katalogu z pakietami !");
+    return;
+  }
+  if (!dirs.size()) {
+    IMLOG("[iPackageHandler::loadPackages()] Brak katalogów z pakietami !");
+    return;
+  }
+
+  for (tParsers::iterator it2 = _parsers.begin(); it2 != _parsers.end(); it2++) {
+    for (FindFile::tFoundFiles::iterator it = dirs.begin(); it != dirs.end(); it++) {
+      FindFile::tFoundFiles fileList;
+      FindFileFiltered files;
+
+      files.setMask(it->getFilePath() + "\\*");
+      files.setFileOnly();
+
+      (*it2)->setDefinitionFilter(files);
+      fileList = files.makeList();
+
+      try {
+        if (files.nothingFound() || !fileList.size() || fileList.front().empty()) {
+          continue;
+        }
+        *this << (*it2)->parse(fileList.front());
+      } catch (const Exception& e) {
+        IMLOG("[iPackageHandler::loadPackages()] b³¹d podczas parsowania paczki emot (%s): %s", 
+          it->getFileName().c_str(), e.getReason().c_str());
+      }
+    }
+  }
+}

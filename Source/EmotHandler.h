@@ -16,8 +16,6 @@
 #ifndef __EMOTSHANDLER_H__
 #define __EMOTSHANDLER_H__
 
-#include <stamina/findfile.h>
-
 #include "Helpers.h"
 #include "iPackageHandler.h"
 #include "EmotParser.h"
@@ -42,15 +40,8 @@ public:
 
 public:
   typedef vector<sEmotInsertion> tEmotInsertions;
-  typedef list<eMParser*> tParsers;
-  typedef list<eMSet> tEmotSets;
 
 public:
-  EmotHandler& operator << (eMParser* parser) {
-    addParser(parser);
-    return *this;
-  }
-
   EmotHandler& operator >> (StringRef& body) {
     body = parse(body);
     return *this;
@@ -60,38 +51,10 @@ public:
   EmotHandler() {
     _dirColID = kIEview2::cfg::emotsDir;
   }
-  ~EmotHandler() {
-    for (tParsers::iterator it = parsers.begin(); it != parsers.end(); it++) {
-      delete *it;
-    }
-  }
 
-  eMSet* getEmotSet(UINT id) {
-    for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-      if (it->getID() == id) return &*it;
-    }
-    throw ExceptionString("EmotSet not found");
-  }
-  eM* getEmot(UINT id) {
-    for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-      for (eMSet::tEmots::iterator it2 = it->getEmots().begin(); it2 != it->getEmots().end(); it2++) {
-        if (it2->getID() == id) return &*it2;
-      }
-    }
-    throw ExceptionString("Emot not found");
-  }
-
-  void addParser(eMParser* parser) {
-    parsers.push_back(parser);
-  }
   String parse(const StringRef& body);
 
   void fillLV(iLV* lv);
-
-  void clearPackages() {
-    if (emotSets.size()) emotSets.clear();
-  }
-  void loadPackages();
 
   void loadSettings();
   void saveSettings();
@@ -103,10 +66,11 @@ protected:
   static string __stdcall emotInsertion(RegEx* reg, void* param);
   static string __stdcall replaceEmot(RegEx* reg, void* param);
 
+  static bool sort(iPackage* one, iPackage* other) {
+    return ((eMSet*) one)->getPos() < ((eMSet*) other)->getPos();
+  }
 protected:
   tEmotInsertions emotInsertions;
-  tEmotSets emotSets;
-  tParsers parsers;
 };
 
 #endif // __EMOTSHANDLER_H__

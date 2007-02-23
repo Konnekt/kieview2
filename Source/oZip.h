@@ -82,8 +82,8 @@ public:
   }
 
   bool find(const string& path) {
-    int index;
     ZIPENTRY entry;
+    int index;
 
     return !FindZipItem(_handle, path.c_str(), true, &index, &entry);
   }
@@ -97,7 +97,7 @@ public:
     ZRESULT zr = 0;
     ZIPENTRY ze;
 
-    while(!zr) {
+    while (!zr) {
       zr = GetZipItem(_handle, index, &ze);
       zr = zr || !unzipItem(index, dir + "\\" + ze.name);
       index++;
