@@ -16,7 +16,6 @@
 #include "EmotParser.h"
 
 iPackage* JispParser::parse(const FindFile::Found& defFile) {
-  String code;
   Zip zip;
 
   string localPath = defFile.getDirectory() + "~local";
@@ -34,21 +33,21 @@ iPackage* JispParser::parse(const FindFile::Found& defFile) {
     }
   }
 
-  DWORD bread;
-  HANDLE file = CreateFile(icondefPath.c_str(), GENERIC_READ, 0, NULL, OPEN_ALWAYS, 0, NULL);
-  DWORD size = GetFileSize(file, NULL);
+  // wczytywanie xmla z definicjami
+  ifstream file(icondefPath.c_str());
+  string code, buff;
 
-  char* buff = new char[size + 1];
-  buff[size] = 0;
+  if (!file.is_open()) {
+    throw CannotOpen("Cannot open file " + icondefPath);
+  }
 
-  ReadFile(file, buff, size, &bread, NULL);
-  CloseHandle(file);
+  while (!file.eof()) {
+    getline(file, buff);
+    code += buff + "\n";
+  }
+  file.close();
 
-  code = buff;
-  delete [] buff;
-
-  // code = zip.getFile(fileDir + "/icondef.xml");
-
+  // parsujemy wczytanego xmla
   xmlpp::DomParser parser;
   parser.set_substitute_entities();
 
