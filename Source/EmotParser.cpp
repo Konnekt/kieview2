@@ -19,12 +19,35 @@ eMSet JispParser::parse(const string& filePath, const string& fileDir) {
   String code;
   Zip zip;
 
-  try {
-    zip.open(filePath);
-    code = zip.getFile(fileDir + "/icondef.xml");
-  } catch(const Exception& e) {
-    throw CannotOpen(e.getReason());
+  string localPath = filePath.substr(0, filePath.find_last_of("\\")) + "\\~local";
+  string icondefPath = localPath + "\\" + fileDir + "\\icondef.xml";
+
+  DWORD c = GetFileAttributes(icondefPath.c_str());
+
+  if (c == -1 || c & FILE_ATTRIBUTE_DIRECTORY) {
+    try {
+      zip.open(filePath);
+      zip.unzip(localPath);
+      zip.close();
+    } catch(const Exception& e) {
+      throw CannotOpen(e.getReason());
+    }
   }
+
+  DWORD bread;
+  HANDLE file = CreateFile(icondefPath.c_str(), GENERIC_READ, 0, NULL, OPEN_ALWAYS, 0, NULL);
+  DWORD size = GetFileSize(file, NULL);
+
+  char* buff = new char[size + 1];
+  buff[size] = 0;
+
+  ReadFile(file, buff, size, &bread, NULL);
+  CloseHandle(file);
+
+  code = buff;
+  delete [] buff;
+
+  // code = zip.getFile(fileDir + "/icondef.xml");
 
   xmlpp::DomParser parser;
   parser.set_substitute_entities();
@@ -94,13 +117,15 @@ eMSet JispParser::parse(const string& filePath, const string& fileDir) {
       if (dynamic_cast<xmlpp::Element*>(*it) && dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")) {
         mime = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")->get_value();
         if (mime == "image/png" || mime == "image/gif" || mime == "image/jpeg") {
-          // emot.menu_img_path = emot.img_path = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content();
-
+          emot.setImgPath("~local\\" + fileDir + "\\" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content());
+          emot.setMenuImgPath(emot.getImgPath());
+          /*
           try {
             // emot.setRawData(zip.getBinaryFile(fileDir + "/" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content()));
           } catch(const Exception& e) {
             throw CannotOpen(e.getReason());
           }
+          */
           break;
         }
         mime.clear();
@@ -125,7 +150,6 @@ eMSet JispParser::parse(const string& filePath, const string& fileDir) {
   }
 
   result.setDir(fileDir);
-  zip.close();
   return result;
 }
 

@@ -85,24 +85,28 @@ public:
     int index;
     ZIPENTRY entry;
 
-    return FindZipItem(_handle, path.c_str(), true, &index, &entry) == ZR_OK;
+    return !FindZipItem(_handle, path.c_str(), true, &index, &entry);
   }
 
   bool unzipItem(int index, const string& path) {
-    return UnzipItem(_handle, index, path.c_str()) == ZR_OK;
+    return !UnzipItem(_handle, index, path.c_str());
   }
 
-  bool unzip(const string& path) {
+  bool unzip(const string& dir) {
     int index = 0;
+    ZRESULT zr = 0;
+    ZIPENTRY ze;
 
-    while(unzipItem(index, path)) {
+    while(!zr) {
+      zr = GetZipItem(_handle, index, &ze);
+      zr = zr || !unzipItem(index, dir + "\\" + ze.name);
       index++;
     }
     return index;
   }
 
   bool setBaseDir(const string& dir) {
-    return SetUnzipBaseDir(_handle, dir.c_str()) == ZR_OK;
+    return !SetUnzipBaseDir(_handle, dir.c_str());
   }
 
   string getErrorMsg(ZRESULT result) {

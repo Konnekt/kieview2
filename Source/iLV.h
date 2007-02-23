@@ -28,10 +28,12 @@ namespace kIEview2 {
   public:
     STAMINA_OBJECT_CLASS_VERSION(iLV, ListWnd::ListView, Version(0,1,0,0));
 
+    friend class iEntry;
+
   public:
     typedef vector<iLV*> tInstances;
 
-  public:;
+  public:
     iLV(sUIActionNotify_createWindow* an, int w, int h);
     virtual ~iLV();
 
@@ -51,9 +53,7 @@ namespace kIEview2 {
     virtual void setSize(int w, int h);
     virtual void setPos(int x, int y);
 
-  // protected:
-  // @warning cos z tym zrobic
-  public:
+  protected:
     static tInstances _instances;
 
     oImage _unChecked;
