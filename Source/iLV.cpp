@@ -12,7 +12,9 @@
   */
 
 #include "stdafx.h"
+
 #include "iLV.h"
+#include "iEntry.h"
 
 namespace kIEview2 {
   iLV::tInstances iLV::_instances;
@@ -39,6 +41,8 @@ namespace kIEview2 {
   }
 
   iLV::~iLV() {
+    removeAll();
+
     DeleteObject(_fontNormal);
     DeleteObject(_fontBold);
 
@@ -70,5 +74,34 @@ namespace kIEview2 {
 
   void iLV::setPos(int x, int y) {
     SetWindowPos(getHwnd(), 0, x, y, 0, 0, SWP_NOSIZE);
+  }
+
+  ListWnd::oItem iLV::getItem(UINT id) {
+    if (id >= itemsCount()) return NULL;
+    int i = 0;
+
+    for (ListWnd::ItemList::iterator it = getItemList().begin(); it != getItemList().end(); it++, i++) { 
+      if (i == id) return *it;
+    }
+    return NULL;
+  }
+
+  void iLV::removeItem(UINT id) {
+    if (id >= itemsCount()) return;
+
+    ListWnd::oItem item = getItem(id);
+    removeEntry(item->getEntry());
+  }
+
+  bool iLV::selectItem(UINT id, bool value) {
+    ListWnd::oItem item = getItem(id);
+    iEntry* entry;
+
+    if (item) {
+      entry = (iEntry*) item->getEntry().get();
+      entry->setSelected(this, value);
+      return true;
+    }
+    return false;
   }
 }

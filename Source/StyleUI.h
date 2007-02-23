@@ -16,10 +16,9 @@
 #ifndef __STYLE_UI_H__
 #define __STYLE_UI_H__
 
-#include "stdafx.h"
 #include "kIEview2.h"
-
 #include "iLV.h"
+#include "iEntry.h"
 #include "Emots.h"
 #include "Helpers.h"
 
@@ -62,14 +61,14 @@ protected:
   UINT _last_checked;
 
 public:
-  class StyleInfoItem: public iLV::iEntry {
+  class StyleInfoItem: public iEntry {
   public:
     friend class StyleLV;
 
   public:
-    STAMINA_OBJECT_CLASS_VERSION(StyleInfoItem, iLV::iEntry, Version(0,1,0,0));
+    STAMINA_OBJECT_CLASS_VERSION(StyleInfoItem, iEntry, Version(0,1,0,0));
 
-    StyleInfoItem(StyleLV* parent, sStylePackInfo* styleInfo): _styleInfo(styleInfo), iLV::iEntry(parent, styleInfo->used) { }
+    StyleInfoItem(StyleLV* parent, sStylePackInfo* styleInfo): _styleInfo(styleInfo), iEntry(parent, styleInfo->used) { }
 
     Size getMinSize();
     Size getMaxSize();

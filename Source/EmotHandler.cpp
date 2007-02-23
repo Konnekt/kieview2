@@ -13,8 +13,9 @@
   */
 
 #include "stdafx.h"
-#include "EmotHandler.h"
 #include "Helpers.h"
+
+#include "EmotHandler.h"
 #include "Controller.h"
 
 eMSet JispParser::parse(const string& filePath, const string& fileDir) {
@@ -197,9 +198,17 @@ eMSet GGParser::parse(const string& filePath, const string& fileDir) {
   return result;
 }
 
+string StyleHandler::getCurrentStyleDir() {
+  string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
+
+  for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
+    if (it->getDir() == currentStyle) return getDir() + "\\" + it->getDir();
+  }
+  return getKonnektPath() + "data\\templates\\core";
+}
+
 void StyleHandler::loadSettings() {
   string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
-  string stylesDir = Controller::getConfig()->getChar(cfg::stylesDir);
 
   for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
     if (it->getDir() == currentStyle) {
@@ -207,8 +216,8 @@ void StyleHandler::loadSettings() {
     }
   }
   Controller::getInstance()->getTplHandler()->clearDirs();
-  Controller::getInstance()->getTplHandler()->addTplDir("/" + stylesDir + "/" + currentStyle + "/");
-  Controller::getInstance()->getTplHandler()->addTplDir("/data/templates/core/");
+  Controller::getInstance()->getTplHandler()->addTplDir(getDir() + "/" + currentStyle + "/");
+  Controller::getInstance()->getTplHandler()->addTplDir("data/templates/core/");
 }
 
 void StyleHandler::saveSettings() {
@@ -219,7 +228,8 @@ void StyleHandler::saveSettings() {
   }
 }
 
-void StyleHandler::fillLV(StyleLV* lv) {
+void StyleHandler::fillLV(iLV* _lv) {
+  StyleLV* lv = (StyleLV*) _lv;
   for (tStyleSets::iterator it = styleSets.begin(); it != styleSets.end(); it++) {
     lv->addItem(new StyleLV::sStylePackInfo(it->isEnabled(), &*it));
   }
@@ -243,7 +253,7 @@ void StyleHandler::loadPackages() {
   }
 
   for (Dir::tItems::iterator it = tplDirs.begin(); it != tplDirs.end(); it++) {
-    if (!Dir::isDot(*it)) styleSets.push_back(TplSet(it->cFileName, it->cFileName));
+    styleSets.push_back(TplSet(it->cFileName, it->cFileName));
   }
 }
 void EmotHandler::loadSettings() {
@@ -281,30 +291,18 @@ void EmotHandler::saveSettings() {
   Controller::getConfig()->set(cfg::emotPacks, result);
 }
 
-void EmotHandler::fillLV(EmotLV* lv) {
+void EmotHandler::fillLV(iLV* _lv) {
+  EmotLV* lv = (EmotLV*) _lv;
   oImage img;
 
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
     if (!it->getEmots()[0].isVirtual()) {
-      img = loadImageFromFile((getEmotDir() + "\\" + it->getDir() + "\\" + it->getEmots()[0].getMenuImgPath()).c_str());
+      img = loadImageFromFile((getDir() + "\\" + it->getDir() + "\\" + it->getEmots()[0].getMenuImgPath()).c_str());
     } else {
       img = new Icon((HICON) Ctrl->ICMessage(IMI_ICONGET, kIEview2::ico::emots, IML_16), false);
     }
     lv->addItem(new EmotLV::sEmotPackInfo(it->isEnabled(), &*it, img));
   }
-}
-
-string EmotHandler::getKonnektPath() {
-  return Controller::getInstance()->kPath;
-}
-
-string EmotHandler::getEmotDir() {
-  string emotDir = Controller::getConfig()->getChar(kIEview2::cfg::emotsDir);
-
-  if (emotDir.find(':') == emotDir.npos) {
-    emotDir = getKonnektPath() + emotDir;
-  }
-  return emotDir;
 }
 
 String EmotHandler::prepareBody(const StringRef& body, bool encode, bool html) {
@@ -344,7 +342,7 @@ string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
   return "<img src=\"" + 
     (ei->emot->isVirtual() ? 
       "javascript:oController.getEmot(" + inttostr(ei->emot->getID()) + ");" :
-      unifyPath(handler->getEmotDir() + "/" + ei->emotSet->getDir() + "/" + ei->emot->getImgPath())
+      unifyPath(handler->getDir() + "/" + ei->emotSet->getDir() + "/" + ei->emot->getImgPath())
     ) + "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
 }
 
@@ -387,7 +385,7 @@ String EmotHandler::parse(const StringRef& body, int net) {
 void EmotHandler::loadPackages() {
   clearPackages();
 
-  string emotDir = getEmotDir();
+  string emotDir = getDir();
   Dir::tItems emotDirs;
 
   try {

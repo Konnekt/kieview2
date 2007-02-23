@@ -20,8 +20,8 @@
 #include "unzip.h"
 #include <fstream>
 
-// #include "Base64.h"
 #include "Helpers.h"
+#include "iPackageHandler.h"
 #include "EmotUI.h"
 #include "Emots.h"
 #include "StyleUI.h"
@@ -75,7 +75,7 @@ public:
   }
 
   static bool isDot(WIN32_FIND_DATA fd) {
-    return fd.cFileName == "." || fd.cFileName == "..";
+    return fd.cFileName[0] == '.';
   }
 
   static tItems getItems(const string& dir) {
@@ -245,33 +245,31 @@ public:
 /*
  * Style parsing class
  */
-class StyleHandler : public SharedObject<iSharedObject> {
+class StyleHandler : public iPackageHandler {
 public:
   /* Class version */
-  STAMINA_OBJECT_CLASS_VERSION(StyleHandler, iSharedObject, Version(0,1,0,0));
+  STAMINA_OBJECT_CLASS_VERSION(StyleHandler, iPackageHandler, Version(0,1,0,0));
 
 public:
   typedef list<TplSet> tStyleSets;
 
 public:
-  void fillLV(StyleLV* lv);
+  StyleHandler() {
+    _dirColID = kIEview2::cfg::stylesDir;
+  }
+
+public:
+  void fillLV(iLV* lv);
 
   void clearPackages() {
     if (styleSets.size()) styleSets.clear();
-  }
-
-  void reloadPackages(StyleLV* lv = 0) {
-    if (!StyleLV::isValidLV(lv)) lv = 0;
-
-    if (lv) lv->removeAll();
-    loadPackages();
-    loadSettings();
-    if (lv) fillLV(lv);
   }
   void loadPackages();
 
   void loadSettings();
   void saveSettings();
+
+  string getCurrentStyleDir();
 
 protected:
   tStyleSets styleSets;
@@ -280,10 +278,10 @@ protected:
 /*
  * Emots parsing class
  */
-class EmotHandler : public SharedObject<iSharedObject> {
+class EmotHandler : public iPackageHandler {
 public:
   /* Class version */
-  STAMINA_OBJECT_CLASS_VERSION(EmotHandler, iSharedObject, Version(0,1,0,0));
+  STAMINA_OBJECT_CLASS_VERSION(EmotHandler, iPackageHandler, Version(0,1,0,0));
 
 public:
   struct sEmotInsertion {
@@ -304,15 +302,14 @@ public:
   typedef list<eMSet> tEmotSets;
 
 public:
-  // EmotHandler();
+  EmotHandler() {
+    _dirColID = kIEview2::cfg::emotsDir;
+  }
   ~EmotHandler() {
     for (tParsers::iterator it = parsers.begin(); it != parsers.end(); it++) {
       delete *it;
     }
   }
-
-  string getKonnektPath();
-  string getEmotDir();
 
   eMSet* getEmotSet(UINT id) {
     for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
@@ -334,19 +331,10 @@ public:
   }
   String parse(const StringRef& body, int net);
 
-  void fillLV(EmotLV* lv);
+  void fillLV(iLV* lv);
 
   void clearPackages() {
     if (emotSets.size()) emotSets.clear();
-  }
-
-  void reloadPackages(EmotLV* lv = 0) {
-    if (!EmotLV::isValidLV(lv)) lv = 0;
-
-    if (lv) lv->removeAll();
-    loadPackages();
-    loadSettings();
-    if (lv) fillLV(lv);
   }
   void loadPackages();
 

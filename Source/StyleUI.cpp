@@ -31,23 +31,15 @@ UINT StyleLV::addItem(sStylePackInfo *s) {
 }
 
 bool StyleLV::selectItem(UINT id, bool value) {
-  ListWnd::oItem item = getItem(id);
-  ListWnd::oItem lastItem = getItem(_last_checked);
-  StyleInfoItem* si;
-
-  if (item) {
-    if (_last_checked != -1 && lastItem) {
+  if (_last_checked != -1) {
+    if (iLV::selectItem(_last_checked, false)) {
       getSPI(_last_checked)->used = false;
-      si = (StyleInfoItem*) lastItem->getEntry().get();
-      si->setSelected(this, false);
     }
-
+  }
+  if (iLV::selectItem(id, true)) {
     getSPI(id)->used = true;
     _last_checked = id;
-
-    si = (StyleInfoItem*) item->getEntry().get();
-    si->setSelected(this, true);
-    touchConfigWnd();
+    return true;
   }
   return false;
 }

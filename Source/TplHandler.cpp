@@ -21,9 +21,8 @@ TplHandler::TplHandler(const string& tplExt) {
 void TplHandler::addTplDir(const string& dir, bool asInclude) {
   if (!dir.size()) return;
 
-  string tplDir = dir;
+  string tplDir = (dir.find(':') == dir.npos) ? kPath + dir : dir;
   tplDir = unifyPath(tplDir);
-  tplDir = ltrim(tplDir, ".\\");
 
   if (asInclude) {
     addIncludeDir(tplDir);
@@ -66,13 +65,13 @@ std::string TplHandler::getTplDir(const char* tplName) {
   fileName += "." + tplExt;
 
   for (tTplDirs::iterator it = tplDirs.begin(); it != tplDirs.end(); it++) {
-    if (fileExists(((*it) + "/" + fileName).c_str())) return *it;
+    if (fileExists(((*it) + "\\" + fileName).c_str())) return *it;
   }
   throw std::logic_error("Cannot find file '" + fileName + "'");
 }
 
 std::string TplHandler::getTplPath(const char* tplName) {
-  string fullPath = getTplDir(tplName) + "/";
+  string fullPath = getTplDir(tplName) + "\\";
 
   fullPath += tplName;
   fullPath += ".";

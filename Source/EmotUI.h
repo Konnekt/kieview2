@@ -16,11 +16,9 @@
 #ifndef __EMOT_UI_H__
 #define __EMOT_UI_H__
 
-#include "stdafx.h"
 #include "kIEview2.h"
-
 #include "iLV.h"
-
+#include "iEntry.h"
 #include "Helpers.h"
 #include "Emots.h"
 
@@ -75,11 +73,11 @@ protected:
   int mmitem;
 
 public:
-  class EmotPackInfoItem: public iLV::iEntry {
+  class EmotPackInfoItem: public iEntry {
   public:
-    STAMINA_OBJECT_CLASS_VERSION(EmotPackInfoItem, iLV::iEntry, Version(0,1,0,0));
+    STAMINA_OBJECT_CLASS_VERSION(EmotPackInfoItem, iEntry, Version(0,1,0,0));
 
-    EmotPackInfoItem(EmotLV* parent, sEmotPackInfo* emotInfo): _emotInfo(emotInfo), iLV::iEntry(parent, emotInfo->checked) { }
+    EmotPackInfoItem(EmotLV* parent, sEmotPackInfo* emotInfo): _emotInfo(emotInfo), iEntry(parent, emotInfo->checked) { }
 
     Size getMinSize();
     Size getMaxSize();
