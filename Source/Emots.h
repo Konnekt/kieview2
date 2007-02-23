@@ -20,20 +20,12 @@
 
 class eM {
 public:
-  eM(bool in_menu = true, bool preg = true, bool __virtual = false): 
-    _id(random()), _in_menu(in_menu), _virtual(__virtual), _preg(preg) { }
-    virtual ~eM() { }
+  eM(bool in_menu = true, bool preg = true): _id(random()), _in_menu(in_menu), _preg(preg) { }
+  virtual ~eM() { }
 
 public:
   inline UINT getID() const {
     return _id;
-  }
-
-  virtual const ByteBuffer& getRawData() const {
-    return _img_data;
-  }
-  virtual void setRawData(const ByteBuffer& new_data) {
-    _img_data.assign(new_data);
   }
 
   virtual string getImgPath() const {
@@ -55,13 +47,6 @@ public:
   }
   virtual void setText(const StringRef& new_text) {
     _text = new_text;
-  }
-
-  virtual bool isVirtual() const {
-    return _virtual;
-  }
-  virtual void setVirtual(bool value) {
-    _virtual = value;
   }
 
   virtual bool isPreg() const {
@@ -87,7 +72,6 @@ protected:
   String _text;
 
   bool _in_menu;
-  bool _virtual;
   bool _preg;
 };
 

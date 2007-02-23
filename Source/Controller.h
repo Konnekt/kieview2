@@ -292,29 +292,12 @@ namespace kIEview2 {
       Controller(): iObject(NULL, true), pCtrl(::Controller::getInstance()) {
         bindMethod("getPluginVersion", bind(&Controller::getPluginVersion, this, _1, _2));
         bindMethod("getPluginName", bind(&Controller::getPluginName, this, _1, _2));
-        bindMethod("getEmot", bind(&Controller::getEmot, this, _1, _2));
 
         setProperty("ieVersion", (int) pCtrl->ieVersion);
         setProperty("name", "oController");
       }
 
     public:
-      IECtrl::Var getEmot(IECtrl::Var& args, IECtrl::iObject* obj) {
-        if (args.empty() || !args[0].isInteger()) return false;
-
-        eM* emot;
-        try {
-          emot = pCtrl->getEmotHandler()->getEmot(args[0].getInteger());
-        } catch (const Exception& e) {
-          throw IECtrl::JSException(e.getReason());
-        }
-        if (emot->isVirtual()) {
-          return (ByteBuffer) emot->getRawData();
-        }
-        // wczytujemy plik z img_path i zwracamy
-        return "ssaj";
-      }
-
       IECtrl::Var getPluginName(IECtrl::Var& args, IECtrl::iObject* obj) {
         if (args.empty() || !args[0].isInteger()) return false;
 

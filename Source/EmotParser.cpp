@@ -86,7 +86,7 @@ eMSet JispParser::parse(const string& filePath, const string& fileDir) {
   
   icons = rootNode->get_children("icon");
   for (xmlpp::Node::NodeList::iterator it = icons.begin(); it != icons.end(); it++) {
-    eM emot(true, false, true);
+    eM emot(true, false);
     string mime;
 
     nodes = (*it)->get_children("object");
@@ -97,7 +97,7 @@ eMSet JispParser::parse(const string& filePath, const string& fileDir) {
           // emot.menu_img_path = emot.img_path = dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content();
 
           try {
-            emot.setRawData(zip.getBinaryFile(fileDir + "/" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content()));
+            // emot.setRawData(zip.getBinaryFile(fileDir + "/" + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content()));
           } catch(const Exception& e) {
             throw CannotOpen(e.getReason());
           }

@@ -57,11 +57,9 @@ void EmotHandler::fillLV(iLV* _lv) {
   oImage img;
 
   for (tEmotSets::iterator it = emotSets.begin(); it != emotSets.end(); it++) {
-    if (!it->getEmots()[0].isVirtual()) {
-      img = loadImageFromFile((getDir() + "\\" + it->getDir() + "\\" + it->getEmots()[0].getMenuImgPath()).c_str());
-    } else {
-      img = new Icon((HICON) Ctrl->ICMessage(IMI_ICONGET, kIEview2::ico::emots, IML_16), false);
-    }
+    if (!it->getEmots().size()) continue;
+
+    img = loadImageFromFile((getDir() + "\\" + it->getDir() + "\\" + it->getEmots()[0].getMenuImgPath()).c_str());
     lv->addItem(new EmotLV::sEmotPackInfo(it->isEnabled(), &*it, img));
   }
 }
@@ -100,11 +98,8 @@ string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
   IMLOG("[EmotHandler::replaceEmot()] match = %s, img_path = %s, emot = %s, set = %s", ei->match.c_str(), 
     ei->emot->getImgPath().c_str(), ei->emot->getText().c_str(), ei->emotSet->getName().c_str());
 
-  return "<img src=\"" + 
-    (ei->emot->isVirtual() ? 
-      "javascript:oController.getEmot(" + inttostr(ei->emot->getID()) + ");" :
-      unifyPath(handler->getDir() + "/" + ei->emotSet->getDir() + "/" + ei->emot->getImgPath())
-    ) + "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
+  return "<img src=\"" + unifyPath(handler->getDir() + "/" + ei->emotSet->getDir() + "/" + ei->emot->getImgPath()) +
+    "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
 }
 
 void EmotHandler::parseSet(RegEx& reg, eMSet& set) {
