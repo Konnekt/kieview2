@@ -81,6 +81,30 @@ public:
     return str;
   }
 
+  bool find(const string& path) {
+    int index;
+    ZIPENTRY entry;
+
+    return FindZipItem(_handle, path.c_str(), true, &index, &entry) == ZR_OK;
+  }
+
+  bool unzipItem(int index, const string& path) {
+    return UnzipItem(_handle, index, path.c_str()) == ZR_OK;
+  }
+
+  bool unzip(const string& path) {
+    int index = 0;
+
+    while(unzipItem(index, path)) {
+      index++;
+    }
+    return index;
+  }
+
+  bool setBaseDir(const string& dir) {
+    return SetUnzipBaseDir(_handle, dir.c_str()) == ZR_OK;
+  }
+
   string getErrorMsg(ZRESULT result) {
     char msg[256];
     FormatZipMessage(result, msg, 255);
