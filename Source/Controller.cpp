@@ -71,19 +71,16 @@ namespace kIEview2 {
     IECtrl::init();
     setlocale(LC_ALL, "polish");
 
-    this->tplHandler = new TplHandler;
-    this->rtfHtml = new RtfHtmlTag;
+    tplHandler.bindStdFunctions();
+    tplHandler.bindUdf("getCntSetting", new udf_get_cnt_setting);
+    tplHandler.bindUdf("getSetting", new udf_get_cfg_setting);
 
-    tplHandler->bindStdFunctions();
-    tplHandler->bindUdf("getCntSetting", new udf_get_cnt_setting);
-    tplHandler->bindUdf("getSetting", new udf_get_cfg_setting);
+    tplHandler.bindUdf("formatString", new udf_stringf);
+    tplHandler.bindUdf("formatTime", new udf_strftime);
 
-    tplHandler->bindUdf("formatString", new udf_stringf);
-    tplHandler->bindUdf("formatTime", new udf_strftime);
-
-    tplHandler->bindUdf("getExtParam", new udf_get_ext_param);
-    tplHandler->bindUdf("replace", new udf_replace);
-    tplHandler->bindUdf("match?", new udf_match);
+    tplHandler.bindUdf("getExtParam", new udf_get_ext_param);
+    tplHandler.bindUdf("replace", new udf_replace);
+    tplHandler.bindUdf("match?", new udf_match);
 
     bindMsgHandler(MT_QUICKEVENT, bind(&Controller::_handleQuickEventTpl, this, _1, _2), "quickevent");
     bindMsgHandler(MT_MESSAGE, bind(&Controller::_handleStdMsgTpl, this, _1, _2), "message");
@@ -100,10 +97,6 @@ namespace kIEview2 {
     for (tMsgHandlers::iterator it = msgHandlers.begin(); it != msgHandlers.end(); it++) {
       delete it->second;
     }
-
-    delete tplHandler;
-    delete rtfHtml;
-
     IECtrl::deinit();
   }
 
@@ -123,14 +116,15 @@ namespace kIEview2 {
 
   void Controller::_onPrepare() {
     historyTable = Tables::registerTable(Ctrl, tableNotFound, optPrivate);
+    kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
+
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
-    tplHandler->setKonnektPath(kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR));
 
     emotHandler << new JispParser;
     emotHandler << new GGParser;
 
-    styleHandler.loadPackages();
-    styleHandler.loadSettings();
+    tplHandler.loadPackages();
+    tplHandler.loadSettings();
 
     emotHandler.loadPackages();
     emotHandler.loadSettings();
@@ -349,7 +343,7 @@ namespace kIEview2 {
       }
       case ui::refreshStyleLV: {
         if (an->code == ACTN_ACTION) {
-          styleHandler.reloadPackages(styleLV);
+          tplHandler.reloadPackages(styleLV);
         }
         break;
       }
@@ -363,8 +357,8 @@ namespace kIEview2 {
     if (StyleLV::isValidLV(styleLV)) {
       styleLV->saveState();
     }
-    styleHandler.saveSettings();
-    styleHandler.reloadPackages(styleLV);
+    tplHandler.saveSettings();
+    tplHandler.reloadPackages(styleLV);
 
     if (EmotLV::isValidLV(emotLV)) {
       emotLV->saveState();
@@ -417,7 +411,7 @@ namespace kIEview2 {
         try {
           args[0] = _parseMsgTpl(an).a_str();
         } catch(const exception& e) { 
-          args[0] = tplHandler->parseException(e).a_str();
+          args[0] = tplHandler.parseException(e).a_str();
         } catch(const Exception& e) {
           break;
         }
@@ -439,7 +433,7 @@ namespace kIEview2 {
         try {
           args[0] = _parseStatusTpl(an).a_str();
         } catch(const exception& e) { 
-          args[0] = tplHandler->parseException(e).a_str();
+          args[0] = tplHandler.parseException(e).a_str();
         } catch(const Exception& e) {
           break;
         }
@@ -482,7 +476,7 @@ namespace kIEview2 {
   void Controller::_styleLV() {
     if (getAN()->code == ACTN_CREATEWINDOW) {
       styleLV = new StyleLV((sUIActionNotify_createWindow*) getAN(), 220, 120);
-      styleHandler.fillLV(styleLV);
+      tplHandler.fillLV(styleLV);
     }
   }
 
@@ -542,7 +536,7 @@ namespace kIEview2 {
         text.replaceChars(sla, xsla);
         text = htmlEscape(text);
         text.replaceChars(xsla, sla);
-        text = rtfHtml->rtfParse((char*)text.a_str(), text.size());
+        text = rtfHtml.rtfParse((char*)text.a_str(), text.size());
         text = text.substr(29, text.length() - 29 - 13); // @debug chwilowe obejscie buga z przymusowym kolorem wysylanego tekstu
 
         strcpy(an->_message->body, text.a_str());
@@ -832,7 +826,7 @@ namespace kIEview2 {
     // czyscimy wiadomosci grupowania
     clearGroupedMsgs(ctrl);
 
-    ctrl->navigate(("file:///" + unifyPath(styleHandler.getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
+    ctrl->navigate(("file:///" + unifyPath(tplHandler.getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
     // ctrl->clear();
 
     SetProp(GetParent(ctrl->getHWND()), "MsgSession", (HANDLE) 0);
@@ -928,7 +922,7 @@ namespace kIEview2 {
   }
 
   String Controller::htmlEscape(StringRef& txt) {
-    return tplHandler->runFunc("htmlEscape", txt);
+    return tplHandler.runFunc("htmlEscape", txt);
   }
 
   string __stdcall Controller::eMailInsertion(RegEx* reg) {
@@ -1109,7 +1103,7 @@ namespace kIEview2 {
     if (an->_status & ST_IGNORED) {
       data.hash_insert_new_var("ignored?", "1");
     }
-    return tplHandler->parseTpl(&data, "status");
+    return tplHandler.parseTpl(&data, "status");
   }
 
   String Controller::_parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an) {
@@ -1182,7 +1176,7 @@ namespace kIEview2 {
     clearGroupedMsgs(an);
     groupedMsgs.push_back(sGroupedMsg(senderID, msg->type, date));
 
-    return tplHandler->parseTpl(&data, ("content-types/" + type).c_str());
+    return tplHandler.parseTpl(&data, ("content-types/" + type).c_str());
   }
 
   /*

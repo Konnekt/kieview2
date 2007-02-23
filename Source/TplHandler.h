@@ -16,8 +16,12 @@
 #ifndef __TPLHANDLER_H__
 #define __TPLHANDLER_H__
 
+#include <stamina/simxml.h>
 #include <ctpp/ctpp.hpp>
 #include <functions/std_fn_list.hpp>
+
+#include "kIEview2.h"
+#include "iPackageHandler.h"
 #include "Helpers.h"
 
 #pragma comment(lib, "ctpp.lib")
@@ -27,16 +31,40 @@ using namespace Stamina;
 using namespace boost;
 using namespace Helpers;
 
-class TplHandler : public SharedObject<iSharedObject> {
+class TplSet : public iPackage {
+public:
+  TplSet(const StringRef& name, const string& dir, const string& version = "", const StringRef& description = ""):
+    iPackage(name, dir, version, description) { }
+  TplSet() { }
+  virtual ~TplSet() { }
+};
+
+class TplPackageParser: public iPackageParser {
+public:
+  void setDefinitionFilter(FindFileFiltered& files) {
+    files.setMask(files.found().getDirectory() + "template.xml");
+  }
+  iPackage* parse(const FindFile::Found& defFile);
+};
+
+class TplHandler : public iPackageHandler {
 public:
   /* Class version */
-  STAMINA_OBJECT_CLASS_VERSION(TplHandler, iSharedObject, Version(0,1,0,0));
+  STAMINA_OBJECT_CLASS_VERSION(TplHandler, iPackageHandler, Version(0,1,0,0));
 
 public:
   typedef std::vector<string> tTplDirs;
 
 public:
   TplHandler(const string& tplExt = "tpl");
+
+public:
+  void fillLV(iLV* lv);
+
+  void loadSettings();
+  void saveSettings();
+
+  string getCurrentStyleDir();
 
 public:
   inline void addIncludeDir(const string& dir) {
@@ -49,9 +77,6 @@ public:
     tplDirs.clear();
   }
 
-  inline void setKonnektPath(const string& path) {
-    kPath = path;
-  }
   inline void setTplExt(const string& ext) {
     tplExt = ext;
   }
@@ -82,11 +107,7 @@ protected:
   udf_fn_factory udfFactory;
   v_include_dir includeDirs;
   tTplDirs tplDirs;
-
   string tplExt;
-  string kPath;
 };
-
-typedef SharedPtr<TplHandler> oTplHandler;
 
 #endif // __TPLHANDLER_H__

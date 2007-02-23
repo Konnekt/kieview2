@@ -56,7 +56,7 @@ namespace kIEview2 {
     const unsigned int source = ico + 6;
 
     const unsigned int emots = ico + 7;
-    const unsigned int bold = ico + 9;
+    const unsigned int bold = ico + 8;
     const unsigned int italic = ico + 9;
     const unsigned int underline = ico + 10;
     const unsigned int color = ico + 11;

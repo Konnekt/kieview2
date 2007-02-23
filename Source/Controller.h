@@ -26,8 +26,6 @@
 
 #include "ActionHandler.h"
 #include "TplHandler.h"
-
-#include "StyleHandler.h"
 #include "EmotHandler.h"
 
 #include "StyleUI.h"
@@ -251,7 +249,7 @@ namespace kIEview2 {
     }
 
     TplHandler* getTplHandler() {
-      return tplHandler;
+      return &tplHandler;
     }
 
     static DWORD CALLBACK streamOut(DWORD, LPBYTE, LONG, LONG*);
@@ -274,13 +272,12 @@ namespace kIEview2 {
     CriticalSection _locker;
     Tables::oTable historyTable;
     JS::Controller* jsController;
-    StyleHandler styleHandler;
     EmotHandler emotHandler;
+    TplHandler tplHandler;
     WNDPROC oldMsgWndProc;
     StyleLV* styleLV;
     EmotLV* emotLV;
-    TplHandler* tplHandler;
-    RtfHtmlTag* rtfHtml;
+    RtfHtmlTag rtfHtml;
 
     tEmailInsertions eMailInsertions;
     tLinkInsertions linkInsertions;

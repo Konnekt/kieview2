@@ -40,7 +40,7 @@ namespace kIEview2 {
   }
 
   void iEntry::setSelected(iLV* lv, bool value) {
-    _selectBtn->setImage(value ? lv->_checked : lv->_unChecked);
+    _selectBtn->setImage(value ? lv->_checked : lv->_unchecked);
     _selected = value;
     refreshEntry(lv, ListWnd::RefreshFlags::refreshPaint);
     touchConfigWnd();

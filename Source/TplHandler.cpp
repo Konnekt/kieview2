@@ -12,16 +12,74 @@
   */
 
 #include "stdafx.h"
+
 #include "TplHandler.h"
+#include "Controller.h"
 
 TplHandler::TplHandler(const string& tplExt) {
+  _dirColID = kIEview2::cfg::stylesDir;
+  *this << new TplPackageParser;
   setTplExt(tplExt);
+}
+
+iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
+  SXML xml;
+  xml.loadFile(defFile.getFilePath().c_str());
+
+  TplSet set;
+  set.setName(xml.getText("template/meta/name"));
+  set.setVersion(xml.getText("template/meta/version"));
+  set.setDescription(xml.getText("template/meta/description"));
+  set.setDir(defFile.getDirectoryName());
+
+  return new TplSet(set);
+}
+
+string TplHandler::getCurrentStyleDir() {
+  string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
+
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    TplSet* set = (TplSet*) *it;
+    if (set->getDir() == currentStyle) return getDir() + "\\" + set->getDir();
+  }
+  return getKonnektPath() + "data\\templates\\core";
+}
+
+void TplHandler::loadSettings() {
+  string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
+
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    TplSet* set = (TplSet*) *it;
+    if (set->getDir() == currentStyle) {
+      set->setEnabled(true); break;
+    }
+  }
+  clearDirs();
+  addTplDir(getDir() + "/" + currentStyle + "/");
+  addTplDir("data/templates/core/");
+}
+
+void TplHandler::saveSettings() {
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    TplSet* set = (TplSet*) *it;
+    if (set->isEnabled()) {
+      Controller::getConfig()->set(cfg::currentStyle, set->getDir()); break;
+    }
+  }
+}
+
+void TplHandler::fillLV(iLV* _lv) {
+  StyleLV* lv = (StyleLV*) _lv;
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    TplSet* set = (TplSet*) *it;
+    lv->addItem(new StyleLV::sStylePackInfo(set->isEnabled(), &*set));
+  }
 }
 
 void TplHandler::addTplDir(const string& dir, bool asInclude) {
   if (!dir.size()) return;
 
-  string tplDir = (dir.find(':') == dir.npos) ? kPath + dir : dir;
+  string tplDir = (dir.find(':') == dir.npos) ? getKonnektPath() + dir : dir;
   tplDir = unifyPath(tplDir);
 
   if (asInclude) {
@@ -145,8 +203,8 @@ String TplHandler::parseString(param_data* data, const StringRef& text) {
 }
 
 String TplHandler::parseTpl(param_data* data, const char* tplName) {
-  if (kPath.size()) {
-    data->hash_insert_new_var("tplPath", kPath + getTplDir(tplName));
+  if (getKonnektPath().size()) {
+    data->hash_insert_new_var("tplPath", getKonnektPath() + getTplDir(tplName));
   }
   return parseString(data, getTpl(tplName));
 }

@@ -56,7 +56,7 @@ namespace kIEview2 {
   protected:
     static tInstances _instances;
 
-    oImage _unChecked;
+    oImage _unchecked;
     oImage _checked;
 
     HFONT _fontNormal;

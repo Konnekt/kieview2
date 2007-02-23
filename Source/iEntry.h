@@ -31,7 +31,7 @@ namespace kIEview2 {
 
   public:
     iEntry(iLV* parent, bool selected = false): _selected(selected) {
-      _selectBtn = new DrawableButtonBasic(Rect(0,0,16,16), selected ? parent->_checked : parent->_unChecked);
+      _selectBtn = new DrawableButtonBasic(Rect(0,0,16,16), selected ? parent->_checked : parent->_unchecked);
     }
     virtual ~iEntry() { }
 
