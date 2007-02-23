@@ -158,7 +158,7 @@ void EmotHandler::loadPackages() {
   for (FindFile::tFoundFiles::iterator it = emotDirs.begin(); it != emotDirs.end(); it++) {
     for (tParsers::iterator it2 = parsers.begin(); it2 != parsers.end(); it2++) {
 
-      string fileName = unifyPath(it->getDirectory() + "/" + (*it2)->getDefFileName(it->getFileName()));
+      string fileName = it->getFilePath() + "\\" + (*it2)->getDefFileName(it->getFileName());
       if (!fileExists(fileName.c_str())) continue;
 
       try {

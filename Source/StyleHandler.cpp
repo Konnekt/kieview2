@@ -57,10 +57,8 @@ void StyleHandler::fillLV(iLV* _lv) {
 void StyleHandler::loadPackages() {
   clearPackages();
 
-  string tplDir = Controller::getConfig()->getChar(cfg::stylesDir);
-
   FindFile find;
-  find.setMask(tplDir + "\\*");
+  find.setMask(getDir() + "\\*");
   find.setDirOnly();
 
   FindFile::tFoundFiles tplDirs = find.makeList();
