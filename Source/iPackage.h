@@ -16,7 +16,7 @@
 #ifndef __IPACKAGE_H__
 #define __IPACKAGE_H__
 
-class iPackage {
+class iPackage : public iObject {
 public:
   iPackage(const StringRef& name, const string& dir, const string& version = "", const StringRef& description = ""):
     _id(random()), _enabled(false), _name(name), _dir(dir), _version(version), _description(description) { }

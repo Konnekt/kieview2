@@ -68,16 +68,20 @@ public:
     _packages.push_back(package);
   }
 
-  virtual void clearPackages() {
-    if (_packages.size()) _packages.clear();
+  virtual void load() {
+    loadPackages();
+    loadSettings();
   }
-  virtual void reloadPackages(iLV* lv = 0) {
+  virtual void reload(iLV* lv = 0) {
     bool validLV = iLV::isValidLV(lv);
 
     if (validLV) lv->removeAll();
-    loadPackages();
-    loadSettings();
+    load();
     if (validLV) fillLV(lv);
+  }
+
+  virtual void clearPackages() {
+    if (_packages.size()) _packages.clear();
   }
   virtual void loadPackages();
 

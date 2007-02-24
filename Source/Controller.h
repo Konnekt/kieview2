@@ -164,20 +164,20 @@ namespace kIEview2 {
     int getIEVersion();
 
     sWndObjCollection* getWndObjects(sUIActionNotify_base* an) {
-      IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
-      return ctrl ? &wndObjCollection[ctrl] : NULL;
+      IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+      return pCtrl ? &wndObjCollection[pCtrl] : NULL;
     }
-    sWndObjCollection* getWndObjects(IECtrl* ctrl) {
-      return ctrl ? &wndObjCollection[ctrl] : NULL;
+    sWndObjCollection* getWndObjects(IECtrl* pCtrl) {
+      return pCtrl ? &wndObjCollection[pCtrl] : NULL;
     }
 
     void clearGroupedMsgs(sUIActionNotify_base* an) {
       getWndObjects(an)->groupedMsgs.clear();
       getWndObjects(an)->groupedSt.clear();
     }
-    void clearGroupedMsgs(IECtrl* ctrl) {
-      getWndObjects(ctrl)->groupedMsgs.clear();
-      getWndObjects(ctrl)->groupedSt.clear();
+    void clearGroupedMsgs(IECtrl* pCtrl) {
+      getWndObjects(pCtrl)->groupedMsgs.clear();
+      getWndObjects(pCtrl)->groupedSt.clear();
     }
 
   protected:
@@ -198,13 +198,13 @@ namespace kIEview2 {
     bool isMsgFromHistory(sUIActionNotify_base* an);
     bool loadMsgTable(tCntId cnt);
 
-    void waitForIECtrlReady(IECtrl* ctrl, UINT sleepTime = 100) {
+    void waitForIECtrlReady(IECtrl* pCtrl, UINT sleepTime = 100) {
       Ctrl->WMProcess();
-      if (!ctrl->isReady()) {
+      if (!pCtrl->isReady()) {
         do {
           Ctrl->WMProcess();
           Ctrl->Sleep(sleepTime);
-        } while (!ctrl->isReady());
+        } while (!pCtrl->isReady());
       }
     }
 
@@ -241,8 +241,8 @@ namespace kIEview2 {
     void _handleFileTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an);
 
   public:
-    bool autoScroll(sUIActionNotify_base* an, IECtrl* ctrl);
-    void initWnd(IECtrl* ctrl);
+    bool autoScroll(sUIActionNotify_base* an, IECtrl* pCtrl);
+    void initWnd(IECtrl* pCtrl);
 
     EmotHandler* getEmotHandler() {
       return &emotHandler;
@@ -332,7 +332,7 @@ namespace kIEview2 {
 
     class WndController : public IECtrl::iObject {
     public:
-      WndController(IECtrl* ctrl, IECtrl::Var& args): iObject(ctrl, true), pCtrl(::Controller::getInstance()) {
+      WndController(IECtrl* pCtrl, IECtrl::Var& args): iObject(pCtrl, true), pCtrl(::Controller::getInstance()) {
         bindMethod("minimized", bind(resolve_cast0(&WndController::minimized), this), true);
         bindMethod("visible", bind(resolve_cast0(&WndController::visible), this), true);
         bindMethod("tabbed", bind(resolve_cast0(&WndController::tabbed), this), true);

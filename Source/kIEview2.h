@@ -18,21 +18,23 @@
 
 namespace kIEview2 {
   const unsigned int net = 880;
+  const unsigned int net1k = net * 1000;
+
   const char sig[] = "KIEV2";
 
   namespace api {
-    const unsigned int api = net * 1000 + IM_USER;
+    const unsigned int api = net1k + IM_USER;
   }
 
   namespace im {
-    const unsigned int im = net * 1000 + IM_USER + 100;
+    const unsigned int im = net1k + IM_USER + 100;
     
     const unsigned int fileDrop = im + 1;
     const unsigned int anchorClick = im + 2;
   }
 
   namespace ui {
-    const unsigned int ui = net * 1000;
+    const unsigned int ui = net1k + 10;
 
     const unsigned int cfgGroup = ui + 1;
     const unsigned int styleCfgGroup = ui + 2;
@@ -46,7 +48,7 @@ namespace kIEview2 {
   }
 
   namespace ico {
-    const unsigned int ico = net * 1000 + 100;
+    const unsigned int ico = net1k + 100;
     const unsigned int logo = ico + 1;
 
     const unsigned int link = ico + 2;
@@ -70,7 +72,7 @@ namespace kIEview2 {
   }
 
   namespace act {
-    const unsigned int act = net * 1000 + 200;
+    const unsigned int act = net1k + 200;
 
     namespace popup {
       const unsigned int popup = act + 100;
@@ -104,7 +106,7 @@ namespace kIEview2 {
   }
 
   namespace cfg {
-    const unsigned int cfg = net * 1000 + 500;
+    const unsigned int cfg = net1k + 500;
 
     const unsigned int showFormattingBtns = cfg + 1;
     const unsigned int showEmotChooser = cfg + 10;

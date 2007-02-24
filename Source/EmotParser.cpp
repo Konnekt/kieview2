@@ -33,21 +33,7 @@ iPackage* JispParser::parse(const FindFile::Found& defFile) {
     }
   }
 
-  // wczytywanie xmla z definicjami
-  ifstream file(icondefPath.c_str());
-  string code, buff;
-
-  if (!file.is_open()) {
-    throw CannotOpen("Cannot open file " + icondefPath);
-  }
-
-  while (!file.eof()) {
-    getline(file, buff);
-    code += buff + "\n";
-  }
-  file.close();
-
-  // parsujemy wczytanego xmla
+  // parsujemy xmla z definicjami
   xmlpp::DomParser parser;
   parser.set_substitute_entities();
 
@@ -58,11 +44,13 @@ iPackage* JispParser::parse(const FindFile::Found& defFile) {
   xmlpp::Attribute* attrib;
   eMSet result;
 
+  ifstream file(icondefPath.c_str());
   try {
-    parser.parse_memory(code.c_str());
+    parser.parse_stream(file);
   } catch (const xmlpp::exception& e) {
     throw XMLParserException(e.what());
   }
+  file.close();
 
   rootNode = parser.get_document()->get_root_node();
   if (rootNode->get_name() != "icondef") throw WrongFormat("Z³a nazwa korzenia dokumentu (z³y format ?)");

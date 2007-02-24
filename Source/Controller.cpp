@@ -109,7 +109,7 @@ namespace kIEview2 {
     if (int oldId = pluginExists(plugsNET::kieview)) {
       Ctrl->IMessage(&sIMessage_plugOut(oldId, "Wykryto starsz¹ wersjê wtyczki, od³¹czanie...",
         sIMessage_plugOut::erNo, sIMessage_plugOut::euNowAndOnNextStart));
-      return this->setFailure();
+      return setFailure();
     }
     setSuccess();
   }
@@ -120,14 +120,11 @@ namespace kIEview2 {
 
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
 
-    emotHandler << new JispParser;
+    // emotHandler << new JispParser;
     emotHandler << new GGParser;
 
-    tplHandler.loadPackages();
-    tplHandler.loadSettings();
-
-    emotHandler.loadPackages();
-    emotHandler.loadSettings();
+    tplHandler.load();
+    emotHandler.load();
 
     IconRegister(IML_16, ico::logo, Ctrl->hDll(), IDI_LOGO);
     IconRegister(IML_16, ico::link, Ctrl->hDll(), IDI_LINK);
@@ -154,9 +151,9 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::urlSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::saveImage, ACTSMENU_BOLD, "Zapisz obrazek", ico::save);
     UIActionAdd(act::popup::popup, act::popup::imageSep, ACTT_SEP);
-    UIActionAdd(act::popup::popup, act::popup::print, 0, "Drukuj", ico::print);
     UIActionAdd(act::popup::popup, act::popup::copySelection, 0, "Kopiuj", ico::copy);
     UIActionAdd(act::popup::popup, act::popup::selectAll, 0, "Zaznacz wszystko");
+    UIActionAdd(act::popup::popup, act::popup::print, 0, "Drukuj", ico::print);
     UIActionAdd(act::popup::popup, act::popup::showSource, 0, "Poka¿ Ÿród³o", ico::source);
     UIActionAdd(act::popup::popup, act::popup::historySep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::lastSession, 0, "Wczytaj ostatni¹ sesjê");
@@ -251,11 +248,11 @@ namespace kIEview2 {
 
     switch(an->act.id) {
       case act::popup::popup: {
-        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
+        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(
           sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, Konnekt::UI::ACT::msg_ctrlview, an->act.cnt)
         ));
-        if (ctrl) {
-          wndObjCollection[ctrl].actionHandler->selectedMenuItem = 0;
+        if (pCtrl) {
+          wndObjCollection[pCtrl].actionHandler->selectedMenuItem = 0;
         }
         break;
       }
@@ -270,11 +267,11 @@ namespace kIEview2 {
       case act::popup::lastSession:
       case act::popup::clear: {
         if (an->code != ACTN_ACTION) break;
-        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(
+        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(
           sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, Konnekt::UI::ACT::msg_ctrlview, an->act.cnt)
         ));
-        if (ctrl) {
-          wndObjCollection[ctrl].actionHandler->selectedMenuItem = an->act.id;
+        if (pCtrl) {
+          wndObjCollection[pCtrl].actionHandler->selectedMenuItem = an->act.id;
         }
         break;
       }
@@ -337,13 +334,13 @@ namespace kIEview2 {
       }
       case ui::refreshEmotLV: {
         if (an->code == ACTN_ACTION) {
-          emotHandler.reloadPackages(emotLV);
+          emotHandler.reload(emotLV);
         }
         break;
       }
       case ui::refreshStyleLV: {
         if (an->code == ACTN_ACTION) {
-          tplHandler.reloadPackages(styleLV);
+          tplHandler.reload(styleLV);
         }
         break;
       }
@@ -358,13 +355,13 @@ namespace kIEview2 {
       styleLV->saveState();
     }
     tplHandler.saveSettings();
-    tplHandler.reloadPackages(styleLV);
+    tplHandler.reload(styleLV);
 
     if (EmotLV::isValidLV(emotLV)) {
       emotLV->saveState();
     }
     emotHandler.saveSettings();
-    emotHandler.reloadPackages(emotLV);
+    emotHandler.reload(emotLV);
   }
 
   void Controller::_msgCtrlView() {
@@ -374,40 +371,40 @@ namespace kIEview2 {
     switch (getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
-        IECtrl* ctrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
-        an->hwnd = ctrl->getHWND();
+        IECtrl* pCtrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
+        an->hwnd = pCtrl->getHWND();
 
         oldMsgWndProc = (WNDPROC) SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
         SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
 
-        wndObjCollection[ctrl].actionHandler = new ActionHandler(ctrl, an->act.cnt);
+        wndObjCollection[pCtrl].actionHandler = new ActionHandler(pCtrl, an->act.cnt);
 
-        ctrl->enableSandbox(false);
-        this->initWnd(ctrl);
+        pCtrl->enableSandbox(false);
+        this->initWnd(pCtrl);
         break;
       }
 
       case ACTN_DESTROYWINDOW: {
         sUIActionNotify_destroyWindow* an = (sUIActionNotify_destroyWindow*)this->getAN();
-        IECtrl* ctrl = IECtrl::get(an->hwnd);
+        IECtrl* pCtrl = IECtrl::get(an->hwnd);
 
         for (tWndObjCollection::iterator it = wndObjCollection.begin(); it != wndObjCollection.end(); it++) {
-          if (it->first == ctrl) {
+          if (it->first == pCtrl) {
             wndObjCollection.erase(it); break;
           }
         }
-        delete ctrl;
+        delete pCtrl;
         break;
       }
 
       case Konnekt::UI::Notify::insertMsg: {
         Konnekt::UI::Notify::_insertMsg* an = (Konnekt::UI::Notify::_insertMsg*)this->getAN();
-        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
 
         IECtrl::Var args;
         IECtrl::Var ret;
 
-        bool autoScroll = an->_scroll && this->autoScroll(an, ctrl);
+        bool autoScroll = an->_scroll && this->autoScroll(an, pCtrl);
         try {
           args[0] = _parseMsgTpl(an).a_str();
         } catch(const exception& e) { 
@@ -416,20 +413,20 @@ namespace kIEview2 {
           break;
         }
 
-        waitForIECtrlReady(ctrl);
-        ctrl->callJScript("addMessage", args, &ret);
-        if (autoScroll) ctrl->scrollToBottom();
+        waitForIECtrlReady(pCtrl);
+        pCtrl->callJScript("addMessage", args, &ret);
+        if (autoScroll) pCtrl->scrollToBottom();
         break;
       }
 
       case Konnekt::UI::Notify::insertStatus: {
         Konnekt::UI::Notify::_insertStatus* an = (Konnekt::UI::Notify::_insertStatus*)this->getAN();
-        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
 
         IECtrl::Var args;
         IECtrl::Var ret;
 
-        bool autoScroll = this->autoScroll(an, ctrl);
+        bool autoScroll = this->autoScroll(an, pCtrl);
         try {
           args[0] = _parseStatusTpl(an).a_str();
         } catch(const exception& e) { 
@@ -438,30 +435,30 @@ namespace kIEview2 {
           break;
         }
 
-        waitForIECtrlReady(ctrl);
-        ctrl->callJScript("addStatus", args, &ret);
-        if (autoScroll) ctrl->scrollToBottom();
+        waitForIECtrlReady(pCtrl);
+        pCtrl->callJScript("addStatus", args, &ret);
+        if (autoScroll) pCtrl->scrollToBottom();
         break;
       }
 
       case Konnekt::UI::Notify::lock: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
-        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
         // TODO: Mo¿emy spodziewaæ siê, ¿e zaraz dodamy du¿o danych, np. przy przegl¹daniu historii
         break;
       }
 
       case Konnekt::UI::Notify::unlock: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
-        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
         // TODO: Du¿a iloœæ danych zosta³a dodana
         break;
       }
 
       case Konnekt::UI::Notify::clear: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
-        IECtrl* ctrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
-        this->initWnd(ctrl);
+        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        this->initWnd(pCtrl);
         break;
       }
 
@@ -586,12 +583,12 @@ namespace kIEview2 {
 
   IECtrl::Var Controller::getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj) {
     if (args.length() > 0) {
-      IECtrl* ctrl = IECtrl::get((HWND)args[0].getInteger());
-      if (ctrl) {
-        if (!wndObjCollection[ctrl].jsWndController) {
-          wndObjCollection[ctrl].jsWndController = new JS::WndController(ctrl, args);
+      IECtrl* pCtrl = IECtrl::get((HWND)args[0].getInteger());
+      if (pCtrl) {
+        if (!wndObjCollection[pCtrl].jsWndController) {
+          wndObjCollection[pCtrl].jsWndController = new JS::WndController(pCtrl, args);
         }
-        return wndObjCollection[ctrl].jsWndController;
+        return wndObjCollection[pCtrl].jsWndController;
       }
     }
     throw IECtrl::JSException("Invalid IE Control ref ID");
@@ -632,10 +629,10 @@ namespace kIEview2 {
     return (msgHandlers[type]->connections[label] = msgHandlers[type]->signal.connect(priority, f, pos)).connected();
   }
 
-  bool Controller::autoScroll(sUIActionNotify_base* an, IECtrl* ctrl) {
+  bool Controller::autoScroll(sUIActionNotify_base* an, IECtrl* pCtrl) {
     if (!an->act.cnt) return false;
 
-    if ((UIActionGetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::autoScroll, an->act.cnt)) & ACTS_CHECKED) || ctrl->isScrollOnBottom()) {
+    if ((UIActionGetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::autoScroll, an->act.cnt)) & ACTS_CHECKED) || pCtrl->isScrollOnBottom()) {
       return true;
     }
     return false;
@@ -685,15 +682,28 @@ namespace kIEview2 {
     const char encryptKey[] = "\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84";
     const char decryptKey[] = "\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d";
 
-    char* resultChar = table->getStr(row, table->getColIdByPos(pos));
+    /*
+    Value v(Tables::ctypeString);
+    v.buffSize = -1;
+    v.vChar = 0;
+
+    if (!table->get(row, table->getColIdByPos(pos), v)) {
+      IMLOG("[Controller::getStringCol()] Cannot access msg row");
+      return "";
+    }
+    */
+
+    Value v(Tables::ctypeString);
+    v.vCChar = (char*) table->getStr(row, table->getColIdByPos(pos));
+    v.buffSize = strlen(v.vCChar);
 
     if (table->getColType(table->getColIdByPos(pos)) & cflagXor) {
-      xor1_encrypt((unsigned char*)encryptKey, (unsigned char*)resultChar, strlen(resultChar));
-      xor1_decrypt((unsigned char*)decryptKey, (unsigned char*)resultChar, strlen(resultChar));
+      xor1_encrypt((unsigned char*)encryptKey, (unsigned char*)v.vCChar, v.buffSize);
+      xor1_decrypt((unsigned char*)decryptKey, (unsigned char*)v.vCChar, v.buffSize);
 
-      IMLOG("colPos = %i, value = %s", pos, resultChar);
+      IMLOG("colPos = %i, value = %s", pos, v.vCChar);
     }
-    return resultChar;
+    return (char*) v.vCChar;
   }
 
   String Controller::getSettingStr(const string& name, tTable table, tRowId row) {
@@ -819,17 +829,17 @@ namespace kIEview2 {
     return msgCount;
   }
 
-  void Controller::initWnd(IECtrl* ctrl) {
+  void Controller::initWnd(IECtrl* pCtrl) {
     // locking
     LockerCS lock(_locker);
 
     // czyscimy wiadomosci grupowania
-    clearGroupedMsgs(ctrl);
+    clearGroupedMsgs(pCtrl);
 
-    ctrl->navigate(("file:///" + unifyPath(tplHandler.getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
-    // ctrl->clear();
+    pCtrl->navigate(("file:///" + unifyPath(tplHandler.getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
+    // pCtrl->clear();
 
-    SetProp(GetParent(ctrl->getHWND()), "MsgSession", (HANDLE) 0);
+    SetProp(GetParent(pCtrl->getHWND()), "MsgSession", (HANDLE) 0);
   }
 
   DWORD CALLBACK Controller::streamOut(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) {
@@ -926,15 +936,15 @@ namespace kIEview2 {
   }
 
   string __stdcall Controller::eMailInsertion(RegEx* reg) {
-    Controller* ctrl = Controller::getInstance();
+    Controller* pCtrl = Controller::getInstance();
     RegEx& r = *reg;
 
     if (r.hasSub(1)) {
       return r[0];
     }
 
-    sEmailInsertion ei(ctrl->eMailInsertions.size(), r[2]);
-    ctrl->eMailInsertions.push_back(ei);
+    sEmailInsertion ei(pCtrl->eMailInsertions.size(), r[2]);
+    pCtrl->eMailInsertions.push_back(ei);
 
     return "<kiev2:email:insertion id=\"" + inttostr(ei.id) + "\" />";
   }
@@ -947,18 +957,18 @@ namespace kIEview2 {
   }
 
   string __stdcall Controller::linkInsertion(RegEx* reg) {
-    Controller* ctrl = Controller::getInstance();
+    Controller* pCtrl = Controller::getInstance();
     RegEx& r = *reg;
 
     if (r.hasSub(1) && r.hasSub(4)) {
       return r[0];
     }
 
-    sLinkInsertion li(ctrl->linkInsertions.size());
+    sLinkInsertion li(pCtrl->linkInsertions.size());
     li.url = ((r[3].find(":") == r[3].npos) ? "http://" : "") + r[2];
     li.name = r[2];
 
-    ctrl->linkInsertions.push_back(li);
+    pCtrl->linkInsertions.push_back(li);
     return r[1] + "<kiev2:link:insertion id=\"" + inttostr(li.id) + "\" />" + r[4];
   }
 

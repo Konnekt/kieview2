@@ -16,12 +16,6 @@
 #include "TplHandler.h"
 #include "Controller.h"
 
-TplHandler::TplHandler(const string& tplExt) {
-  _dirColID = kIEview2::cfg::stylesDir;
-  *this << new TplPackageParser;
-  setTplExt(tplExt);
-}
-
 iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
   SXML xml;
   xml.loadFile(defFile.getFilePath().c_str());
@@ -30,40 +24,53 @@ iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
   set.setName(xml.getText("template/meta/name"));
   set.setVersion(xml.getText("template/meta/version"));
   set.setDescription(xml.getText("template/meta/description"));
+  set.setPreview(xml.getText("template/meta/preview"));
   set.setDir(defFile.getDirectoryName());
 
   return new TplSet(set);
 }
 
-string TplHandler::getCurrentStyleDir() {
+const char TplHandler::coreStylePath[] = "data/templates/core";
+
+TplHandler::TplHandler(const string& tplExt) {
+  *this << new TplPackageParser;
+
+  _dirColID = kIEview2::cfg::stylesDir;
+  setTplExt(tplExt);
+}
+
+TplSet* TplHandler::getCurrentStyle() {
   string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    TplSet* set = (TplSet*) *it;
-    if (set->getDir() == currentStyle) return getDir() + "\\" + set->getDir();
+    if ((*it)->getDir() == currentStyle) return (TplSet*) *it;
   }
-  return getKonnektPath() + "data\\templates\\core";
+  throw ExceptionString("No style selected");
+}
+
+string TplHandler::getCurrentStyleDir() {
+  try {
+    return getDir() + "\\" + getCurrentStyle()->getDir();
+  } catch(...) {
+    return getKonnektPath() + unifyPath(coreStylePath);
+  }
 }
 
 void TplHandler::loadSettings() {
-  string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
-
-  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    TplSet* set = (TplSet*) *it;
-    if (set->getDir() == currentStyle) {
-      set->setEnabled(true); break;
-    }
-  }
   clearDirs();
-  addTplDir(getDir() + "/" + currentStyle + "/");
-  addTplDir("data/templates/core/");
+
+  try {
+    getCurrentStyle()->setEnabled(true);
+    addTplDir(getDir() + "/" + getCurrentStyle()->getDir() + "/");
+  } catch(...) { }
+
+  addTplDir(coreStylePath);
 }
 
 void TplHandler::saveSettings() {
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    TplSet* set = (TplSet*) *it;
-    if (set->isEnabled()) {
-      Controller::getConfig()->set(cfg::currentStyle, set->getDir()); break;
+    if ((*it)->isEnabled()) {
+      Controller::getConfig()->set(cfg::currentStyle, (*it)->getDir()); break;
     }
   }
 }
@@ -71,8 +78,7 @@ void TplHandler::saveSettings() {
 void TplHandler::fillLV(iLV* _lv) {
   StyleLV* lv = (StyleLV*) _lv;
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    TplSet* set = (TplSet*) *it;
-    lv->addItem(new StyleLV::sStylePackInfo(set->isEnabled(), &*set));
+    lv->addItem(new StyleLV::sStylePackInfo((*it)->isEnabled(), (TplSet*) *it));
   }
 }
 

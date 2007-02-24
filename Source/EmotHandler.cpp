@@ -32,10 +32,9 @@ void EmotHandler::loadSettings() {
 
     if (rows.size() != 3) continue;
     for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-      eMSet* set = (eMSet*) *it;
-      if (set->getDir() == rows[2]) {
-        set->setEnabled(atoi(rows[1].c_str()));
-        set->setPos(atoi(rows[0].c_str()));
+      if ((*it)->getDir() == rows[2]) {
+        ((eMSet*) *it)->setPos(atoi(rows[0].c_str()));
+        (*it)->setEnabled(atoi(rows[1].c_str()));
         break;
       }
     }
@@ -48,8 +47,7 @@ void EmotHandler::saveSettings() {
   String result;
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    eMSet* set = (eMSet*) *it;
-    result += stringf("%d|%d|%s\n", set->getPos(), (int) set->isEnabled(), set->getDir().c_str());
+    result += stringf("%d|%d|%s\n", ((eMSet*) *it)->getPos(), (int) (*it)->isEnabled(), (*it)->getDir().c_str());
   }
   Controller::getConfig()->set(cfg::emotPacks, result);
 }
@@ -60,8 +58,9 @@ void EmotHandler::fillLV(iLV* _lv) {
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
     eMSet* set = (eMSet*) *it;
-    if (!set->getEmots().size()) continue;
-
+    if (!set->getEmots().size()) {
+      continue;
+    }
     img = loadImageFromFile((getDir() + "\\" + set->getDir() + "\\" + set->getEmots()[0].getMenuImgPath()).c_str());
     lv->addItem(new EmotLV::sEmotPackInfo(set->isEnabled(), &*set, img));
   }

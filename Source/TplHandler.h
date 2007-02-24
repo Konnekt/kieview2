@@ -16,7 +16,6 @@
 #ifndef __TPLHANDLER_H__
 #define __TPLHANDLER_H__
 
-#include <stamina/simxml.h>
 #include <ctpp/ctpp.hpp>
 #include <functions/std_fn_list.hpp>
 
@@ -37,6 +36,17 @@ public:
     iPackage(name, dir, version, description) { }
   TplSet() { }
   virtual ~TplSet() { }
+
+public:
+  virtual string getPreview() const {
+    return _preview;
+  }
+  virtual void setPreview(const StringRef& img_path) {
+    _preview = img_path;
+  }
+
+protected:
+  string _preview;
 };
 
 class TplPackageParser: public iPackageParser {
@@ -53,7 +63,7 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(TplHandler, iPackageHandler, Version(0,1,0,0));
 
 public:
-  typedef std::vector<string> tTplDirs;
+  typedef vector<string> tTplDirs;
 
 public:
   TplHandler(const string& tplExt = "tpl");
@@ -64,18 +74,18 @@ public:
   void loadSettings();
   void saveSettings();
 
+  TplSet* getCurrentStyle();
   string getCurrentStyleDir();
 
 public:
+  inline void clearDirs() {
+    includeDirs.clear();
+    tplDirs.clear();
+  }
   inline void addIncludeDir(const string& dir) {
     includeDirs.push_back(dir);
   }
   void addTplDir(const string& dir, bool asInclude = true);
-
-  void clearDirs() {
-    includeDirs.clear();
-    tplDirs.clear();
-  }
 
   inline void setTplExt(const string& ext) {
     tplExt = ext;
@@ -104,10 +114,13 @@ public:
   String parseException(const exception &e);
 
 protected:
+  static const char coreStylePath[];
+
   udf_fn_factory udfFactory;
+  string tplExt;
+
   v_include_dir includeDirs;
   tTplDirs tplDirs;
-  string tplExt;
 };
 
 #endif // __TPLHANDLER_H__
