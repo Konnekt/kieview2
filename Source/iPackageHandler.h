@@ -35,7 +35,7 @@ public:
   typedef list<iPackage*> tPackages;
 
 public:
-  iPackageHandler(): _dirColID(0) { }
+  iPackageHandler(): _dirColID(0), _repoDir("~local") { }
   virtual ~iPackageHandler() {
     for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
       delete *it;
@@ -60,6 +60,7 @@ public:
 
   virtual string getKonnektPath();
   virtual string getDir();
+  virtual void prepareRepo(const string& path); 
 
   virtual void addParser(iPackageParser* parser) {
     _parsers.push_back(parser);
@@ -67,7 +68,6 @@ public:
   virtual void addPackage(iPackage* package) {
     _packages.push_back(package);
   }
-
   virtual void load() {
     loadPackages();
     loadSettings();
@@ -92,6 +92,7 @@ protected:
   Tables::tColId _dirColID;
   tPackages _packages;
   tParsers _parsers;
+  string _repoDir;
 };
 
 #endif // __IPACKAGEHANDLER_H__

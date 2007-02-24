@@ -20,6 +20,23 @@ string iPackageHandler::getKonnektPath() {
   return Controller::getInstance()->kPath;
 }
 
+void iPackageHandler::prepareRepo(const string& path) {
+  Zip zip;
+
+  string localPath = getFileDirectory(path) + "\\" + _repoDir;
+
+  try {
+    zip.open(string(path).c_str());
+    zip.unzip(localPath);
+    zip.close();
+  } catch(const Exception& e) {
+    throw CannotOpen(e.getReason());
+  }
+
+  SetFileAttributes(localPath.c_str(), GetFileAttributes(localPath.c_str()) & FILE_ATTRIBUTE_HIDDEN);
+}
+
+
 string iPackageHandler::getDir() {
   if (_dirColID) {
     string dir = Controller::getConfig()->getChar(_dirColID);

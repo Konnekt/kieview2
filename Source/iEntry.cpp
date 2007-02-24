@@ -29,7 +29,7 @@ namespace kIEview2 {
   int iEntry::sizeInfo(iLV* lv, Rect& rc) {
     string text = getText();
     HDC dc = lv->getDC();
-    RECT rcz = {0, 0, rc.width(), 0};
+    RECT rcz = {0, 0, rc.width() - 25, 0};
 
     HFONT oldFont = (HFONT) SelectObject(dc, lv->_fontNormal);
     DrawText(dc, text.c_str(), -1, &rcz, DT_CALCRECT | DT_WORDBREAK);

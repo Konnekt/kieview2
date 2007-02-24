@@ -92,12 +92,14 @@ Size EmotLV::EmotPackInfoItem::getEntrySize(ListWnd::ListView* lv, const ListWnd
   LockerCS locker(_lock);
 
   int addY = 0;
+  int addX = 0;
   if (_emotInfo->image.isValid()) {
     addY = _emotInfo->image->getSize().h;
+    addX = _emotInfo->image->getSize().w;
   }
   if (addY < 16) addY = 16;
   if (li->isActive()) {
-    return Size(fitIn.w, sizeInfo((EmotLV*)lv, Rect(0, 0, fitIn.w, 0)) + 6 + addY);
+    return Size(fitIn.w, sizeInfo((EmotLV*)lv, Rect(0, 0, fitIn.w -  addX - 3 , 0)) + 6 + addY);
   }
   return Size(fitIn.w, 6 + addY);
 }
@@ -164,11 +166,9 @@ bool EmotLV::EmotPackInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd:
       return false;
 
     } else {
-      if (li->isActive()) {
-        elv->draged = true;
-        elv->draged_id = lv->getItemIndex(li);
-        elv->mmitem = elv->draged_id;
-      }
+      elv->draged = true;
+      elv->draged_id = lv->getItemIndex(li);
+      elv->mmitem = elv->draged_id;
       SetCapture(lv->getHwnd());
     }
   }
