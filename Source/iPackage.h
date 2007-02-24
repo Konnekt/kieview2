@@ -33,36 +33,41 @@ public:
   virtual bool isEnabled() {
     return _enabled;
   }
-  virtual void setEnabled(bool value) {
+  virtual iPackage& setEnabled(bool value) {
     _enabled = value;
+    return *this;
   }
 
   virtual String getName() {
     return _name;
   }
-  virtual void setName(const StringRef& name) {
+  virtual iPackage& setName(const StringRef& name) {
     _name = name;
+    return *this;
   }
 
   virtual string getVersion() {
     return _version;
   }
-  virtual void setVersion(const string& version) {
+  virtual iPackage& setVersion(const string& version) {
     _version = version;
+    return *this;
   }
 
   virtual String getDescription() {
     return _description;
   }
-  virtual void setDescription(const StringRef& desc) {
+  virtual iPackage& setDescription(const StringRef& desc) {
     _description = desc;
+    return *this;
   }
 
   virtual string getDir() {
     return _dir;
   }
-  virtual void setDir(const string& dir) {
+  virtual iPackage& setDir(const string& dir) {
     _dir = dir;
+    return *this;
   }
 
 protected:

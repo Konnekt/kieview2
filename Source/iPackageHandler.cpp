@@ -63,7 +63,7 @@ void iPackageHandler::loadPackages() {
         if (files.nothingFound() || !fileList.size() || fileList.front().empty()) {
           continue;
         }
-        *this << (*it2)->parse(fileList.front());
+        addPackage(&(*it2)->parse(fileList.front())->setDir(it->getFileName()));
       } catch (const Exception& e) {
         IMLOG("[iPackageHandler::loadPackages()] b³¹d podczas parsowania paczki emot (%s): %s", 
           it->getFileName().c_str(), e.getReason().c_str());

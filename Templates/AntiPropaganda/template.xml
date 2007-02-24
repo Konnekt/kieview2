@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<template>
+  <meta>
+    <name>AntiPropaganda</name>
+    <version>1.0</version>
+    <description>Port stylu o tej samej nazwie na AdiumX</description>
+    <creation>2007-03-23</creation>
+    <author jid="oskar@mindsposure.com">Oskar Krawczyk</author>
+    <author jid="sija@khrone.pl">Sija</author>
+	  <url>http://konnekt.info/</url>
+    <preview>css/img/preview.png</preview>
+  </meta>
+</template>

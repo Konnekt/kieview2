@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<template>
+  <meta>
+    <name>Silk</name>
+    <version>1.1</version>
+    <description></description>
+    <creation>2007-03-23</creation>
+    <author jid="sija@khrone.pl">Sija</author>
+	  <url>http://konnekt.info/</url>
+    <preview>css/img/preview.png</preview>
+  </meta>
+</template>

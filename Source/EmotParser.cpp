@@ -129,43 +129,33 @@ iPackage* JispParser::parse(const FindFile::Found& defFile) {
       }
     }
   }
-
-  result.setDir(defFile.getDirectoryName());
   return new eMSet(result);
 }
 
 iPackage* GGParser::parse(const FindFile::Found& defFile) {
   ifstream file(defFile.getFilePath().c_str());
-  string code, buff;
+  string buff;
 
   if (!file.is_open()) {
     throw CannotOpen("Cannot open file " + defFile.getFilePath());
   }
 
-  while (!file.eof()) {
-    getline(file, buff);
-    code += buff + "\n";
-  }
-  file.close();
-
-  eMSet result;
-  tStringVector strings;
   bool inMenu;
-
-  Stamina::split(code, "\n", strings);
+  eMSet result;
   RegEx reg;
 
-  for (tStringVector::iterator it = strings.begin(); it != strings.end(); it++) {
+  while (!file.eof()) {
+    getline(file, buff);
     eMSet::tEmots emots;
 
-    if ((*it)[0] == '*') {
+    if (buff[0] == '*') {
       inMenu = false;
-      (*it).erase(0);
+      buff.erase(0);
     } else {
       inMenu = true;
     }
 
-    reg.setSubject(*it);
+    reg.setSubject(buff);
     reg.setPattern("/,?\"(.+?)\",?/");
 
     while (reg.match_global()) {
@@ -173,7 +163,7 @@ iPackage* GGParser::parse(const FindFile::Found& defFile) {
       emot.setText(reg[1].c_str());
       emots.push_back(emot);
 
-      if (reg.getSubject()[reg.getStart()] == ')' || (*it)[0] != '(') {
+      if (reg.getSubject()[reg.getStart()] == ')' || buff[0] != '(') {
         string img_path;
         string menu_img_path;
 
@@ -193,9 +183,8 @@ iPackage* GGParser::parse(const FindFile::Found& defFile) {
     }
     result.getEmots().insert(result.getEmots().end(), emots.begin(), emots.end());
   }
+  file.close();
 
   result.setName(defFile.getDirectoryName());
-  result.setDir(defFile.getDirectoryName());
-
   return new eMSet(result);
 }
