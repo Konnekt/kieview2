@@ -60,7 +60,6 @@ public:
 
   virtual string getKonnektPath();
   virtual string getDir();
-  virtual void prepareRepo(const string& path); 
 
   virtual void addParser(iPackageParser* parser) {
     _parsers.push_back(parser);
@@ -68,6 +67,7 @@ public:
   virtual void addPackage(iPackage* package) {
     _packages.push_back(package);
   }
+
   virtual void load() {
     loadPackages();
     loadSettings();
@@ -84,6 +84,7 @@ public:
     if (_packages.size()) _packages.clear();
   }
   virtual void loadPackages();
+  virtual void prepareRepo(const string& path); 
 
   virtual void loadSettings() = 0;
   virtual void saveSettings() = 0;

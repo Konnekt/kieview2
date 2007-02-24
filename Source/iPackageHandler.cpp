@@ -16,26 +16,23 @@
 #include "iPackageHandler.h"
 #include "Controller.h"
 
-string iPackageHandler::getKonnektPath() {
-  return Controller::getInstance()->kPath;
-}
-
 void iPackageHandler::prepareRepo(const string& path) {
+  string localPath = getFileDirectory(path) + "\\" + _repoDir;
   Zip zip;
 
-  string localPath = getFileDirectory(path) + "\\" + _repoDir;
-
   try {
-    zip.open(string(path).c_str());
+    zip.open(path);
     zip.unzip(localPath);
     zip.close();
   } catch(const Exception& e) {
     throw CannotOpen(e.getReason());
   }
-
   SetFileAttributes(localPath.c_str(), GetFileAttributes(localPath.c_str()) & FILE_ATTRIBUTE_HIDDEN);
 }
 
+string iPackageHandler::getKonnektPath() {
+  return Controller::getInstance()->kPath;
+}
 
 string iPackageHandler::getDir() {
   if (_dirColID) {
@@ -48,12 +45,11 @@ string iPackageHandler::getDir() {
 void iPackageHandler::loadPackages() {
   clearPackages();
 
-  FindFile::tFoundFiles dirs;
   FindFile find;
-
   find.setMask(getDir() + "\\*");
   find.setDirOnly();
 
+  FindFile::tFoundFiles dirs;
   dirs = find.makeList();
 
   if (find.nothingFound()) {
@@ -65,25 +61,23 @@ void iPackageHandler::loadPackages() {
     return;
   }
 
-  for (tParsers::iterator it2 = _parsers.begin(); it2 != _parsers.end(); it2++) {
-    for (FindFile::tFoundFiles::iterator it = dirs.begin(); it != dirs.end(); it++) {
-      FindFile::tFoundFiles fileList;
-      FindFileFiltered files;
+  for (tParsers::iterator parser = _parsers.begin(); parser != _parsers.end(); parser++) {
+    for (FindFile::tFoundFiles::iterator dir = dirs.begin(); dir != dirs.end(); dir++) {
 
-      files.setMask(it->getFilePath() + "\\*");
+      FindFileFiltered files(dir->getFilePath() + "\\*");
       files.setFileOnly();
 
-      (*it2)->setDefinitionFilter(files);
-      fileList = files.makeList();
+      (*parser)->setDefinitionFilter(files);
+      files.find();
 
+      if (files.nothingFound() || files.found().empty()) {
+        continue;
+      }
       try {
-        if (files.nothingFound() || !fileList.size() || fileList.front().empty()) {
-          continue;
-        }
-        addPackage(&(*it2)->parse(fileList.front())->setDir(it->getFileName()));
+        *this << &(*parser)->parse(files.found())->setDir(dir->getFileName());
       } catch (const Exception& e) {
-        IMLOG("[iPackageHandler::loadPackages()] b³¹d podczas parsowania paczki emot (%s): %s", 
-          it->getFileName().c_str(), e.getReason().c_str());
+        IMLOG("[iPackageHandler::loadPackages()] b³¹d podczas parsowania paczki (%s): %s", 
+          dir->getFileName().c_str(), e.getReason().c_str());
       }
     }
   }
