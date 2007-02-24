@@ -44,7 +44,10 @@ TplSet* TplHandler::getCurrentStyle() {
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
     if ((*it)->getDir() == currentStyle) return (TplSet*) *it;
   }
-  throw ExceptionString("No style selected");
+  if (_packages.size()) {
+    return (TplSet*) _packages.front();
+  }
+  throw ExceptionString("No styles available");
 }
 
 string TplHandler::getCurrentStyleDir() {
