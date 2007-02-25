@@ -14,6 +14,8 @@
 #include "stdafx.h"
 #include "IECtrl.h"
 
+#pragma comment(lib, "Advapi32.lib")
+
 #define DISPID_BEFORENAVIGATE2 250
 
 IECtrl::Global* IECtrl::m_pGlobal = NULL;
@@ -402,12 +404,47 @@ void IECtrl::close() {
   m_bGetFocus = false;
 }
 
-void IECtrl::navigate(const char *url) {
+void IECtrl::navigate(const char *url, bool playSound) {
   int textLen = strlen(url) + 1;
   WCHAR *tTemp = new WCHAR[textLen];
 
   MultiByteToWideChar(CP_ACP, 0, url, -1, tTemp, textLen);
+
+  TCHAR values[256], wavPath[256];
+  DWORD type = 0, bs = 255, r = 0;
+  HKEY key;
+
+  if (!playSound) {
+    RegOpenKey(HKEY_CURRENT_USER, "AppEvents\\Schemes", &key);
+    r = RegQueryValueExA(key, NULL, 0, &type, (LPBYTE)values, &bs);
+    RegCloseKey(key);
+
+    key = 0;
+    bool current = !r && !strcmp(".current", values);
+
+    if (current) {
+      RegOpenKey(HKEY_CURRENT_USER, "AppEvents\\Schemes\\Apps\\Explorer\\Navigating\\.Current", &key);
+    }
+    else {
+      RegOpenKey(HKEY_CURRENT_USER, "AppEvents\\Schemes\\Apps\\Explorer\\Navigating\\.Default", &key);
+    }
+    bs = sizeof(wavPath);
+    r = RegQueryValueExA(key, NULL, 0, &type, (LPBYTE)wavPath, &bs);
+    RegSetValueEx(key, NULL, 0, REG_EXPAND_SZ, (LPBYTE)"", 1);
+
+    SendMessage(getHWND(), WM_SETTINGCHANGE, 0, 0);
+    SendMessage(getHWND(), WM_WININICHANGE, 0, 0);
+  }
+
   m_pWebBrowser->Navigate(tTemp, NULL, NULL, NULL, NULL);
+
+  if (!playSound) {
+    if (!r) {
+      RegSetValueEx(key, NULL, 0, REG_EXPAND_SZ, (LPBYTE)wavPath, lstrlen(wavPath));
+    }
+    RegCloseKey(key);
+  }
+
   delete tTemp;
 }
 
