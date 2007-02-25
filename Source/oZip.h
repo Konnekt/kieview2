@@ -105,6 +105,27 @@ public:
     return index;
   }
 
+  bool unzipDir(const string& dir, const string& root) {
+    int index = 0;
+    ZRESULT zr = 0;
+    ZIPENTRY ze;
+    string tmp;
+
+    while (!zr) {
+      zr = GetZipItem(_handle, index, &ze);
+      tmp = ze.name;
+
+      if (getFileDirectory(tmp).find(root) == -1) {
+        index++;
+        continue;
+      }
+      tmp = tmp.substr(root.size());
+      zr = zr || !unzipItem(index, dir + "\\" + tmp);
+      index++;
+    }
+    return index;
+  }
+
   bool setBaseDir(const string& dir) {
     return !SetUnzipBaseDir(_handle, dir.c_str());
   }

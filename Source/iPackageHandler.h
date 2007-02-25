@@ -84,7 +84,7 @@ public:
     if (_packages.size()) _packages.clear();
   }
   virtual void loadPackages();
-  virtual void prepareRepo(const string& path); 
+  virtual void prepareRepo(const string& path, const string& rootDir); 
 
   virtual void loadSettings() = 0;
   virtual void saveSettings() = 0;

@@ -16,13 +16,13 @@
 #include "iPackageHandler.h"
 #include "Controller.h"
 
-void iPackageHandler::prepareRepo(const string& path) {
+void iPackageHandler::prepareRepo(const string& path, const string& rootdir) {
   string localPath = getFileDirectory(path) + "\\" + _repoDir;
   Zip zip;
 
   try {
     zip.open(path);
-    zip.unzip(localPath);
+    zip.unzipDir(localPath, rootdir);
     zip.close();
   } catch(const Exception& e) {
     throw CannotOpen(e.getReason());
