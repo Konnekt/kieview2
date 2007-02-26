@@ -227,7 +227,7 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::emotCfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê \"pakiety\" emotikon");
     UIActionCfgAdd(ui::emotCfgGroup, cfg::emotsDir, ACTT_DIR, "", cfg::emotsDir);
     UIActionCfgAdd(ui::emotCfgGroup, 0, ACTT_SEPARATOR, "Wybierz pakiety emotikon:");
-    UIActionCfgAdd(ui::emotCfgGroup, ui::emotLV, ACTT_HWND | ACTSC_INLINE);
+    UIActionCfgAdd(ui::emotCfgGroup, ui::emotLV, ACTT_HWND | ACTSC_INLINE | ACTSC_FULLWIDTH);
     UIActionCfgAdd(ui::emotCfgGroup, ui::refreshEmotLV, ACTT_BUTTON, "Odœwie¿" AP_ICO "702", 0, 0, 0, 75);
     UIActionCfgAdd(ui::emotCfgGroup, 0, ACTT_GROUPEND);
 
@@ -235,7 +235,7 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê \"pakiety\" styli");
     UIActionCfgAdd(ui::styleCfgGroup, cfg::stylesDir, ACTT_DIR, "", cfg::stylesDir);
     UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_SEPARATOR, "Wybierz aktywny styl:");
-    UIActionCfgAdd(ui::styleCfgGroup, ui::styleLV, ACTT_HWND | ACTSC_INLINE);
+    UIActionCfgAdd(ui::styleCfgGroup, ui::styleLV, ACTT_HWND | ACTSC_INLINE | ACTSC_FULLWIDTH);
     UIActionCfgAdd(ui::styleCfgGroup, ui::refreshStyleLV, ACTT_BUTTON, "Odœwie¿" AP_ICO "702", 0, 0, 0, 75);
     UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_GROUPEND);
   }
