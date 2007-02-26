@@ -66,6 +66,12 @@ public:
   string getDefinitionMask() {
     return "emots.txt";
   }
+  string getArchiveMask() {
+    return "*.zip";
+  }
+  bool fromArchive() {
+    return true;
+  }
   iPackage* parse(const FindFile::Found& defFile);
 };
 

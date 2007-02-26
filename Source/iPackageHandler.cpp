@@ -22,7 +22,7 @@ void iPackageHandler::prepareRepo(const string& path) {
   if (!isDirectory(localPath.c_str())) {
     try {
       Zip zip(path);
-      zip.unzipDir(localPath, "");
+      zip.unzipDir(localPath, zip.get(0).getDirectory());
       zip.close();
     } catch(const Exception& e) {
       throw CannotOpen(e.getReason());
@@ -74,8 +74,8 @@ void iPackageHandler::loadPackages() {
         files.find();
         if (!files.nothingFound() && !files.found().empty()) {
           prepareRepo(files.found().getFilePath());
+          defPath += _repoDir + "\\";
         }
-        defPath += _repoDir + "\\";
       }
 
       files.setMask(defPath + (*parser)->getDefinitionMask());
@@ -85,7 +85,13 @@ void iPackageHandler::loadPackages() {
         continue;
       }
       try {
-        *this << &(*parser)->parse(files.found())->setDir(dir->getFileName());
+        iPackage* package = (*parser)->parse(files.found());
+        if (!package->getName().length()) {
+          package->setName(dir->getFileName());
+        }
+        package->setDir(dir->getFileName());
+
+        *this << package;
       } catch (const Exception& e) {
         IMLOG("[iPackageHandler::loadPackages()] b³¹d podczas parsowania paczki (%s): %s", 
           dir->getFileName().c_str(), e.getReason().c_str());

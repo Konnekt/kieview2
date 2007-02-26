@@ -37,9 +37,8 @@ class Zip {
 public:
   class Entry {
   public:
-    Entry(const string& dir = "") {
+    Entry() {
       _data.name[0] = 0;
-      setDirectory(dir);
     }
     inline Entry(const Entry& b) {
       *this = b;
@@ -47,7 +46,6 @@ public:
 
     inline Entry& operator = (const Entry& b) {
       memcpy(&_data, &b._data, sizeof(_data));
-      this->_dir = b._dir;
       return *this;
     }
 
@@ -87,24 +85,20 @@ public:
     }
 
     inline string getDirectoryName() const {
-      string name = _dir.substr(0, _dir.length() - 1);
+      string name = getDirectory().substr(0, getDirectory().length() - 1);
       return name.substr(name.find_last_of("\\/") + 1);
     }
 
     inline string getDirectory() const {
-      return _dir;
-    }
-
-    inline void setDirectory(const string& dir)  {
-      _dir = unifyPath(dir, true);
+      return getFileDirectory(getFilePath());
     }
 
     inline string getFileName() const {
-      return _data.name;
+      return getFilePath().substr(getFilePath().find_last_of("\\/") + 1);
     }
 
     inline string getFilePath() const {
-      return _dir + this->getFileName();
+      return _data.name;
     }
 
     inline bool isDirectory() const {
@@ -113,7 +107,6 @@ public:
 
   protected:
     ZIPENTRY _data;
-    string _dir;
   };
 
 public:
@@ -141,35 +134,59 @@ public:
     _handle = NULL;
   }
 
-  bool find(const string& path) {
-    /*
-    Entry entry(getFileDirectory(path));
-    FindZipItem(_handle, path.c_str(), true, &entry.getDataRef()->index, &entry.getDataRef());
-    */
-    ZIPENTRY entry;
-    int index;
-
-    return !FindZipItem(_handle, path.c_str(), true, &index, &entry);
+public:
+  bool handleResult(ZRESULT resultCode) {
+    if (resultCode != ZR_OK) {
+      throw ExceptionString(getErrorMsg(resultCode));
+    }
+    return true;
   }
 
-  bool unzipItem(int index, const string& path) {
-    return !UnzipItem(_handle, index, path.c_str());
+  string getErrorMsg(ZRESULT result) {
+    char msg[256];
+    FormatZipMessage(result, msg, 255);
+
+    return msg;
   }
 
-  bool unzip(const string& dir) {
+  bool setBaseDir(const string& dir) {
+    return handleResult(SetUnzipBaseDir(_handle, dir.c_str()));
+  }
+
+public:
+  Entry find(const string& filename) {
+    Entry entry;
+    handleResult(FindZipItem(_handle, filename.c_str(), true, &entry.getDataRef()->index, entry.getDataRef()));
+
+    return entry;
+  }
+
+  Entry get(UINT index) {
+    Entry entry;
+    handleResult(GetZipItem(_handle, index, entry.getDataRef()));
+
+    return entry;
+  }
+
+public:
+  bool unzip(UINT index, const string& path) {
+    return handleResult(UnzipItem(_handle, index, path.c_str()));
+  }
+
+  bool unzip(const string& path) {
     int index = 0;
     ZRESULT zr = 0;
     ZIPENTRY ze;
 
     while (!zr) {
       zr = GetZipItem(_handle, index, &ze);
-      zr = zr || !unzipItem(index, dir + "\\" + ze.name);
+      zr = zr || !unzip(index, path + "\\" + ze.name);
       index++;
     }
     return index;
   }
 
-  bool unzipDir(const string& dir, const string& root) {
+  bool unzipDir(const string& path, const string& root) {
     int index = 0;
     ZRESULT zr = 0;
     ZIPENTRY ze;
@@ -184,23 +201,13 @@ public:
         continue;
       }
       tmp = tmp.substr(root.size());
-      zr = zr || !unzipItem(index, dir + "\\" + tmp);
+      zr = zr || !unzip(index, path + "\\" + tmp);
       index++;
     }
     return index;
   }
 
-  bool setBaseDir(const string& dir) {
-    return !SetUnzipBaseDir(_handle, dir.c_str());
-  }
-
-  string getErrorMsg(ZRESULT result) {
-    char msg[256];
-    FormatZipMessage(result, msg, 255);
-
-    return msg;
-  }
-
+public:
   String getFile(const string& path) {
     ZIPENTRY entry;
     int index;

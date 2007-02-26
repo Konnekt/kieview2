@@ -167,6 +167,5 @@ iPackage* GGParser::parse(const FindFile::Found& defFile) {
   }
   file.close();
 
-  result.setName(defFile.getDirectoryName());
   return new eMSet(result);
 }
