@@ -36,7 +36,7 @@ public:
   }
 
   virtual string getMenuImgPath() const {
-    return _img_path;
+    return _menu_img_path.length() ? _menu_img_path : _img_path;
   }
   virtual void setMenuImgPath(const StringRef& new_path) {
     _menu_img_path = new_path;

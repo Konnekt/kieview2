@@ -16,15 +16,17 @@
 #include "EmotParser.h"
 
 iPackage* JispParser::parse(const FindFile::Found& defFile) {
+  using namespace xmlpp;
+
   // parsujemy xmla z definicjami
-  xmlpp::DomParser parser;
+  DomParser parser;
   parser.set_substitute_entities();
 
-  xmlpp::Node* rootNode;
-  xmlpp::Node* metaNode;
-  xmlpp::Node::NodeList icons;
-  xmlpp::Node::NodeList nodes;
-  xmlpp::Attribute* attrib;
+  Node* rootNode;
+  Node* metaNode;
+  Node::NodeList icons;
+  Node::NodeList nodes;
+  Attribute* attrib;
   eMSet result;
 
   ifstream file(defFile.getFilePath().c_str());
@@ -44,51 +46,50 @@ iPackage* JispParser::parse(const FindFile::Found& defFile) {
   if (!metaNode) throw WrongFormat("Element 'meta' nie zawiera dzieci");
 
   nodes = metaNode->get_children("name");
-  if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.setName(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
+  if (nodes.size() == 1 && dynamic_cast<Element*>(*nodes.begin())) {
+    result.setName(dynamic_cast<Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
   }
 
   nodes = metaNode->get_children("version");
-  if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.setVersion(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
+  if (nodes.size() == 1 && dynamic_cast<Element*>(*nodes.begin())) {
+    result.setVersion(dynamic_cast<Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
   }
 
   nodes = metaNode->get_children("description");
-  if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.setDescription(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
+  if (nodes.size() == 1 && dynamic_cast<Element*>(*nodes.begin())) {
+    result.setDescription(dynamic_cast<Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
   }
 
   nodes = metaNode->get_children("author");
-  for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
-    if (dynamic_cast<xmlpp::Element*>(*it)) {
-      attrib = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("jid");
-      result.addAuthor(eMAuthor(dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str(),
+  for (Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
+    if (dynamic_cast<Element*>(*it)) {
+      attrib = dynamic_cast<Element*>(*it)->get_attribute("jid");
+      result.addAuthor(eMAuthor(dynamic_cast<Element*>(*it)->get_child_text()->get_content().c_str(),
         attrib ? attrib->get_value().c_str() : ""));
     }
   }
 
   nodes = metaNode->get_children("creation");
-  if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    // result.setCTime(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
+  if (nodes.size() == 1 && dynamic_cast<Element*>(*nodes.begin())) {
+    // result.setCTime(dynamic_cast<Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
   }
 
   nodes = metaNode->get_children("home");
-  if (nodes.size() == 1 && dynamic_cast<xmlpp::Element*>(*nodes.begin())) {
-    result.setUrl(dynamic_cast<xmlpp::Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
+  if (nodes.size() == 1 && dynamic_cast<Element*>(*nodes.begin())) {
+    result.setUrl(dynamic_cast<Element*>(*nodes.begin())->get_child_text()->get_content().c_str());
   }
   
   icons = rootNode->get_children("icon");
-  for (xmlpp::Node::NodeList::iterator it = icons.begin(); it != icons.end(); it++) {
+  for (Node::NodeList::iterator it = icons.begin(); it != icons.end(); it++) {
     eM emot(true, false);
     string mime;
 
     nodes = (*it)->get_children("object");
-    for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
-      if (dynamic_cast<xmlpp::Element*>(*it) && dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")) {
-        mime = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")->get_value();
+    for (Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
+      if (dynamic_cast<Element*>(*it) && dynamic_cast<Element*>(*it)->get_attribute("mime")) {
+        mime = dynamic_cast<Element*>(*it)->get_attribute("mime")->get_value();
         if (mime == "image/png" || mime == "image/gif" || mime == "image/jpeg") {
-          emot.setImgPath(defFile.getDirectory() + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content());
-          emot.setMenuImgPath(emot.getImgPath());
+          emot.setImgPath(defFile.getDirectory() + (string) dynamic_cast<Element*>(*it)->get_child_text()->get_content());
           break;
         }
         mime.clear();
@@ -100,10 +101,10 @@ iPackage* JispParser::parse(const FindFile::Found& defFile) {
     nodes = (*it)->get_children("text");
     if (nodes.empty()) throw WrongFormat("Brak tekstu do zamiany");
 
-    for (xmlpp::Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
-      if (dynamic_cast<xmlpp::Element*>(*it)) {
-        emot.setText(dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content().c_str());
-        attrib = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("regexp");
+    for (Node::NodeList::iterator it = nodes.begin(); it != nodes.end(); it++) {
+      if (dynamic_cast<Element*>(*it)) {
+        emot.setText(dynamic_cast<Element*>(*it)->get_child_text()->get_content().c_str());
+        attrib = dynamic_cast<Element*>(*it)->get_attribute("regexp");
         if (attrib) {
           emot.setPreg((bool) atoi(attrib->get_value().c_str()));
         }

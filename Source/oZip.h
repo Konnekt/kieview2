@@ -80,6 +80,10 @@ public:
       return _data.mtime;
     }
 
+    inline int getIndex() const {
+      return _data.index;
+    }
+
     inline long getFileSize() const {
       return _data.unc_size;
     }
@@ -137,7 +141,7 @@ public:
 public:
   bool handleResult(ZRESULT resultCode) {
     if (resultCode != ZR_OK) {
-      throw ExceptionString(getErrorMsg(resultCode));
+      throw ExceptionString("ZIP Error { " + getErrorMsg(resultCode) + " }");
     }
     return true;
   }
@@ -169,6 +173,10 @@ public:
   }
 
 public:
+  bool unzip(UINT index, const char* buff, UINT buffSize) {
+    return handleResult(UnzipItem(_handle, index, (void*) buff, buffSize));
+  }
+
   bool unzip(UINT index, const string& path) {
     return handleResult(UnzipItem(_handle, index, path.c_str()));
   }
@@ -209,45 +217,43 @@ public:
 
 public:
   String getFile(const string& path) {
-    ZIPENTRY entry;
-    int index;
+    Entry file = find(path);
 
-    if (FindZipItem(_handle, path.c_str(), true, &index, &entry) != ZR_OK) {
+    if (file.empty()) {
       throw NotFound("Cannot find file " + path);
     }
 
-    char* buff = new char[entry.unc_size + 1];
-    buff[entry.unc_size] = '\0';
     String str;
+    try {
+      char* buff = new char[file.getFileSize() + 1];
+      buff[file.getFileSize()] = '\0';
 
-    ZRESULT result = UnzipItem(_handle, index, buff, entry.unc_size);
-    str.assign(buff);
-    delete [] buff;
-
-    if (result != ZR_OK) {
-      throw CannotRead("Msg: " + getErrorMsg(result) + " in file: " + path);
+      unzip(file.getIndex(), buff, file.getFileSize());
+      str.assign(buff);
+      delete [] buff;
+    } catch(...) {
+      throw;
     }
     return str;
   }
 
   ByteBuffer getBinaryFile(const string& path) {
-    ZIPENTRY entry;
-    int index;
+    Entry file = find(path);
 
-    if (FindZipItem(_handle, path.c_str(), true, &index, &entry) != ZR_OK) {
+    if (file.empty()) {
       throw NotFound("Cannot find file " + path);
     }
 
-    char* buff = new char[entry.unc_size + 1];
-    buff[entry.unc_size] = '\0';
     ByteBuffer str;
+    try {
+      char* buff = new char[file.getFileSize() + 1];
+      buff[file.getFileSize()] = '\0';
 
-    ZRESULT result = UnzipItem(_handle, index, buff, entry.unc_size + 1);
-    str.assign((const unsigned char*) buff, entry.unc_size + 1);
-    delete [] buff;
-
-    if (result != ZR_OK) {
-      throw CannotRead("Msg: " + getErrorMsg(result) + " in file: " + path);
+      unzip(file.getIndex(), buff, file.getFileSize());
+      str.assign((const unsigned char*) buff, file.getFileSize() + 1);
+      delete [] buff;
+    } catch(...) {
+      throw;
     }
     return str;
   }

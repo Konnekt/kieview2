@@ -21,7 +21,6 @@
 
 #include "iPackageHandler.h"
 #include "Emots.h"
-#include "oZip.h"
 
 /*
  * Base emot definition parser

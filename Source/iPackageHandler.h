@@ -17,6 +17,7 @@
 #define __IPACKAGEHANDLER_H__
 
 #include "iPackage.h"
+#include "oZip.h"
 #include "iLV.h"
 
 class iPackageParser {
@@ -92,6 +93,7 @@ public:
   }
   virtual void loadPackages();
 
+  virtual string getRepoPath(const string& path); 
   virtual void prepareRepo(const string& path); 
 
   virtual void loadSettings() = 0;

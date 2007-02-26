@@ -16,8 +16,12 @@
 #include "iPackageHandler.h"
 #include "Controller.h"
 
+string iPackageHandler::getRepoPath(const string& path) {
+  return getFileDirectory(path) + "\\" + _repoDir;
+}
+
 void iPackageHandler::prepareRepo(const string& path) {
-  string localPath = getFileDirectory(path) + "\\" + _repoDir;
+  string localPath = getRepoPath(path);
 
   if (!isDirectory(localPath.c_str())) {
     try {
@@ -74,7 +78,7 @@ void iPackageHandler::loadPackages() {
         files.find();
         if (!files.nothingFound() && !files.found().empty()) {
           prepareRepo(files.found().getFilePath());
-          defPath += _repoDir + "\\";
+          defPath = getRepoPath(defPath) + "\\";
         }
       }
 
