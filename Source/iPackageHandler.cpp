@@ -40,11 +40,11 @@ string iPackageHandler::getKonnektPath() {
 }
 
 string iPackageHandler::getDir() {
-  if (_dirColID) {
-    string dir = Controller::getConfig()->getChar(_dirColID);
-    return (dir.find(':') == dir.npos) ? getKonnektPath() + dir : dir;
-  }
-  return "";
+  if (!_dirColID) return "";
+
+  string dir = Controller::getConfig()->getChar(_dirColID);
+  dir = (dir.find(':') == dir.npos) ? getKonnektPath() + dir : dir;
+  return dir;
 }
 
 void iPackageHandler::loadPackages() {

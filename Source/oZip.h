@@ -98,7 +98,7 @@ public:
     }
 
     inline string getFileName() const {
-      return getFilePath().substr(getFilePath().find_last_of("\\/") + 1);
+      return ::getFileName(getFilePath());
     }
 
     inline string getFilePath() const {
@@ -106,7 +106,7 @@ public:
     }
 
     inline bool isDirectory() const {
-      return this->hasAttribute(FindFile::attDirectory);
+      return hasAttribute(FindFile::attDirectory);
     }
 
   protected:

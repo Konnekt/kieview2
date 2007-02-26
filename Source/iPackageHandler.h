@@ -66,7 +66,7 @@ public:
 public:
   virtual void fillLV(iLV* lv) = 0;
 
-  virtual string getKonnektPath();
+  static string getKonnektPath();
   virtual string getDir();
 
   virtual void addParser(iPackageParser* parser) {
