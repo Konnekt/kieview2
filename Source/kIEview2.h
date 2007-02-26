@@ -72,7 +72,7 @@ namespace kIEview2 {
 
     const unsigned int checked = ico + 13;
     const unsigned int unchecked = ico + 14;
-    const unsigned int emotsinfo = ico + 15;
+    const unsigned int tipinfo = ico + 15;
 
     const unsigned int styles = ico + 16;
   }

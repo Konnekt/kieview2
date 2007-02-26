@@ -32,6 +32,7 @@ public:
 
 public:
   StyleLV(sUIActionNotify_createWindow* an, int w, int h);
+  ~StyleLV();
 
 public:
   struct sStylePackInfo {
@@ -59,6 +60,8 @@ public:
 
 protected:
   UINT _last_checked;
+  oDrawableButton _tipBtn;
+  ToolTipX::ToolTip* _tip;
 
 public:
   class StyleInfoItem: public iEntry {

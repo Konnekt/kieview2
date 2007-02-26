@@ -15,8 +15,17 @@
 #include "styleUI.h"
 #include "iLV.h"
 
+#include "ToolTipIE.h"
+
 StyleLV::StyleLV(sUIActionNotify_createWindow* an, int w, int h): iLV(an, w, h) {
+  _tipBtn = new DrawableButtonBasic(Rect(0,0,16,16), new Icon((HICON) ICMessage(IMI_ICONGET, kIEview2::ico::tipinfo, IML_16), false));
+
+  _tip = new ToolTipX::ToolTip(getHwnd(), 0);
   _last_checked = -1;
+}
+
+StyleLV::~StyleLV() {
+  delete _tip;
 }
 
 UINT StyleLV::addItem(sStylePackInfo *s) {
@@ -91,13 +100,20 @@ bool StyleLV::StyleInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::o
 
     Rect rc = lv->itemToClient(li->getRect());
 
-    Rect rcradio = rc;
-    rcradio.left += 3;
-    rcradio.top += 3;
-    _selectBtn->setPos(rcradio.getLT());
+    Point rcp(rc.left + 3, rc.top + 3);
+    _selectBtn->setPos(rcp);
+
+    Point rct(rc.right - 19, rc.top + 3);
+    slv->_tipBtn->setPos(rct);
 
     if (_selectBtn->hitTest(p)) {
       slv->selectItem(slv->getItemIndex(li));
+      return false;
+    } else if (slv->_tipBtn->hitTest(p)){
+      slv->_tip->hide();
+      slv->_tip->setTip((ToolTipX::Tip*) new ToolTipIE(200, 100), false);
+      slv->_tip->setPos(Point(), true, ToolTipX::enPositioning::positionFirst, ToolTipX::enPlacement::pRightBottom);
+      slv->_tip->show();
       return false;
     }
   }
@@ -186,17 +202,21 @@ void StyleLV::StyleInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oI
 
   Stamina::Point p = Point(0,0);
 
-  Rect rcradio = rc;
-  rcradio.left += 3;
-  rcradio.top += 3;
-  _selectBtn->setPos(rcradio.getLT());
+  Point rcp(rc.left + 3, rc.top + 3);
+  _selectBtn->setPos(rcp);
   _selectBtn->draw(dc, p);
+
+  Point rct(rc.right - 19, rc.top + 3);
+  slv->_tipBtn->setPos(rct);
+  slv->_tipBtn->draw(dc, p);
 
   HFONT oldFont = (HFONT)SelectObject(dc, slv->_fontBold);
   COLORREF oldTextColor = SetTextColor(dc, textColor);
+  rctxt.right -= 19;
   DrawTextA(dc, name.c_str(), -1, rctxt.ref(), DT_NOPREFIX | DT_END_ELLIPSIS | DT_SINGLELINE);
   SelectObject(dc, oldFont);
   rctxt.top += 16;
+  rctxt.right += 19;
 
   if (li->isActive()) {
     drawInfo(slv, rctxt);
