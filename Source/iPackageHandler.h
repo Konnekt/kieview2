@@ -21,8 +21,15 @@
 
 class iPackageParser {
 public:
-  virtual void setDefinitionFilter(FindFileFiltered& files) = 0;
+  virtual string getDefinitionMask() = 0;
   virtual iPackage* parse(const FindFile::Found& defFile) = 0;
+
+  virtual bool fromArchive() {
+    return false;
+  }
+  virtual string getArchiveMask() {
+    return "";
+  }
 };
 
 class iPackageHandler : public iObject {
@@ -84,7 +91,8 @@ public:
     if (_packages.size()) _packages.clear();
   }
   virtual void loadPackages();
-  virtual void prepareRepo(const string& path, const string& rootDir); 
+
+  virtual void prepareRepo(const string& path); 
 
   virtual void loadSettings() = 0;
   virtual void saveSettings() = 0;

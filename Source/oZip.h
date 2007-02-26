@@ -35,6 +35,88 @@ public:
 
 class Zip {
 public:
+  class Entry {
+  public:
+    Entry(const string& dir = "") {
+      _data.name[0] = 0;
+      setDirectory(dir);
+    }
+    inline Entry(const Entry& b) {
+      *this = b;
+    }
+
+    inline Entry& operator = (const Entry& b) {
+      memcpy(&_data, &b._data, sizeof(_data));
+      this->_dir = b._dir;
+      return *this;
+    }
+
+    inline ZIPENTRY* getDataRef() {
+      return &_data;
+    }
+    inline const ZIPENTRY& operator -> () {
+      return _data;
+    }
+
+    inline bool empty() const {
+      return _data.name[0] == 0;
+    }
+
+    inline bool hasAttribute(FindFile::enAttribute attr) const {
+      return (_data.attr & attr) != 0;
+    }
+
+    inline int getAttributes() const {
+      return _data.attr;
+    }
+
+    inline const FILETIME& getCreationTime() const {
+      return _data.ctime;
+    }
+
+    inline const FILETIME& getLastAccessTime() const {
+      return _data.atime;
+    }
+
+    inline const FILETIME& getLastWriteTime() const {
+      return _data.mtime;
+    }
+
+    inline long getFileSize() const {
+      return _data.unc_size;
+    }
+
+    inline string getDirectoryName() const {
+      string name = _dir.substr(0, _dir.length() - 1);
+      return name.substr(name.find_last_of("\\/") + 1);
+    }
+
+    inline string getDirectory() const {
+      return _dir;
+    }
+
+    inline void setDirectory(const string& dir)  {
+      _dir = unifyPath(dir, true);
+    }
+
+    inline string getFileName() const {
+      return _data.name;
+    }
+
+    inline string getFilePath() const {
+      return _dir + this->getFileName();
+    }
+
+    inline bool isDirectory() const {
+      return this->hasAttribute(FindFile::attDirectory);
+    }
+
+  protected:
+    ZIPENTRY _data;
+    string _dir;
+  };
+
+public:
   Zip(const string& path): _handle(NULL) {
     open(path);
   }
@@ -59,29 +141,11 @@ public:
     _handle = NULL;
   }
 
-  ByteBuffer getBinaryFile(const string& path) {
-    ZIPENTRY entry;
-    int index;
-
-    if (FindZipItem(_handle, path.c_str(), true, &index, &entry) != ZR_OK) {
-      throw NotFound("Cannot find file " + path);
-    }
-
-    char* buff = new char[entry.unc_size + 1];
-    buff[entry.unc_size] = '\0';
-    ByteBuffer str;
-
-    ZRESULT result = UnzipItem(_handle, index, buff, entry.unc_size + 1);
-    str.assign((const unsigned char*) buff, entry.unc_size + 1);
-    delete [] buff;
-
-    if (result != ZR_OK) {
-      throw CannotRead("Msg: " + getErrorMsg(result) + " in file: " + path);
-    }
-    return str;
-  }
-
   bool find(const string& path) {
+    /*
+    Entry entry(getFileDirectory(path));
+    FindZipItem(_handle, path.c_str(), true, &entry.getDataRef()->index, &entry.getDataRef());
+    */
     ZIPENTRY entry;
     int index;
 
@@ -151,6 +215,28 @@ public:
 
     ZRESULT result = UnzipItem(_handle, index, buff, entry.unc_size);
     str.assign(buff);
+    delete [] buff;
+
+    if (result != ZR_OK) {
+      throw CannotRead("Msg: " + getErrorMsg(result) + " in file: " + path);
+    }
+    return str;
+  }
+
+  ByteBuffer getBinaryFile(const string& path) {
+    ZIPENTRY entry;
+    int index;
+
+    if (FindZipItem(_handle, path.c_str(), true, &index, &entry) != ZR_OK) {
+      throw NotFound("Cannot find file " + path);
+    }
+
+    char* buff = new char[entry.unc_size + 1];
+    buff[entry.unc_size] = '\0';
+    ByteBuffer str;
+
+    ZRESULT result = UnzipItem(_handle, index, buff, entry.unc_size + 1);
+    str.assign((const unsigned char*) buff, entry.unc_size + 1);
     delete [] buff;
 
     if (result != ZR_OK) {

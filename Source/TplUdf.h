@@ -90,6 +90,26 @@ protected:
   tCntId _cnt;
 };
 
+class udf_nl2br: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return ONE_PARAM;
+  }
+  inline void param(const std::string& str) {
+    _str = str;
+  }
+
+  inline void handler() {
+    _str = RegEx::doReplace("/\r?\n/m", "<br />\r\n", _str.c_str());
+  }
+  inline std::string& result() {
+    return _str;
+  }
+
+protected:
+  std::string _str;
+};
+
 class udf_stringf: public udf_fn {
 public:
   inline e_accept_params accept_params() {

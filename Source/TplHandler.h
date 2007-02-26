@@ -51,8 +51,8 @@ protected:
 
 class TplPackageParser: public iPackageParser {
 public:
-  void setDefinitionFilter(FindFileFiltered& files) {
-    files.setMask(files.found().getDirectory() + "template.xml");
+  string getDefinitionMask() {
+    return "template.xml";
   }
   iPackage* parse(const FindFile::Found& defFile);
 };

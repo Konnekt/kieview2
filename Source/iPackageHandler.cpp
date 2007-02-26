@@ -16,18 +16,19 @@
 #include "iPackageHandler.h"
 #include "Controller.h"
 
-void iPackageHandler::prepareRepo(const string& path, const string& rootdir) {
+void iPackageHandler::prepareRepo(const string& path) {
   string localPath = getFileDirectory(path) + "\\" + _repoDir;
-  Zip zip;
 
-  try {
-    zip.open(path);
-    zip.unzipDir(localPath, rootdir);
-    zip.close();
-  } catch(const Exception& e) {
-    throw CannotOpen(e.getReason());
+  if (!isDirectory(localPath.c_str())) {
+    try {
+      Zip zip(path);
+      zip.unzipDir(localPath, "");
+      zip.close();
+    } catch(const Exception& e) {
+      throw CannotOpen(e.getReason());
+    }
+    SetFileAttributes(localPath.c_str(), GetFileAttributes(localPath.c_str()) | FILE_ATTRIBUTE_HIDDEN);
   }
-  SetFileAttributes(localPath.c_str(), GetFileAttributes(localPath.c_str()) & FILE_ATTRIBUTE_HIDDEN);
 }
 
 string iPackageHandler::getKonnektPath() {
@@ -63,11 +64,21 @@ void iPackageHandler::loadPackages() {
 
   for (tParsers::iterator parser = _parsers.begin(); parser != _parsers.end(); parser++) {
     for (FindFile::tFoundFiles::iterator dir = dirs.begin(); dir != dirs.end(); dir++) {
+      string defPath = dir->getFilePath() + "\\";
 
-      FindFileFiltered files(dir->getFilePath() + "\\*");
+      FindFileFiltered files(defPath + "*");
       files.setFileOnly();
 
-      (*parser)->setDefinitionFilter(files);
+      if ((*parser)->fromArchive()) {
+        files.setMask(defPath + (*parser)->getArchiveMask());
+        files.find();
+        if (!files.nothingFound() && !files.found().empty()) {
+          prepareRepo(files.found().getFilePath());
+        }
+        defPath += _repoDir + "\\";
+      }
+
+      files.setMask(defPath + (*parser)->getDefinitionMask());
       files.find();
 
       if (files.nothingFound() || files.found().empty()) {

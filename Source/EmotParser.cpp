@@ -16,23 +16,6 @@
 #include "EmotParser.h"
 
 iPackage* JispParser::parse(const FindFile::Found& defFile) {
-  Zip zip;
-
-  string localPath = defFile.getDirectory() + "~local";
-  string icondefPath = localPath + "\\" + defFile.getDirectoryName() + "\\icondef.xml";
-
-  DWORD c = GetFileAttributes(icondefPath.c_str());
-
-  if (c == -1 || c & FILE_ATTRIBUTE_DIRECTORY) {
-    try {
-      zip.open(defFile.getFilePath());
-      zip.unzip(localPath);
-      zip.close();
-    } catch(const Exception& e) {
-      throw CannotOpen(e.getReason());
-    }
-  }
-
   // parsujemy xmla z definicjami
   xmlpp::DomParser parser;
   parser.set_substitute_entities();
@@ -44,7 +27,7 @@ iPackage* JispParser::parse(const FindFile::Found& defFile) {
   xmlpp::Attribute* attrib;
   eMSet result;
 
-  ifstream file(icondefPath.c_str());
+  ifstream file(defFile.getFilePath().c_str());
   try {
     parser.parse_stream(file);
   } catch (const xmlpp::exception& e) {
@@ -104,8 +87,7 @@ iPackage* JispParser::parse(const FindFile::Found& defFile) {
       if (dynamic_cast<xmlpp::Element*>(*it) && dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")) {
         mime = dynamic_cast<xmlpp::Element*>(*it)->get_attribute("mime")->get_value();
         if (mime == "image/png" || mime == "image/gif" || mime == "image/jpeg") {
-          emot.setImgPath("~local\\" + defFile.getDirectoryName() + "\\" + 
-            (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content());
+          emot.setImgPath(defFile.getDirectory() + (string) dynamic_cast<xmlpp::Element*>(*it)->get_child_text()->get_content());
           emot.setMenuImgPath(emot.getImgPath());
           break;
         }
@@ -172,8 +154,8 @@ iPackage* GGParser::parse(const FindFile::Found& defFile) {
           menu_img_path = reg.match_global() ? reg[1] : img_path;
 
           for (eMSet::tEmots::iterator it = emots.begin(); it != emots.end(); it++) {
-            it->setMenuImgPath(menu_img_path);
-            it->setImgPath(img_path);
+            it->setMenuImgPath(defFile.getDirectory() + menu_img_path);
+            it->setImgPath(defFile.getDirectory() + img_path);
           }
         } else {
           throw WrongFormat("Brak œcie¿ki do obrazka");

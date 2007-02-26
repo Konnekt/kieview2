@@ -46,8 +46,14 @@ public:
   };
 
 public:
-  void setDefinitionFilter(FindFileFiltered& files) {
-    files.setMask(files.found().getDirectory() + "*.jisp");
+  string getDefinitionMask() {
+    return "icondef.xml";
+  }
+  string getArchiveMask() {
+    return "*.jisp";
+  }
+  bool fromArchive() {
+    return true;
   }
   iPackage* parse(const FindFile::Found& defFile);
 };
@@ -57,8 +63,8 @@ public:
  */
 class GGParser: public iPackageParser {
 public:
-  void setDefinitionFilter(FindFileFiltered& files) {
-    files.setMask(files.found().getDirectory() + "emots.txt");
+  string getDefinitionMask() {
+    return "emots.txt";
   }
   iPackage* parse(const FindFile::Found& defFile);
 };

@@ -61,7 +61,7 @@ void EmotHandler::fillLV(iLV* _lv) {
     if (!set->getEmots().size()) {
       continue;
     }
-    img = loadImageFromFile((getDir() + "\\" + set->getDir() + "\\" + set->getEmots()[0].getMenuImgPath()).c_str());
+    img = loadImageFromFile(set->getEmots()[0].getMenuImgPath().c_str());
     lv->addItem(new EmotLV::sEmotPackInfo(set->isEnabled(), &*set, img));
   }
 }
@@ -100,8 +100,7 @@ string __stdcall EmotHandler::replaceEmot(RegEx* reg, void* param) {
   IMLOG("[EmotHandler::replaceEmot()] match = %s, img_path = %s, emot = %s, set = %s", ei->match.c_str(), 
     ei->emot->getImgPath().c_str(), ei->emot->getText().c_str(), ei->emotSet->getName().c_str());
 
-  return "<img src=\"" + unifyPath(handler->getDir() + "/" + ei->emotSet->getDir() + "/" + ei->emot->getImgPath()) +
-    "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
+  return "<img src=\"" + unifyPath(ei->emot->getImgPath()) + "\" class=\"emoticon\" alt=\"" + ei->match + "\" />";
 }
 
 void EmotHandler::parseSet(RegEx& reg, eMSet& set) {
