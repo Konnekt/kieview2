@@ -17,7 +17,7 @@
 #include "Controller.h"
 
 string iPackageHandler::getRepoPath(const string& path) {
-  return getFileDirectory(path) + "\\" + _repoDir;
+  return getFileDirectory(path) + "\\~local";
 }
 
 void iPackageHandler::prepareRepo(const string& path) {

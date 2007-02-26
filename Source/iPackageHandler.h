@@ -43,7 +43,7 @@ public:
   typedef list<iPackage*> tPackages;
 
 public:
-  iPackageHandler(): _dirColID(0), _repoDir("~local") { }
+  iPackageHandler(): _dirColID(0) { }
   virtual ~iPackageHandler() {
     for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
       delete *it;
@@ -103,7 +103,6 @@ protected:
   Tables::tColId _dirColID;
   tPackages _packages;
   tParsers _parsers;
-  string _repoDir;
 };
 
 #endif // __IPACKAGEHANDLER_H__
