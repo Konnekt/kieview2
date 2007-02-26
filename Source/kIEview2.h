@@ -22,6 +22,12 @@ namespace kIEview2 {
 
   const char sig[] = "KIEV2";
 
+  enum enShowOnLoad {
+    showNothing,
+    showLastSession,
+    showLastMsgs
+  };
+
   namespace api {
     const unsigned int api = net1k + IM_USER;
   }
@@ -128,6 +134,8 @@ namespace kIEview2 {
     const unsigned int autoScroll = cfg + 8;
     const unsigned int lastMsgCount = cfg + 9;
     const unsigned int relativeTime = cfg + 13;
+
+    const unsigned int showOnLoad = cfg + 16;
   }
 }
 

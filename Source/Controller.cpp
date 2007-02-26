@@ -15,8 +15,6 @@
 #include "stdafx.h"
 #include "Controller.h"
 #include "Message.h"
-#include "TplUdf.h"
-#include "EmotUI.h"
 
 namespace kIEview2 {
   // initialization
@@ -46,6 +44,7 @@ namespace kIEview2 {
     config->setColumn(DTCFG, cfg::lastMsgCount, DT_CT_INT, 10, "kIEview2/lastMsgCount");
     config->setColumn(DTCFG, cfg::relativeTime, DT_CT_INT, 1, "kIEview2/relativeTime");
     config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 0, "kIEview2/autoScroll");
+    config->setColumn(DTCFG, cfg::showOnLoad, DT_CT_INT, showNothing, "kIEview2/showOnLoad");
 
     config->setColumn(DTCFG, cfg::showFormattingBtns, DT_CT_INT, 1, "kIEview2/showFormattingBtns");
     config->setColumn(DTCFG, cfg::showEmotChooser, DT_CT_INT, 1, "kIEview2/showEmotChooser");
@@ -70,17 +69,6 @@ namespace kIEview2 {
 
     IECtrl::init();
     setlocale(LC_ALL, "polish");
-
-    tplHandler.bindStdFunctions();
-    tplHandler.bindUdf("getCntSetting", new udf_get_cnt_setting);
-    tplHandler.bindUdf("getSetting", new udf_get_cfg_setting);
-
-    tplHandler.bindUdf("formatString", new udf_stringf);
-    tplHandler.bindUdf("formatTime", new udf_strftime);
-
-    tplHandler.bindUdf("getExtParam", new udf_get_ext_param);
-    tplHandler.bindUdf("replace", new udf_replace);
-    tplHandler.bindUdf("match?", new udf_match);
 
     bindMsgHandler(MT_QUICKEVENT, bind(&Controller::_handleQuickEventTpl, this, _1, _2), "quickevent");
     bindMsgHandler(MT_MESSAGE, bind(&Controller::_handleStdMsgTpl, this, _1, _2), "message");
@@ -120,7 +108,7 @@ namespace kIEview2 {
 
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
 
-    // emotHandler << new JispParser;
+    emotHandler << new JispParser;
     emotHandler << new GGParser;
 
     tplHandler.load();
@@ -196,6 +184,12 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Stosuj czas relatywny (jeœli siê da)", cfg::relativeTime);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SPINNER | ACTSC_INLINE, AP_MINIMUM "0" AP_MAXIMUM "1000", cfg::lastMsgCount, 0, 0, 65);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Iloœæ ostatnich wiadomoœci do wczytania");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
+
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Po otwarciu okna rozmowy ...");
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_RADIO | ACTSRADIO_BYPOS | ACTSC_BOLD | ACTSC_INLINE, "nic nie rób", cfg::showOnLoad);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_RADIO | ACTSRADIO_BYPOS | ACTSC_INLINE, "przywróæ ostatni¹ sesjê", cfg::showOnLoad);
+    UIActionCfgAdd(ui::cfgGroup, 0, ACTT_RADIO | ACTSRADIO_BYPOS | ACTSRADIO_LAST, "przywróæ ostatnie wiad.", cfg::showOnLoad);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Linki");
@@ -839,6 +833,14 @@ namespace kIEview2 {
     pCtrl->navigate(("file:///" + unifyPath(tplHandler.getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
     // pCtrl->clear();
 
+    if (int showOnLoad = config->getInt(cfg::showOnLoad)) {
+      int cntID = getWndObjects(pCtrl)->actionHandler->cntId;
+      if (showOnLoad == showLastSession) {
+        readLastMsgSession(cntID);
+      } else {
+        readMsgs(cntID, config->getInt(cfg::lastMsgCount));
+      }
+    }
     SetProp(GetParent(pCtrl->getHWND()), "MsgSession", (HANDLE) 0);
   }
 
@@ -931,10 +933,6 @@ namespace kIEview2 {
     return cnt;
   }
 
-  String Controller::htmlEscape(StringRef& txt) {
-    return tplHandler.runFunc("htmlEscape", txt);
-  }
-
   string __stdcall Controller::eMailInsertion(RegEx* reg) {
     Controller* pCtrl = Controller::getInstance();
     RegEx& r = *reg;
@@ -1006,9 +1004,12 @@ namespace kIEview2 {
     return PassStringRef(txt);
   }
 
+  String Controller::htmlEscape(StringRef& txt) {
+    return tplHandler.runFunc("htmlEscape", txt);
+  }
+
   String Controller::nl2br(StringRef& txt) {
-    txt = RegEx::doReplace("/\r?\n/m", "<br />\r\n", txt.c_str());
-    return PassStringRef(txt);
+    return tplHandler.runFunc("nl2br", txt);
   }
 
   String Controller::getDisplayFromMsg(Konnekt::UI::Notify::_insertMsg* an) {

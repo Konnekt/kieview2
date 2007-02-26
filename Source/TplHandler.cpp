@@ -15,6 +15,7 @@
 
 #include "TplHandler.h"
 #include "Controller.h"
+#include "TplUdf.h"
 
 iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
   SXML xml;
@@ -29,13 +30,25 @@ iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
   return new TplSet(set);
 }
 
-const char TplHandler::coreStylePath[] = "data/templates/core";
+const char TplHandler::_coreStylePath[] = "data/templates/core";
 
 TplHandler::TplHandler(const string& tplExt) {
-  *this << new TplPackageParser;
-
   _dirColID = kIEview2::cfg::stylesDir;
-  setTplExt(tplExt);
+  _tplExt = tplExt;
+
+  bindStdFunctions();
+  bindUdf("getCntSetting", new udf_get_cnt_setting);
+  bindUdf("getSetting", new udf_get_cfg_setting);
+
+  bindUdf("formatString", new udf_stringf);
+  bindUdf("formatTime", new udf_strftime);
+
+  bindUdf("getExtParam", new udf_get_ext_param);
+  bindUdf("nl2br", new udf_nl2br);
+  bindUdf("replace", new udf_replace);
+  bindUdf("match?", new udf_match);
+
+  *this << new TplPackageParser;
 }
 
 TplSet* TplHandler::getCurrentStyle() {
@@ -54,7 +67,7 @@ string TplHandler::getCurrentStyleDir() {
   try {
     return getDir() + "\\" + getCurrentStyle()->getDir();
   } catch(...) {
-    return getKonnektPath() + unifyPath(coreStylePath);
+    return getKonnektPath() + unifyPath(_coreStylePath);
   }
 }
 
@@ -66,7 +79,7 @@ void TplHandler::loadSettings() {
     addTplDir(getDir() + "/" + getCurrentStyle()->getDir() + "/");
   } catch(...) { }
 
-  addTplDir(coreStylePath);
+  addTplDir(_coreStylePath);
 }
 
 void TplHandler::saveSettings() {
@@ -93,7 +106,7 @@ void TplHandler::addTplDir(const string& dir, bool asInclude) {
   if (asInclude) {
     addIncludeDir(tplDir);
   }
-  tplDirs.push_back(tplDir);
+  _tplDirs.push_back(tplDir);
 }
 
 String TplHandler::runFunc(const string& name, udf_fn_param& params) {
@@ -125,12 +138,12 @@ String TplHandler::runFunc(const string& name, const StringRef& param1, const St
 }
 
 std::string TplHandler::getTplDir(const char* tplName) {
-  if (!tplDirs.size()) return "";
+  if (!_tplDirs.size()) return "";
 
   string fileName = tplName;
-  fileName += "." + tplExt;
+  fileName += "." + _tplExt;
 
-  for (tTplDirs::iterator it = tplDirs.begin(); it != tplDirs.end(); it++) {
+  for (tTplDirs::iterator it = _tplDirs.begin(); it != _tplDirs.end(); it++) {
     if (fileExists(((*it) + "\\" + fileName).c_str())) return *it;
   }
   throw std::logic_error("Cannot find file '" + fileName + "'");
@@ -141,7 +154,7 @@ std::string TplHandler::getTplPath(const char* tplName) {
 
   fullPath += tplName;
   fullPath += ".";
-  fullPath += tplExt;
+  fullPath += _tplExt;
 
   return fullPath;
 }
@@ -201,7 +214,7 @@ String TplHandler::parseString(param_data* data, const StringRef& text) {
   template_text parser(getUdfFactory());
 
   // Set allowed list of catalogs to include
-  parser.set_include_dir(includeDirs);
+  parser.set_include_dir(_includeDirs);
   // Parse the template
   parser.parse(text);
   // We impose parameters on a pattern

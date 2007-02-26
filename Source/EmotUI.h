@@ -87,15 +87,9 @@ public:
     void paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent);
 
     string getText() {
-      eMSet* set = _emotInfo->set;
-      string text;
-
-      if (set->getUrl().length()) text += "URL: " + set->getUrl() + "\n";
-      if (set->getDescription().length()) text += "Opis: " + set->getDescription();
-      if (text.length()) text = rtrim(text.c_str(), "\n");
-
-      return text;
+      return _emotInfo->set->getDescription();
     }
+
     void setSelected(iLV* lv, bool value = true) {
       iEntry::setSelected(lv, value);
       _emotInfo->checked = value;

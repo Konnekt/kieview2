@@ -78,13 +78,7 @@ public:
     void paintEntry(ListWnd::ListView* lv, const ListWnd::oItem& li, const ListWnd::oItemCollection& parent);
 
     string getText() {
-      TplSet* set = _styleInfo->set;
-      string text;
-
-      if (set->getDescription().length()) text += "Opis: " + set->getDescription();
-      if (text.length()) text = rtrim(text.c_str(), "\n");
-
-      return text;
+      return _styleInfo->set->getDescription();
     }
 
     bool onMouseDown(ListWnd::ListView* lv, const ListWnd::oItem& li, int level, int vkey, const Point& pos);

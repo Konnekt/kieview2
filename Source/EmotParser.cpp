@@ -152,10 +152,10 @@ iPackage* GGParser::parse(const FindFile::Found& defFile) {
 
         if (reg.match_global()) {
           img_path = reg[1];
-          menu_img_path = reg.match_global() ? reg[1] : img_path;
+          menu_img_path = reg.match_global() ? reg[1] : "";
 
           for (eMSet::tEmots::iterator it = emots.begin(); it != emots.end(); it++) {
-            it->setMenuImgPath(defFile.getDirectory() + menu_img_path);
+            if (menu_img_path.length()) it->setMenuImgPath(defFile.getDirectory() + menu_img_path);
             it->setImgPath(defFile.getDirectory() + img_path);
           }
         } else {

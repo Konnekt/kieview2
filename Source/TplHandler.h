@@ -79,23 +79,23 @@ public:
 
 public:
   inline void clearDirs() {
-    includeDirs.clear();
-    tplDirs.clear();
+    _includeDirs.clear();
+    _tplDirs.clear();
   }
   inline void addIncludeDir(const string& dir) {
-    includeDirs.push_back(dir);
+    _includeDirs.push_back(dir);
   }
   void addTplDir(const string& dir, bool asInclude = true);
 
   inline void setTplExt(const string& ext) {
-    tplExt = ext;
+    _tplExt = ext;
   }
 
   inline void bindUdf(const string& name, udf_fn* function) {
     getUdfFactory()->install_udf_fn(name, function);
   }
   inline udf_fn_factory* getUdfFactory() {
-    return &udfFactory;
+    return &_udfFactory;
   }
 
   String runFunc(const string& name, udf_fn_param& params);
@@ -114,13 +114,13 @@ public:
   String parseException(const exception &e);
 
 protected:
-  static const char coreStylePath[];
+  static const char _coreStylePath[];
 
-  udf_fn_factory udfFactory;
-  string tplExt;
+  udf_fn_factory _udfFactory;
+  string _tplExt;
 
-  v_include_dir includeDirs;
-  tTplDirs tplDirs;
+  v_include_dir _includeDirs;
+  tTplDirs _tplDirs;
 };
 
 #endif // __TPLHANDLER_H__
