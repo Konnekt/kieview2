@@ -204,7 +204,8 @@ public:
       zr = GetZipItem(_handle, index, &ze);
       tmp = ze.name;
 
-      if (getFileDirectory(tmp).find(root) == -1) {
+      int pos = getFileDirectory(tmp).find(root);
+      if (pos == -1 || pos > 0) {
         index++;
         continue;
       }
