@@ -72,7 +72,7 @@ namespace kIEview2 {
     };
 
   public:
-    typedef std::map<int, sMessageHandler*> tMsgHandlers;
+    typedef std::map<tMsgType, sMessageHandler*> tMsgHandlers;
     typedef vector<oWndController> tWndControllers;
 
     typedef vector<sEmailInsertion> tEmailInsertions;
@@ -101,21 +101,13 @@ namespace kIEview2 {
     int readLastMsgSession(tCntId cnt, int sessionOffset = 0);
 
     String getSettingStr(const string& name, tTable table, tRowId row = 0);
-    string getMsgTypeLabel(int type);
+    string getMsgTypeLabel(tMsgType type);
     String getStatusLabel(int status);
 
     string bytesToString(double bytes);
     string timeToString(int time);
 
-    String parseBody(StringRef& txt, bool escape, bool _nl2br, bool linkify, bool emots) {
-      if (escape) txt = htmlEscape(txt);
-      if (_nl2br) txt = nl2br(txt);
-      if (linkify) txt = preLinkify(txt);
-      if (emots) emotHandler >> txt;
-      if (linkify) txt = postLinkify(txt);
-
-      return normalizeSpaces(txt);
-    }
+    String parseBody(StringRef& txt, bool escape, bool _nl2br, bool linkify, bool emots);
 
     String preLinkify(StringRef& txt);
     String postLinkify(StringRef& txt);
@@ -144,40 +136,14 @@ namespace kIEview2 {
 
     tCntId getCntFromMsg(cMessage* msg);
     String getDisplayFromMsg(Konnekt::UI::Notify::_insertMsg* an);
-
     bool isMsgFromHistory(sUIActionNotify_base* an);
+
     bool loadMsgTable(tCntId cnt);
-
-    void waitForIECtrlReady(IECtrl* pCtrl, UINT sleepTime = 100) {
-      Ctrl->WMProcess();
-      if (!pCtrl->isReady()) {
-        do {
-          Ctrl->WMProcess();
-          Ctrl->Sleep(sleepTime);
-        } while (!pCtrl->isReady());
-      }
-    }
-
-    void setActionsStatus() {
-      bool showEmot = config->getInt(cfg::useEmots) && config->getInt(cfg::showEmotChooser);
-      bool showAutoScroll = config->getInt(cfg::showAutoScroll);
-      bool showFormat = config->getInt(cfg::showFormattingBtns);
-      bool showColor = config->getInt(cfg::showColorChooser);
-
-      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::autoScroll), !showAutoScroll ? -1 : 0, ACTS_HIDDEN);
-      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::emots), !showEmot ? -1 : 0, ACTS_HIDDEN);
-      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::color), !showColor ? -1 : 0, ACTS_HIDDEN);
-
-      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline), !showFormat ? -1 : 0, ACTS_HIDDEN);
-      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic), !showFormat ? -1 : 0, ACTS_HIDDEN);
-      UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold), !showFormat ? -1 : 0, ACTS_HIDDEN);
-
-      UIActionSetStatus(sUIAction(IMIG_MSGBAR, act::formatTb::formatTb), 
-        !(showEmot || showAutoScroll || showFormat || showColor) ? -1 : 0, ACTS_HIDDEN);
-    }
-
-    void handleTextFlag(int flag, int mask);
     char* getStringCol(Tables::oTable& table, tRowId row, int pos); // do zmiany
+
+    void waitForIECtrlReady(IECtrl* pCtrl, UINT sleepTime = 100);
+    void setActionsStatus();
+    void handleTextFlag(int flag, int mask);
 
     String _parseStatusTpl(Konnekt::UI::Notify::_insertStatus* an);
     String _parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an);
@@ -235,45 +201,11 @@ namespace kIEview2 {
   namespace JS {
     class Controller : public IECtrl::iObject {
     public:
-      Controller(): iObject(NULL, true), pCtrl(::Controller::getInstance()) {
-        bindMethod("getPluginVersion", bind(&Controller::getPluginVersion, this, _1, _2));
-        bindMethod("getPluginName", bind(&Controller::getPluginName, this, _1, _2));
-
-        setProperty("ieVersion", (int) pCtrl->ieVersion);
-        setProperty("name", "oController");
-      }
+      Controller();
 
     public:
-      IECtrl::Var getPluginName(IECtrl::Var& args, IECtrl::iObject* obj) {
-        if (args.empty() || !args[0].isInteger()) return false;
-
-        if (int plugID = pluginExists(args[0].getInteger())) {
-          return getPlugName(plugID);
-        }
-        throw IECtrl::JSException("Plugin not found");
-      }
-
-      IECtrl::Var getPluginVersion(IECtrl::Var& args, IECtrl::iObject* obj) {
-        if (args.empty()) return false;
-
-        int plugID = 0;
-        if (args[0].isString()) {
-          plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) args[0].getString());
-        } else if (args[0].isInteger()) {
-          plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL);
-        } else {
-          return false;
-        }
-
-        if (plugID) {
-          char ver[50] = {0};
-          Ctrl->ICMessage(IMC_PLUG_VERSION, Ctrl->ICMessage(IMC_PLUGID_POS, plugID, 0), (int) ver);
-          if (Ctrl->getError() != IMERROR_NORESULT) {
-	          return ver;
-          }
-        }
-        throw IECtrl::JSException("Plugin not found");
-      }
+      IECtrl::Var getPluginVersion(IECtrl::Var& args, IECtrl::iObject* obj);
+      IECtrl::Var getPluginName(IECtrl::Var& args, IECtrl::iObject* obj);
 
     protected:
       ::Controller* pCtrl;

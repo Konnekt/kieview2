@@ -5,7 +5,6 @@
   *
   *  @filesource
   *  @copyright    Copyright (c) 2006-2007 Sijawusz Pur Rahnama
-  *  @copyright    Copyright (c) 2006-2007 Micha³ "Dulek" Dulko
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
   *  @version      $Revision$
   *  @modifiedby   $LastChangedBy$
@@ -667,6 +666,34 @@ namespace kIEview2 {
     return ver;
   }
 
+  void Controller::waitForIECtrlReady(IECtrl* pCtrl, UINT sleepTime) {
+    Ctrl->WMProcess();
+    if (!pCtrl->isReady()) {
+      do {
+        Ctrl->WMProcess();
+        Ctrl->Sleep(sleepTime);
+      } while (!pCtrl->isReady());
+    }
+  }
+
+  void Controller::setActionsStatus() {
+    bool showEmot = config->getInt(cfg::useEmots) && config->getInt(cfg::showEmotChooser);
+    bool showAutoScroll = config->getInt(cfg::showAutoScroll);
+    bool showFormat = config->getInt(cfg::showFormattingBtns);
+    bool showColor = config->getInt(cfg::showColorChooser);
+
+    UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::autoScroll), !showAutoScroll ? -1 : 0, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::emots), !showEmot ? -1 : 0, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::color), !showColor ? -1 : 0, ACTS_HIDDEN);
+
+    UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline), !showFormat ? -1 : 0, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic), !showFormat ? -1 : 0, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold), !showFormat ? -1 : 0, ACTS_HIDDEN);
+
+    UIActionSetStatus(sUIAction(IMIG_MSGBAR, act::formatTb::formatTb), 
+      !(showEmot || showAutoScroll || showFormat || showColor) ? -1 : 0, ACTS_HIDDEN);
+  }
+
   bool Controller::loadMsgTable(tCntId cnt) {
     if (historyTable->isLoaded()) return false;
 
@@ -857,7 +884,7 @@ namespace kIEview2 {
     return name;
   }
 
-  string Controller::getMsgTypeLabel(int type) {
+  string Controller::getMsgTypeLabel(tMsgType type) {
     string name = "unknown";
 
     if (msgHandlers.find(type) != msgHandlers.end()) {
@@ -912,6 +939,16 @@ namespace kIEview2 {
       result += stringf("%ds, ", secs);
     }
     return rtrim(result, ", ");
+  }
+
+  String Controller::parseBody(StringRef& txt, bool escape, bool _nl2br, bool linkify, bool emots) {
+    if (escape) txt = htmlEscape(txt);
+    if (_nl2br) txt = nl2br(txt);
+    if (linkify) txt = preLinkify(txt);
+    if (emots) emotHandler >> txt;
+    if (linkify) txt = postLinkify(txt);
+
+    return normalizeSpaces(txt);
   }
 
   tCntId Controller::getCntFromMsg(cMessage* msg) {
@@ -1277,6 +1314,47 @@ namespace kIEview2 {
     }
     if (an->_message->flag & MF_SEND) {
       data.hash_insert_new_var("sent?", "1");
+    }
+  }
+
+  namespace JS {
+    Controller::Controller(): iObject(NULL, true), pCtrl(::Controller::getInstance()) {
+      bindMethod("getPluginVersion", bind(&Controller::getPluginVersion, this, _1, _2));
+      bindMethod("getPluginName", bind(&Controller::getPluginName, this, _1, _2));
+
+      setProperty("ieVersion", (int) pCtrl->ieVersion);
+      setProperty("name", "oController");
+    }
+
+    IECtrl::Var Controller::getPluginName(IECtrl::Var& args, IECtrl::iObject* obj) {
+      if (args.empty() || !args[0].isInteger()) return false;
+
+      if (int plugID = pluginExists(args[0].getInteger())) {
+        return getPlugName(plugID);
+      }
+      throw IECtrl::JSException("Plugin not found");
+    }
+
+    IECtrl::Var Controller::getPluginVersion(IECtrl::Var& args, IECtrl::iObject* obj) {
+      if (args.empty()) return false;
+
+      int plugID = 0;
+      if (args[0].isString()) {
+        plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) args[0].getString());
+      } else if (args[0].isInteger()) {
+        plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL);
+      } else {
+        return false;
+      }
+
+      if (plugID) {
+        char ver[50] = {0};
+        Ctrl->ICMessage(IMC_PLUG_VERSION, Ctrl->ICMessage(IMC_PLUGID_POS, plugID, 0), (int) ver);
+        if (Ctrl->getError() != IMERROR_NORESULT) {
+          return ver;
+        }
+      }
+      throw IECtrl::JSException("Plugin not found");
     }
   }
 }
