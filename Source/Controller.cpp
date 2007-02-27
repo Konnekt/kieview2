@@ -571,6 +571,7 @@ namespace kIEview2 {
   }
 
   oWndController Controller::getWndController(sUIActionNotify_base* an) {
+    // return getWndController(IECtrl::get((HWND)UIActionHandleDirect(an->act)));
     return getWndController(an->act.cnt);
   }
 

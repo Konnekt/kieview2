@@ -66,11 +66,13 @@ namespace kIEview2 {
 
     clearWnd();
 
-    if (int showOnLoad = pCtrl->getConfig()->getInt(cfg::showOnLoad)) {
-      if (showOnLoad == showLastSession) {
-        pCtrl->readLastMsgSession(cntID);
-      } else {
-        pCtrl->readMsgs(cntID, pCtrl->getConfig()->getInt(cfg::lastMsgCount));
+    if (getCntID()) {
+      if (int showOnLoad = pCtrl->getConfig()->getInt(cfg::showOnLoad)) {
+        if (showOnLoad == showLastSession) {
+          pCtrl->readLastMsgSession(cntID);
+        } else {
+          pCtrl->readMsgs(cntID, pCtrl->getConfig()->getInt(cfg::lastMsgCount));
+        }
       }
     }
   }
