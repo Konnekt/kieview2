@@ -19,6 +19,7 @@
 
 #include "kIEview2.h"
 #include "PlugController.h"
+#include "WndController.h"
 #include "Helpers.h"
 
 #include "IECtrl.h"
@@ -38,7 +39,6 @@ namespace kIEview2 {
   namespace JS {
     class Controller;
   }
-  typedef SharedPtr<class WndController> oWndController;
 
   class Controller : public PlugController<Controller> {
   public:

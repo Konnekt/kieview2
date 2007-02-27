@@ -20,9 +20,7 @@
 #include "Helpers.h"
 
 #include "IECtrl.h"
-#include "ActionHandler.h"
 #include "TplHandler.h"
-#include "Controller.h"
 
 using namespace kIEview2;
 using namespace Helpers;
@@ -51,6 +49,8 @@ namespace kIEview2 {
   namespace JS {
     class WndController;
   }
+  class ActionHandler;
+  class Controller;
 
   class WndController : public SharedObject<iSharedObject> {
   public:
@@ -76,6 +76,8 @@ namespace kIEview2 {
     ActionHandler* actionHandler;
     Controller* pCtrl;
     IECtrl* pIECtrl;
+
+    TplSet* tplSet;
     tCntId cntID;
 
     tGroupedMsgs groupedMsgs;

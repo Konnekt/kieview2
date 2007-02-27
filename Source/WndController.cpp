@@ -12,14 +12,20 @@
   */
 
 #include "stdafx.h"
+
+#include "ActionHandler.h"
 #include "WndController.h"
 #include "Controller.h"
 
 namespace kIEview2 {
-  WndController::WndController(sUIActionNotify_createWindow* an): jsController(0), actionHandler(0), pIECtrl(0) {
+  WndController::WndController(sUIActionNotify_createWindow* an): jsController(0), tplSet(0) {
     pIECtrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
-    actionHandler = new ActionHandler(pIECtrl, an->act.cnt);
+    actionHandler = new ActionHandler(pIECtrl, this);
+
     pCtrl = Controller::getInstance();
+    try {
+      tplSet = pCtrl->getTplHandler()->getCurrentStyle();
+    } catch(...) { }
 
     an->hwnd = pIECtrl->getHWND();
     cntID = an->act.cnt;
@@ -30,8 +36,8 @@ namespace kIEview2 {
 
   WndController::~WndController() {
     if (jsController) delete jsController;
-    if (actionHandler) delete actionHandler;
-    if (pIECtrl) delete pIECtrl;
+    delete actionHandler;
+    delete pIECtrl;
   }
 
   IECtrl::Var WndController::getJSController(IECtrl* pCtrl, IECtrl::Var& args) {
@@ -51,6 +57,8 @@ namespace kIEview2 {
     // ladujemy bootstrapa
     pIECtrl->navigate(("file:///" + unifyPath(pCtrl->getTplHandler()->getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
     // pIECtrl->clear();
+
+    SetProp(GetParent(pIECtrl->getHWND()), "MsgSession", (HANDLE) 0);
   }
 
   void WndController::initWnd() {
@@ -59,13 +67,16 @@ namespace kIEview2 {
     clearWnd();
 
     if (int showOnLoad = pCtrl->getConfig()->getInt(cfg::showOnLoad)) {
+      int howMany = 0;
       if (showOnLoad == showLastSession) {
-        pCtrl->readLastMsgSession(cntID);
+        howMany = pCtrl->readLastMsgSession(cntID);
       } else {
-        pCtrl->readMsgs(cntID, pCtrl->getConfig()->getInt(cfg::lastMsgCount));
+        howMany = pCtrl->readMsgs(cntID, pCtrl->getConfig()->getInt(cfg::lastMsgCount));
+      }
+      if (howMany) {
+        SetProp(GetParent(pIECtrl->getHWND()), "MsgSession", (HANDLE) 1);
       }
     }
-    SetProp(GetParent(pIECtrl->getHWND()), "MsgSession", (HANDLE) 0);
   }
 
   void WndController::clearGroupedMsgs() {

@@ -19,20 +19,22 @@
 #include "Controller.h"
 
 namespace kIEview2 {
-  void ActionHandler::anchorClicked(const char* url, IECtrl* ctrl) {
-    Ctrl->IMessage(im::anchorClick, NET_BROADCAST, -1, cntId, (int)url);
+  void ActionHandler::anchorClicked(const char* url, IECtrl* pCtrl) {
+    Ctrl->IMessage(im::anchorClick, NET_BROADCAST, -1, wndCtrl->getCntID(), (int)url);
     ShellExecute(GetDesktopWindow(), "open", url, 0, 0, SW_SHOWNORMAL);
   }
 
-  void ActionHandler::fileDropped(const char *url, IECtrl* ctrl) {
-    Ctrl->IMessage(im::fileDrop, NET_BROADCAST, -1, cntId, (int)url);
+  void ActionHandler::fileDropped(const char *url, IECtrl* pCtrl) {
+    Ctrl->IMessage(im::fileDrop, NET_BROADCAST, -1, wndCtrl->getCntID(), (int)url);
   }
 
   int ActionHandler::showMessage(HWND hWnd, const char* lpText, DWORD dwType) { 
     return MessageBox(hWnd, lpText, "[kIEview2] Wiadomoœæ od skryptu", dwType); 
   }
 
-  ActionHandler::tMenuAction ActionHandler::popupMenu(tMenuType type, POINT pt, IECtrl* ctrl) {
+  ActionHandler::tMenuAction ActionHandler::popupMenu(tMenuType type, POINT pt, IECtrl* pCtrl) {
+    tCntId cntID = wndCtrl->getCntID();
+
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::urlSep), -1, ACTS_HIDDEN);
@@ -45,8 +47,8 @@ namespace kIEview2 {
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::historySep), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastMsgs), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastSession), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), cntId ? 0 : -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), cntId ? 0 : -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), cntID ? 0 : -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), cntID ? 0 : -1, ACTS_HIDDEN);
 
     switch (type) {
       case tMenuType::Anchor: {
@@ -65,7 +67,7 @@ namespace kIEview2 {
         break;
       }
       default: {
-        if (!cntId) break;
+        if (!cntID) break;
 
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::historySep), 0, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastMsgs), 0, ACTS_HIDDEN);
@@ -74,9 +76,9 @@ namespace kIEview2 {
       }
     }
 
-    if (cntId) {
-      Ctrl->IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, cntId), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, 
-        pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, cntId))));
+    if (cntID) {
+      Ctrl->IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, cntID), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, 
+        pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_MSGWND, cntID))));
     } else {
       Ctrl->IMessage(&sIMessage_UIMakePopup(sUIAction(IMIG_MSGWND, act::popup::popup, -1), TPM_LEFTBUTTON | TPM_RIGHTBUTTON, 
         pt.x, pt.y, 0, UIActionHandleDirect(sUIAction(0, IMIG_HISTORYWND, -1))));
@@ -105,21 +107,21 @@ namespace kIEview2 {
         return tMenuAction::ShowSource;
       }
       case act::popup::lastMsgs: {
-        if (cntId) {
-          Controller::getInstance()->readMsgs(cntId, Controller::getConfig()->getInt(cfg::lastMsgCount), 
-            GetProp(GetParent(ctrl->getHWND()), "MsgSession") ? 1 : 0);
+        if (cntID) {
+          Controller::getInstance()->readMsgs(cntID, Controller::getConfig()->getInt(cfg::lastMsgCount), 
+            GetProp(GetParent(pCtrl->getHWND()), "MsgSession") ? 1 : 0);
         }
         break;
       }
       case act::popup::lastSession: {
-        if (cntId) {
-          Controller::getInstance()->readLastMsgSession(cntId, GetProp(GetParent(ctrl->getHWND()), "MsgSession") ? 1 : 0);
+        if (cntID) {
+          Controller::getInstance()->readLastMsgSession(cntID, GetProp(GetParent(pCtrl->getHWND()), "MsgSession") ? 1 : 0);
         }
         break;
       }
       case act::popup::clear: {
-        if (cntId) {
-          Controller::getInstance()->getWndController(ctrl)->clearWnd();
+        if (cntID) {
+          wndCtrl->clearWnd();
         }
         break;
       }

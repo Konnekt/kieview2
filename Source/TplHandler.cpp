@@ -83,10 +83,15 @@ void TplHandler::loadSettings() {
 }
 
 void TplHandler::saveSettings() {
+  iPackage* selectedStyle = 0;
+
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
     if ((*it)->isEnabled()) {
-      Controller::getConfig()->set(cfg::currentStyle, (*it)->getDir()); break;
+      selectedStyle = *it; break;
     }
+  }
+  if (selectedStyle) {
+    Controller::getConfig()->set(cfg::currentStyle, selectedStyle->getDir());
   }
 }
 

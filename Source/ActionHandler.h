@@ -19,6 +19,7 @@
 
 #include "kIEView2.h"
 #include "IECtrl.h"
+#include "WndController.h"
 
 namespace kIEview2 {
   class ActionHandler: public IECtrl::AnchorClickListener,
@@ -31,18 +32,19 @@ namespace kIEview2 {
     typedef IECtrl::PopupMenuListener::MenuType tMenuType;
 
   public:
-    ActionHandler(IECtrl* ctrl, tCntId _cntId = 0): selectedMenuItem(0), cntId(_cntId) {
-      ctrl->setPopupMenuListener(this);
-      ctrl->setAnchorClickListener(this);
-      ctrl->setDropListener(this);
-      ctrl->setScriptMessageListener(this);
-      ctrl->setKeyDownListener(this);
+    ActionHandler(IECtrl* pCtrl, oWndController wndCtrl): selectedMenuItem(0), wndCtrl(wndCtrl) {
+      pCtrl->setPopupMenuListener(this);
+      pCtrl->setAnchorClickListener(this);
+      pCtrl->setDropListener(this);
+      pCtrl->setScriptMessageListener(this);
+      pCtrl->setKeyDownListener(this);
     }
 
   public:
-    void anchorClicked(const char* url, IECtrl* ctrl);
-    void fileDropped(const char *url, IECtrl* ctrl);
-    MakeAction popupMenu(MenuType type, POINT pt, IECtrl* ctrl);
+    void anchorClicked(const char* url, IECtrl* pCtrl);
+    void fileDropped(const char *url, IECtrl* pCtrl);
+
+    MakeAction popupMenu(MenuType type, POINT pt, IECtrl* pCtrl);
     int showMessage(HWND hWnd, const char* lpText, DWORD dwType);
 
     // @todo implement
@@ -50,7 +52,9 @@ namespace kIEview2 {
 
   public:
     int selectedMenuItem;
-    tCntId cntId;
+
+  protected:
+    oWndController wndCtrl;
   };
 }
 

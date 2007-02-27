@@ -241,7 +241,7 @@ namespace kIEview2 {
 
     sUIActionNotify* an = this->getAN();
 
-    switch(an->act.id) {
+    switch (an->act.id) {
       case act::popup::popup: {
         IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(
           sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, Konnekt::UI::ACT::msg_ctrlview, an->act.cnt)
