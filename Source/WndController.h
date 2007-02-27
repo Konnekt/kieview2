@@ -29,16 +29,16 @@ namespace kIEview2 {
   struct sGroupedMsg {
     Date64 time;
     tCntId cnt;
-    int type;
+    tMsgType type;
 
-    sGroupedMsg(tCntId _cnt, int _type, const Date64& _time): cnt(_cnt), type(_type), time(_time) { }
+    sGroupedMsg(tCntId _cnt, tMsgType _type, const Date64& _time): cnt(_cnt), type(_type), time(_time) { }
     sGroupedMsg(): cnt(0), type(0) { }
   };
   typedef vector<sGroupedMsg> tGroupedMsgs;
 
   struct sGroupedSt {
-    String info;
     Date64 time;
+    String info;
     int status;
 
     sGroupedSt(int _status, const Date64& _time, const StringRef& _info = ""): status(_status), time(_time), info(_info) { }
@@ -102,6 +102,7 @@ namespace kIEview2 {
       IECtrl::Var restore();
       IECtrl::Var show();
       IECtrl::Var close();
+      IECtrl::Var clear();
       IECtrl::Var flash(IECtrl::Var& args, IECtrl::iObject* obj);
 
       IECtrl::Var breakGrouping();

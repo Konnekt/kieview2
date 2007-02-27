@@ -30,7 +30,8 @@ iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
   return new TplSet(set);
 }
 
-const char TplHandler::_coreStylePath[] = "data/templates/core";
+const char TplHandler::_sysStylesPath[] = "data/templates";
+const char TplHandler::_coreStylesDir[] = "__core";
 
 TplHandler::TplHandler(const string& tplExt) {
   _dirColID = kIEview2::cfg::stylesDir;
@@ -51,46 +52,62 @@ TplHandler::TplHandler(const string& tplExt) {
   *this << new TplPackageParser;
 }
 
+void TplHandler::loadPackages() {
+  iPackageHandler::loadPackages();
+  if (_packages.size()) {
+    return;
+  }
+
+  iPackageHandler::loadPackages(unifyPath(getSystemStylesDir()));
+  if (!_packages.size()) {
+    throw SystemStylesMissing();
+  }
+
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    ((TplSet*) *it)->isSystem(true);
+  }
+}
+
+string TplHandler::getSystemStylesDir() {
+  return getKonnektPath() + unifyPath(_sysStylesPath, true);
+}
+
 TplSet* TplHandler::getCurrentStyle() {
   string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
     if ((*it)->getDir() == currentStyle) return (TplSet*) *it;
   }
-  if (_packages.size()) {
-    return (TplSet*) _packages.front();
-  }
-  throw ExceptionString("No styles available");
+  return (TplSet*) _packages.front();
 }
 
 string TplHandler::getCurrentStyleDir() {
-  try {
-    return getDir() + "\\" + getCurrentStyle()->getDir();
-  } catch(...) {
-    return getKonnektPath() + unifyPath(_coreStylePath);
+  if (getCurrentStyle()->isSystem()) {
+    return getSystemStylesDir() + getCurrentStyle()->getDir();
   }
+  return getDir() + "\\" + getCurrentStyle()->getDir();
 }
 
 void TplHandler::loadSettings() {
   clearDirs();
 
-  try {
-    getCurrentStyle()->setEnabled(true);
-    addTplDir(getDir() + "/" + getCurrentStyle()->getDir() + "/");
-  } catch(...) { }
+  getCurrentStyle()->setEnabled(true);
+  addTplDir(getCurrentStyleDir());
 
-  addTplDir(_coreStylePath);
+  if (getCurrentStyle()->getDir() != _coreStylesDir) {
+    addTplDir(getSystemStylesDir() + _coreStylesDir);
+  }
 }
 
 void TplHandler::saveSettings() {
-  iPackage* selectedStyle = 0;
+  TplSet* selectedStyle = 0;
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
     if ((*it)->isEnabled()) {
-      selectedStyle = *it; break;
+      selectedStyle = (TplSet*) *it; break;
     }
   }
-  if (selectedStyle) {
+  if (selectedStyle && selectedStyle->getDir() != _coreStylesDir) {
     Controller::getConfig()->set(cfg::currentStyle, selectedStyle->getDir());
   }
 }

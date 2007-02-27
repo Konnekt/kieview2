@@ -3,7 +3,7 @@
   <div class="context-grouped">
     <span class="floating time">{{if groupTime}}<b>{{$timeFromLastSt}}</b> póŸniej{{else}}{{$time}}{{/if}}</span>
     {{unless groupStatus}}<span class="floating name">{{$status}}</span>{{/unless}}
-    <div class="body">{{if info}}{{func replace('/\r?\n/', '<br />', info)}}{{else}}<em>void</em>{{/if}}</div>
+    <div class="body">{{if info}}{{$nl2br(info)}}{{else}}<em>void</em>{{/if}}</div>
   </div>
 </div>
 {{else}}
@@ -14,7 +14,7 @@
       <span class="name">{{$status}}</span>
       <span class="time">{{$time}}</span>
     </div>
-    {{if info}}<div class="body">{{func replace('/\r?\n/', '<br />', info)}}</div>{{/if}}
+    {{if info}}<div class="body">{{$nl2br(info)}}</div>{{/if}}
   </div>
 </div>
 {{/if}}

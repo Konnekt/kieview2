@@ -33,11 +33,18 @@ using namespace Helpers;
 class TplSet : public iPackage {
 public:
   TplSet(const StringRef& name, const string& dir, const string& version = "", const StringRef& description = ""):
-    iPackage(name, dir, version, description) { }
-  TplSet() { }
+    iPackage(name, dir, version, description), _system(false) { }
+  TplSet(): _system(false) { }
   virtual ~TplSet() { }
 
 public:
+  bool isSystem() {
+    return _system;
+  }
+  void isSystem(bool value) {
+    _system = value;
+  }
+
   virtual string getPreview() const {
     return _preview;
   }
@@ -47,6 +54,7 @@ public:
 
 protected:
   string _preview;
+  bool _system;
 };
 
 class TplPackageParser: public iPackageParser {
@@ -55,6 +63,11 @@ public:
     return "template.xml";
   }
   iPackage* parse(const FindFile::Found& defFile);
+};
+
+class SystemStylesMissing : public ExceptionString {
+public:
+  SystemStylesMissing(): ExceptionString("Nie znaleziono katalogu z g³ównymi szablonami !") { }
 };
 
 class TplHandler : public iPackageHandler {
@@ -71,11 +84,13 @@ public:
 public:
   void fillLV(iLV* lv);
 
+  void loadPackages();
   void loadSettings();
   void saveSettings();
 
-  TplSet* getCurrentStyle();
+  string getSystemStylesDir();
   string getCurrentStyleDir();
+  TplSet* getCurrentStyle();
 
 public:
   inline void clearDirs() {
@@ -114,7 +129,8 @@ public:
   String parseException(const exception &e);
 
 protected:
-  static const char _coreStylePath[];
+  static const char _sysStylesPath[];
+  static const char _coreStylesDir[];
 
   udf_fn_factory _udfFactory;
   string _tplExt;

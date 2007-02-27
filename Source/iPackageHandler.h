@@ -39,7 +39,7 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(iPackageHandler, iObject, Version(0,1,0,0));
 
 public:
-  typedef list<iPackageParser*> tParsers;
+  typedef vector<iPackageParser*> tParsers;
   typedef list<iPackage*> tPackages;
 
 public:
@@ -91,7 +91,11 @@ public:
   virtual void clearPackages() {
     if (_packages.size()) _packages.clear();
   }
-  virtual void loadPackages();
+  virtual void loadPackage(iPackageParser* parser, FindFile::Found& dir);
+  virtual void loadPackages(const string& dir);
+  virtual void loadPackages() {
+    loadPackages(getDir());
+  }
 
   virtual string getRepoPath(const string& path); 
   virtual void prepareRepo(const string& path); 

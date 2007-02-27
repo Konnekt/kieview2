@@ -4,19 +4,13 @@
 
   <script type="text/javascript" src="js/jquery.js"></script>
   <script type="text/javascript">
-    var oController = window.external.oController;
-    var oWindow = window.external.oWindow;
+    var oExternal = window.external;
+    var oController = oExternal.oGlobal.oController;
+    var oWindow = oExternal.oGlobal.oWindow(oExternal.refID);
 
     $(document).ready(function() {
       try {
-        //Coontroller.ieVersion = function() { return 9 + 1; };
-        //oController.ieVersion = 9;
-        //oController.justSS = function() { return "blaa"; };
-        //alert($H(oController).inspect());
-        //oWindow.minimize();
-        //insertString(oController.getPluginVersion('xkAway2'));
-        //alert(oController.getEmot(4716));
-
+        // sth here
       } catch(e) {
         insertString('<b>Exception</b> (<b>' + e.name + '</b>): ' + e.message);
       }

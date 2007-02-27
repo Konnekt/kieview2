@@ -56,6 +56,7 @@ namespace kIEview2 {
     clearGroupedMsgs();
     // ladujemy bootstrapa
     pIECtrl->navigate(("file:///" + unifyPath(pCtrl->getTplHandler()->getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
+    IMLOG("--- %s", ("file:///" + unifyPath(pCtrl->getTplHandler()->getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
     // pIECtrl->clear();
 
     SetProp(GetParent(pIECtrl->getHWND()), "MsgSession", (HANDLE) 0);
@@ -94,6 +95,7 @@ namespace kIEview2 {
       bindMethod("restore", bind(resolve_cast0(&WndController::restore), this));
       bindMethod("show", bind(resolve_cast0(&WndController::show), this));
       bindMethod("close", bind(resolve_cast0(&WndController::close), this));
+      bindMethod("clear", bind(resolve_cast0(&WndController::clear), this));
       bindMethod("flash", bind(&WndController::flash, this, _1, _2));
 
       bindMethod("breakGrouping", bind(resolve_cast0(&WndController::breakGrouping), this));
@@ -135,6 +137,10 @@ namespace kIEview2 {
     }
     IECtrl::Var WndController::close() {
       return CloseWindow(hWndWnd);
+    }
+    IECtrl::Var WndController::clear() {
+      oCtrl->clearWnd();
+      return true;
     }
     IECtrl::Var WndController::flash(IECtrl::Var& args, IECtrl::iObject* obj) {
       /*
