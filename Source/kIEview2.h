@@ -75,6 +75,9 @@ namespace kIEview2 {
     const unsigned int tipinfo = ico + 15;
 
     const unsigned int styles = ico + 16;
+
+    const unsigned int scrollUp = ico + 17;
+    const unsigned int scrollDown = ico + 18;
   }
 
   namespace act {
@@ -97,6 +100,9 @@ namespace kIEview2 {
       const unsigned int lastSession = popup + 12;
       const unsigned int clearSep = popup + 13;
       const unsigned int clear = popup + 14;
+      const unsigned int scrollToUp = popup + 15;
+      const unsigned int scrollToDown = popup + 16;
+      const unsigned int pasteActualConversation = popup + 17;
     }
 
     namespace formatTb {
@@ -136,6 +142,7 @@ namespace kIEview2 {
     const unsigned int relativeTime = cfg + 13;
 
     const unsigned int showOnLoad = cfg + 16;
+    const unsigned int pasteActualConversation = cfg + 17;
   }
 }
 

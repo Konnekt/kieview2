@@ -323,6 +323,27 @@ bool IECtrl::isScrollOnBottom() {
   return isScroll;
 }
 
+bool IECtrl::isScrollOnTop() {
+  bool isScroll = false;
+
+  IHTMLDocument2 *pDocument = getDocument();
+  if (pDocument != NULL) {
+    IHTMLElement *pBody = NULL;
+    if (SUCCEEDED(pDocument->get_body(&pBody)) && pBody != NULL) {
+      IHTMLElement2 *pElement = NULL;
+      if (SUCCEEDED(pBody->QueryInterface(IID_IHTMLElement2,(void**)&pElement)) && pElement != NULL) {
+        long st;
+        pElement->get_scrollTop(&st);
+
+        isScroll = !st;
+        pElement->Release();
+      }
+      pBody->Release();
+    }
+    pDocument->Release();
+  }
+  return isScroll;
+}
 void IECtrl::scrollToBottom() {
   IHTMLDocument2 *document = getDocument();
   if (document != NULL) {
@@ -1172,6 +1193,8 @@ STDMETHODIMP IECtrl::ClientSite::ShowContextMenu(DWORD dwID, POINT *ppt, IUnknow
           type = PopupMenuListener::MenuType::Selection;
         } else if (dwID == 1) {
           type = PopupMenuListener::MenuType::Image;
+        } else if (dwID == 10) {
+          type = PopupMenuListener::MenuType::Scroll;
         }
 
         PopupMenuListener::MakeAction action = m_pCtrl->m_pPopupMenuListener->popupMenu(type, *ppt, m_pCtrl);

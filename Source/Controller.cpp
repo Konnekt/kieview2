@@ -48,6 +48,7 @@ namespace kIEview2 {
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::lastMsgCount, DT_CT_INT, 10, "kIEview2/lastMsgCount");
     config->setColumn(DTCFG, cfg::relativeTime, DT_CT_INT, 1, "kIEview2/relativeTime");
+    config->setColumn(DTCFG, cfg::pasteActualConversation, DT_CT_INT, 0, "kIEview2/pasteActualConversation");
     config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 0, "kIEview2/autoScroll");
     config->setColumn(DTCFG, cfg::showOnLoad, DT_CT_INT, showNothing, "kIEview2/showOnLoad");
 
@@ -144,9 +145,12 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::selectAll, 0, "Zaznacz wszystko");
     UIActionAdd(act::popup::popup, act::popup::print, 0, "Drukuj", ico::print);
     UIActionAdd(act::popup::popup, act::popup::showSource, 0, "Poka¿ Ÿród³o", ico::source);
+    UIActionAdd(act::popup::popup, act::popup::scrollToUp, 0, "Przewijaj do góry");
+    UIActionAdd(act::popup::popup, act::popup::scrollToDown, 0, "Przewijaj do do³u");
     UIActionAdd(act::popup::popup, act::popup::historySep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::lastSession, 0, "Wczytaj ostatni¹ sesjê");
     UIActionAdd(act::popup::popup, act::popup::lastMsgs, 0, "Wczytaj ostatnie wiad.");
+    UIActionAdd(act::popup::popup, act::popup::pasteActualConversation, ACTT_CHECK, "Doklej aktualn¹ rozmowê do wcztywanej sesji.");
     UIActionAdd(act::popup::popup, act::popup::clearSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
 
@@ -185,6 +189,7 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Stosuj czas relatywny (jeœli siê da)", cfg::relativeTime);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SPINNER | ACTSC_INLINE, AP_MINIMUM "0" AP_MAXIMUM "1000", cfg::lastMsgCount, 0, 0, 65);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Iloœæ ostatnich wiadomoœci do wczytania");
+    UIActionCfgAdd(ui::cfgGroup, cfg::pasteActualConversation, ACTT_CHECK, "Doklejaj aktualn¹ rozmowê do wczytywanych sesji", cfg::pasteActualConversation);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Po otwarciu okna rozmowy ...");
@@ -260,6 +265,8 @@ namespace kIEview2 {
       case act::popup::showSource:
       case act::popup::lastMsgs:
       case act::popup::lastSession:
+      case act::popup::scrollToDown:
+      case act::popup::scrollToUp:
       case act::popup::clear: {
         if (an->code != ACTN_ACTION) break;
         IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(
@@ -267,6 +274,15 @@ namespace kIEview2 {
         ));
         if (pCtrl) {
           getWndController(pCtrl)->actionHandler->selectedMenuItem = an->act.id;
+        }
+        break;
+      }
+      case act::popup::pasteActualConversation: {
+        if (an->code == ACTN_ACTION) {
+          bool checked = UIActionGetStatus(an->act) & ACTS_CHECKED;
+          SETINT(cfg::pasteActualConversation, !checked);
+          getConfig()->set(cfg::pasteActualConversation, !checked);
+          UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::pasteActualConversation), checked ? -1 : 0, ACTS_CHECKED); //@cos nie chce dzia³ac
         }
         break;
       }

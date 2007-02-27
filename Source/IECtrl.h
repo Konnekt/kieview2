@@ -63,7 +63,8 @@ public:
       Unknown,
       Anchor,
       Selection,
-      Image
+      Image,
+      Scroll
     };
     enum MakeAction {
       None = 0,
@@ -73,7 +74,7 @@ public:
       OpenLink = 4,
       SaveImage = 2270,
       Print = 27,
-      ShowSource = 2139
+      ShowSource = 2139,
     };
     virtual MakeAction popupMenu(MenuType type, POINT pt, IECtrl* ctrl) = 0;
   };
@@ -126,6 +127,7 @@ public:
   void write(const WCHAR *text);
   void write(const char *text);
   void close();
+  bool isScrollOnTop();
   bool isScrollOnBottom();
   void scrollToTop();
   void scrollToBottom();

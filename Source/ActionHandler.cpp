@@ -34,6 +34,7 @@ namespace kIEview2 {
 
   ActionHandler::tMenuAction ActionHandler::popupMenu(tMenuType type, POINT pt, IECtrl* pCtrl) {
     tCntId cntID = wndCtrl->getCntID();
+    bool showDefaultItems = type != tMenuType::Scroll;
 
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), -1, ACTS_HIDDEN);
@@ -41,14 +42,21 @@ namespace kIEview2 {
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::saveImage), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::imageSep), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copySelection), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), 0, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), 0, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), showDefaultItems ? 0 : -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), showDefaultItems ? 0 : -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), showDefaultItems ? 0 : -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::historySep), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastMsgs), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastSession), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), cntID ? 0 : -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), cntID ? 0 : -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), cntID && showDefaultItems ? 0 : -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), cntID && showDefaultItems ? 0 : -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToUp), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToDown), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToUp), 0, ACTS_DISABLED);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToDown), 0, ACTS_DISABLED);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::pasteActualConversation), cntID && showDefaultItems ? 0 : -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::pasteActualConversation),
+      Controller::getConfig()->getInt(cfg::pasteActualConversation) ? -1 : 0, ACTS_CHECKED);
 
     switch (type) {
       case tMenuType::Anchor: {
@@ -64,6 +72,17 @@ namespace kIEview2 {
       }
       case tMenuType::Selection: {
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copySelection), 0, ACTS_HIDDEN);
+        break;
+      }
+      case tMenuType::Scroll: {
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToDown), 0, ACTS_HIDDEN);
+        if (pCtrl->isScrollOnBottom()) {
+          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToDown), -1, ACTS_DISABLED);
+        }
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToUp), 0, ACTS_HIDDEN);
+        if (pCtrl->isScrollOnTop()) {
+          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToUp), -1, ACTS_DISABLED);
+        }
         break;
       }
       default: {
@@ -114,12 +133,21 @@ namespace kIEview2 {
       }
       case act::popup::lastSession: {
         if (cntID) {
-          Controller::getInstance()->readLastMsgSession(cntID);
+          bool openSession = GetProp(GetParent(pCtrl->getHWND()), "MsgSession");
+          Controller::getInstance()->readLastMsgSession(cntID, openSession && !Controller::getConfig()->getInt(cfg::pasteActualConversation));
         }
         break;
       }
       case act::popup::clear: {
         if (cntID) wndCtrl->clearWnd();
+        break;
+      }
+      case act::popup::scrollToUp: {
+        pCtrl->scrollToTop();
+        break;
+      }
+      case act::popup::scrollToDown: {
+        pCtrl->scrollToBottom();
         break;
       }
     }
