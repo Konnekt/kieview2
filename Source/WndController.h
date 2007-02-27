@@ -63,11 +63,11 @@ namespace kIEview2 {
     void clearWnd();
     void initWnd();
 
+    tCntId getCntID() const {
+      return cntID;
+    }
     IECtrl* getIECtrl() {
       return pIECtrl;
-    }
-    tCntId getCntID() {
-      return cntID;
     }
     IECtrl::Var getJSController();
 

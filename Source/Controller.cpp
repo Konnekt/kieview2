@@ -370,7 +370,9 @@ namespace kIEview2 {
         oldMsgWndProc = (WNDPROC) SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
         SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
 
-        wndControllers.push_back(new WndController(an));
+        oWndController wndCtrl = new WndController(an);
+        wndControllers.push_back(wndCtrl);
+        wndCtrl->initWnd();
         break;
       }
 

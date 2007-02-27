@@ -31,7 +31,7 @@ namespace kIEview2 {
     cntID = an->act.cnt;
 
     pIECtrl->enableSandbox(false);
-    initWnd();
+    // initWnd();
   }
 
   WndController::~WndController() {
