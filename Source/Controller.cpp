@@ -390,7 +390,7 @@ namespace kIEview2 {
 
       case Konnekt::UI::Notify::insertMsg: {
         Konnekt::UI::Notify::_insertMsg* an = (Konnekt::UI::Notify::_insertMsg*)this->getAN();
-        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        IECtrl* pCtrl = getWndController(an)->getIECtrl();
 
         IECtrl::Var args;
         IECtrl::Var ret;
@@ -571,7 +571,7 @@ namespace kIEview2 {
   }
 
   oWndController Controller::getWndController(sUIActionNotify_base* an) {
-    return getWndController(IECtrl::get((HWND)UIActionHandleDirect(an->act)));
+    return getWndController(an->act.cnt);
   }
 
   oWndController Controller::getWndController(IECtrl* pCtrl) {
