@@ -13,8 +13,8 @@
 
 #include "stdafx.h"
 
-#include "TplHandler.h"
 #include "Controller.h"
+#include "TplHandler.h"
 #include "TplUdf.h"
 
 iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {

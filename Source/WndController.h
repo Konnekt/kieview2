@@ -69,7 +69,7 @@ namespace kIEview2 {
     tCntId getCntID() {
       return cntID;
     }
-    IECtrl::Var getJSController(IECtrl* pCtrl, IECtrl::Var& args);
+    IECtrl::Var getJSController();
 
   public:
     JS::WndController* jsController;
@@ -91,7 +91,7 @@ namespace kIEview2 {
   namespace JS {
     class WndController : public IECtrl::iObject {
     public:
-      WndController(IECtrl* pCtrl, IECtrl::Var& args, oWndController wndCtrl);
+      WndController(oWndController wndCtrl);
 
     public:
       IECtrl::Var minimized();

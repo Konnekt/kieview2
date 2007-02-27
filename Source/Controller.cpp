@@ -13,6 +13,7 @@
   */
 
 #include "stdafx.h"
+
 #include "WndController.h"
 #include "Controller.h"
 #include "Message.h"
@@ -581,13 +582,19 @@ namespace kIEview2 {
     return NULL;
   }
 
+  oWndController Controller::getWndController(tCntId cntID) {
+    for (tWndControllers::iterator it = wndControllers.begin(); it != wndControllers.end(); it++) {
+      if ((*it)->getCntID() == cntID) return *it;
+    }
+    return NULL;
+  }
+
   IECtrl::Var Controller::getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj) {
     if (args.length() > 0) {
-      IECtrl* pCtrl = IECtrl::get((HWND)args[0].getInteger());
-      WndController* wndCtrl = getWndController(pCtrl);
+      oWndController wndCtrl = getWndController(IECtrl::get((HWND) args[0].getInteger()));
 
-      if (pCtrl && wndCtrl) {
-        return wndCtrl->getJSController(pCtrl, args);
+      if (wndCtrl) {
+        return wndCtrl->getJSController();
       }
     }
     throw IECtrl::JSException("Invalid IE Control ref ID");
@@ -771,6 +778,7 @@ namespace kIEview2 {
     }
 
     if (m) {
+      SetProp(GetParent(getWndController(cnt)->getIECtrl()->getHWND()), "MsgSession", (HANDLE) 1);
       Message::quickEvent(cnt, "Wczytujê wiadomoœci z historii.");
     }
 

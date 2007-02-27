@@ -40,11 +40,11 @@ namespace kIEview2 {
     delete pIECtrl;
   }
 
-  IECtrl::Var WndController::getJSController(IECtrl* pCtrl, IECtrl::Var& args) {
+  IECtrl::Var WndController::getJSController() {
     LockerCS lock(_locker);
 
     if (!jsController) {
-      jsController = new JS::WndController(pCtrl, args, this);
+      jsController = new JS::WndController(this);
     }
     return jsController;
   }
@@ -67,14 +67,10 @@ namespace kIEview2 {
     clearWnd();
 
     if (int showOnLoad = pCtrl->getConfig()->getInt(cfg::showOnLoad)) {
-      int howMany = 0;
       if (showOnLoad == showLastSession) {
-        howMany = pCtrl->readLastMsgSession(cntID);
+        pCtrl->readLastMsgSession(cntID);
       } else {
-        howMany = pCtrl->readMsgs(cntID, pCtrl->getConfig()->getInt(cfg::lastMsgCount));
-      }
-      if (howMany) {
-        SetProp(GetParent(pIECtrl->getHWND()), "MsgSession", (HANDLE) 1);
+        pCtrl->readMsgs(cntID, pCtrl->getConfig()->getInt(cfg::lastMsgCount));
       }
     }
   }
@@ -87,7 +83,7 @@ namespace kIEview2 {
   }
 
   namespace JS {
-    WndController::WndController(IECtrl* pCtrl, IECtrl::Var& args, oWndController wndCtrl): iObject(pCtrl, true), oCtrl(wndCtrl) {
+    WndController::WndController(oWndController wndCtrl): iObject(wndCtrl->getIECtrl(), true), oCtrl(wndCtrl) {
       bindMethod("minimized", bind(resolve_cast0(&WndController::minimized), this), true);
       bindMethod("visible", bind(resolve_cast0(&WndController::visible), this), true);
       bindMethod("tabbed", bind(resolve_cast0(&WndController::tabbed), this), true);

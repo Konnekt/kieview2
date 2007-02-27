@@ -20,12 +20,12 @@
 
 namespace kIEview2 {
   void ActionHandler::anchorClicked(const char* url, IECtrl* pCtrl) {
-    Ctrl->IMessage(im::anchorClick, NET_BROADCAST, -1, wndCtrl->getCntID(), (int)url);
+    Ctrl->IMessage(im::anchorClick, NET_BROADCAST, -1, wndCtrl->getCntID(), (int) url);
     ShellExecute(GetDesktopWindow(), "open", url, 0, 0, SW_SHOWNORMAL);
   }
 
   void ActionHandler::fileDropped(const char *url, IECtrl* pCtrl) {
-    Ctrl->IMessage(im::fileDrop, NET_BROADCAST, -1, wndCtrl->getCntID(), (int)url);
+    Ctrl->IMessage(im::fileDrop, NET_BROADCAST, -1, wndCtrl->getCntID(), (int) url);
   }
 
   int ActionHandler::showMessage(HWND hWnd, const char* lpText, DWORD dwType) { 
@@ -108,21 +108,18 @@ namespace kIEview2 {
       }
       case act::popup::lastMsgs: {
         if (cntID) {
-          Controller::getInstance()->readMsgs(cntID, Controller::getConfig()->getInt(cfg::lastMsgCount), 
-            GetProp(GetParent(pCtrl->getHWND()), "MsgSession") ? 1 : 0);
+          Controller::getInstance()->readMsgs(cntID, Controller::getConfig()->getInt(cfg::lastMsgCount));
         }
         break;
       }
       case act::popup::lastSession: {
         if (cntID) {
-          Controller::getInstance()->readLastMsgSession(cntID, GetProp(GetParent(pCtrl->getHWND()), "MsgSession") ? 1 : 0);
+          Controller::getInstance()->readLastMsgSession(cntID);
         }
         break;
       }
       case act::popup::clear: {
-        if (cntID) {
-          wndCtrl->clearWnd();
-        }
+        if (cntID) wndCtrl->clearWnd();
         break;
       }
     }

@@ -128,6 +128,7 @@ namespace kIEview2 {
 
     oWndController getWndController(sUIActionNotify_base* an);
     oWndController getWndController(IECtrl* pCtrl);
+    oWndController getWndController(tCntId cntID);
 
   protected:
     void _onPluginsLoaded();
