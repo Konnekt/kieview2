@@ -13,6 +13,7 @@
   */
 
 #include "stdafx.h"
+#include "WndController.h"
 #include "Controller.h"
 #include "Message.h"
 
@@ -23,22 +24,26 @@ namespace kIEview2 {
     IECtrl::getGlobal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2));
 
     /* Static values like net, type or version */
-    this->setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
-    this->setStaticValue(IM_PLUG_PRIORITY, PLUGP_HIGH + 1);
-    this->setStaticValue(IM_PLUG_NAME, (int) "kIEview2");
-    this->setStaticValue(IM_PLUG_SIG, (int) sig);
-    this->setStaticValue(IM_PLUG_NET, net);
+    setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
+    setStaticValue(IM_PLUG_PRIORITY, PLUGP_HIGH + 1);
+    setStaticValue(IM_PLUG_NAME, (int) "kIEview2");
+    setStaticValue(IM_PLUG_SIG, (int) sig);
+    setStaticValue(IM_PLUG_NET, net);
 
     /* Callbacks */
-    this->registerObserver(IM_ALLPLUGINSINITIALIZED, bind(resolve_cast0(&Controller::_onPluginsLoaded), this));
-    this->registerObserver(IM_UI_PREPARE, bind(resolve_cast0(&Controller::_onPrepare), this));
-    this->registerObserver(IM_UIACTION, bind(resolve_cast0(&Controller::_onAction), this));
-    this->registerObserver(IM_CFG_CHANGED, bind(resolve_cast0(&Controller::_onCfgChanged), this));
-    this->registerActionObserver(Konnekt::UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
-    this->registerActionObserver(Konnekt::UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
+    registerObserver(IM_ALLPLUGINSINITIALIZED, bind(resolve_cast0(&Controller::_onPluginsLoaded), this));
+    registerObserver(IM_UI_PREPARE, bind(resolve_cast0(&Controller::_onPrepare), this));
+    registerObserver(IM_UIACTION, bind(resolve_cast0(&Controller::_onAction), this));
+    registerObserver(IM_CFG_CHANGED, bind(resolve_cast0(&Controller::_onCfgChanged), this));
+    registerActionObserver(Konnekt::UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
+    registerActionObserver(Konnekt::UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
 
-    this->registerActionObserver(ui::styleLV, bind(resolve_cast0(&Controller::_styleLV), this));
-    this->registerActionObserver(ui::emotLV, bind(resolve_cast0(&Controller::_emotLV), this));
+    registerActionObserver(ui::styleLV, bind(resolve_cast0(&Controller::_styleLV), this));
+    registerActionObserver(ui::emotLV, bind(resolve_cast0(&Controller::_emotLV), this));
+
+    subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_MSGWND);
+    subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
+    subclassAction(Konnekt::UI::ACT::msg_ctrlsend, IMIG_MSGWND);
 
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::lastMsgCount, DT_CT_INT, 10, "kIEview2/lastMsgCount");
@@ -63,21 +68,17 @@ namespace kIEview2 {
     config->setColumn(DTCFG, cfg::stylesDir, DT_CT_STR, "templates", "kIEview2/styles/dir");
     config->setColumn(DTCFG, cfg::currentStyle, DT_CT_STR, "", "kIEview2/styles/current");
 
-    this->subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_MSGWND);
-    this->subclassAction(Konnekt::UI::ACT::msg_ctrlview, IMIG_HISTORYWND);
-    this->subclassAction(Konnekt::UI::ACT::msg_ctrlsend, IMIG_MSGWND);
-
-    IECtrl::init();
-    setlocale(LC_ALL, "polish");
-
     bindMsgHandler(MT_QUICKEVENT, bind(&Controller::_handleQuickEventTpl, this, _1, _2), "quickevent");
     bindMsgHandler(MT_MESSAGE, bind(&Controller::_handleStdMsgTpl, this, _1, _2), "message");
     bindMsgHandler(MT_FILE, bind(&Controller::_handleFileTpl, this, _1, _2), "file");
     bindMsgHandler(MT_SMS, bind(&Controller::_handleSmsTpl, this, _1, _2), "sms");
+
+    IECtrl::init();
+    setlocale(LC_ALL, "polish");
   }
 
   Controller::~Controller() {
-    wndObjCollection.clear();
+    wndControllers.clear();
 
     if (jsController) {
       delete jsController;
@@ -108,7 +109,7 @@ namespace kIEview2 {
 
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
 
-    emotHandler << new JispParser;
+    // emotHandler << new JispParser;
     emotHandler << new GGParser;
 
     tplHandler.load();
@@ -246,7 +247,7 @@ namespace kIEview2 {
           sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, Konnekt::UI::ACT::msg_ctrlview, an->act.cnt)
         ));
         if (pCtrl) {
-          wndObjCollection[pCtrl].actionHandler->selectedMenuItem = 0;
+          getWndController(pCtrl)->actionHandler->selectedMenuItem = 0;
         }
         break;
       }
@@ -265,7 +266,7 @@ namespace kIEview2 {
           sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, Konnekt::UI::ACT::msg_ctrlview, an->act.cnt)
         ));
         if (pCtrl) {
-          wndObjCollection[pCtrl].actionHandler->selectedMenuItem = an->act.id;
+          getWndController(pCtrl)->actionHandler->selectedMenuItem = an->act.id;
         }
         break;
       }
@@ -365,16 +366,11 @@ namespace kIEview2 {
     switch (getAN()->code) {
       case ACTN_CREATEWINDOW: {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
-        IECtrl* pCtrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
-        an->hwnd = pCtrl->getHWND();
 
         oldMsgWndProc = (WNDPROC) SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
         SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
 
-        wndObjCollection[pCtrl].actionHandler = new ActionHandler(pCtrl, an->act.cnt);
-
-        pCtrl->enableSandbox(false);
-        this->initWnd(pCtrl);
+        wndControllers.push_back(new WndController(an));
         break;
       }
 
@@ -382,12 +378,11 @@ namespace kIEview2 {
         sUIActionNotify_destroyWindow* an = (sUIActionNotify_destroyWindow*)this->getAN();
         IECtrl* pCtrl = IECtrl::get(an->hwnd);
 
-        for (tWndObjCollection::iterator it = wndObjCollection.begin(); it != wndObjCollection.end(); it++) {
-          if (it->first == pCtrl) {
-            wndObjCollection.erase(it); break;
+        for (tWndControllers::iterator it = wndControllers.begin(); it != wndControllers.end(); it++) {
+          if ((*it)->getIECtrl() == pCtrl) {
+            wndControllers.erase(it); break;
           }
         }
-        delete pCtrl;
         break;
       }
 
@@ -450,9 +445,7 @@ namespace kIEview2 {
       }
 
       case Konnekt::UI::Notify::clear: {
-        sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
-        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
-        this->initWnd(pCtrl);
+        getWndController(getAN())->clearWnd();
         break;
       }
 
@@ -575,14 +568,26 @@ namespace kIEview2 {
     return CallWindowProc(getInstance()->oldMsgWndProc, hWnd, msg, wParam, lParam);
   }
 
+  oWndController Controller::getWndController(sUIActionNotify_base* an) {
+    return getWndController(IECtrl::get((HWND)UIActionHandleDirect(an->act)));
+  }
+
+  oWndController Controller::getWndController(IECtrl* pCtrl) {
+    if (!pCtrl) return NULL;
+
+    for (tWndControllers::iterator it = wndControllers.begin(); it != wndControllers.end(); it++) {
+      if ((*it)->getIECtrl() == pCtrl) return *it;
+    }
+    return NULL;
+  }
+
   IECtrl::Var Controller::getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj) {
     if (args.length() > 0) {
       IECtrl* pCtrl = IECtrl::get((HWND)args[0].getInteger());
-      if (pCtrl) {
-        if (!wndObjCollection[pCtrl].jsWndController) {
-          wndObjCollection[pCtrl].jsWndController = new JS::WndController(pCtrl, args);
-        }
-        return wndObjCollection[pCtrl].jsWndController;
+      WndController* wndCtrl = getWndController(pCtrl);
+
+      if (pCtrl && wndCtrl) {
+        return wndCtrl->getJSController(pCtrl, args);
       }
     }
     throw IECtrl::JSException("Invalid IE Control ref ID");
@@ -823,27 +828,6 @@ namespace kIEview2 {
     return msgCount;
   }
 
-  void Controller::initWnd(IECtrl* pCtrl) {
-    // locking
-    LockerCS lock(_locker);
-
-    // czyscimy wiadomosci grupowania
-    clearGroupedMsgs(pCtrl);
-
-    pCtrl->navigate(("file:///" + unifyPath(tplHandler.getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
-    // pCtrl->clear();
-
-    if (int showOnLoad = config->getInt(cfg::showOnLoad)) {
-      int cntID = getWndObjects(pCtrl)->actionHandler->cntId;
-      if (showOnLoad == showLastSession) {
-        readLastMsgSession(cntID);
-      } else {
-        readMsgs(cntID, config->getInt(cfg::lastMsgCount));
-      }
-    }
-    SetProp(GetParent(pCtrl->getHWND()), "MsgSession", (HANDLE) 0);
-  }
-
   DWORD CALLBACK Controller::streamOut(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) {
     String* entry = (String*) dwCookie;
     *entry += (char*) pbBuff;
@@ -1075,7 +1059,7 @@ namespace kIEview2 {
       data.hash_insert_new_var("info", info);
     }
 
-    tGroupedSt& groupedSt = getWndObjects(an)->groupedSt;
+    tGroupedSt& groupedSt = getWndController(an)->groupedSt;
 
     bool groupStatus = false;
     bool groupTime = false;
@@ -1108,7 +1092,7 @@ namespace kIEview2 {
       data.hash_insert_new_var("grouped", "1");
     }
 
-    clearGroupedMsgs(an);
+    getWndController(an)->clearGroupedMsgs();
     groupedSt.push_back(sGroupedSt(an->_status, date, an->_info));
 
     if (an->_status & ST_IGNORED) {
@@ -1118,7 +1102,6 @@ namespace kIEview2 {
   }
 
   String Controller::_parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an) {
-    // locking
     LockerCS lock(_locker);
 
     cMessage* msg = an->_message;
@@ -1153,7 +1136,7 @@ namespace kIEview2 {
     }
 
     tCntId senderID = !(msg->flag & MF_SEND) ? Ctrl->ICMessage(IMC_CNT_FIND, msg->net, (int) msg->fromUid) : 0;
-    tGroupedMsgs& groupedMsgs = getWndObjects(an)->groupedMsgs;
+    tGroupedMsgs& groupedMsgs = getWndController(an)->groupedMsgs;
 
     bool groupDisplay = false;
     bool groupTime = false;
@@ -1184,7 +1167,7 @@ namespace kIEview2 {
       msgHandlers[msg->type]->signal(data, an);
     }
 
-    clearGroupedMsgs(an);
+    getWndController(an)->clearGroupedMsgs();
     groupedMsgs.push_back(sGroupedMsg(senderID, msg->type, date));
 
     return tplHandler.parseTpl(&data, ("content-types/" + type).c_str());

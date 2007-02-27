@@ -13,7 +13,9 @@
   */
 
 #include "stdafx.h"
+
 #include "ActionHandler.h"
+#include "WndController.h"
 #include "Controller.h"
 
 namespace kIEview2 {
@@ -117,7 +119,7 @@ namespace kIEview2 {
       }
       case act::popup::clear: {
         if (cntId) {
-          Controller::getInstance()->initWnd(ctrl);
+          Controller::getInstance()->getWndController(ctrl)->clearWnd();
         }
         break;
       }

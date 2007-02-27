@@ -1,5 +1,5 @@
 /**
-  *  kIEview2 Control class
+  *  kIEview2 Controller class
   *
   *  Any modifications or reusing strictly prohibited!
   *
@@ -36,9 +36,9 @@ using namespace Helpers;
 
 namespace kIEview2 {
   namespace JS {
-    class WndController;
     class Controller;
   }
+  typedef SharedPtr<class WndController> oWndController;
 
   class Controller : public PlugController<Controller> {
   public:
@@ -53,26 +53,6 @@ namespace kIEview2 {
       MessageHandlerSig signal;
       string label;
     };
-
-    struct sGroupedMsg {
-      Date64 time;
-      tCntId cnt;
-      int type;
-
-      sGroupedMsg(tCntId _cnt, int _type, const Date64& _time): cnt(_cnt), type(_type), time(_time) { }
-      sGroupedMsg(): cnt(0), type(0) { }
-    };
-    typedef vector<sGroupedMsg> tGroupedMsgs;
-
-    struct sGroupedSt {
-      String info;
-      Date64 time;
-      int status;
-
-      sGroupedSt(int _status, const Date64& _time, const StringRef& _info = ""): status(_status), time(_time), info(_info) { }
-      sGroupedSt(): status(0) { }
-    };
-    typedef vector<sGroupedSt> tGroupedSt;
 
     struct sEmailInsertion {
       string email;
@@ -91,23 +71,9 @@ namespace kIEview2 {
       sLinkInsertion(): id(0) { }
     };
 
-    struct sWndObjCollection {
-      JS::WndController* jsWndController;
-      ActionHandler* actionHandler;
-
-      tGroupedMsgs groupedMsgs;
-      tGroupedSt groupedSt;
-
-      sWndObjCollection(): jsWndController(0), actionHandler(0) { }
-      ~sWndObjCollection() {
-        if (jsWndController) delete jsWndController;
-        if (actionHandler) delete actionHandler;
-      }
-    };
-
   public:
-    typedef std::map<IECtrl*, sWndObjCollection> tWndObjCollection;
     typedef std::map<int, sMessageHandler*> tMsgHandlers;
+    typedef vector<oWndController> tWndControllers;
 
     typedef vector<sEmailInsertion> tEmailInsertions;
     typedef vector<sLinkInsertion> tLinkInsertions;
@@ -121,11 +87,8 @@ namespace kIEview2 {
     /* Class version */
     STAMINA_OBJECT_CLASS_VERSION(Controller, PlugController, Version(0,1,0,0));
 
-  protected:
-    Controller();
-
-  public:
-    ~Controller();
+  protected: Controller();
+  public: ~Controller();
 
     bool hasMsgHandler(int type);
     bool bindMsgHandler(int type, fMessageHandler f, const string& label, int priority = 0, 
@@ -163,22 +126,8 @@ namespace kIEview2 {
 
     int getIEVersion();
 
-    sWndObjCollection* getWndObjects(sUIActionNotify_base* an) {
-      IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
-      return pCtrl ? &wndObjCollection[pCtrl] : NULL;
-    }
-    sWndObjCollection* getWndObjects(IECtrl* pCtrl) {
-      return pCtrl ? &wndObjCollection[pCtrl] : NULL;
-    }
-
-    void clearGroupedMsgs(sUIActionNotify_base* an) {
-      getWndObjects(an)->groupedMsgs.clear();
-      getWndObjects(an)->groupedSt.clear();
-    }
-    void clearGroupedMsgs(IECtrl* pCtrl) {
-      getWndObjects(pCtrl)->groupedMsgs.clear();
-      getWndObjects(pCtrl)->groupedSt.clear();
-    }
+    oWndController getWndController(sUIActionNotify_base* an);
+    oWndController getWndController(IECtrl* pCtrl);
 
   protected:
     void _onPluginsLoaded();
@@ -242,7 +191,6 @@ namespace kIEview2 {
 
   public:
     bool autoScroll(sUIActionNotify_base* an, IECtrl* pCtrl);
-    void initWnd(IECtrl* pCtrl);
 
     EmotHandler* getEmotHandler() {
       return &emotHandler;
@@ -267,7 +215,7 @@ namespace kIEview2 {
     static string __stdcall replaceEmail(RegEx* reg);
 
   protected:
-    tWndObjCollection wndObjCollection;
+    tWndControllers wndControllers;
     tMsgHandlers msgHandlers;
     CriticalSection _locker;
     Tables::oTable historyTable;
@@ -328,94 +276,6 @@ namespace kIEview2 {
 
     protected:
       ::Controller* pCtrl;
-    };
-
-    class WndController : public IECtrl::iObject {
-    public:
-      WndController(IECtrl* pCtrl, IECtrl::Var& args): iObject(pCtrl, true), pCtrl(::Controller::getInstance()) {
-        bindMethod("minimized", bind(resolve_cast0(&WndController::minimized), this), true);
-        bindMethod("visible", bind(resolve_cast0(&WndController::visible), this), true);
-        bindMethod("tabbed", bind(resolve_cast0(&WndController::tabbed), this), true);
-
-        bindMethod("minimize", bind(resolve_cast0(&WndController::minimize), this));
-        bindMethod("restore", bind(resolve_cast0(&WndController::restore), this));
-        bindMethod("show", bind(resolve_cast0(&WndController::show), this));
-        bindMethod("close", bind(resolve_cast0(&WndController::close), this));
-        bindMethod("flash", bind(&WndController::flash, this, _1, _2));
-
-        bindMethod("breakGrouping", bind(resolve_cast0(&WndController::breakGrouping), this));
-        bindMethod("reloadParent", bind(resolve_cast0(&WndController::reloadParent), this));
-
-        setProperty("name", "oWindow");
-
-        haveTabs = pluginExists(plugsNET::tabletka);
-        reloadParent();
-      }
-
-    public:
-      IECtrl::Var minimized() {
-        return IsIconic(hWndWnd);
-      }
-      IECtrl::Var visible() {
-        return IsWindowVisible(hWndWnd) && GetForegroundWindow() == hWndWnd;
-      }
-      IECtrl::Var tabbed() {
-        return (bool) GetProp(GetParent(m_pCtrl->getHWND()), "TABBED");
-      }
-
-      IECtrl::Var minimize() {
-        if (!minimized().getBool()) {
-          return ShowWindow(hWndWnd, SW_MINIMIZE);
-        }
-        return false;
-      }
-      IECtrl::Var restore() {
-        if (minimized().getBool()) {
-          return ShowWindow(hWndWnd, SW_RESTORE) && show().getBool();
-        }
-        return false;
-      }
-      IECtrl::Var show() {
-        if (minimized().getBool()) {
-          return restore();
-        }
-        return SetForegroundWindow(hWndWnd);
-      }
-      IECtrl::Var close() {
-        return CloseWindow(hWndWnd);
-      }
-      IECtrl::Var flash(IECtrl::Var& args, IECtrl::iObject* obj) {
-        /*
-        FLASHWINFO info;
-        info.cbSize = sizeof(FLASHWINFO)
-        info.dwFlags = FLASHW_ALL;
-        info.hwnd = hWndWnd;
-        info.dwTimeout = args[1].getInteger();
-        info.uCount = args[0].getInteger();
-
-        return FlashWindowEx(&info);
-        */
-        return false;
-      }
-
-      IECtrl::Var breakGrouping() {
-        pCtrl->clearGroupedMsgs(m_pCtrl);
-        return true;
-      }
-      IECtrl::Var reloadParent() {
-        if (haveTabs && tabbed().getBool()) {
-          hWndWnd = (HWND) Ctrl->IMessage(Tabs::IM::GetTabWindow, plugsNET::tabletka);
-        } else {
-          hWndWnd = GetParent(m_pCtrl->getHWND());
-        }
-        return true;
-      }
-
-    protected:
-      ::Controller* pCtrl;
-
-      bool haveTabs;
-      HWND hWndWnd;
     };
   }
 }

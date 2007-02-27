@@ -16,8 +16,8 @@
 #ifndef __TOOLTIP_IE_H__
 #define __TOOLTIP_IE_H__
 
+#include <Stamina/UI/ToolTipX.h>
 #include "IECtrl.h"
-#include "Stamina/UI/ToolTipX.h"
 
 using namespace Stamina::UI;
 using namespace ToolTipX;

@@ -12,8 +12,7 @@
   */
 
 #include "stdafx.h"
-#include "emotUI.h"
-#include "Emots.h"
+#include "EmotUI.h"
 
 EmotLV::EmotLV(sUIActionNotify_createWindow* an, int w, int h): iLV(an, w, h) {
   draged = false;

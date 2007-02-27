@@ -262,6 +262,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\ToolTipIE.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\TplHandler.cpp"
 				>
 			</File>
@@ -284,6 +288,10 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\Source\WndController.cpp"
+				>
 			</File>
 		</Filter>
 		<Filter
@@ -380,6 +388,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source\ToolTipIE.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Source\TplHandler.h"
 				>
 			</File>
@@ -389,6 +401,10 @@
 			</File>
 			<File
 				RelativePath="..\Source\unzip.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Source\WndController.h"
 				>
 			</File>
 		</Filter>

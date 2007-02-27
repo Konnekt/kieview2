@@ -16,7 +16,7 @@
 #define IDI_AUTOSCROLL                  113
 #define IDI_CHECKED                     114
 #define IDI_UNCHECKED                   115
-#define IDI_EMOTSINFO                   116
+#define IDI_TIPINFO                     116
 #define IDI_STYLES                      117
 
 // Next default values for new objects

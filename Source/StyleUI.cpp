@@ -12,14 +12,12 @@
   */
 
 #include "stdafx.h"
-#include "styleUI.h"
-#include "iLV.h"
 
 #include "ToolTipIE.h"
+#include "StyleUI.h"
 
 StyleLV::StyleLV(sUIActionNotify_createWindow* an, int w, int h): iLV(an, w, h) {
   _tipBtn = new DrawableButtonBasic(Rect(0,0,16,16), new Icon((HICON) ICMessage(IMI_ICONGET, kIEview2::ico::tipinfo, IML_16), false));
-
   _tip = new ToolTipX::ToolTip(getHwnd(), 0);
   _last_checked = -1;
 }
