@@ -45,11 +45,14 @@ public:
     _system = value;
   }
 
+  virtual bool hasPreview() {
+    return _preview.length();
+  }
   virtual string getPreview() const {
     return _preview;
   }
-  virtual void setPreview(const StringRef& img_path) {
-    _preview = img_path;
+  virtual void setPreview(const string& img_path) {
+    _preview = fileExists(img_path.c_str()) ? img_path : "";
   }
 
 protected:

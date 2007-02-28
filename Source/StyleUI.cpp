@@ -17,7 +17,7 @@
 #include "StyleUI.h"
 
 StyleLV::StyleLV(sUIActionNotify_createWindow* an, int w, int h): iLV(an, w, h) {
-  _tipBtn = new DrawableButtonBasic(Rect(0,0,16,16), new Icon((HICON) ICMessage(IMI_ICONGET, kIEview2::ico::tipinfo, IML_16), false));
+  _previewBtn = new DrawableButtonBasic(Rect(0,0,16,16), new Icon((HICON) ICMessage(IMI_ICONGET, kIEview2::ico::preview, IML_16), false));
   _tip = new ToolTipX::ToolTip(getHwnd(), 0);
   _last_checked = -1;
 }
@@ -101,18 +101,21 @@ bool StyleLV::StyleInfoItem::onMouseDown(ListWnd::ListView* lv, const ListWnd::o
     Point rcp(rc.left + 3, rc.top + 3);
     _selectBtn->setPos(rcp);
 
-    Point rct(rc.right - 19, rc.top + 3);
-    slv->_tipBtn->setPos(rct);
-
     if (_selectBtn->hitTest(p)) {
       slv->selectItem(slv->getItemIndex(li));
       return false;
-    } else if (slv->_tipBtn->hitTest(p)){
-      slv->_tip->hide();
-      slv->_tip->setTip((ToolTipX::Tip*) new ToolTipIE(200, 100), false);
-      slv->_tip->setPos(Point(), true, ToolTipX::enPositioning::positionFirst, ToolTipX::enPlacement::pRightBottom);
-      slv->_tip->show();
-      return false;
+    }
+
+    if (_styleInfo->set->hasPreview()) {
+      Point rct(rc.right - 19, rc.top + 3);
+      slv->_previewBtn->setPos(rct);
+
+      if (slv->_previewBtn->hitTest(p)){
+        slv->_tip->setTip(slv->getHwnd(), oTarget((iTarget*) new TargetWindow(new TipOnlyImage(loadImageFromFile(_styleInfo->set->getPreview().c_str())), slv->getHwnd())), true);
+        slv->_tip->setPos(Point(), true, ToolTipX::enPositioning::positionAuto, ToolTipX::enPlacement::pRightBottom);
+        slv->_tip->show();
+        return false;
+      }
     }
   }
   return true;
@@ -204,9 +207,11 @@ void StyleLV::StyleInfoItem::paintEntry(ListWnd::ListView* lv, const ListWnd::oI
   _selectBtn->setPos(rcp);
   _selectBtn->draw(dc, p);
 
-  Point rct(rc.right - 19, rc.top + 3);
-  slv->_tipBtn->setPos(rct);
-  slv->_tipBtn->draw(dc, p);
+  if (_styleInfo->set->hasPreview()) {
+    Point rct(rc.right - 19, rc.top + 3);
+    slv->_previewBtn->setPos(rct);
+    slv->_previewBtn->draw(dc, p);
+  }
 
   HFONT oldFont = (HFONT)SelectObject(dc, slv->_fontBold);
   COLORREF oldTextColor = SetTextColor(dc, textColor);

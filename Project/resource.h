@@ -16,7 +16,7 @@
 #define IDI_AUTOSCROLL                  113
 #define IDI_CHECKED                     114
 #define IDI_UNCHECKED                   115
-#define IDI_TIPINFO                     116
+#define IDI_PREVIEW                     116
 #define IDI_STYLES                      117
 #define IDI_ARROWUP                     118
 #define IDI_ARROWDOWN                   119

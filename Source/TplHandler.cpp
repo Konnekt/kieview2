@@ -25,8 +25,11 @@ iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
   set.setName(xml.getText("template/meta/name"));
   set.setVersion(xml.getText("template/meta/version"));
   set.setDescription(xml.getText("template/meta/description"));
-  set.setPreview(xml.getText("template/meta/preview"));
 
+  string preview = xml.getText("template/meta/preview");
+  if (preview.length()) {
+    set.setPreview(defFile.getDirectory() + preview);
+  }
   return new TplSet(set);
 }
 

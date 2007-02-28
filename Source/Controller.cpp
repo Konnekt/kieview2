@@ -136,7 +136,7 @@ namespace kIEview2 {
 
     IconRegister(IML_16, ico::checked, Ctrl->hDll(), IDI_CHECKED);
     IconRegister(IML_16, ico::unchecked, Ctrl->hDll(), IDI_UNCHECKED);
-    IconRegister(IML_16, ico::tipinfo, Ctrl->hDll(), IDI_TIPINFO);
+    IconRegister(IML_16, ico::preview, Ctrl->hDll(), IDI_PREVIEW);
 
     // menu akcji pod prawym klawiszem myszy
     UIGroupAdd(IMIG_MSGWND, act::popup::popup, ACTR_INIT);

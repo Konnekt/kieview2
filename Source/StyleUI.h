@@ -58,10 +58,19 @@ public:
     }
   }
 
+  void onMouseDown(int vkey, const Point& pos) {
+    if (_tip->visible()) _tip->hide();
+    ListWnd::ListView::onMouseDown(vkey, pos);
+  }
+  void onKeyDown(int vkey, int info) {
+    if (_tip->visible()) _tip->hide();
+    ListWnd::ListView::onKeyDown(vkey, info);
+  }
+
 protected:
-  UINT _last_checked;
-  oDrawableButton _tipBtn;
+  oDrawableButton _previewBtn;
   ToolTipX::ToolTip* _tip;
+  UINT _last_checked;
 
 public:
   class StyleInfoItem: public iEntry {
