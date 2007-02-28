@@ -60,7 +60,9 @@ void TplHandler::loadPackages() {
 
   iPackageHandler::loadPackages(unifyPath(getSystemStylesDir()));
   if (!_packages.size()) {
-    throw SystemStylesMissing();
+    IMLOG("[TplHandler::loadPackages()] Brak katalogów ze stylami systemowymi !");
+    return;
+    // throw SystemStylesMissing();
   }
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
@@ -77,6 +79,9 @@ TplSet* TplHandler::getCurrentStyle() {
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
     if ((*it)->getDir() == currentStyle) return (TplSet*) *it;
+  }
+  if (!_packages.size()) {
+    return &_emptySet;
   }
   return (TplSet*) _packages.front();
 }

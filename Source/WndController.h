@@ -63,6 +63,13 @@ namespace kIEview2 {
     void clearWnd();
     void initWnd();
 
+    bool getSession() const {
+      return GetProp(GetParent(pIECtrl->getHWND()), "MsgSession");
+    }
+    void setSession(bool value) {
+      SetProp(GetParent(pIECtrl->getHWND()), "MsgSession", (HANDLE) value);
+    }
+
     tCntId getCntID() const {
       return cntID;
     }
@@ -77,6 +84,7 @@ namespace kIEview2 {
     Controller* pCtrl;
     IECtrl* pIECtrl;
 
+    bool pasteSession;
     TplSet* tplSet;
     tCntId cntID;
 

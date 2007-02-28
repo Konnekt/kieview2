@@ -414,6 +414,14 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath="..\Res\arrow-down.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\arrow-up.ico"
+				>
+			</File>
+			<File
 				RelativePath="..\Res\autoScroll.ico"
 				>
 			</File>

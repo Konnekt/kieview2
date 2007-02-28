@@ -76,8 +76,8 @@ namespace kIEview2 {
 
     const unsigned int styles = ico + 16;
 
-    const unsigned int scrollUp = ico + 17;
-    const unsigned int scrollDown = ico + 18;
+    const unsigned int arrowUp = ico + 17;
+    const unsigned int arrowDown = ico + 18;
   }
 
   namespace act {
@@ -86,23 +86,35 @@ namespace kIEview2 {
     namespace popup {
       const unsigned int popup = act + 100;
 
-      const unsigned int openUrl = popup + 1;
-      const unsigned int copyUrl = popup + 2;
-      const unsigned int urlSep = popup + 3;
-      const unsigned int saveImage = popup + 4;
-      const unsigned int imageSep = popup + 5;
+      namespace url {
+        const unsigned int open = popup + 1;
+        const unsigned int copy = popup + 2;
+      }
+      namespace img {
+        const unsigned int save = popup + 3;
+      }
+      namespace sel {
+        const unsigned int copy = popup + 4;
+      }
+
+      const unsigned int sep = popup + 5;
       const unsigned int print = popup + 6;
-      const unsigned int copySelection = popup + 7;
-      const unsigned int selectAll = popup + 8;
-      const unsigned int showSource = popup + 9;
-      const unsigned int historySep = popup + 10;
-      const unsigned int lastMsgs = popup + 11;
-      const unsigned int lastSession = popup + 12;
-      const unsigned int clearSep = popup + 13;
-      const unsigned int clear = popup + 14;
-      const unsigned int scrollToUp = popup + 15;
-      const unsigned int scrollToDown = popup + 16;
-      const unsigned int pasteActualConversation = popup + 17;
+      const unsigned int selectAll = popup + 7;
+      const unsigned int showSource = popup + 8;
+
+      const unsigned int historySep = popup + 9;
+      const unsigned int lastMsgs = popup + 10;
+      const unsigned int lastSession = popup + 11;
+
+      const unsigned int clearSep = popup + 12;
+      const unsigned int clear = popup + 13;
+
+      namespace scroll {
+        const unsigned int up = popup + 14;
+        const unsigned int down = popup + 15;
+      }
+      const unsigned int pasteSession = popup + 16;
+      const unsigned int pasteSessionSep = popup + 17;
     }
 
     namespace formatTb {
@@ -142,7 +154,7 @@ namespace kIEview2 {
     const unsigned int relativeTime = cfg + 13;
 
     const unsigned int showOnLoad = cfg + 16;
-    const unsigned int pasteActualConversation = cfg + 17;
+    const unsigned int pasteSession = cfg + 17;
   }
 }
 

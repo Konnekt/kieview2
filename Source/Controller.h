@@ -97,8 +97,8 @@ namespace kIEview2 {
     IECtrl::Var getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj);
     IECtrl::Var getJSController();
 
-    int readMsgs(tCntId cnt, int howMany, int sessionOffset = 0);
-    int readLastMsgSession(tCntId cnt, int sessionOffset = 0);
+    int readMsgs(tCntId cnt, int howMany, int sessionOffset = 0, bool setSession = false);
+    int readLastMsgSession(tCntId cnt, int sessionOffset = 0, bool setSession = false);
 
     String getSettingStr(const string& name, tTable table, tRowId row = 0);
     string getMsgTypeLabel(tMsgType type);

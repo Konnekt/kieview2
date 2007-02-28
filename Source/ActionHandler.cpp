@@ -34,63 +34,72 @@ namespace kIEview2 {
 
   ActionHandler::tMenuAction ActionHandler::popupMenu(tMenuType type, POINT pt, IECtrl* pCtrl) {
     tCntId cntID = wndCtrl->getCntID();
-    bool showDefaultItems = type != tMenuType::Scroll;
 
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::urlSep), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::saveImage), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::imageSep), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copySelection), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), showDefaultItems ? 0 : -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), showDefaultItems ? 0 : -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), showDefaultItems ? 0 : -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::url::open), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::url::copy), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::img::save), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::sel::copy), -1, ACTS_HIDDEN);
+
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::sep), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), 0, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), 0, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), 0, ACTS_HIDDEN);
+
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::pasteSessionSep), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::pasteSession), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::historySep), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastMsgs), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastSession), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), cntID && showDefaultItems ? 0 : -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), cntID && showDefaultItems ? 0 : -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToUp), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToDown), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToUp), 0, ACTS_DISABLED);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToDown), 0, ACTS_DISABLED);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::pasteActualConversation), cntID && showDefaultItems ? 0 : -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::pasteActualConversation),
-      Controller::getConfig()->getInt(cfg::pasteActualConversation) ? -1 : 0, ACTS_CHECKED);
+
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), 0, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), 0, ACTS_HIDDEN);
+
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::up), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::down), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::up), 0, ACTS_DISABLED);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::down), 0, ACTS_DISABLED);
 
     switch (type) {
       case tMenuType::Anchor: {
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::openUrl), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copyUrl), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::urlSep), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::url::open), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::url::copy), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::sep), 0, ACTS_HIDDEN);
         break;
       }
       case tMenuType::Image: {
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::saveImage), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::imageSep), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::img::save), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::sep), 0, ACTS_HIDDEN);
         break;
       }
       case tMenuType::Selection: {
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::copySelection), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::sel::copy), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::sep), 0, ACTS_HIDDEN);
         break;
       }
       case tMenuType::Scroll: {
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToDown), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::down), 0, ACTS_HIDDEN);
         if (pCtrl->isScrollOnBottom()) {
-          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToDown), -1, ACTS_DISABLED);
+          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::down), -1, ACTS_DISABLED);
         }
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToUp), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::up), 0, ACTS_HIDDEN);
         if (pCtrl->isScrollOnTop()) {
-          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scrollToUp), -1, ACTS_DISABLED);
+          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::up), -1, ACTS_DISABLED);
         }
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), -1, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), -1, ACTS_HIDDEN);
         break;
       }
       default: {
-        if (!cntID) break;
-
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::historySep), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastMsgs), 0, ACTS_HIDDEN);
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastSession), 0, ACTS_HIDDEN);
+        if (cntID) {
+          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::pasteSessionSep), 0, ACTS_HIDDEN);
+          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::pasteSession), 0, ACTS_HIDDEN);
+          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::historySep), 0, ACTS_HIDDEN);
+          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastSession), 0, ACTS_HIDDEN);
+          UIActionSetStatus(sUIAction(act::popup::popup, act::popup::lastMsgs), 0, ACTS_HIDDEN);
+        }
         break;
       }
     }
@@ -104,16 +113,16 @@ namespace kIEview2 {
     }
 
     switch (this->selectedMenuItem) {
-      case act::popup::openUrl: {
+      case act::popup::url::open: {
         return tMenuAction::OpenLink;
       }
-      case act::popup::copyUrl: {
+      case act::popup::url::copy: {
         return tMenuAction::CopyLink;
       }
-      case act::popup::saveImage: {
+      case act::popup::img::save: {
         return tMenuAction::SaveImage;
       }
-      case act::popup::copySelection: {
+      case act::popup::sel::copy: {
         return tMenuAction::CopySelection;
       }
       case act::popup::print: {
@@ -127,14 +136,14 @@ namespace kIEview2 {
       }
       case act::popup::lastMsgs: {
         if (cntID) {
-          Controller::getInstance()->readMsgs(cntID, Controller::getConfig()->getInt(cfg::lastMsgCount));
+          Controller::getInstance()->readMsgs(cntID, Controller::getConfig()->getInt(cfg::lastMsgCount), 
+            wndCtrl->getSession() && wndCtrl->pasteSession, wndCtrl->pasteSession);
         }
         break;
       }
       case act::popup::lastSession: {
         if (cntID) {
-          bool openSession = GetProp(GetParent(pCtrl->getHWND()), "MsgSession");
-          Controller::getInstance()->readLastMsgSession(cntID, openSession && !Controller::getConfig()->getInt(cfg::pasteActualConversation));
+          Controller::getInstance()->readLastMsgSession(cntID, wndCtrl->getSession() && wndCtrl->pasteSession, wndCtrl->pasteSession);
         }
         break;
       }
@@ -142,11 +151,11 @@ namespace kIEview2 {
         if (cntID) wndCtrl->clearWnd();
         break;
       }
-      case act::popup::scrollToUp: {
+      case act::popup::scroll::up: {
         pCtrl->scrollToTop();
         break;
       }
-      case act::popup::scrollToDown: {
+      case act::popup::scroll::down: {
         pCtrl->scrollToBottom();
         break;
       }

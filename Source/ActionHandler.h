@@ -32,7 +32,9 @@ namespace kIEview2 {
     typedef IECtrl::PopupMenuListener::MenuType tMenuType;
 
   public:
-    ActionHandler(IECtrl* pCtrl, oWndController wndCtrl): selectedMenuItem(0), wndCtrl(wndCtrl) {
+    ActionHandler(oWndController wndCtrl): selectedMenuItem(0), wndCtrl(wndCtrl) {
+      IECtrl* pCtrl = wndCtrl->getIECtrl();
+
       pCtrl->setPopupMenuListener(this);
       pCtrl->setAnchorClickListener(this);
       pCtrl->setDropListener(this);

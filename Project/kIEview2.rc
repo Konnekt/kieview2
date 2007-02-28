@@ -110,6 +110,8 @@ IDI_CHECKED             ICON                    "..\\Res\\checked.ico"
 IDI_UNCHECKED           ICON                    "..\\Res\\unchecked.ico"
 IDI_TIPINFO             ICON                    "..\\Res\\infoe.ico"
 IDI_STYLES              ICON                    "..\\Res\\styles.ico"
+IDI_ARROWUP             ICON                    "..\\Res\\arrow-up.ico"
+IDI_ARROWDOWN           ICON                    "..\\Res\\arrow-down.ico"
 #endif    // Polish resources
 /////////////////////////////////////////////////////////////////////////////
 

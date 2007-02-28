@@ -344,6 +344,7 @@ bool IECtrl::isScrollOnTop() {
   }
   return isScroll;
 }
+
 void IECtrl::scrollToBottom() {
   IHTMLDocument2 *document = getDocument();
   if (document != NULL) {

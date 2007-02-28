@@ -18,15 +18,14 @@
 #include "Controller.h"
 
 namespace kIEview2 {
-  WndController::WndController(sUIActionNotify_createWindow* an): jsController(0), tplSet(0) {
+  WndController::WndController(sUIActionNotify_createWindow* an): jsController(0) {
     pIECtrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
-    actionHandler = new ActionHandler(pIECtrl, this);
+    actionHandler = new ActionHandler(this);
 
     pCtrl = Controller::getInstance();
-    try {
-      tplSet = pCtrl->getTplHandler()->getCurrentStyle();
-    } catch(...) { }
+    tplSet = pCtrl->getTplHandler()->getCurrentStyle();
 
+    pasteSession = pCtrl->getConfig()->getInt(cfg::pasteSession);
     an->hwnd = pIECtrl->getHWND();
     cntID = an->act.cnt;
 
@@ -56,10 +55,9 @@ namespace kIEview2 {
     clearGroupedMsgs();
     // ladujemy bootstrapa
     pIECtrl->navigate(("file:///" + unifyPath(pCtrl->getTplHandler()->getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
-    IMLOG("--- %s", ("file:///" + unifyPath(pCtrl->getTplHandler()->getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
     // pIECtrl->clear();
 
-    SetProp(GetParent(pIECtrl->getHWND()), "MsgSession", (HANDLE) 0);
+    setSession(false);
   }
 
   void WndController::initWnd() {

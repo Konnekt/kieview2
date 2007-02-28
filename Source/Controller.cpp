@@ -35,6 +35,7 @@ namespace kIEview2 {
     registerObserver(IM_UI_PREPARE, bind(resolve_cast0(&Controller::_onPrepare), this));
     registerObserver(IM_UIACTION, bind(resolve_cast0(&Controller::_onAction), this));
     registerObserver(IM_CFG_CHANGED, bind(resolve_cast0(&Controller::_onCfgChanged), this));
+
     registerActionObserver(Konnekt::UI::ACT::msg_ctrlview, bind(resolve_cast0(&Controller::_msgCtrlView), this));
     registerActionObserver(Konnekt::UI::ACT::msg_ctrlsend, bind(resolve_cast0(&Controller::_msgCtrlSend), this));
 
@@ -48,7 +49,7 @@ namespace kIEview2 {
     /* Configuration columns */
     config->setColumn(DTCFG, cfg::lastMsgCount, DT_CT_INT, 10, "kIEview2/lastMsgCount");
     config->setColumn(DTCFG, cfg::relativeTime, DT_CT_INT, 1, "kIEview2/relativeTime");
-    config->setColumn(DTCFG, cfg::pasteActualConversation, DT_CT_INT, 0, "kIEview2/pasteActualConversation");
+    config->setColumn(DTCFG, cfg::pasteSession, DT_CT_INT, 1, "kIEview2/pasteSession");
     config->setColumn(DTCFG, cfg::autoScroll, DT_CT_INT, 0, "kIEview2/autoScroll");
     config->setColumn(DTCFG, cfg::showOnLoad, DT_CT_INT, showNothing, "kIEview2/showOnLoad");
 
@@ -130,29 +131,36 @@ namespace kIEview2 {
     IconRegister(IML_16, ico::source, Ctrl->hDll(), IDI_SOURCE);
     IconRegister(IML_16, ico::autoScroll, Ctrl->hDll(), IDI_AUTOSCROLL);
 
+    IconRegister(IML_16, ico::arrowUp, Ctrl->hDll(), IDI_ARROWUP);
+    IconRegister(IML_16, ico::arrowDown, Ctrl->hDll(), IDI_ARROWDOWN);
+
     IconRegister(IML_16, ico::checked, Ctrl->hDll(), IDI_CHECKED);
     IconRegister(IML_16, ico::unchecked, Ctrl->hDll(), IDI_UNCHECKED);
     IconRegister(IML_16, ico::tipinfo, Ctrl->hDll(), IDI_TIPINFO);
 
     // menu akcji pod prawym klawiszem myszy
     UIGroupAdd(IMIG_MSGWND, act::popup::popup, ACTR_INIT);
-    UIActionAdd(act::popup::popup, act::popup::openUrl, ACTSMENU_BOLD, "Otwórz", ico::link);
-    UIActionAdd(act::popup::popup, act::popup::copyUrl, 0, "Kopiuj adres");
-    UIActionAdd(act::popup::popup, act::popup::urlSep, ACTT_SEP);
-    UIActionAdd(act::popup::popup, act::popup::saveImage, ACTSMENU_BOLD, "Zapisz obrazek", ico::save);
-    UIActionAdd(act::popup::popup, act::popup::imageSep, ACTT_SEP);
-    UIActionAdd(act::popup::popup, act::popup::copySelection, 0, "Kopiuj", ico::copy);
+    UIActionAdd(act::popup::popup, act::popup::url::open, ACTSMENU_BOLD, "Otwórz", ico::link);
+    UIActionAdd(act::popup::popup, act::popup::url::copy, 0, "Kopiuj adres");
+    UIActionAdd(act::popup::popup, act::popup::img::save, ACTSMENU_BOLD, "Zapisz obrazek", ico::save);
+    UIActionAdd(act::popup::popup, act::popup::sel::copy, 0, "Kopiuj", ico::copy);
+
+    UIActionAdd(act::popup::popup, act::popup::sep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::selectAll, 0, "Zaznacz wszystko");
     UIActionAdd(act::popup::popup, act::popup::print, 0, "Drukuj", ico::print);
     UIActionAdd(act::popup::popup, act::popup::showSource, 0, "Poka¿ Ÿród³o", ico::source);
-    UIActionAdd(act::popup::popup, act::popup::scrollToUp, 0, "Przewijaj do góry");
-    UIActionAdd(act::popup::popup, act::popup::scrollToDown, 0, "Przewijaj do do³u");
+
     UIActionAdd(act::popup::popup, act::popup::historySep, ACTT_SEP);
+    UIActionAdd(act::popup::popup, act::popup::pasteSession, ACTT_CHECK | ACTR_INIT, "Doklej do ostaniej sesji");
+    UIActionAdd(act::popup::popup, act::popup::pasteSessionSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::lastSession, 0, "Wczytaj ostatni¹ sesjê");
     UIActionAdd(act::popup::popup, act::popup::lastMsgs, 0, "Wczytaj ostatnie wiad.");
-    UIActionAdd(act::popup::popup, act::popup::pasteActualConversation, ACTT_CHECK, "Doklej aktualn¹ rozmowê do wcztywanej sesji.");
+
     UIActionAdd(act::popup::popup, act::popup::clearSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
+
+    UIActionAdd(act::popup::popup, act::popup::scroll::up, 0, "Przewiñ do góry", ico::arrowUp);
+    UIActionAdd(act::popup::popup, act::popup::scroll::down, 0, "Przewiñ do do³u", ico::arrowDown);
 
     UIGroupAdd(IMIG_MSGBAR, act::formatTb::formatTb);
     UIActionAdd(act::formatTb::formatTb, act::formatTb::emots, 0, "Emotikony", ico::emots);
@@ -186,10 +194,11 @@ namespace kIEview2 {
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Ustawienia");
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Automatycznie przewijaj okno rozmowy", cfg::autoScroll);
+    UIActionCfgAdd(ui::cfgGroup, cfg::pasteSession, ACTT_CHECK, "Doklejaj aktualn¹ rozmowê do ostatniej sesji", 
+      cfg::pasteSession);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_CHECK, "Stosuj czas relatywny (jeœli siê da)", cfg::relativeTime);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_SPINNER | ACTSC_INLINE, AP_MINIMUM "0" AP_MAXIMUM "1000", cfg::lastMsgCount, 0, 0, 65);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_COMMENT, "Iloœæ ostatnich wiadomoœci do wczytania");
-    UIActionCfgAdd(ui::cfgGroup, cfg::pasteActualConversation, ACTT_CHECK, "Doklejaj aktualn¹ rozmowê do wczytywanych sesji", cfg::pasteActualConversation);
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::cfgGroup, 0, ACTT_GROUP, "Po otwarciu okna rozmowy ...");
@@ -246,6 +255,17 @@ namespace kIEview2 {
 
     sUIActionNotify* an = this->getAN();
 
+    if (an->act.parent == act::popup::popup) {
+      if (an->code == ACTN_ACTION) {
+        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(
+          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, Konnekt::UI::ACT::msg_ctrlview, an->act.cnt)
+        ));
+        if (pCtrl) {
+          getWndController(pCtrl)->actionHandler->selectedMenuItem = an->act.id;
+        }
+      }
+    }
+
     switch (an->act.id) {
       case act::popup::popup: {
         IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(
@@ -256,33 +276,13 @@ namespace kIEview2 {
         }
         break;
       }
-      case act::popup::openUrl:
-      case act::popup::copyUrl:
-      case act::popup::saveImage:
-      case act::popup::copySelection:
-      case act::popup::print:
-      case act::popup::selectAll:
-      case act::popup::showSource:
-      case act::popup::lastMsgs:
-      case act::popup::lastSession:
-      case act::popup::scrollToDown:
-      case act::popup::scrollToUp:
-      case act::popup::clear: {
-        if (an->code != ACTN_ACTION) break;
-        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(
-          sUIAction(an->act.cnt != -1 ? IMIG_MSGWND : IMIG_HISTORYWND, Konnekt::UI::ACT::msg_ctrlview, an->act.cnt)
-        ));
-        if (pCtrl) {
-          getWndController(pCtrl)->actionHandler->selectedMenuItem = an->act.id;
-        }
-        break;
-      }
-      case act::popup::pasteActualConversation: {
+      case act::popup::pasteSession: {
+        if (an->act.cnt == -1) break;
+
         if (an->code == ACTN_ACTION) {
-          bool checked = UIActionGetStatus(an->act) & ACTS_CHECKED;
-          SETINT(cfg::pasteActualConversation, !checked);
-          getConfig()->set(cfg::pasteActualConversation, !checked);
-          UIActionSetStatus(sUIAction(ui::cfgGroup, cfg::pasteActualConversation), checked ? -1 : 0, ACTS_CHECKED); //@cos nie chce dzia³ac
+          getWndController(an)->pasteSession = !(UIActionGetStatus(an->act) & ACTS_CHECKED);
+        } else if (an->code == ACTN_CREATE) {
+          UIActionSetStatus(an->act, getWndController(an)->pasteSession ? -1 : 0, ACTS_CHECKED);
         }
         break;
       }
@@ -777,7 +777,7 @@ namespace kIEview2 {
     throw std::logic_error("Unknown column type in '" + name + "'.");
   }
 
-  int Controller::readMsgs(tCntId cnt, int howMany, int sessionOffset) {
+  int Controller::readMsgs(tCntId cnt, int howMany, int sessionOffset, bool setSession) {
     if (!howMany) {
       Message::quickEvent(cnt, "Brak wiadomoœci do wczytania.", false, false, true);
       return 0;
@@ -824,7 +824,9 @@ namespace kIEview2 {
     }
 
     if (m) {
-      SetProp(GetParent(getWndController(cnt)->getIECtrl()->getHWND()), "MsgSession", (HANDLE) 1);
+      if (setSession) {
+        getWndController(cnt)->setSession(true);
+      }
       Message::quickEvent(cnt, "Wczytujê wiadomoœci z historii.");
     }
 
@@ -851,7 +853,7 @@ namespace kIEview2 {
     return m;
   }
 
-  int Controller::readLastMsgSession(tCntId cnt, int sessionOffset) {
+  int Controller::readLastMsgSession(tCntId cnt, int sessionOffset, bool setSession) {
     // locking
     LockerCS lock(_locker);
 
@@ -876,7 +878,7 @@ namespace kIEview2 {
       }
     }
 
-    int msgCount = readMsgs(cnt, howMany, sessionOffset);
+    int msgCount = readMsgs(cnt, howMany, sessionOffset, setSession);
     table->unloadData();
 
     return msgCount;

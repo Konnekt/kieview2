@@ -137,6 +137,7 @@ protected:
 
   v_include_dir _includeDirs;
   tTplDirs _tplDirs;
+  TplSet _emptySet;
 };
 
 #endif // __TPLHANDLER_H__
