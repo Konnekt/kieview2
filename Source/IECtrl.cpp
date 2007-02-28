@@ -287,6 +287,57 @@ void IECtrl::setWindowPos(int x, int y, int cx, int cy)  {
   SetWindowPos(getHWND(), HWND_TOP, x, y, cx, cy, 0);
 }
 
+void IECtrl::setScrollPosByMouse(int x, int y) {
+  IHTMLDocument2 *document = getDocument();
+  if (document != NULL) {
+    IHTMLElement *pBody = NULL;
+    if (SUCCEEDED(document->get_body(&pBody)) && pBody != NULL) {
+      IHTMLElement2 *pElement = NULL;
+      if (SUCCEEDED(pBody->QueryInterface(IID_IHTMLElement2,(void**)&pElement)) && pElement != NULL) {
+        long sh, ch, cw, sw;
+
+        pElement->get_scrollWidth(&sw);
+        pElement->get_clientWidth(&cw);
+        pElement->get_scrollHeight(&sh);
+        pElement->get_clientHeight(&ch);
+
+        int widthArrowButton = GetSystemMetrics(SM_CYVSCROLL);
+        int heightArrowButton = GetSystemMetrics(SM_CXHSCROLL);
+
+        if (y > -1) {
+          if (y < heightArrowButton) {
+            y = 0;
+          } else {
+            y -= heightArrowButton;
+          }
+
+          y = sh * y / (ch - 2 * heightArrowButton);
+        }
+
+        if (x > -1) {
+          if (x < widthArrowButton) {
+            y = 0;
+          } else {
+            x -= widthArrowButton;
+          }
+
+          y = sw * x / (cw - 2 * widthArrowButton);
+        }
+
+        pElement->Release();
+      }
+      pBody->Release();
+    }
+
+    IHTMLWindow2* pWindow = NULL;
+    if (SUCCEEDED(document->get_parentWindow(&pWindow)) && pWindow != NULL) {
+      pWindow->scrollTo(x < 0 ? -0x01FFFFFF : x, y < 0 ? -0x01FFFFFF : y);
+      pWindow->Release();
+    }
+    document->Release();
+  }
+}
+
 void IECtrl::scrollToTop() {
   IHTMLDocument2 *document = getDocument();
   if (document != NULL) {
@@ -774,6 +825,7 @@ void IECtrl::saveDocument() {
 }
 
 bool IECtrl::callJScript(const char* szFunc, Var &args, Var *ret) {
+  IMLOG("Wiadomosc %s", args[0].getString());
   IHTMLDocument2 *document = getDocument();
   bool bRet = false;
 

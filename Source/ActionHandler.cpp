@@ -56,6 +56,7 @@ namespace kIEview2 {
 
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::up), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::down), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::to), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::up), 0, ACTS_DISABLED);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::down), 0, ACTS_DISABLED);
 
@@ -85,6 +86,8 @@ namespace kIEview2 {
         if (pCtrl->isScrollOnTop()) {
           UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::up), -1, ACTS_DISABLED);
         }
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::to), 0, ACTS_HIDDEN);
+
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), -1, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), -1, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::showSource), -1, ACTS_HIDDEN);
@@ -158,6 +161,10 @@ namespace kIEview2 {
       case act::popup::scroll::down: {
         pCtrl->scrollToBottom();
         break;
+      }
+      case act::popup::scroll::to: {
+        ScreenToClient(pCtrl->getHWND(), &pt);
+        pCtrl->setScrollPosByMouse(-1, pt.y);
       }
     }
     return tMenuAction::None;

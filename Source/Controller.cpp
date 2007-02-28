@@ -133,6 +133,7 @@ namespace kIEview2 {
 
     IconRegister(IML_16, ico::arrowUp, Ctrl->hDll(), IDI_ARROWUP);
     IconRegister(IML_16, ico::arrowDown, Ctrl->hDll(), IDI_ARROWDOWN);
+    IconRegister(IML_16, ico::arrowTo, Ctrl->hDll(), IDI_ARROWTO);
 
     IconRegister(IML_16, ico::checked, Ctrl->hDll(), IDI_CHECKED);
     IconRegister(IML_16, ico::unchecked, Ctrl->hDll(), IDI_UNCHECKED);
@@ -160,6 +161,7 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
 
     UIActionAdd(act::popup::popup, act::popup::scroll::up, 0, "Przewiñ do góry", ico::arrowUp);
+    UIActionAdd(act::popup::popup, act::popup::scroll::to, 0, "Przewiñ tutaj", ico::arrowTo);
     UIActionAdd(act::popup::popup, act::popup::scroll::down, 0, "Przewiñ do do³u", ico::arrowDown);
 
     UIGroupAdd(IMIG_MSGBAR, act::formatTb::formatTb);

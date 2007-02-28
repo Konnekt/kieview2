@@ -78,6 +78,7 @@ namespace kIEview2 {
 
     const unsigned int arrowUp = ico + 17;
     const unsigned int arrowDown = ico + 18;
+    const unsigned int arrowTo = ico + 19;
   }
 
   namespace act {
@@ -112,9 +113,10 @@ namespace kIEview2 {
       namespace scroll {
         const unsigned int up = popup + 14;
         const unsigned int down = popup + 15;
+        const unsigned int to = popup + 16;
       }
-      const unsigned int pasteSession = popup + 16;
-      const unsigned int pasteSessionSep = popup + 17;
+      const unsigned int pasteSession = popup + 17;
+      const unsigned int pasteSessionSep = popup + 18;
     }
 
     namespace formatTb {

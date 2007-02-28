@@ -20,7 +20,7 @@
 #define IDI_STYLES                      117
 #define IDI_ARROWUP                     118
 #define IDI_ARROWDOWN                   119
-
+#define IDI_ARROWTO                     120
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

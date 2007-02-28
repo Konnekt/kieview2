@@ -127,6 +127,7 @@ public:
   void write(const WCHAR *text);
   void write(const char *text);
   void close();
+  void setScrollPosByMouse(int x, int y);
   bool isScrollOnTop();
   bool isScrollOnBottom();
   void scrollToTop();
