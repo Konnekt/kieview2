@@ -14,7 +14,7 @@
 #include "stdafx.h"
 
 #include "Controller.h"
-#include "TplHandler.h"
+#include "StyleHandler.h"
 #include "TplUdf.h"
 
 iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
@@ -24,7 +24,7 @@ iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
   }
 
   string buff;
-  TplSet set;
+  StyleSet set;
 
   buff = xml.getText("template/meta/name");
   if (!buff.length()) {
@@ -34,12 +34,13 @@ iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
 
   buff = xml.getText("template/meta/id");
   if (!buff.length()) {
-    buff = RegEx::doReplace("/[^a-z0-9-_.]/i", "", buff.c_str());
+    buff = RegEx::doReplace("/[^a-z0-9-_.]/i", "", set.getName().c_str());
   }
   set.setID(buff);
 
   set.setVersion(xml.getText("template/meta/version"));
   set.setDescription(xml.getText("template/meta/description"));
+  set.setDescription(xml.getText("template/options/ext"));
 
   buff = xml.getText("template/options/noSave");
   set.isSavable(!buff.length() || buff == "false");
@@ -47,15 +48,12 @@ iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
   buff = xml.getText("template/meta/preview");
   set.setPreview(buff.length() ? defFile.getDirectory() + buff : "");
 
-  return new TplSet(set);
+  return new StyleSet(set);
 }
 
 const char TplHandler::_sysStylesPath[] = "data/templates";
 
-TplHandler::TplHandler(const string& tplExt) {
-  _dirColID = kIEview2::cfg::stylesDir;
-  _tplExt = tplExt;
-
+TplHandler::TplHandler() {
   bindStdFunctions();
   bindUdf("getCntSetting", new udf_get_cnt_setting);
   bindUdf("getSetting", new udf_get_cfg_setting);
@@ -72,20 +70,19 @@ TplHandler::TplHandler(const string& tplExt) {
 }
 
 void TplHandler::loadPackages() {
-  iPackageHandler::loadPackages();
+  __super::loadPackages();
   if (_packages.size()) {
     return;
   }
 
-  iPackageHandler::loadPackages(unifyPath(getSystemStylesDir()));
+  __super::loadPackages(unifyPath(getSystemStylesDir()));
   if (!_packages.size()) {
     IMLOG("[TplHandler::loadPackages()] Brak katalogów ze stylami systemowymi !");
     return;
-    // throw SystemStylesMissing();
   }
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    ((TplSet*) *it)->isSystem(true);
+    ((StyleSet*)*it)->isSystem(true);
   }
 }
 
@@ -93,16 +90,16 @@ string TplHandler::getSystemStylesDir() {
   return getKonnektPath() + unifyPath(_sysStylesPath, true);
 }
 
-TplSet* TplHandler::getCurrentStyle() {
+StyleSet* TplHandler::getCurrentStyle() {
   string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    if ((*it)->getDir() == currentStyle) return (TplSet*) *it;
+    if ((*it)->getID() == currentStyle) return (StyleSet*) *it;
   }
-  if (!_packages.size()) {
-    return &_emptySet;
+  if (_packages.size()) {
+    return (StyleSet*) _packages.front();
   }
-  return (TplSet*) _packages.front();
+  return &_emptySet;
 }
 
 string TplHandler::getCurrentStyleDir() {
@@ -117,27 +114,30 @@ void TplHandler::loadSettings() {
 
   clearDirs();
   addTplDir(getCurrentStyleDir());
+
   addIncludeDir(getSystemStylesDir());
-  addIncludeDir(getDir());
+  if (!getCurrentStyle()->isSystem()) {
+    addIncludeDir(getDir());
+  }
 }
 
 void TplHandler::saveSettings() {
-  TplSet* selectedStyle = 0;
+  StyleSet* selectedStyle = 0;
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
     if ((*it)->isEnabled()) {
-      selectedStyle = (TplSet*) *it; break;
+      selectedStyle = (StyleSet*) *it; break;
     }
   }
   if (selectedStyle && selectedStyle->isSavable()) {
-    Controller::getConfig()->set(cfg::currentStyle, selectedStyle->getDir());
+    Controller::getConfig()->set(cfg::currentStyle, selectedStyle->getID());
   }
 }
 
 void TplHandler::fillLV(iLV* _lv) {
   StyleLV* lv = (StyleLV*) _lv;
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    lv->addItem(new StyleLV::sStylePackInfo((*it)->isEnabled(), (TplSet*) *it));
+    lv->addItem(new StyleLV::sStylePackInfo((*it)->isEnabled(), (StyleSet*) *it));
   }
 }
 
@@ -181,11 +181,11 @@ String TplHandler::runFunc(const string& name, const StringRef& param1, const St
   return func->result();
 }
 
-string TplHandler::getTplDir(const char* tplName) {
+string TplHandler::getTplDir(const char* tplName, StyleSet* styleSet) {
   if (!_tplDirs.size()) return "";
 
   string fileName = tplName;
-  fileName += "." + _tplExt;
+  fileName += ".tpl";
 
   for (tTplDirs::iterator it = _tplDirs.begin(); it != _tplDirs.end(); it++) {
     if (fileExists(((*it) + "\\" + fileName).c_str())) return *it;
@@ -193,19 +193,18 @@ string TplHandler::getTplDir(const char* tplName) {
   throw logic_error("Cannot find file '" + fileName + "'");
 }
 
-string TplHandler::getTplPath(const char* tplName) {
-  string fullPath = getTplDir(tplName) + "\\";
+string TplHandler::getTplPath(const char* tplName, StyleSet* styleSet) {
+  string fullPath = getTplDir(tplName, styleSet) + "\\";
 
   fullPath += tplName;
-  fullPath += ".";
-  fullPath += _tplExt;
+  fullPath += ".tpl";
 
   return fullPath;
 }
 
-String TplHandler::getTpl(const char* tplName) {
+String TplHandler::getTpl(const char* tplName, StyleSet* styleSet) {
   loader_base loader;
-  loader.load_file(getTplPath(tplName));
+  loader.load_file(getTplPath(tplName, styleSet));
 
   return loader.get_data();
 }
@@ -229,7 +228,7 @@ void TplHandler::bindStdFunctions() {
   bindUdf("isTrue?", new istrue);
 }
 
-String TplHandler::parseException(const exception &e) {
+String TplHandler::parseException(const exception &e, StyleSet* styleSet) {
   String result, exceptionString;
 
   param_data data(param_data::HASH);
@@ -241,10 +240,10 @@ String TplHandler::parseException(const exception &e) {
     "</div>";
 
   try {
-    result = parseTpl(&data, "exception");
+    result = parseTpl(&data, "exception", styleSet);
   } catch(...) { 
     try {
-      result = parseString(&data, exceptionString);
+      result = parseString(&data, exceptionString, styleSet);
     } catch(const exception &e2) {
       result = "It can't be worse - exception caught while parsing exceptionString (";
       result += e2.what();
@@ -254,7 +253,7 @@ String TplHandler::parseException(const exception &e) {
   return result;
 }
 
-String TplHandler::parseString(param_data* data, const StringRef& text) {
+String TplHandler::parseString(param_data* data, const StringRef& text, StyleSet* styleSet) {
   template_text parser(getUdfFactory());
 
   // Set allowed list of catalogs to include
@@ -267,9 +266,9 @@ String TplHandler::parseString(param_data* data, const StringRef& text) {
   return parser.output();
 }
 
-String TplHandler::parseTpl(param_data* data, const char* tplName) {
+String TplHandler::parseTpl(param_data* data, const char* tplName, StyleSet* styleSet) {
   if (getKonnektPath().size()) {
-    data->hash_insert_new_var("tplPath", getKonnektPath() + getTplDir(tplName));
+    data->hash_insert_new_var("tplPath", getKonnektPath() + getTplDir(tplName, styleSet));
   }
-  return parseString(data, getTpl(tplName));
+  return parseString(data, getTpl(tplName, styleSet), styleSet);
 }

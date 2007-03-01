@@ -48,10 +48,9 @@ public:
   }
 
 public:
-  EmotHandler() {
-    _dirColID = kIEview2::cfg::emotsDir;
+  string getDir() {
+    return __super::getDir(kIEview2::cfg::emotsDir);
   }
-
   String parse(const StringRef& body);
 
   void fillLV(iLV* lv);

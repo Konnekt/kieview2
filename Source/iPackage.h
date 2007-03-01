@@ -18,10 +18,6 @@
 
 class iPackage : public iObject {
 public:
-  iPackage(const StringRef& name, const string& dir, const string& version = "", const StringRef& description = ""):
-    _enabled(false), _name(name), _dir(dir), _version(version), _description(description) { }
-  iPackage(const StringRef& name, const string& dir, bool enabled, const string& version = "", const StringRef& description = ""):
-    _enabled(enabled), _name(name), _dir(dir), _version(version), _description(description) { }
   iPackage(): _enabled(false) { }
   virtual ~iPackage() { }
 
@@ -34,7 +30,7 @@ public:
     return *this;
   }
 
-  virtual bool isEnabled() {
+  virtual bool isEnabled() const {
     return _enabled;
   }
   virtual iPackage& setEnabled(bool value) {
@@ -75,12 +71,12 @@ public:
   }
 
 protected:
-  string _id;
   String _name;
   string _version;
   String _description;
 
   bool _enabled;
+  string _id;
   string _dir;
 };
 

@@ -39,10 +39,8 @@ string iPackageHandler::getKonnektPath() {
   return Controller::getInstance()->kPath;
 }
 
-string iPackageHandler::getDir() {
-  if (!_dirColID) return "";
-
-  string dir = Controller::getConfig()->getChar(_dirColID);
+string iPackageHandler::getDir(tColId dirColID) {
+  string dir = Controller::getConfig()->getChar(dirColID);
   dir = (dir.find(':') == dir.npos) ? getKonnektPath() + dir : dir;
   return dir;
 }

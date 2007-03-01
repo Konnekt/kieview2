@@ -107,7 +107,6 @@ public:
   typedef vector<eM> tEmots;
 
 public:
-  eMSet(const StringRef& name, const string& version = "", const StringRef& description = ""): iPackage(name, "", version, description) { }
   eMSet(): _pos(-1) { }
   virtual ~eMSet() { }
 

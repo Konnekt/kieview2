@@ -20,7 +20,7 @@
 #include "Helpers.h"
 
 #include "IECtrl.h"
-#include "TplHandler.h"
+#include "StyleHandler.h"
 
 using namespace kIEview2;
 using namespace Helpers;
@@ -73,6 +73,9 @@ namespace kIEview2 {
     tCntId getCntID() const {
       return cntID;
     }
+    StyleSet* getStyleSet() {
+      return styleSet;
+    }
     IECtrl* getIECtrl() {
       return pIECtrl;
     }
@@ -85,7 +88,7 @@ namespace kIEview2 {
     IECtrl* pIECtrl;
 
     bool pasteSession;
-    TplSet* tplSet;
+    StyleSet* styleSet;
     tCntId cntID;
 
     tGroupedMsgs groupedMsgs;

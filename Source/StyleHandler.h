@@ -30,32 +30,37 @@ using namespace Stamina;
 using namespace boost;
 using namespace Helpers;
 
-class TplSet : public iPackage {
+class StyleSet : public iPackage {
 public:
-  TplSet(const StringRef& name, const string& dir, const string& version = "", const StringRef& description = ""):
-    iPackage(name, dir, version, description), _savable(true), _system(false) { }
-  TplSet(): _savable(true), _system(false) { }
-  virtual ~TplSet() { }
+  StyleSet(): _savable(true), _system(false) { }
+  virtual ~StyleSet() { }
 
 public:
-  bool isSavable() {
+  virtual bool isSavable() const {
     return _savable;
   }
-  void isSavable(bool value) {
+  virtual void isSavable(bool value) {
     _savable = value;
   }
 
-  bool isSystem() {
+  virtual bool isSystem() const {
     return _system;
   }
-  void isSystem(bool value) {
+  virtual void isSystem(bool value) {
     _system = value;
   }
 
-  virtual bool hasPreview() {
+  virtual string getExt() {
+    return _ext;
+  }
+  virtual void setExt(const string& newExt) {
+    _ext = newExt;
+  }
+
+  virtual bool hasPreview() const {
     return _preview.length();
   }
-  virtual string getPreview() const {
+  virtual string getPreview() {
     return _preview;
   }
   virtual void setPreview(const string& img_path) {
@@ -64,6 +69,8 @@ public:
 
 protected:
   string _preview;
+  string _ext;
+
   bool _savable;
   bool _system;
 };
@@ -82,11 +89,6 @@ public:
   iPackage* parse(const FindFile::Found& defFile);
 };
 
-class SystemStylesMissing : public ExceptionString {
-public:
-  SystemStylesMissing(): ExceptionString("Nie znaleziono katalogu z g³ównymi szablonami !") { }
-};
-
 class TplHandler : public iPackageHandler {
 public:
   /* Class version */
@@ -96,7 +98,7 @@ public:
   typedef vector<string> tTplDirs;
 
 public:
-  TplHandler(const string& tplExt = "tpl");
+  TplHandler();
 
 public:
   void fillLV(iLV* lv);
@@ -107,7 +109,7 @@ public:
 
   string getSystemStylesDir();
   string getCurrentStyleDir();
-  TplSet* getCurrentStyle();
+  StyleSet* getCurrentStyle();
 
 public:
   inline void clearDirs() {
@@ -118,10 +120,6 @@ public:
     _includeDirs.push_back(dir);
   }
   void addTplDir(const string& dir, bool asInclude = true);
-
-  inline void setTplExt(const string& ext) {
-    _tplExt = ext;
-  }
 
   inline void bindUdf(const string& name, udf_fn* function) {
     getUdfFactory()->install_udf_fn(name, function);
@@ -135,25 +133,26 @@ public:
   String runFunc(const string& name, const StringRef& param1, const StringRef& param2);
   String runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3);
 
-  string getTplDir(const char* tplName);
-  string getTplPath(const char* tplName);
+  string getDir() {
+    return __super::getDir(kIEview2::cfg::stylesDir);
+  }
+  string getTplDir(const char* tplName, StyleSet* styleSet);
+  string getTplPath(const char* tplName, StyleSet* styleSet);
 
-  String getTpl(const char* tplName);
+  String getTpl(const char* tplName, StyleSet* styleSet);
   void bindStdFunctions();
 
-  String parseString(param_data* data, const StringRef& text);
-  String parseTpl(param_data* data, const char* tplName);
-  String parseException(const exception &e);
+  String parseString(param_data* data, const StringRef& text, StyleSet* styleSet);
+  String parseTpl(param_data* data, const char* tplName, StyleSet* styleSet);
+  String parseException(const exception &e, StyleSet* styleSet);
 
 protected:
   static const char _sysStylesPath[];
 
   udf_fn_factory _udfFactory;
-  string _tplExt;
-
   v_include_dir _includeDirs;
   tTplDirs _tplDirs;
-  TplSet _emptySet;
+  StyleSet _emptySet;
 };
 
 #endif // __TPLHANDLER_H__

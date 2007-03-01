@@ -50,6 +50,8 @@ namespace kIEview2 {
   }
 
   bool iLV::isValidLV(iLV* lv) {
+    if (!lv) return false;
+
     for (tInstances::iterator it = _instances.begin(); it != _instances.end(); it++) {
       if (*it == lv) return true;
     }

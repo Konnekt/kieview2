@@ -267,7 +267,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Source\TplHandler.cpp"
+				RelativePath="..\Source\StyleHandler.cpp"
 				>
 			</File>
 			<File
@@ -393,7 +393,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Source\TplHandler.h"
+				RelativePath="..\Source\StyleHandler.h"
 				>
 			</File>
 			<File

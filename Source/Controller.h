@@ -26,7 +26,7 @@
 #include "RtfHtml.h"
 
 #include "ActionHandler.h"
-#include "TplHandler.h"
+#include "StyleHandler.h"
 #include "EmotHandler.h"
 
 #include "StyleUI.h"
@@ -141,7 +141,6 @@ namespace kIEview2 {
     bool loadMsgTable(tCntId cnt);
     char* getStringCol(Tables::oTable& table, tRowId row, int pos); // do zmiany
 
-    void waitForIECtrlReady(IECtrl* pCtrl, UINT sleepTime = 100);
     void setActionsStatus();
     void handleTextFlag(int flag, int mask);
 
@@ -162,7 +161,6 @@ namespace kIEview2 {
     EmotHandler* getEmotHandler() {
       return &emotHandler;
     }
-
     TplHandler* getTplHandler() {
       return &tplHandler;
     }

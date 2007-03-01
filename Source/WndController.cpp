@@ -23,7 +23,7 @@ namespace kIEview2 {
     actionHandler = new ActionHandler(this);
 
     pCtrl = Controller::getInstance();
-    tplSet = pCtrl->getTplHandler()->getCurrentStyle();
+    styleSet = pCtrl->getTplHandler()->getCurrentStyle();
 
     pasteSession = pCtrl->getConfig()->getInt(cfg::pasteSession);
     an->hwnd = pIECtrl->getHWND();

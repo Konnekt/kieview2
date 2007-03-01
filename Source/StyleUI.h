@@ -19,7 +19,7 @@
 #include "kIEview2.h"
 #include "iLV.h"
 #include "iEntry.h"
-#include "TplHandler.h"
+#include "StyleHandler.h"
 #include "Helpers.h"
 
 using namespace Stamina::UI;
@@ -36,11 +36,11 @@ public:
 
 public:
   struct sStylePackInfo {
-    TplSet* set;
+    StyleSet* set;
     bool used;
     UINT id;
 
-    sStylePackInfo(bool used, TplSet* _set): used(used), set(_set), id(-1) { }
+    sStylePackInfo(bool used, StyleSet* _set): used(used), set(_set), id(-1) { }
     sStylePackInfo(): used(false) { }
   };
 

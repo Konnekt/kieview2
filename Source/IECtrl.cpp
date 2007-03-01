@@ -271,18 +271,32 @@ IHTMLDocument2* IECtrl::getDocument() {
   return document;
 }
 
-bool IECtrl::isReady() {
-  READYSTATE state;
-  m_pWebBrowser->get_ReadyState(&state);
+bool IECtrl::waitTillLoaded(int timeout) {
+  READYSTATE result;
+  DWORD firstTick = GetTickCount();
 
-  return state & READYSTATE_COMPLETE;
+  do {
+    m_pWebBrowser->get_ReadyState(&result);
+    
+    if (result != READYSTATE_COMPLETE) {
+      Ctrl->WMProcess();
+      Ctrl->Sleep(250);
+    }
+    if (timeout > 0) {
+      if ((GetTickCount() - firstTick) > timeout) {
+        break;
+      }
+    }
+  } while (result != READYSTATE_COMPLETE);
+
+  return result == READYSTATE_COMPLETE;
 }
 
 void IECtrl::setWindowPos(int x, int y, int cx, int cy)  {
   m_rcClient.left = x;
   m_rcClient.top = y;
   m_rcClient.right = cx;
-  m_rcClient.bottom = cy; //y + cy;
+  m_rcClient.bottom = cy; // y + cy;
 
   SetWindowPos(getHWND(), HWND_TOP, x, y, cx, cy, 0);
 }
@@ -587,7 +601,7 @@ std::string IECtrl::humanize(const char* text) {
   reg.replaceItself("/(?<!<\\/div>)<\\/div>/im", "\r\n");
   reg.replaceItself("/<br\\/?>/im", "\r\n");
 
-  // usuwamy cudzyslowy z wewnatrz znacznikow html (w razie jakby byly tam >
+  // usuwamy cudzyslowy z wewnatrz znacznikow html (w razie jakby byly tam >)
   reg.replaceItself("/(<[^>\"]*)\"[^\"]*\"([^>]*>)/m", "\\1\\2");
   reg.replaceItself("/(<[^>']*)'[^']*'([^>]*>)/m", "\\1\\2");
 
@@ -1260,7 +1274,8 @@ STDMETHODIMP IECtrl::ClientSite::ShowContextMenu(DWORD dwID, POINT *ppt, IUnknow
         } else if (action == PopupMenuListener::MakeAction::CopyLink) {
           SendMessage(hSPWnd, WM_COMMAND, (WPARAM)2262, (LPARAM) NULL);
         } else if (action == PopupMenuListener::MakeAction::CopySelection) {
-          SendMessage(hSPWnd, WM_COMMAND, (WPARAM)15, (LPARAM) NULL);
+          m_pCtrl->m_bGetSelection = true;
+          m_pCtrl->copySelection();
           if (m_pCtrl->getOnCopyEmptySel()) {
             IHTMLDocument2 *document = m_pCtrl->getDocument();
             if (document != NULL) {

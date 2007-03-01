@@ -20,17 +20,16 @@
 #include "oZip.h"
 #include "iLV.h"
 
+using namespace Konnekt::Tables;
+
 class iPackageParser {
 public:
-  virtual string getDefinitionMask() = 0;
-  virtual iPackage* parse(const FindFile::Found& defFile) = 0;
+  virtual bool fromArchive() { return false; }
 
-  virtual bool fromArchive() {
-    return false;
-  }
-  virtual string getArchiveMask() {
-    return "";
-  }
+  virtual string getDefinitionMask() = 0;
+  virtual string getArchiveMask() { return ""; }
+
+  virtual iPackage* parse(const FindFile::Found& defFile) = 0;
 };
 
 class iPackageHandler : public iObject {
@@ -43,14 +42,12 @@ public:
   typedef list<iPackage*> tPackages;
 
 public:
-  iPackageHandler(): _dirColID(0) { }
+  iPackageHandler() { }
   virtual ~iPackageHandler() {
-    for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-      delete *it;
-    }
     for (tParsers::iterator it = _parsers.begin(); it != _parsers.end(); it++) {
       delete *it;
     }
+    clearPackages();
   }
 
 public:
@@ -63,18 +60,21 @@ public:
     return *this;
   }
 
-public:
-  virtual void fillLV(iLV* lv) = 0;
-
-  static string getKonnektPath();
-  virtual string getDir();
-
   virtual void addParser(iPackageParser* parser) {
     _parsers.push_back(parser);
   }
   virtual void addPackage(iPackage* package) {
     _packages.push_back(package);
   }
+
+public:
+  static string getKonnektPath();
+  virtual string getDir() = 0;
+
+  virtual string getRepoPath(const string& path); 
+  virtual void prepareRepo(const string& path); 
+
+  virtual void fillLV(iLV* lv) = 0;
 
   virtual void load() {
     loadPackages();
@@ -89,22 +89,25 @@ public:
   }
 
   virtual void clearPackages() {
-    if (_packages.size()) _packages.clear();
+    for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+      delete *it;
+    }
+    _packages.clear();
   }
-  virtual void loadPackage(iPackageParser* parser, FindFile::Found& dir);
-  virtual void loadPackages(const string& dir);
   virtual void loadPackages() {
     loadPackages(getDir());
   }
-
-  virtual string getRepoPath(const string& path); 
-  virtual void prepareRepo(const string& path); 
 
   virtual void loadSettings() = 0;
   virtual void saveSettings() = 0;
 
 protected:
-  Tables::tColId _dirColID;
+  virtual string getDir(tColId dirColID);
+
+  virtual void loadPackage(iPackageParser* parser, FindFile::Found& dir);
+  virtual void loadPackages(const string& dir);
+
+protected:
   tPackages _packages;
   tParsers _parsers;
 };

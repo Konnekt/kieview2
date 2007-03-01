@@ -135,7 +135,7 @@ public:
   void saveDocument();
   void selectAll();
   bool callJScript(const char* szFunc, Var &args, Var *ret);
-  bool isReady();
+  bool waitTillLoaded(int timeout = 0);
 
   static std::string humanize(const char* text);
 

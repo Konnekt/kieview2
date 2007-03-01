@@ -418,12 +418,12 @@ namespace kIEview2 {
         try {
           args[0] = _parseMsgTpl(an).a_str();
         } catch(const exception& e) { 
-          args[0] = tplHandler.parseException(e).a_str();
+          args[0] = tplHandler.parseException(e, 0).a_str();
         } catch(const Exception& e) {
           break;
         }
 
-        waitForIECtrlReady(pCtrl);
+        pCtrl->waitTillLoaded();
         pCtrl->callJScript("addMessage", args, &ret);
         if (autoScroll) pCtrl->scrollToBottom();
         break;
@@ -440,12 +440,12 @@ namespace kIEview2 {
         try {
           args[0] = _parseStatusTpl(an).a_str();
         } catch(const exception& e) { 
-          args[0] = tplHandler.parseException(e).a_str();
+          args[0] = tplHandler.parseException(e, 0).a_str();
         } catch(const Exception& e) {
           break;
         }
 
-        waitForIECtrlReady(pCtrl);
+        pCtrl->waitTillLoaded();
         pCtrl->callJScript("addStatus", args, &ret);
         if (autoScroll) pCtrl->scrollToBottom();
         break;
@@ -686,16 +686,6 @@ namespace kIEview2 {
       RegCloseKey(hKey);
     }
     return ver;
-  }
-
-  void Controller::waitForIECtrlReady(IECtrl* pCtrl, UINT sleepTime) {
-    Ctrl->WMProcess();
-    if (!pCtrl->isReady()) {
-      do {
-        Ctrl->WMProcess();
-        Ctrl->Sleep(sleepTime);
-      } while (!pCtrl->isReady());
-    }
   }
 
   void Controller::setActionsStatus() {
@@ -1117,7 +1107,8 @@ namespace kIEview2 {
       data.hash_insert_new_var("info", info);
     }
 
-    tGroupedSt& groupedSt = getWndController(an)->groupedSt;
+    oWndController wndCtrl = getWndController(an);
+    tGroupedSt& groupedSt = wndCtrl->groupedSt;
 
     bool groupStatus = false;
     bool groupTime = false;
@@ -1150,18 +1141,19 @@ namespace kIEview2 {
       data.hash_insert_new_var("grouped", "1");
     }
 
-    getWndController(an)->clearGroupedMsgs();
+    wndCtrl->clearGroupedMsgs();
     groupedSt.push_back(sGroupedSt(an->_status, date, an->_info));
 
     if (an->_status & ST_IGNORED) {
       data.hash_insert_new_var("ignored?", "1");
     }
-    return tplHandler.parseTpl(&data, "status");
+    return tplHandler.parseTpl(&data, "status", wndCtrl->getStyleSet());
   }
 
   String Controller::_parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an) {
     LockerCS lock(_locker);
 
+    oWndController wndCtrl = getWndController(an);
     cMessage* msg = an->_message;
     string type = getMsgTypeLabel(msg->type);
     String body = msg->body;
@@ -1194,7 +1186,7 @@ namespace kIEview2 {
     }
 
     tCntId senderID = !(msg->flag & MF_SEND) ? Ctrl->ICMessage(IMC_CNT_FIND, msg->net, (int) msg->fromUid) : 0;
-    tGroupedMsgs& groupedMsgs = getWndController(an)->groupedMsgs;
+    tGroupedMsgs& groupedMsgs = wndCtrl->groupedMsgs;
 
     bool groupDisplay = false;
     bool groupTime = false;
@@ -1225,10 +1217,10 @@ namespace kIEview2 {
       msgHandlers[msg->type]->signal(data, an);
     }
 
-    getWndController(an)->clearGroupedMsgs();
+    wndCtrl->clearGroupedMsgs();
     groupedMsgs.push_back(sGroupedMsg(senderID, msg->type, date));
 
-    return tplHandler.parseTpl(&data, ("content-types/" + type).c_str());
+    return tplHandler.parseTpl(&data, ("content-types/" + type).c_str(), wndCtrl->getStyleSet());
   }
 
   /*
