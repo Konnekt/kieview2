@@ -66,10 +66,12 @@
   #pragma comment(lib, "stamina_d.lib")
   #pragma comment(lib, "stamina_ui_d.lib")
   #pragma comment(lib, "listwnd_d.lib")
+  #pragma comment(lib, "datatable_d.lib")
 #else
   #pragma comment(lib, "stamina.lib")
   #pragma comment(lib, "stamina_ui.lib")
   #pragma comment(lib, "listwnd.lib")
+  #pragma comment(lib, "datatable.lib")
 #endif
 
 #include <boost/signal.hpp>
@@ -88,6 +90,9 @@
 #include <stamina/findfile.h>
 #include <stamina/findfilefiltered.h>
 #include <stamina/simxml.h>
+
+#include <stamina/DataTable/DataTable.h>
+#include <stamina/DataTable/FileBin.h>
 #include <stamina/DataTable/Crypt.h>
 
 #include <Stamina/ListWnd/ListWnd.h>

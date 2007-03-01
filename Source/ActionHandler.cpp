@@ -54,9 +54,11 @@ namespace kIEview2 {
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clearSep), 0, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::clear), 0, ACTS_HIDDEN);
 
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::to), -1, ACTS_HIDDEN);
+    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::sep), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::up), -1, ACTS_HIDDEN);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::down), -1, ACTS_HIDDEN);
-    UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::to), -1, ACTS_HIDDEN);
+
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::up), 0, ACTS_DISABLED);
     UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::down), 0, ACTS_DISABLED);
 
@@ -78,6 +80,9 @@ namespace kIEview2 {
         break;
       }
       case tMenuType::Scroll: {
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::to), 0, ACTS_HIDDEN);
+        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::sep), 0, ACTS_HIDDEN);
+
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::down), 0, ACTS_HIDDEN);
         if (pCtrl->isScrollOnBottom()) {
           UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::down), -1, ACTS_DISABLED);
@@ -86,7 +91,6 @@ namespace kIEview2 {
         if (pCtrl->isScrollOnTop()) {
           UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::up), -1, ACTS_DISABLED);
         }
-        UIActionSetStatus(sUIAction(act::popup::popup, act::popup::scroll::to), 0, ACTS_HIDDEN);
 
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::selectAll), -1, ACTS_HIDDEN);
         UIActionSetStatus(sUIAction(act::popup::popup, act::popup::print), -1, ACTS_HIDDEN);

@@ -167,7 +167,7 @@ String TplHandler::runFunc(const string& name, const StringRef& param1, const St
   return func->result();
 }
 
-std::string TplHandler::getTplDir(const char* tplName) {
+string TplHandler::getTplDir(const char* tplName) {
   if (!_tplDirs.size()) return "";
 
   string fileName = tplName;
@@ -176,10 +176,10 @@ std::string TplHandler::getTplDir(const char* tplName) {
   for (tTplDirs::iterator it = _tplDirs.begin(); it != _tplDirs.end(); it++) {
     if (fileExists(((*it) + "\\" + fileName).c_str())) return *it;
   }
-  throw std::logic_error("Cannot find file '" + fileName + "'");
+  throw logic_error("Cannot find file '" + fileName + "'");
 }
 
-std::string TplHandler::getTplPath(const char* tplName) {
+string TplHandler::getTplPath(const char* tplName) {
   string fullPath = getTplDir(tplName) + "\\";
 
   fullPath += tplName;

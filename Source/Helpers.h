@@ -51,9 +51,6 @@ void logDebug(const char * format, ...);
  */
 
 namespace Helpers {
-  void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size);
-  void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int size);
-
   String icon16(int ico);
   String icon32(int ico);
 

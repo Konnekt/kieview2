@@ -575,19 +575,24 @@ std::string IECtrl::humanize(const char* text) {
   RegEx reg;
   reg.setSubject(text);
 
+  // wyszukujemy znacznikow img i pozostawiamy tylko zawartosc alt
+  reg.replaceItself("/<img[^>]*alt=\"([^\"]*)\"[^>]*>/im", "\\1");
+  // jw tyle ze bez cudzyslowa
+  reg.replaceItself("/<img[^>]*alt=([^ >]*)[^>]*>/im", "\\1");
+
   // usuwamy znaki nowej linii
   reg.replaceItself("/[\r\n]/m", "");
 
   // wstawiamy w odpowiednich miejscach znaki nowej linii
-  reg.replaceItself("#<(p|blockquote|li|[uo]l|div)[^>]*>#i", "\n");
-  reg.replaceItself("#</(p|blockquote|li|[uo]l|div)>#i", "\n");
-  reg.replaceItself("#<br ?/?>#i", "\n");
+  reg.replaceItself("/(?<!<\\/div>)<\\/div>/im", "\r\n");
+  reg.replaceItself("/<br\\/?>/im", "\r\n");
 
-  // usuwamy wielokrotne znaki nowej linii
-  reg.replaceItself("/[\n]{3,}/", "\n\n\n");
+  // usuwamy cudzyslowy z wewnatrz znacznikow html (w razie jakby byly tam >
+  reg.replaceItself("/(<[^>\"]*)\"[^\"]*\"([^>]*>)/m", "\\1\\2");
+  reg.replaceItself("/(<[^>']*)'[^']*'([^>]*>)/m", "\\1\\2");
 
   // formatujemy listy
-  reg.replaceItself("/<li>/i", "* ");
+  reg.replaceItself("/<li>/i", "\n# ");
 
   // usuwamy znaczniki html
   reg.replaceItself("/<[^!>][^>]*>/m", "");
@@ -600,9 +605,6 @@ std::string IECtrl::humanize(const char* text) {
   reg.replaceItself("/&quot;/", "\"");
   reg.replaceItself("/&nbsp;/", " ");
   reg.replaceItself("/&amp;/", "&");
-
-  // dodajemy windowsowe powroty karetki
-  reg.replaceItself("/\n/", "\r\n");
 
   return reg.getSubject();
 }

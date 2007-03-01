@@ -160,8 +160,9 @@ namespace kIEview2 {
     UIActionAdd(act::popup::popup, act::popup::clearSep, ACTT_SEP);
     UIActionAdd(act::popup::popup, act::popup::clear, 0, "Wyczyœæ okno", 0x74);
 
-    UIActionAdd(act::popup::popup, act::popup::scroll::up, 0, "Przewiñ do góry", ico::arrowUp);
     UIActionAdd(act::popup::popup, act::popup::scroll::to, 0, "Przewiñ tutaj", ico::arrowTo);
+    UIActionAdd(act::popup::popup, act::popup::scroll::sep, ACTT_SEP);
+    UIActionAdd(act::popup::popup, act::popup::scroll::up, 0, "Przewiñ do góry", ico::arrowUp);
     UIActionAdd(act::popup::popup, act::popup::scroll::down, 0, "Przewiñ do do³u", ico::arrowDown);
 
     UIGroupAdd(IMIG_MSGBAR, act::formatTb::formatTb);
@@ -736,24 +737,13 @@ namespace kIEview2 {
     const char encryptKey[] = "\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84";
     const char decryptKey[] = "\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d";
 
-    /*
-    Value v(Tables::ctypeString);
-    v.buffSize = -1;
-    v.vChar = 0;
-
-    if (!table->get(row, table->getColIdByPos(pos), v)) {
-      IMLOG("[Controller::getStringCol()] Cannot access msg row");
-      return "";
-    }
-    */
-
     Value v(Tables::ctypeString);
     v.vCChar = (char*) table->getStr(row, table->getColIdByPos(pos));
     v.buffSize = strlen(v.vCChar);
 
     if (table->getColType(table->getColIdByPos(pos)) & cflagXor) {
-      xor1_encrypt((unsigned char*)encryptKey, (unsigned char*)v.vCChar, v.buffSize);
-      xor1_decrypt((unsigned char*)decryptKey, (unsigned char*)v.vCChar, v.buffSize);
+      DT::xor1_encrypt((unsigned char*)encryptKey, (unsigned char*)v.vCChar, v.buffSize);
+      DT::xor1_decrypt((unsigned char*)decryptKey, (unsigned char*)v.vCChar, v.buffSize);
 
       IMLOG("colPos = %i, value = %s", pos, v.vCChar);
     }
@@ -763,12 +753,12 @@ namespace kIEview2 {
   String Controller::getSettingStr(const string& name, tTable table, tRowId row) {
     tColId col = Ctrl->DTgetNameID(table, name.c_str());
     if (col == colNotFound) {
-      throw std::logic_error("Cannot find setting '" + name + "'.");
+      throw logic_error("Cannot find setting '" + name + "'.");
     }
 
     int colType = Ctrl->DTgetType(table, col);
     if ((colType & cflagSecret) || (colType & cflagXor)) {
-      throw std::logic_error("Access to setting '" + name + "' is forbidden.");
+      throw logic_error("Access to setting '" + name + "' is forbidden.");
     }
 
     switch (colType & ctypeMask) {
@@ -776,7 +766,7 @@ namespace kIEview2 {
       case ctypeInt: return inttostr(Ctrl->DTgetInt(table, row, col));
       case ctypeString: return Ctrl->DTgetStr(table, row, col);
     }
-    throw std::logic_error("Unknown column type in '" + name + "'.");
+    throw logic_error("Unknown column type in '" + name + "'.");
   }
 
   int Controller::readMsgs(tCntId cnt, int howMany, int sessionOffset, bool setSession) {

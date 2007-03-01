@@ -80,38 +80,6 @@ void logDebug(const char * format, ...) {
  */
 
 namespace Helpers {
-  void xor1_encrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
-    unsigned int ksize = strlen((char*)key);
-    unsigned int ki = 0;
-
-    if (!size) {
-      size = strlen((char*)data);
-    }
-
-    int j = 0;
-    for (unsigned int p = 0; p < size; p++) {
-      *data = (*data ^ key[ki]) + (unsigned char)((j) & 0xFF); // | (j * 2);
-      data++;
-      ki++;
-      if (ki >= ksize) ki = 0;
-      j++;
-    }
-  }
-
-  void xor1_decrypt(const unsigned char* key, unsigned char* data, unsigned int size) {
-    unsigned int ksize = strlen((char*)key);
-    unsigned int ki = 0;
-
-    int j = 0;
-    for (unsigned int p = 0; p < size; p++) {
-      *data = (*data - (unsigned char)((j) & 0xFF)) ^ key[ki]; // | (j * 2);
-      data++;
-      ki++;
-      if (ki >= ksize) ki = 0;
-      j++;
-    }
-  }
-
   String icon16(int ico) {
     return "reg://IML16/" + inttostr(ico) + ".ico";
   }

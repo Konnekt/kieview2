@@ -49,28 +49,28 @@ public:
       _result = Controller::getInstance()->getSettingStr(_name, tableConfig);
     }
   }
-  inline std::string& result() {
+  inline string& result() {
     return _result;
   }
 
 protected:
-  std::string _result;
-  std::string _name;
-  std::string _def;
+  string _result;
+  string _name;
+  string _def;
 };
 
 class udf_get_cnt_setting: public udf_get_cfg_setting {
 public:
   inline void param(udf_fn_param& params) {
     if (params.size() < 2) {
-      throw std::logic_error("udf_get_cnt_setting: you didn't provided required arguments");
+      throw logic_error("udf_get_cnt_setting: you didn't provided required arguments");
     }
     _cnt = atoi(params[1].c_str());
     _def = params.size() > 2 ? params[2] : "";
     _name = params[0];
 
     if (!_cnt && (params[1] != "0")) {
-      throw std::logic_error("udf_get_cnt_setting: contact id conversion failed");
+      throw logic_error("udf_get_cnt_setting: contact id conversion failed");
     }
   }
 
@@ -95,19 +95,19 @@ public:
   inline e_accept_params accept_params() {
     return ONE_PARAM;
   }
-  inline void param(const std::string& str) {
+  inline void param(const string& str) {
     _str = str;
   }
 
   inline void handler() {
     _str = RegEx::doReplace("/\r?\n/m", "<br />\r\n", _str.c_str());
   }
-  inline std::string& result() {
+  inline string& result() {
     return _str;
   }
 
 protected:
-  std::string _str;
+  string _str;
 };
 
 class udf_stringf: public udf_fn {
@@ -128,14 +128,14 @@ public:
     }
     _result = formatter.str();
   }
-  inline std::string& result() {
+  inline string& result() {
     return _result;
   }
 
 protected:
   udf_fn_param _params;
-  std::string _format;
-  std::string _result;
+  string _format;
+  string _result;
 };
 
 class udf_strftime: public udf_fn {
@@ -143,7 +143,7 @@ public:
   inline e_accept_params accept_params() {
     return TWO_PARAMS;
   }
-  inline void param(const std::string& param1, const std::string& param2) {
+  inline void param(const string& param1, const string& param2) {
     _date = _atoi64(param2.c_str());
     _format = param1;
   }
@@ -157,13 +157,13 @@ public:
 
     _result = date.strftime(_format.c_str());
   }
-  inline std::string& result() {
+  inline string& result() {
     return _result;
   }
 
 protected:
-  std::string _result;
-  std::string _format;
+  string _result;
+  string _format;
   __int64 _date;
 };
 
@@ -172,19 +172,19 @@ public:
   inline e_accept_params accept_params() {
     return TWO_PARAMS;
   }
-  inline void param(const std::string& param1, const std::string& param2) {
+  inline void param(const string& param1, const string& param2) {
     reg.match(param1.c_str(), param2.c_str());
   }
 
   inline void handler() {
     _result = reg.isMatched() ? "1" : "";
   }
-  inline std::string& result() {
+  inline string& result() {
     return _result;
   }
 
 protected:
-  std::string _result;
+  string _result;
   RegEx reg;
 };
 
@@ -193,7 +193,7 @@ public:
   inline e_accept_params accept_params() {
     return THREE_PARAMS;
   }
-  inline void param(const std::string& param1, const std::string& param2, const std::string& param3) {
+  inline void param(const string& param1, const string& param2, const string& param3) {
     reg.setPattern(param1);
     reg.setSubject(param3);
 
@@ -203,13 +203,13 @@ public:
   inline void handler() {
     _result = reg.replace(_replace.c_str());
   }
-  inline std::string& result() {
+  inline string& result() {
     return _result;
   }
 
 protected:
-  std::string _replace;
-  std::string _result;
+  string _replace;
+  string _result;
   RegEx reg;
 };
 
@@ -218,7 +218,7 @@ public:
   inline e_accept_params accept_params() {
     return TWO_PARAMS;
   }
-  inline void param(const std::string& param1, const std::string& param2) {
+  inline void param(const string& param1, const string& param2) {
     _name = param2;
     _ext = param1;
   }
@@ -226,14 +226,14 @@ public:
   inline void handler() {
     _result = GetExtParam(_ext, _name);
   }
-  inline std::string& result() {
+  inline string& result() {
     return _result;
   }
 
 protected:
-  std::string _name;
-  std::string _ext;
-  std::string _result;
+  string _name;
+  string _ext;
+  string _result;
 };
 
 #endif // __TPLUDF_H__

@@ -65,6 +65,12 @@ public:
   string getDefinitionMask() {
     return "template.xml";
   }
+  string getArchiveMask() {
+    return "*.ktpl";
+  }
+  bool fromArchive() {
+    return true;
+  }
   iPackage* parse(const FindFile::Found& defFile);
 };
 
@@ -121,8 +127,8 @@ public:
   String runFunc(const string& name, const StringRef& param1, const StringRef& param2);
   String runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3);
 
-  std::string getTplDir(const char* tplName);
-  std::string getTplPath(const char* tplName);
+  string getTplDir(const char* tplName);
+  string getTplPath(const char* tplName);
 
   String getTpl(const char* tplName);
   void bindStdFunctions();

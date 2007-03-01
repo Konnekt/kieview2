@@ -72,7 +72,7 @@ namespace kIEview2 {
     };
 
   public:
-    typedef std::map<tMsgType, sMessageHandler*> tMsgHandlers;
+    typedef map<tMsgType, sMessageHandler*> tMsgHandlers;
     typedef vector<oWndController> tWndControllers;
 
     typedef vector<sEmailInsertion> tEmailInsertions;

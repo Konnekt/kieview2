@@ -111,12 +111,13 @@ namespace kIEview2 {
       const unsigned int clear = popup + 13;
 
       namespace scroll {
-        const unsigned int up = popup + 14;
-        const unsigned int down = popup + 15;
-        const unsigned int to = popup + 16;
+        const unsigned int to = popup + 14;
+        const unsigned int sep = popup + 15;
+        const unsigned int up = popup + 16;
+        const unsigned int down = popup + 17;
       }
-      const unsigned int pasteSession = popup + 17;
-      const unsigned int pasteSessionSep = popup + 18;
+      const unsigned int pasteSession = popup + 18;
+      const unsigned int pasteSessionSep = popup + 19;
     }
 
     namespace formatTb {

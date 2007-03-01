@@ -119,6 +119,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="3"
 				AdditionalIncludeDirectories="..\Depends\ctpp\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;KIEVIEW2_EXPORTS"
 				RuntimeLibrary="2"
@@ -446,10 +447,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Res\preview.ico"
-				>
-			</File>
-			<File
 				RelativePath="..\Res\italic.ico"
 				>
 			</File>
@@ -463,6 +460,10 @@
 			</File>
 			<File
 				RelativePath="..\Res\logo.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Res\preview.ico"
 				>
 			</File>
 			<File
