@@ -19,15 +19,19 @@
 class iPackage : public iObject {
 public:
   iPackage(const StringRef& name, const string& dir, const string& version = "", const StringRef& description = ""):
-    _id(random()), _enabled(false), _name(name), _dir(dir), _version(version), _description(description) { }
+    _enabled(false), _name(name), _dir(dir), _version(version), _description(description) { }
   iPackage(const StringRef& name, const string& dir, bool enabled, const string& version = "", const StringRef& description = ""):
-    _id(random()), _enabled(enabled), _name(name), _dir(dir), _version(version), _description(description) { }
+    _enabled(enabled), _name(name), _dir(dir), _version(version), _description(description) { }
   iPackage(): _enabled(false) { }
   virtual ~iPackage() { }
 
 public:
-  virtual UINT getID() {
+  virtual string getID() {
     return _id;
+  }
+  virtual iPackage& setID(const string& id) {
+    _id = id;
+    return *this;
   }
 
   virtual bool isEnabled() {
@@ -71,8 +75,7 @@ public:
   }
 
 protected:
-  UINT _id;
-
+  string _id;
   String _name;
   string _version;
   String _description;

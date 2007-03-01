@@ -8,4 +8,7 @@
     <author jid="sija@khrone.pl">Sija</author>
     <url>http://konnekt.info/</url>
   </meta>
+  <options>
+    <noSave>true</noSave>
+  </options>
 </template>

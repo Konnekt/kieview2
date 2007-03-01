@@ -19,22 +19,38 @@
 
 iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
   SXML xml;
-  xml.loadFile(defFile.getFilePath().c_str());
+  if (!xml.loadFile(defFile.getFilePath().c_str())) {
+    throw ExceptionString("Brak pliku z definicj¹ szablonu");
+  }
 
+  string buff;
   TplSet set;
-  set.setName(xml.getText("template/meta/name"));
+
+  buff = xml.getText("template/meta/name");
+  if (!buff.length()) {
+    throw ExceptionString("Brak nazwy szablonu");
+  }
+  set.setName(buff);
+
+  buff = xml.getText("template/meta/id");
+  if (!buff.length()) {
+    buff = RegEx::doReplace("/[^a-z0-9-_.]/i", "", buff.c_str());
+  }
+  set.setID(buff);
+
   set.setVersion(xml.getText("template/meta/version"));
   set.setDescription(xml.getText("template/meta/description"));
 
-  string preview = xml.getText("template/meta/preview");
-  if (preview.length()) {
-    set.setPreview(defFile.getDirectory() + preview);
-  }
+  buff = xml.getText("template/options/noSave");
+  set.isSavable(!buff.length() || buff == "false");
+
+  buff = xml.getText("template/meta/preview");
+  set.setPreview(buff.length() ? defFile.getDirectory() + buff : "");
+
   return new TplSet(set);
 }
 
 const char TplHandler::_sysStylesPath[] = "data/templates";
-const char TplHandler::_coreStylesDir[] = "__core";
 
 TplHandler::TplHandler(const string& tplExt) {
   _dirColID = kIEview2::cfg::stylesDir;
@@ -97,14 +113,12 @@ string TplHandler::getCurrentStyleDir() {
 }
 
 void TplHandler::loadSettings() {
-  clearDirs();
-
   getCurrentStyle()->setEnabled(true);
-  addTplDir(getCurrentStyleDir());
 
-  if (getCurrentStyle()->getDir() != _coreStylesDir) {
-    addTplDir(getSystemStylesDir() + _coreStylesDir);
-  }
+  clearDirs();
+  addTplDir(getCurrentStyleDir());
+  addIncludeDir(getSystemStylesDir());
+  addIncludeDir(getDir());
 }
 
 void TplHandler::saveSettings() {
@@ -115,7 +129,7 @@ void TplHandler::saveSettings() {
       selectedStyle = (TplSet*) *it; break;
     }
   }
-  if (selectedStyle && selectedStyle->getDir() != _coreStylesDir) {
+  if (selectedStyle && selectedStyle->isSavable()) {
     Controller::getConfig()->set(cfg::currentStyle, selectedStyle->getDir());
   }
 }

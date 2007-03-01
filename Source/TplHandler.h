@@ -33,11 +33,18 @@ using namespace Helpers;
 class TplSet : public iPackage {
 public:
   TplSet(const StringRef& name, const string& dir, const string& version = "", const StringRef& description = ""):
-    iPackage(name, dir, version, description), _system(false) { }
-  TplSet(): _system(false) { }
+    iPackage(name, dir, version, description), _savable(true), _system(false) { }
+  TplSet(): _savable(true), _system(false) { }
   virtual ~TplSet() { }
 
 public:
+  bool isSavable() {
+    return _savable;
+  }
+  void isSavable(bool value) {
+    _savable = value;
+  }
+
   bool isSystem() {
     return _system;
   }
@@ -57,6 +64,7 @@ public:
 
 protected:
   string _preview;
+  bool _savable;
   bool _system;
 };
 
@@ -139,7 +147,6 @@ public:
 
 protected:
   static const char _sysStylesPath[];
-  static const char _coreStylesDir[];
 
   udf_fn_factory _udfFactory;
   string _tplExt;
