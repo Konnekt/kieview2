@@ -23,6 +23,7 @@ StyleLV::StyleLV(sUIActionNotify_createWindow* an, int w, int h): iLV(an, w, h) 
 }
 
 StyleLV::~StyleLV() {
+  _tip->reset();
   delete _tip;
 }
 

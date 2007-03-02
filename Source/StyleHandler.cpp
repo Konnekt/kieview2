@@ -40,7 +40,7 @@ iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
 
   set.setVersion(xml.getText("template/meta/version"));
   set.setDescription(xml.getText("template/meta/description"));
-  set.setDescription(xml.getText("template/options/ext"));
+  set.setExt(xml.getText("template/options/ext"));
 
   buff = xml.getText("template/options/noSave");
   set.isSavable(!buff.length() || buff == "false");
