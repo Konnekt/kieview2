@@ -118,6 +118,12 @@ namespace kIEview2 {
 
     int getIEVersion();
 
+    void switchStyle(StyleSet* oldStyle, StyleSet* newStyle) {
+      for (tWndControllers::iterator it = wndControllers.begin(); it != wndControllers.end(); it++) {
+        if ((*it)->getStyleSet() == oldStyle) (*it)->switchStyle(newStyle);
+      }
+    }
+
     oWndController getWndController(sUIActionNotify_base* an);
     oWndController getWndController(IECtrl* pCtrl);
     oWndController getWndController(tCntId cntID);

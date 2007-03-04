@@ -32,12 +32,7 @@ iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
   }
   set.setName(buff);
 
-  buff = xml.getText("template/meta/id");
-  if (!buff.length()) {
-    buff = RegEx::doReplace("/[^a-z0-9-_.]/i", "", set.getName().c_str());
-  }
-  set.setID(buff);
-
+  set.setID(xml.getText("template/meta/id"));
   set.setVersion(xml.getText("template/meta/version"));
   set.setDescription(xml.getText("template/meta/description"));
   set.setExt(xml.getText("template/options/ext"));
@@ -69,90 +64,6 @@ TplHandler::TplHandler() {
   *this << new TplPackageParser;
 }
 
-void TplHandler::loadPackages() {
-  __super::loadPackages();
-  if (_packages.size()) {
-    return;
-  }
-
-  __super::loadPackages(unifyPath(getSystemStylesDir()));
-  if (!_packages.size()) {
-    IMLOG("[TplHandler::loadPackages()] Brak katalogów ze stylami systemowymi !");
-    return;
-  }
-
-  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    ((StyleSet*)*it)->isSystem(true);
-  }
-}
-
-string TplHandler::getSystemStylesDir() {
-  return getKonnektPath() + unifyPath(_sysStylesPath, true);
-}
-
-StyleSet* TplHandler::getCurrentStyle() {
-  string currentStyle = Controller::getConfig()->getChar(cfg::currentStyle);
-
-  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    if ((*it)->getID() == currentStyle) return (StyleSet*) *it;
-  }
-  if (_packages.size()) {
-    return (StyleSet*) _packages.front();
-  }
-  return &_emptySet;
-}
-
-string TplHandler::getCurrentStyleDir() {
-  if (getCurrentStyle()->isSystem()) {
-    return getSystemStylesDir() + getCurrentStyle()->getDir();
-  }
-  return getDir() + "\\" + getCurrentStyle()->getDir();
-}
-
-void TplHandler::loadSettings() {
-  getCurrentStyle()->setEnabled(true);
-
-  clearDirs();
-  addTplDir(getCurrentStyleDir());
-
-  addIncludeDir(getSystemStylesDir());
-  if (!getCurrentStyle()->isSystem()) {
-    addIncludeDir(getDir());
-  }
-}
-
-void TplHandler::saveSettings() {
-  StyleSet* selectedStyle = 0;
-
-  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    if ((*it)->isEnabled()) {
-      selectedStyle = (StyleSet*) *it; break;
-    }
-  }
-  if (selectedStyle && selectedStyle->isSavable()) {
-    Controller::getConfig()->set(cfg::currentStyle, selectedStyle->getID());
-  }
-}
-
-void TplHandler::fillLV(iLV* _lv) {
-  StyleLV* lv = (StyleLV*) _lv;
-  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    lv->addItem(new StyleLV::sStylePackInfo((*it)->isEnabled(), (StyleSet*) *it));
-  }
-}
-
-void TplHandler::addTplDir(const string& dir, bool asInclude) {
-  if (!dir.size()) return;
-
-  string tplDir = (dir.find(':') == dir.npos) ? getKonnektPath() + dir : dir;
-  tplDir = unifyPath(tplDir);
-
-  if (asInclude) {
-    addIncludeDir(tplDir);
-  }
-  _tplDirs.push_back(tplDir);
-}
-
 String TplHandler::runFunc(const string& name, udf_fn_param& params) {
   udf_fn* func = getUdfFactory()->get(name);
   func->param(params);
@@ -181,34 +92,6 @@ String TplHandler::runFunc(const string& name, const StringRef& param1, const St
   return func->result();
 }
 
-string TplHandler::getTplDir(const char* tplName, StyleSet* styleSet) {
-  if (!_tplDirs.size()) return "";
-
-  string fileName = tplName;
-  fileName += ".tpl";
-
-  for (tTplDirs::iterator it = _tplDirs.begin(); it != _tplDirs.end(); it++) {
-    if (fileExists(((*it) + "\\" + fileName).c_str())) return *it;
-  }
-  throw logic_error("Cannot find file '" + fileName + "'");
-}
-
-string TplHandler::getTplPath(const char* tplName, StyleSet* styleSet) {
-  string fullPath = getTplDir(tplName, styleSet) + "\\";
-
-  fullPath += tplName;
-  fullPath += ".tpl";
-
-  return fullPath;
-}
-
-String TplHandler::getTpl(const char* tplName, StyleSet* styleSet) {
-  loader_base loader;
-  loader.load_file(getTplPath(tplName, styleSet));
-
-  return loader.get_data();
-}
-
 void TplHandler::bindStdFunctions() {
   using namespace template_parser_std_fn_ns;
 
@@ -226,6 +109,97 @@ void TplHandler::bindStdFunctions() {
   bindUdf("isInt?", new udf_is_int);
   bindUdf("isFloat?", new udf_is_float);
   bindUdf("isTrue?", new istrue);
+}
+
+void TplHandler::fillLV(iLV* _lv) {
+  StyleLV* lv = (StyleLV*) _lv;
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    lv->addItem(new StyleLV::sStylePackInfo((*it)->isEnabled(), (StyleSet*) *it));
+  }
+}
+
+void TplHandler::loadPackages() {
+  __super::loadPackages();
+  if (_packages.size()) {
+    return;
+  }
+
+  __super::loadPackages(unifyPath(getSystemStylesDir()));
+  if (!_packages.size()) {
+    IMLOG("[TplHandler::loadPackages()] Brak katalogów ze stylami systemowymi !");
+    return;
+  }
+
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    ((StyleSet*)*it)->isSystem(true);
+  }
+}
+
+void TplHandler::loadSettings() {
+  getCurrentStyle()->setEnabled(true);
+}
+
+void TplHandler::saveSettings() {
+  StyleSet* selectedStyle;
+
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    if ((*it)->isEnabled()) {
+      selectedStyle = (StyleSet*) *it; break;
+    }
+  }
+  if (selectedStyle && selectedStyle->isSavable()) {
+    StyleSet* currentStyle = getCurrentStyle();
+    if (selectedStyle != currentStyle) {
+      Controller::getConfig()->set(cfg::currentStyle, selectedStyle->getID());
+      Controller::getInstance()->switchStyle(currentStyle, selectedStyle);
+    }
+  }
+}
+
+StyleSet* TplHandler::getByID(const string& id) {
+  for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+    if ((*it)->getID() == id) return (StyleSet*) *it;
+  }
+  return NULL;
+}
+
+StyleSet* TplHandler::getCurrentStyle() {
+  StyleSet* currentStyle = getByID(Controller::getConfig()->getString(cfg::currentStyle));
+
+  if (currentStyle) {
+    return currentStyle;
+  }
+  if (_packages.size()) {
+    return (StyleSet*) _packages.front();
+  }
+  return &_emptySet;
+}
+
+string TplHandler::getStyleDir(StyleSet* set) {
+  if (set->isSystem()) {
+    return getSystemStylesDir() + set->getDir();
+  }
+  return getDir() + "\\" + set->getDir();
+}
+
+string TplHandler::getSystemStylesDir() {
+  return getKonnektPath() + unifyPath(_sysStylesPath, true);
+}
+
+string TplHandler::getTplPath(const char* tplName, StyleSet* styleSet) {
+  string fullPath = getStyleDir(styleSet) + "\\";
+
+  fullPath += tplName;
+  fullPath += ".tpl";
+
+  return fullPath;
+}
+
+String TplHandler::getTpl(const char* tplName, StyleSet* styleSet) {
+  loader_base loader;
+  loader.load_file(getTplPath(tplName, styleSet));
+
+  return loader.get_data();
 }
 
 String TplHandler::parseException(const exception &e, StyleSet* styleSet) {
@@ -267,8 +241,6 @@ String TplHandler::parseString(param_data* data, const StringRef& text, StyleSet
 }
 
 String TplHandler::parseTpl(param_data* data, const char* tplName, StyleSet* styleSet) {
-  if (getKonnektPath().size()) {
-    data->hash_insert_new_var("tplPath", getKonnektPath() + getTplDir(tplName, styleSet));
-  }
+  data->hash_insert_new_var("tplPath", getTplPath(tplName, styleSet));
   return parseString(data, getTpl(tplName, styleSet), styleSet);
 }

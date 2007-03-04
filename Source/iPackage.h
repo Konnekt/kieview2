@@ -16,10 +16,13 @@
 #ifndef __IPACKAGE_H__
 #define __IPACKAGE_H__
 
-class iPackage : public iObject {
+class iPackage : public SharedObject<iSharedObject> {
+public:
+  /* Class version */
+  STAMINA_OBJECT_CLASS_VERSION(iPackage, iSharedObject, Version(0,1,0,0));
+
 public:
   iPackage(): _enabled(false) { }
-  virtual ~iPackage() { }
 
 public:
   virtual string getID() {
@@ -79,5 +82,7 @@ protected:
   string _id;
   string _dir;
 };
+
+typedef SharedPtr<iPackage> oPackage;
 
 #endif // __IPACKAGE_H__

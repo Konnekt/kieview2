@@ -212,9 +212,6 @@ namespace Konnekt {
 
     /* Subclassing */
     inline bool isSublassed(int id, int parent) {
-      // locking
-      LockerCS lock(_locker);
-
       for (tSubclassedActions::iterator it = _subclassedActions.begin(); it != _subclassedActions.end(); it++) {
         if (it->id == id && it->parent == parent) return true;
       }
@@ -282,9 +279,6 @@ namespace Konnekt {
     }
 
     inline int getReturnCode() {
-      // locking
-      LockerCS lock(_locker);
-
       return getIMsgStackItem()->returnCode;
     }
 
@@ -357,9 +351,6 @@ namespace Konnekt {
 
   protected:
     inline sIMsgStackItem* getIMsgStackItem() {
-      // locking
-      LockerCS lock(_locker);
-
       return &_imStack.at(_imStack.size() - 1);
     }
 
@@ -399,9 +390,6 @@ namespace Konnekt {
 
     /* Actions subclassing */
     inline sSubclassedAction* _getSubclassedAction(int id, int parent) {
-      // locking
-      LockerCS lock(_locker);
-
       int i = 0;
       for (tSubclassedActions::iterator it = _subclassedActions.begin(); it != _subclassedActions.end(); it++, i++) {
         if (id == it->id && parent == it->parent) return &_subclassedActions.at(i);
@@ -411,9 +399,6 @@ namespace Konnekt {
 
     /* Observers related methods */
     inline bool _isObserved(int id, tObservers& list) {
-      // locking
-      LockerCS lock(_locker);
-
       if (list.find(id) != list.end()) {
         return !list[id]->signal.empty();
       }
@@ -504,13 +489,13 @@ namespace Konnekt {
     }
 
   protected:
-    CriticalSection _locker;
     tSubclassedActions _subclassedActions;
     tStaticValues _staticValues;
     tObservers _actionObservers;
     tObservers _globalObservers;
     tObservers _imObservers;
     tIMsgStack _imStack;
+    CriticalSection _locker;
   };
 }
 

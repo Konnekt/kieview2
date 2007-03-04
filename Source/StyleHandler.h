@@ -32,8 +32,11 @@ using namespace Helpers;
 
 class StyleSet : public iPackage {
 public:
+  /* Class version */
+  STAMINA_OBJECT_CLASS_VERSION(StyleSet, iPackage, Version(0,1,0,0));
+
+public:
   StyleSet(): _savable(true), _system(false) { }
-  virtual ~StyleSet() { }
 
 public:
   virtual bool isSavable() const {
@@ -75,6 +78,8 @@ protected:
   bool _system;
 };
 
+typedef SharedPtr<StyleSet> oStyleSet;
+
 class TplPackageParser: public iPackageParser {
 public:
   string getDefinitionMask() {
@@ -95,64 +100,63 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(TplHandler, iPackageHandler, Version(0,1,0,0));
 
 public:
-  typedef vector<string> tTplDirs;
-
-public:
   TplHandler();
 
-public:
+  /* CTPP helpers */
+  String runFunc(const string& name, udf_fn_param& params);
+  String runFunc(const string& name, const StringRef& param1);
+  String runFunc(const string& name, const StringRef& param1, const StringRef& param2);
+  String runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3);
+
+  /* CTPP related */
+  inline udf_fn_factory* getUdfFactory() {
+    return &_udfFactory;
+  }
+  inline void bindUdf(const string& name, udf_fn* function) {
+    getUdfFactory()->install_udf_fn(name, function);
+  }
+  void bindStdFunctions();
+
+  /* iPackageHandler derived methods */
   void fillLV(iLV* lv);
 
   void loadPackages();
   void loadSettings();
   void saveSettings();
 
-  string getSystemStylesDir();
-  string getCurrentStyleDir();
+  /* Styleset handling */
+  StyleSet* getByID(const string& id);
   StyleSet* getCurrentStyle();
 
-public:
-  inline void clearDirs() {
-    _includeDirs.clear();
-    _tplDirs.clear();
-  }
-  inline void addIncludeDir(const string& dir) {
-    _includeDirs.push_back(dir);
-  }
-  void addTplDir(const string& dir, bool asInclude = true);
-
-  inline void bindUdf(const string& name, udf_fn* function) {
-    getUdfFactory()->install_udf_fn(name, function);
-  }
-  inline udf_fn_factory* getUdfFactory() {
-    return &_udfFactory;
-  }
-
-  String runFunc(const string& name, udf_fn_param& params);
-  String runFunc(const string& name, const StringRef& param1);
-  String runFunc(const string& name, const StringRef& param1, const StringRef& param2);
-  String runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3);
-
-  string getDir() {
-    return __super::getDir(kIEview2::cfg::stylesDir);
-  }
-  string getTplDir(const char* tplName, StyleSet* styleSet);
-  string getTplPath(const char* tplName, StyleSet* styleSet);
-
-  String getTpl(const char* tplName, StyleSet* styleSet);
-  void bindStdFunctions();
-
+  /* Styleset parsing */
   String parseString(param_data* data, const StringRef& text, StyleSet* styleSet);
   String parseTpl(param_data* data, const char* tplName, StyleSet* styleSet);
   String parseException(const exception &e, StyleSet* styleSet);
 
+  /* directory paths obtaining related methods */
+  inline string getDir() {
+    return __super::getDir(kIEview2::cfg::stylesDir);
+  }
+
+  string getStyleDir(StyleSet* set);
+  string getSystemStylesDir();
+
+  inline void clearDirs() {
+    _includeDirs.clear();
+  }
+  inline void addIncludeDir(const string& dir) {
+    _includeDirs.push_back(dir);
+  }
+
+  string getTplPath(const char* tplName, StyleSet* styleSet);
+  String getTpl(const char* tplName, StyleSet* styleSet);
+
 protected:
   static const char _sysStylesPath[];
+  StyleSet _emptySet;
 
   udf_fn_factory _udfFactory;
   v_include_dir _includeDirs;
-  tTplDirs _tplDirs;
-  StyleSet _emptySet;
 };
 
 #endif // __TPLHANDLER_H__

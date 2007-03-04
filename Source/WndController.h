@@ -58,8 +58,12 @@ namespace kIEview2 {
     ~WndController();
 
   public:
+    void switchStyle(StyleSet* style);
     void clearGroupedMsgs();
 
+    bool empty() {
+      return insertedMsgs == 0;
+    }
     void clearWnd();
     void initWnd();
 
@@ -87,6 +91,7 @@ namespace kIEview2 {
     Controller* pCtrl;
     IECtrl* pIECtrl;
 
+    UINT insertedMsgs;
     bool pasteSession;
     StyleSet* styleSet;
     tCntId cntID;

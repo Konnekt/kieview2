@@ -409,7 +409,8 @@ namespace kIEview2 {
 
       case Konnekt::UI::Notify::insertMsg: {
         Konnekt::UI::Notify::_insertMsg* an = (Konnekt::UI::Notify::_insertMsg*)this->getAN();
-        IECtrl* pCtrl = getWndController(an)->getIECtrl();
+        oWndController wndCtrl = getWndController(an);
+        IECtrl* pCtrl = wndCtrl->getIECtrl();
 
         IECtrl::Var args;
         IECtrl::Var ret;
@@ -418,20 +419,22 @@ namespace kIEview2 {
         try {
           args[0] = _parseMsgTpl(an).a_str();
         } catch(const exception& e) { 
-          args[0] = tplHandler.parseException(e, 0).a_str();
+          args[0] = tplHandler.parseException(e, wndCtrl->getStyleSet()).a_str();
         } catch(const Exception& e) {
           break;
         }
 
         pCtrl->waitTillLoaded();
         pCtrl->callJScript("addMessage", args, &ret);
+        wndCtrl->insertedMsgs++;
         if (autoScroll) pCtrl->scrollToBottom();
         break;
       }
 
       case Konnekt::UI::Notify::insertStatus: {
         Konnekt::UI::Notify::_insertStatus* an = (Konnekt::UI::Notify::_insertStatus*)this->getAN();
-        IECtrl* pCtrl = IECtrl::get((HWND)UIActionHandleDirect(an->act));
+        oWndController wndCtrl = getWndController(an);
+        IECtrl* pCtrl = wndCtrl->getIECtrl();
 
         IECtrl::Var args;
         IECtrl::Var ret;
@@ -440,13 +443,14 @@ namespace kIEview2 {
         try {
           args[0] = _parseStatusTpl(an).a_str();
         } catch(const exception& e) { 
-          args[0] = tplHandler.parseException(e, 0).a_str();
+          args[0] = tplHandler.parseException(e, wndCtrl->getStyleSet()).a_str();
         } catch(const Exception& e) {
           break;
         }
 
         pCtrl->waitTillLoaded();
         pCtrl->callJScript("addStatus", args, &ret);
+        wndCtrl->insertedMsgs++;
         if (autoScroll) pCtrl->scrollToBottom();
         break;
       }
@@ -1012,7 +1016,7 @@ namespace kIEview2 {
   String Controller::preLinkify(StringRef& txt) {
     if (txt.length() > 20480) return PassStringRef(txt);
 
-    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/?*\"<>|\\s]*[a-z0-9])*/?(?:\\?[a-z0-9_.%-]+(?:=[a-z0-9_.,%:/+-=]*)?(?:&[a-z0-9_.%-;]+(?:=[a-z0-9_.,%:/+-=]*)?)*)?(?:#[a-z0-9_.,%]+)?)(\\1)?~i", &Controller::linkInsertion, txt.c_str());
+    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/?*\"<>|\\s]*)*/?(?:\\?[a-z0-9_.%-]+(?:=[a-z0-9_.,%:/+-=*]*)?(?:&[a-z0-9_.%-;]+(?:=[a-z0-9_.,%:/+-=*]*)?)*)?(?:#[a-z0-9_.,%]+)?)(\\1)?~i", &Controller::linkInsertion, txt.c_str());
     txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-]+)@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6}))~i", &Controller::eMailInsertion, txt.c_str());
 
     return PassStringRef(txt);

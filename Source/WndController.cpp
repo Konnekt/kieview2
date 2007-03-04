@@ -18,7 +18,7 @@
 #include "Controller.h"
 
 namespace kIEview2 {
-  WndController::WndController(sUIActionNotify_createWindow* an): jsController(0) {
+  WndController::WndController(sUIActionNotify_createWindow* an): jsController(0), insertedMsgs(0) {
     pIECtrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
     actionHandler = new ActionHandler(this);
 
@@ -54,9 +54,10 @@ namespace kIEview2 {
     // czyscimy wiadomosci grupowania
     clearGroupedMsgs();
     // ladujemy bootstrapa
-    pIECtrl->navigate(("file:///" + unifyPath(pCtrl->getTplHandler()->getCurrentStyleDir(), false, '/') + "/__bootstrap.html").c_str());
+    pIECtrl->navigate(("file:///" + unifyPath(pCtrl->getTplHandler()->getStyleDir(styleSet), false, '/') + "/__bootstrap.html").c_str());
     // pIECtrl->clear();
 
+    insertedMsgs = 0;
     setSession(false);
   }
 
@@ -73,6 +74,16 @@ namespace kIEview2 {
           pCtrl->readMsgs(cntID, pCtrl->getConfig()->getInt(cfg::lastMsgCount));
         }
       }
+    }
+  }
+
+  void WndController::switchStyle(StyleSet* style) {
+    bool isEmpty = empty();
+    styleSet = style;
+    clearWnd();
+
+    if (!isEmpty) {
+      pCtrl->readLastMsgSession(cntID);
     }
   }
 

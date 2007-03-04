@@ -68,10 +68,14 @@ void iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& dir) 
   }
   try {
     iPackage* package = parser->parse(files.found());
+    package->setDir(dir.getFileName());
+
     if (!package->getName().length()) {
       package->setName(dir.getFileName());
     }
-    package->setDir(dir.getFileName());
+    if (!package->getID().length()) {
+      package->setID(RegEx::doReplace("/[^a-z0-9-_.]/i", "", package->getName().c_str()));
+    }
 
     *this << package;
   } catch (const Exception& e) {
