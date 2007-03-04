@@ -273,12 +273,14 @@ IHTMLDocument2* IECtrl::getDocument() {
 
 bool IECtrl::waitTillLoaded(int timeout) {
   READYSTATE result;
+  VARIANT_BOOL busy;
   DWORD firstTick = GetTickCount();
 
   do {
     m_pWebBrowser->get_ReadyState(&result);
-    
-    if (result != READYSTATE_COMPLETE) {
+    m_pWebBrowser->get_Busy(&busy);
+
+    if (result != READYSTATE_COMPLETE || busy) {
       Ctrl->WMProcess();
       Ctrl->Sleep(250);
     }
@@ -287,9 +289,9 @@ bool IECtrl::waitTillLoaded(int timeout) {
         break;
       }
     }
-  } while (result != READYSTATE_COMPLETE);
-
-  return result == READYSTATE_COMPLETE;
+  } while (result != READYSTATE_COMPLETE || busy);
+  
+  return result == READYSTATE_COMPLETE && !busy;
 }
 
 void IECtrl::setWindowPos(int x, int y, int cx, int cy)  {
@@ -841,7 +843,6 @@ void IECtrl::saveDocument() {
 }
 
 bool IECtrl::callJScript(const char* szFunc, Var &args, Var *ret) {
-  IMLOG("Wiadomosc %s", args[0].getString());
   IHTMLDocument2 *document = getDocument();
   bool bRet = false;
 
@@ -1555,7 +1556,7 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
 
   if (SUCCEEDED(pDataObject->GetData(&fmtetc, &medium))) {
     if (medium.tymed == TYMED_HGLOBAL && medium.hGlobal) {
-      DROPFILES * df = (DROPFILES *)GlobalLock(medium.hGlobal);
+      DROPFILES * df = (DROPFILES *) GlobalLock(medium.hGlobal);
       SIZE_T lBufferSize = GlobalSize(medium.hGlobal);
 
       char * file = NULL;
@@ -1563,21 +1564,20 @@ void IECtrl::DropTarget::DropData(IDataObject *pDataObject) {
       DropListener::tFiles files;
 
       if (df->fWide) {
-        wchar_t* p_wFile = (wchar_t*)pFile;
+        wchar_t* p_wFile = (wchar_t*) pFile;
         do {
           int len = wcslen(p_wFile)+1;
           file = new char[len];
           WideCharToMultiByte(CP_ACP, 0, p_wFile, len, file, len, NULL, FALSE);
-          files.push_back((const char*)file);
+          files.push_back((const char*) file);
           p_wFile += len;
         } while (p_wFile[0] != L'\0');
       } else {
         char* p_aFile = (char*)pFile;
         do {
-          char* p_aFile = (char*)pFile;
           int len = strlen(p_aFile) + 1;
           file = new char[len];
-          files.push_back((const char*)file);
+          files.push_back((const char*) file);
           p_aFile += len;
         } while (p_aFile[0] != '\0');
       }
