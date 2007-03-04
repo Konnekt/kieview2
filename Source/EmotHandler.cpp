@@ -32,7 +32,7 @@ void EmotHandler::loadSettings() {
 
     if (rows.size() != 3) continue;
     for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-      if ((*it)->getDir() == rows[2]) {
+      if ((*it)->getID() == rows[2]) {
         ((eMSet*) *it)->setPos(atoi(rows[0].c_str()));
         (*it)->setEnabled(atoi(rows[1].c_str()));
         break;
@@ -47,7 +47,7 @@ void EmotHandler::saveSettings() {
   String result;
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    result += stringf("%d|%d|%s\n", ((eMSet*) *it)->getPos(), (int) (*it)->isEnabled(), (*it)->getDir().c_str());
+    result += stringf("%d|%d|%s\n", ((eMSet*)*it)->getPos(), (int) (*it)->isEnabled(), (*it)->getID().c_str());
   }
   Controller::getConfig()->set(cfg::emotPacks, result);
 }
@@ -88,7 +88,7 @@ String EmotHandler::prepareBody(const StringRef& body, bool encode, bool html) {
 
 string __stdcall EmotHandler::emotInsertion(RegEx* reg, void* param) {
   sEmotInsertion* ei = static_cast<sEmotInsertion*>(param);
-  ei->match = reg->getSub(0).c_str();
+  ei->match = reg->getSub(0);
 
   return "<kiev2:emot:insertion id=\"" + inttostr(ei->id) + "\" />";
 }

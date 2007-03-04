@@ -16,7 +16,7 @@
 #ifndef __IPACKAGE_H__
 #define __IPACKAGE_H__
 
-class iPackage : public SharedObject<iSharedObject> {
+class iPackage : public iObject {
 public:
   /* Class version */
   STAMINA_OBJECT_CLASS_VERSION(iPackage, iSharedObject, Version(0,1,0,0));
