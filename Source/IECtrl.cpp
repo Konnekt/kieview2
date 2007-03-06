@@ -58,7 +58,6 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
   m_pClientSite = NULL;
   m_bClosed = false;
   m_bSandbox = true;
-  m_bGetSelection = false;
   m_pDropTarget = new DropTarget(this);
 
   m_pAnchorClickListener = NULL;
@@ -206,9 +205,6 @@ LRESULT CALLBACK IECtrl::IECtrlServerWindowProcedure (HWND hwnd, UINT message, W
         pt.x = LOWORD(lParam);
         pt.y = HIWORD(lParam);
 
-        if (getAutoCopySel()) {
-          ctrl->m_bGetSelection = true;
-        }
         if (ctrl->mouseClick(pt)) {
           return true;
         }
@@ -221,7 +217,6 @@ LRESULT CALLBACK IECtrl::IECtrlServerWindowProcedure (HWND hwnd, UINT message, W
       case WM_LBUTTONDBLCLK:
         HRESULT hr = CallWindowProc(ctrl->getUserWndProc(), hwnd, message, wParam, lParam);
         if (getAutoCopySel()) {
-          ctrl->m_bGetSelection = true;
           ctrl->copySelection();
         }
         return hr;
@@ -627,27 +622,24 @@ std::string IECtrl::humanize(const char* text) {
 
 bool IECtrl::copySelection(bool gettext) {
   bool result = false;
-  if (m_bGetSelection) {
-    char* text = getSelection(gettext);
-    if (text) {
-      HGLOBAL hMem = GlobalAlloc(GHND | GMEM_DDESHARE, strlen(text) + 1);
-      if (hMem) {
-        char* buf = (char*) GlobalLock(hMem);
-        strncpy(buf, text, strlen(text));
-        buf[strlen(text)] = '\0';
-        GlobalUnlock(hMem);
+  char* text = getSelection(gettext);
+  if (text) {
+    HGLOBAL hMem = GlobalAlloc(GHND | GMEM_DDESHARE, strlen(text) + 1);
+    if (hMem) {
+      char* buf = (char*) GlobalLock(hMem);
+      strncpy(buf, text, strlen(text));
+      buf[strlen(text)] = '\0';
+      GlobalUnlock(hMem);
 
-        if (OpenClipboard(getHWND())) {
-          EmptyClipboard();
-          SetClipboardData(CF_TEXT, hMem);
-          CloseClipboard();
+      if (OpenClipboard(getHWND())) {
+        EmptyClipboard();
+        SetClipboardData(CF_TEXT, hMem);
+        CloseClipboard();
 
-          result = true;
-        }
+        result = true;
       }
     }
   }
-  m_bGetSelection = false;
   return result;
 }
 
@@ -1273,7 +1265,6 @@ STDMETHODIMP IECtrl::ClientSite::ShowContextMenu(DWORD dwID, POINT *ppt, IUnknow
         } else if (action == PopupMenuListener::MakeAction::CopyLink) {
           SendMessage(hSPWnd, WM_COMMAND, (WPARAM)2262, (LPARAM) NULL);
         } else if (action == PopupMenuListener::MakeAction::CopySelection) {
-          m_pCtrl->m_bGetSelection = true;
           m_pCtrl->copySelection();
           if (m_pCtrl->getOnCopyEmptySel()) {
             IHTMLDocument2 *document = m_pCtrl->getDocument();

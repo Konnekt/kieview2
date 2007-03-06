@@ -216,7 +216,6 @@ protected:
 
   WNDPROC m_fUserWndProc;
   bool m_bGetFocus;
-  bool m_bGetSelection;
   char * m_szSelectedText;
   bool m_bClosed;
   bool m_bSandbox;
