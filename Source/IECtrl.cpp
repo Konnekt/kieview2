@@ -1642,16 +1642,6 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
 
   try {
     if (wFlags & DISPATCH_METHOD) {
-      if (_ovNames.find(id) != _ovNames.end()) {
-        Var args;
-        for (UINT i = 0; i < pdp->cArgs; i++) {
-          args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
-        }
-        Var ret = __call(_ovNames[id], args);
-        ret.getVariant(pvarRes);
-        _ovNames.erase(_ovNames.find(id));
-        if (!ret.empty()) return S_OK;
-      }
       if (hasCallback(id)) {
         Var args;
         for (UINT i = 0; i < pdp->cArgs; i++) {
@@ -1677,6 +1667,22 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
           }
           return hr;
         }
+      } else {
+        if (_ovNames.find(id) != _ovNames.end()) {
+          Var args;
+          for (UINT i = 0; i < pdp->cArgs; i++) {
+            args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
+          }
+
+          Var ret;
+          bool success = __call(_ovNames[id], args, ret);
+          _ovNames.erase(_ovNames.find(id));
+
+          if (success) {
+            ret.getVariant(pvarRes);
+            return S_OK;
+          }
+        }
       }
     } else if (wFlags & DISPATCH_PROPERTYGET) {
       if (!id) {
@@ -1690,36 +1696,39 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
         }
         ret.getVariant(pvarRes);
         return S_OK;
+    } else if (hasCallback(id)) {
+        sCallback* method = getCallback(id);
+        Var ret;
+
+        if (method->getter) {
+          ret = trigger(method->id, Var());
+        } else {
+          ret = true;
+        }
+        ret.getVariant(pvarRes);
+        return S_OK;
+
+      } else if (hasProperty(id)) {
+        getProperty(id)->var.getVariant(pvarRes);
+        return S_OK;
       } else {
         if (_ovNames.find(id) != _ovNames.end()) {
-          Var ret = __get(_ovNames[id]);
-          ret.getVariant(pvarRes);
-          _ovNames.erase(_ovNames.find(id));
-          if (!ret.empty()) return S_OK;
-        }
-        if (hasCallback(id)) {
-          sCallback* method = getCallback(id);
-          IECtrl::Var ret;
-
-          if (method->getter) {
-            ret = trigger(method->id, Var());
-          } else {
-            ret = true;
+          Var args;
+          for (UINT i = 0; i < pdp->cArgs; i++) {
+            args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
           }
-          ret.getVariant(pvarRes);
-          return S_OK;
 
-        } else if (hasProperty(id)) {
-          getProperty(id)->var.getVariant(pvarRes);
-          return S_OK;
+          Var ret;
+          bool success = __get(_ovNames[id], ret);
+          _ovNames.erase(_ovNames.find(id));
+
+          if (success) {
+            ret.getVariant(pvarRes);
+            return S_OK;
+          }
         }
       }
     } else if ((wFlags & DISPATCH_PROPERTYPUT) || (wFlags & DISPATCH_PROPERTYPUTREF)) {
-      if (_ovNames.find(id) != _ovNames.end()) {
-        bool success = __set(_ovNames[id], pdp->cArgs ? pdp->rgvarg[pdp->cArgs - 1] : Var());
-        _ovNames.erase(_ovNames.find(id));
-        if (success) return S_OK;
-      }
       sProperty* s = getProperty(id);
       if (s && s->attr > attrReader) {
         if (pdp->cArgs) {
@@ -1737,6 +1746,22 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
             }
           }
         }
+      } else {
+        if (_ovNames.find(id) != _ovNames.end()) {
+          Var args;
+          for (UINT i = 0; i < pdp->cArgs; i++) {
+            args[-1] = pdp->rgvarg[pdp->cArgs - i - 1];
+          }
+
+          Var ret;
+          bool success = __set(_ovNames[id], pdp->cArgs ? pdp->rgvarg[pdp->cArgs - 1] : Var(), ret);
+          _ovNames.erase(_ovNames.find(id));
+
+          if (success) {
+            ret.getVariant(pvarRes);
+            return S_OK;
+          }
+        }
       }
     }
   } catch (const JSException& e) {
@@ -1748,10 +1773,11 @@ STDMETHODIMP IECtrl::iObject::Invoke(DISPID id, REFIID riid, LCID lcid, WORD wFl
     fillExceptionData(pExcepInfo);
     pExcepInfo->scode = DISP_E_EXCEPTION;
 
-    _ovNames.erase(_ovNames.find(id));
+    if (_ovNames.find(id) != _ovNames.end()) {
+      _ovNames.erase(_ovNames.find(id));
+    }
     return DISP_E_EXCEPTION;
   }
-  _ovNames.erase(_ovNames.find(id));
   return DISP_E_MEMBERNOTFOUND;
 }
 
@@ -1781,13 +1807,11 @@ STDMETHODIMP IECtrl::iObject::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UI
 
     if (hasCallback(szName)) {
       rgDispId[i] = getCallback(szName)->id;
-      _ovNames[rgDispId[i]] = szName;
     } else if (hasProperty(szName)) {
       rgDispId[i] = getProperty(szName)->id;
-      _ovNames[rgDispId[i]] = szName;
     } else {
-      //hr = ResultFromScode(DISP_E_UNKNOWNNAME);
-      //rgDispId[i] = DISPID_UNKNOWN;
+      // hr = ResultFromScode(DISP_E_UNKNOWNNAME);
+      // rgDispId[i] = DISPID_UNKNOWN;
       UINT id = random();
       _ovNames[id] = szName;
       rgDispId[i] = id;
@@ -1894,10 +1918,11 @@ STDMETHODIMP IECtrl::iObject::GetDispID(BSTR bstrName, DWORD grfdex, DISPID *pid
 
       prop->external = true;
       id = prop->id;
+    } else {
+      id = id ? id : random();
+      _ovNames[id] = name;
     }
   }
-  id = id ? id : random();
-  _ovNames[id] = name;
 
   *pid = id;
   delete [] name;
@@ -2035,15 +2060,15 @@ STDMETHODIMP IECtrl::iObject::GetNameSpaceParent(IUnknown **ppunk) {
   return S_FALSE;
 }
 
-IECtrl::Var IECtrl::iObject::__call(const string& name, Var& args) {
-  return Var();
+bool IECtrl::iObject::__call(const string& name, Var& args, Var& ret) {
+  return false;
 }
 
-IECtrl::Var IECtrl::iObject::__get(const string& name) {
-  return Var();
+bool IECtrl::iObject::__get(const string& name, Var& ret) {
+  return false;
 }
 
-bool IECtrl::iObject::__set(const string& name, Var& arg) {
+bool IECtrl::iObject::__set(const string& name, Var& arg, Var& ret) {
   return false;
 }
 

@@ -391,7 +391,6 @@ public:
   class Var {
   public:
     Var();
-    Var(bool value);
     Var(int value);
     Var(UINT value);
     Var(double value);
@@ -406,6 +405,7 @@ public:
     Var(Object &v);
     Var(IDispatch *v);
     Var(IDispatch **v);
+    Var(bool value);
     ~Var();
 
     int getInteger();
@@ -434,7 +434,6 @@ public:
     bool isDispatch();
     bool isDispatchRef();
 
-    void setValue(bool value);
     void setValue(int value);
     void setValue(UINT value);
     void setValue(double value);
@@ -448,6 +447,7 @@ public:
     void setValue(Object &value);
     void setValue(IDispatch* value);
     void setValue(IDispatch** value);
+    void setValue(bool value);
 
     bool empty();
     int length();
@@ -455,7 +455,6 @@ public:
 
     const Var & operator=(const Var &copy);
     Var & operator=(Var &copy);
-    Var & operator=(bool value);
     Var & operator=(int value);
     Var & operator=(UINT value);
     Var & operator=(double value);
@@ -468,6 +467,7 @@ public:
     Var & operator=(Object &value);
     Var & operator=(IDispatch* value);
     Var & operator=(IDispatch** value);
+    Var & operator=(bool value);
 
     void operator+=(Var & var);
     void operator+=(int var);
@@ -672,9 +672,9 @@ public:
     virtual sProperty* getProperty(const string& name);
     virtual sProperty* getProperty(long id);
 
-    virtual Var __call(const string& name, Var& args);
-    virtual Var __get(const string& name);
-    virtual bool __set(const string& name, Var& arg);
+    virtual bool __call(const string& name, Var& args, Var& ret);
+    virtual bool __get(const string& name, Var& ret);
+    virtual bool __set(const string& name, Var& arg, Var& ret);
 
     static HRESULT __stdcall fillExceptionData(EXCEPINFO *pExcepInfo);
 
