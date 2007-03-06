@@ -125,6 +125,7 @@ namespace kIEview2 {
   void StyleHandler::loadPackages() {
     __super::loadPackages();
     if (_packages.size()) {
+      Controller::getInstance()->onStylesReload();
       return;
     }
 
@@ -137,6 +138,7 @@ namespace kIEview2 {
     for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
       ((StyleSet*)*it)->isSystem(true);
     }
+    Controller::getInstance()->onStylesReload();
   }
 
   void StyleHandler::loadSettings() {
@@ -157,7 +159,7 @@ namespace kIEview2 {
         Controller::getConfig()->set(cfg::currentStyle, selectedStyle->getID());
       }
       if (selectedStyle != currentStyle) {
-        Controller::getInstance()->switchStyle(currentStyle, selectedStyle);
+        Controller::getInstance()->onSwitchStyle(currentStyle, selectedStyle);
       }
     }
   }

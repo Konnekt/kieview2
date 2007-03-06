@@ -550,6 +550,7 @@ namespace kIEview2 {
         oldREWndProc = (WNDPROC) SetWindowLong(an->hwnd, GWL_WNDPROC, (LONG)Controller::msgREWndProc);
         return;
       }
+
       case Konnekt::UI::Notify::supportsFormatting: {
         return setSuccess();
       }
@@ -640,6 +641,7 @@ namespace kIEview2 {
     }
     return CallWindowProc(getInstance()->oldMsgWndProc, hWnd, msg, wParam, lParam);
   }
+
   LRESULT CALLBACK Controller::msgREWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) { 
       case WM_KEYDOWN: {
@@ -651,7 +653,6 @@ namespace kIEview2 {
               return 0;
             }
           break;
-
           case 'I':
           case 'i':
             if (GetKeyState(VK_CONTROL)) {
@@ -659,7 +660,6 @@ namespace kIEview2 {
               return 0;
             }
           break;
-
           case 'U':
           case 'u':
             if (GetKeyState(VK_CONTROL)) {
@@ -673,7 +673,6 @@ namespace kIEview2 {
     }
     return CallWindowProc(getInstance()->oldREWndProc, hWnd, msg, wParam, lParam);
   }
-
 
   oWndController Controller::getWndController(sUIActionNotify_base* an) {
     // return getWndController(IECtrl::get((HWND)UIActionHandleDirect(an->act)));

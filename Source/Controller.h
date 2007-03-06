@@ -134,13 +134,16 @@ namespace kIEview2 {
 
     int getIEVersion();
 
-    void switchStyle(StyleSet* oldStyle, StyleSet* newStyle) {
-      string id;
+    void onStylesReload() {
+      StyleSet* currentStyle = styleHandler.getCurrentStyle();
       for (tWndControllers::iterator it = wndControllers.begin(); it != wndControllers.end(); it++) {
-        id = (*it)->getStyleSetID();
-        if (!id.length() || id == oldStyle->getID() || !styleHandler.hasStyle(id)) {
-          (*it)->switchStyle(newStyle);
-        }
+        if (!styleHandler.hasStyle((*it)->getStyleSetID())) (*it)->switchStyle(currentStyle);
+      }
+    }
+
+    void onSwitchStyle(StyleSet* oldStyle, StyleSet* newStyle) {
+      for (tWndControllers::iterator it = wndControllers.begin(); it != wndControllers.end(); it++) {
+        if ((*it)->getStyleSet()->getID() == oldStyle->getID()) (*it)->switchStyle(newStyle);
       }
     }
 
