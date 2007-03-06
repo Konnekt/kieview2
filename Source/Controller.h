@@ -168,7 +168,8 @@ namespace kIEview2 {
     char* getStringCol(Tables::oTable& table, tRowId row, int pos); // do zmiany
 
     void setActionsStatus();
-    void handleTextFlag(int flag, int mask);
+
+    static void handleTextFlag(int flag, int mask, HWND hwnd);
 
     String _parseStatusTpl(Konnekt::UI::Notify::_insertStatus* an);
     String _parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an);
@@ -193,7 +194,7 @@ namespace kIEview2 {
 
     static DWORD CALLBACK streamOut(DWORD, LPBYTE, LONG, LONG*);
     static LRESULT CALLBACK msgWndProc(HWND, UINT, WPARAM, LPARAM);
-    
+    static LRESULT CALLBACK msgREWndProc(HWND, UINT, WPARAM, LPARAM);
   public:
     UINT ieVersion;
     string kPath;
@@ -215,6 +216,7 @@ namespace kIEview2 {
     EmotHandler emotHandler;
     StyleHandler styleHandler;
     WNDPROC oldMsgWndProc;
+    WNDPROC oldREWndProc;
     StyleLV* styleLV;
     EmotLV* emotLV;
     RtfHtmlTag rtfHtml;

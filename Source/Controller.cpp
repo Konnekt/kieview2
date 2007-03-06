@@ -332,19 +332,19 @@ namespace kIEview2 {
       }
       case act::formatTb::bold: {
         if (an->code == ACTN_ACTION) {
-          handleTextFlag(CFE_BOLD, CFM_BOLD);
+          handleTextFlag(CFE_BOLD, CFM_BOLD, (HWND) UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, getAN()->act.cnt)));
         }
         break;
       }
       case act::formatTb::italic: {
         if (an->code == ACTN_ACTION) {
-          handleTextFlag(CFE_ITALIC, CFM_ITALIC);
+          handleTextFlag(CFE_ITALIC, CFM_ITALIC, (HWND) UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, getAN()->act.cnt)));
         }
         break;
       }
       case act::formatTb::underline: {
         if (an->code == ACTN_ACTION) {
-          handleTextFlag(CFE_UNDERLINE, CFM_UNDERLINE);
+          handleTextFlag(CFE_UNDERLINE, CFM_UNDERLINE, (HWND) UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, getAN()->act.cnt)));
         }
         break;
       }
@@ -428,6 +428,7 @@ namespace kIEview2 {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
 
         oldMsgWndProc = (WNDPROC) SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
+
         SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
 
         oWndController wndCtrl = new WndController(an);
@@ -543,6 +544,12 @@ namespace kIEview2 {
     LockerCS lock(_locker);
 
     switch (getAN()->code) {
+      case ACTN_CREATEWINDOW: {
+        sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)getAN();
+        forwardAction();
+        oldREWndProc = (WNDPROC) SetWindowLong(an->hwnd, GWL_WNDPROC, (LONG)Controller::msgREWndProc);
+        return;
+      }
       case Konnekt::UI::Notify::supportsFormatting: {
         return setSuccess();
       }
@@ -633,6 +640,40 @@ namespace kIEview2 {
     }
     return CallWindowProc(getInstance()->oldMsgWndProc, hWnd, msg, wParam, lParam);
   }
+  LRESULT CALLBACK Controller::msgREWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) { 
+      case WM_KEYDOWN: {
+        switch (wParam) {
+          case 'B':
+          case 'b':
+            if (GetKeyState(VK_CONTROL)) {
+              handleTextFlag(CFE_BOLD, CFM_BOLD, hWnd);
+              return 0;
+            }
+          break;
+
+          case 'I':
+          case 'i':
+            if (GetKeyState(VK_CONTROL)) {
+              handleTextFlag(CFE_ITALIC, CFM_ITALIC, hWnd);
+              return 0;
+            }
+          break;
+
+          case 'U':
+          case 'u':
+            if (GetKeyState(VK_CONTROL)) {
+              handleTextFlag(CFE_UNDERLINE, CFM_UNDERLINE, hWnd);
+              return 0;
+            }
+          break;
+        }
+        break;
+      }
+    }
+    return CallWindowProc(getInstance()->oldREWndProc, hWnd, msg, wParam, lParam);
+  }
+
 
   oWndController Controller::getWndController(sUIActionNotify_base* an) {
     // return getWndController(IECtrl::get((HWND)UIActionHandleDirect(an->act)));
@@ -811,7 +852,8 @@ namespace kIEview2 {
     }
 
     // locking
-    LockerCS lock(_locker);
+    //LockerCS lock(_locker);
+    ObjLocker lock(this);
 
     IMLOG("[Controller::readMsgs()]: cnt = %i, howMany = %i, sessionOffset = %i",
       cnt, howMany, sessionOffset);
@@ -882,7 +924,8 @@ namespace kIEview2 {
 
   int Controller::readLastMsgSession(tCntId cnt, int sessionOffset, bool setSession) {
     // locking
-    LockerCS lock(_locker);
+    //LockerCS lock(_locker);
+    ObjLocker lock(this);
 
     Tables::oTable table = historyTable;
     loadMsgTable(cnt);
@@ -1113,8 +1156,7 @@ namespace kIEview2 {
     return an->act.parent != IMIG_MSGWND;
   }
 
-  void Controller::handleTextFlag(int flag, int mask) {
-    HWND hwnd = (HWND) UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, getAN()->act.cnt));
+  void Controller::handleTextFlag(int flag, int mask, HWND hwnd) {
     CHARFORMAT cf;
     ZeroMemory(&cf, sizeof(CHARFORMAT));
     cf.cbSize = sizeof(CHARFORMAT);

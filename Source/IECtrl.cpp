@@ -746,9 +746,7 @@ HWND IECtrl::getHWND() {
 
 void IECtrl::translateAccelerator(UINT uMsg, WPARAM wParam, LPARAM lParam) {
   char chr = (char)LOWORD(MapVirtualKey(wParam, 2));
-  if (m_pKeyDownListener != NULL && m_pKeyDownListener->keyDown(wParam, lParam)
-    || m_pKeyDownListener == NULL && GetKeyState(VK_CONTROL) < 0 && (chr == 'C' || chr == 'c' || chr == 'A' || chr == 'a'))
-  {
+  if (m_pKeyDownListener && m_pKeyDownListener->keyDown(wParam, lParam)) {
     IOleInPlaceActiveObject* pIOIPAO;
     if (SUCCEEDED(m_pWebBrowser->QueryInterface(IID_IOleInPlaceActiveObject, (void**)&pIOIPAO))) {
       MSG msg;
@@ -1464,7 +1462,6 @@ STDMETHODIMP IECtrl::ClientSite::GetZoneMappings(DWORD dwZone, IEnumString **ppe
 /*
  * DropTarget
  */
-
 IECtrl::DropTarget::DropTarget(IECtrl * pCtrl) {
   m_pCtrl = pCtrl;
   m_cRef = 0;

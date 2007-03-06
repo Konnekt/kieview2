@@ -32,14 +32,14 @@ namespace kIEview2 {
     typedef IECtrl::PopupMenuListener::MenuType tMenuType;
 
   public:
-    ActionHandler(oWndController wndCtrl): selectedMenuItem(0), wndCtrl(wndCtrl) {
+    ActionHandler(oWndController wndCtrl): selectedMenuItem(0), wndCtrl(wndCtrl), KeyDownListener(wndCtrl->getIECtrl()){
       IECtrl* pCtrl = wndCtrl->getIECtrl();
 
       pCtrl->setPopupMenuListener(this);
       pCtrl->setAnchorClickListener(this);
       pCtrl->setDropListener(this);
-      pCtrl->setScriptMessageListener(this);
       pCtrl->setKeyDownListener(this);
+      pCtrl->setScriptMessageListener(this);
     }
 
   public:
@@ -49,8 +49,7 @@ namespace kIEview2 {
     MakeAction popupMenu(MenuType type, POINT pt, IECtrl* pCtrl);
     int showMessage(HWND hWnd, const char* lpText, DWORD dwType);
 
-    // @todo implement
-    inline bool keyDown(UINT uCode, DWORD dwFlags) { return true; }
+    bool keyDown(UINT uCode, DWORD dwFlags);
 
   public:
     int selectedMenuItem;

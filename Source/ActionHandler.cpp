@@ -32,6 +32,21 @@ namespace kIEview2 {
     return MessageBox(hWnd, lpText, "[kIEview2] Wiadomoœæ od skryptu", dwType); 
   }
 
+  bool ActionHandler::keyDown(UINT uCode, DWORD dwFlags) {
+    if (GetKeyState(VK_CONTROL) && (uCode == 'C' || uCode == 'c')) {
+      if (m_pCtrl) m_pCtrl->copySelection();
+      return false;
+
+    } else if (GetKeyState(VK_CONTROL) && (uCode == 'A' || uCode == 'a')) {
+      if (m_pCtrl) m_pCtrl->selectAll();
+      return false;
+
+    } else {
+      return false;
+    }
+    return true;
+  }
+
   ActionHandler::tMenuAction ActionHandler::popupMenu(tMenuType type, POINT pt, IECtrl* pCtrl) {
     tCntId cntID = wndCtrl->getCntID();
 

@@ -94,7 +94,12 @@ public:
 
   class KeyDownListener {
   public:
+    KeyDownListener(IECtrl* ctrl = NULL): m_pCtrl(ctrl) { }
+
     virtual bool keyDown(UINT uCode, DWORD dwFlags) = 0; // zwraca true jesli pozwala przepuscic klawisz
+
+  protected:
+    IECtrl* m_pCtrl;
   };
 
   class ScriptMessageListener {
