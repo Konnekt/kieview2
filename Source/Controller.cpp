@@ -548,13 +548,26 @@ namespace kIEview2 {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)getAN();
         forwardAction();
         oldREWndProc = (WNDPROC) SetWindowLong(an->hwnd, GWL_WNDPROC, (LONG)Controller::msgREWndProc);
+        SendMessage(an->hwnd, EM_SETEVENTMASK, 0, ENM_KEYEVENTS | ENM_SELCHANGE);
         return;
       }
 
       case Konnekt::UI::Notify::supportsFormatting: {
         return setSuccess();
       }
+      case Konnekt::UI::Notify::insertMsg: {
+        HWND hwnd = (HWND)UIActionHandleDirect(getAN()->act);
+        SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
+        SendMessage(hwnd, EM_SETEVENTMASK, 0, 0);
 
+        forwardAction();
+
+        SendMessage(hwnd, EM_SETEVENTMASK, 0, ENM_SELCHANGE | ENM_KEYEVENTS);
+        SendMessage(hwnd, EM_HIDESELECTION, FALSE, 0);
+        SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
+        InvalidateRect(hwnd, NULL, FALSE);
+        return;
+      }
       case Konnekt::UI::Notify::getMessageSize: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*) getAN();
 
@@ -610,28 +623,63 @@ namespace kIEview2 {
       case WM_NOTIFY: {
         if (wParam == ICMessage(IMI_ACTION_GETINDEX, (int)&sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend), 0)) {
           switch (((NMHDR*)lParam)->code) {
+            case EN_MSGFILTER: {
+              MSGFILTER* m = (MSGFILTER*) lParam;
+              switch (m->msg) {
+                case WM_KEYDOWN:
+                  switch (m->wParam) {
+                    case 'B':
+                    case 'b':
+                      if (GetKeyState(VK_CONTROL)) {
+                        handleTextFlag(CFE_BOLD, CFM_BOLD, m->nmhdr.hwndFrom);
+                        return 0;
+                      }
+                    break;
+
+                    case 'I':
+                    case 'i':
+                    if (GetKeyState(VK_CONTROL)) {
+                      handleTextFlag(CFE_ITALIC, CFM_ITALIC, m->nmhdr.hwndFrom);
+                      return 0;
+                    }
+                    break;
+
+                    case 'U':
+                    case 'u':
+                    if (GetKeyState(VK_CONTROL)) {
+                      handleTextFlag(CFE_UNDERLINE, CFM_UNDERLINE, m->nmhdr.hwndFrom);
+                      return 0;
+                    }
+                    break;
+                  }
+                break;
+              }
+              break;
+            }
             case EN_SELCHANGE: {
               int cntID = (int) GetProp(hWnd, "CntID");
               HWND hEdit = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, cntID));
 
-              CHARFORMAT cf;
-              ZeroMemory(&cf, sizeof(CHARFORMAT));
-              cf.cbSize = sizeof(CHARFORMAT);
-              cf.dwMask = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_COLOR;
-              SendMessage(hEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+              if (hEdit == ((NMHDR*)lParam)->hwndFrom) {
+                CHARFORMAT cf;
+                ZeroMemory(&cf, sizeof(CHARFORMAT));
+                cf.cbSize = sizeof(CHARFORMAT);
+                cf.dwMask = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_COLOR;
+                SendMessage(hEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
-              UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold, cntID), 
-                ((cf.dwEffects & CFE_BOLD) && (cf.dwMask & CFM_BOLD)) ? -1 : 0, ACTS_CHECKED
-              );
-              UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic, cntID), 
-                ((cf.dwEffects & CFE_ITALIC) && (cf.dwMask & CFM_ITALIC)) ? -1 : 0, ACTS_CHECKED
-              );
-              UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline, cntID), 
-                ((cf.dwEffects & CFE_UNDERLINE) && (cf.dwMask & CFM_UNDERLINE)) ? -1 : 0, ACTS_CHECKED
-              );
-              UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::color, cntID), 
-                ((cf.dwEffects & CFE_AUTOCOLOR) && (cf.dwMask & CFM_COLOR)) ? -1 : 0, ACTS_CHECKED
-              );
+                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::bold, cntID), 
+                  ((cf.dwEffects & CFE_BOLD) && (cf.dwMask & CFM_BOLD)) ? -1 : 0, ACTS_CHECKED
+                );
+                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::italic, cntID), 
+                  ((cf.dwEffects & CFE_ITALIC) && (cf.dwMask & CFM_ITALIC)) ? -1 : 0, ACTS_CHECKED
+                );
+                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::underline, cntID), 
+                  ((cf.dwEffects & CFE_UNDERLINE) && (cf.dwMask & CFM_UNDERLINE)) ? -1 : 0, ACTS_CHECKED
+                );
+                UIActionSetStatus(sUIAction(act::formatTb::formatTb, act::formatTb::color, cntID), 
+                  ((cf.dwEffects & CFE_AUTOCOLOR) && (cf.dwMask & CFM_COLOR)) ? -1 : 0, ACTS_CHECKED
+                );
+              }
               break;
             }
           }
@@ -643,32 +691,25 @@ namespace kIEview2 {
   }
 
   LRESULT CALLBACK Controller::msgREWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    switch (msg) { 
-      case WM_KEYDOWN: {
-        switch (wParam) {
-          case 'B':
-          case 'b':
-            if (GetKeyState(VK_CONTROL)) {
-              handleTextFlag(CFE_BOLD, CFM_BOLD, hWnd);
-              return 0;
-            }
-          break;
-          case 'I':
-          case 'i':
-            if (GetKeyState(VK_CONTROL)) {
-              handleTextFlag(CFE_ITALIC, CFM_ITALIC, hWnd);
-              return 0;
-            }
-          break;
-          case 'U':
-          case 'u':
-            if (GetKeyState(VK_CONTROL)) {
-              handleTextFlag(CFE_UNDERLINE, CFM_UNDERLINE, hWnd);
-              return 0;
-            }
-          break;
-        }
-        break;
+    switch (msg) {
+      case WM_PASTE:
+      case EM_PASTESPECIAL: {
+        CHARFORMAT2 cf_old;
+        ZeroMemory(&cf_old, sizeof(CHARFORMAT2));
+        cf_old.cbSize = sizeof(CHARFORMAT2);
+        cf_old.dwMask = CFM_SIZE | CFM_CHARSET | CFM_FACE;
+        SendMessage(hWnd, EM_GETCHARFORMAT, SCF_ALL, (LPARAM)&cf_old);
+        LRESULT hr = CallWindowProc(getInstance()->oldREWndProc, hWnd, msg, wParam, lParam);
+        CHARFORMAT2 cf;
+        ZeroMemory(&cf, sizeof(CHARFORMAT2));
+        cf.cbSize = sizeof(CHARFORMAT2);
+        cf.dwMask = CFM_SIZE | CFM_CHARSET | CFM_FACE;
+        cf.yHeight = cf_old.yHeight;
+        cf.bCharSet = cf_old.bCharSet;
+        cf.bPitchAndFamily = cf_old.bPitchAndFamily;
+        strcpy(cf.szFaceName, cf_old.szFaceName);
+        SendMessage(hWnd, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+        return hr;
       }
     }
     return CallWindowProc(getInstance()->oldREWndProc, hWnd, msg, wParam, lParam);
