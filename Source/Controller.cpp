@@ -18,10 +18,51 @@
 #include "Message.h"
 
 namespace kIEview2 {
+  namespace JS {
+    bool UdfBridge::__call(const string& name, IECtrl::Var& args, IECtrl::Var& ret) {
+      if (args.empty()) {
+        throw IECtrl::JSException("You didn't provide any arguments");
+      }
+      try {
+        udf_fn* func = ::Controller::getInstance()->getStyleHandler()->getUdfFactory()->get(name);
+        udf_fn::e_accept_params paramsCount = func->accept_params();
+
+        if (paramsCount == udf_fn::ANY_PARAMS) {
+          udf_fn_param params;
+          for (int i = 0; i < args.length(); i++) {
+            params.push_back(args[i]);
+          }
+          func->param(params);
+        } else {
+          if (args.length() < (int(paramsCount) + 1)) {
+            throw IECtrl::JSException("Too few arguments provided");
+          }
+          switch (paramsCount) {
+            case udf_fn::ONE_PARAM: func->param(args[0]); break;
+            case udf_fn::TWO_PARAMS: func->param(args[0], args[1]); break;
+            case udf_fn::THREE_PARAMS: func->param(args[0], args[1], args[2]); break;
+          }
+        }
+        func->handler();
+        ret = func->result();
+        return true;
+      } catch(const exception& e) {
+        throw IECtrl::JSException(e.what());
+      }
+      return false;
+    }
+
+    Controller::Controller(): iObject(NULL, true), pCtrl(::Controller::getInstance()) {
+      setProperty("ieVersion", pCtrl->ieVersion);
+      setProperty("name", "oController");
+    }
+  }
+
   // initialization
   Controller::Controller(): jsController(0), styleLV(0), emotLV(0), ieVersion(getIEVersion()) {
     IECtrl::getGlobal()->bindMethod("oController", bind(resolve_cast0(&Controller::getJSController), this), true);
     IECtrl::getGlobal()->bindMethod("oWindow", bind(&Controller::getJSWndController, this, _1, _2));
+    IECtrl::getGlobal()->setProperty("oUdf", &udfBridge);
 
     /* Static values like net, type or version */
     setStaticValue(IM_PLUG_TYPE, IMT_CONFIG | IMT_MSGUI | IMT_UI);
@@ -114,7 +155,7 @@ namespace kIEview2 {
     // emotHandler << new JispParser;
     emotHandler << new GGParser;
 
-    tplHandler.load();
+    styleHandler.load();
     emotHandler.load();
 
     IconRegister(IML_16, ico::logo, Ctrl->hDll(), IDI_LOGO);
@@ -354,7 +395,7 @@ namespace kIEview2 {
       }
       case ui::refreshStyleLV: {
         if (an->code == ACTN_ACTION) {
-          tplHandler.reload(styleLV);
+          styleHandler.reload(styleLV);
         }
         break;
       }
@@ -368,8 +409,8 @@ namespace kIEview2 {
     if (StyleLV::isValidLV(styleLV)) {
       styleLV->saveState();
     }
-    tplHandler.saveSettings();
-    tplHandler.reload(styleLV);
+    styleHandler.saveSettings();
+    styleHandler.reload(styleLV);
 
     if (EmotLV::isValidLV(emotLV)) {
       emotLV->saveState();
@@ -419,7 +460,7 @@ namespace kIEview2 {
         try {
           args[0] = _parseMsgTpl(an).a_str();
         } catch(const exception& e) { 
-          args[0] = tplHandler.parseException(e, wndCtrl->getStyleSet()).a_str();
+          args[0] = styleHandler.parseException(e, wndCtrl).a_str();
         } catch(const Exception& e) {
           break;
         }
@@ -443,7 +484,7 @@ namespace kIEview2 {
         try {
           args[0] = _parseStatusTpl(an).a_str();
         } catch(const exception& e) { 
-          args[0] = tplHandler.parseException(e, wndCtrl->getStyleSet()).a_str();
+          args[0] = styleHandler.parseException(e, wndCtrl).a_str();
         } catch(const Exception& e) {
           break;
         }
@@ -476,7 +517,7 @@ namespace kIEview2 {
 
       case ACTN_SETCNT: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*)this->getAN();
-        an->notify2 = (int)GetDlgItem((HWND)UIActionHandleDirect(sUIAction(0, an->act.parent, an->act.cnt)), Konnekt::UI::ACT::msg_ctrlview);
+        an->notify2 = (int) GetDlgItem((HWND)UIActionHandleDirect(sUIAction(0, an->act.parent, an->act.cnt)), Konnekt::UI::ACT::msg_ctrlview);
         break;
       }
     }
@@ -485,7 +526,7 @@ namespace kIEview2 {
   void Controller::_styleLV() {
     if (getAN()->code == ACTN_CREATEWINDOW) {
       styleLV = new StyleLV((sUIActionNotify_createWindow*) getAN(), 220, 120);
-      tplHandler.fillLV(styleLV);
+      styleHandler.fillLV(styleLV);
     }
   }
 
@@ -1016,7 +1057,7 @@ namespace kIEview2 {
   String Controller::preLinkify(StringRef& txt) {
     if (txt.length() > 20480) return PassStringRef(txt);
 
-    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9])(?:\\.[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9])+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/?*\"<>|\\s]*)*/?(?:\\?[a-z0-9_.%-]+(?:=[a-z0-9_.,%:/+-=*]*)?(?:&[a-z0-9_.%-;]+(?:=[a-z0-9_.,%:/+-=*]*)?)*)?(?:#[a-z0-9_.,%]+)?)(\\1)?~i", &Controller::linkInsertion, txt.c_str());
+    txt = RegEx::doReplace("~([\"|']|&quot;|&apos;|&#0?39;)?((?>([a-z+]{2,}://|www\\.|ftp\\.))(?:[a-z0-9]+(?:\\:[a-z0-9]+)?@)?(?:(?:[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9]?)(?:\\.[a-z0-9](?:[a-z0-9]|(?<!-)-)*[a-z0-9]?)+|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?:\\:\\d+)?(?:/[^\\\/?*\"<>|\\s]*)*/?(?:\\?[a-z0-9_.%-]+(?:=[a-z0-9_.,%:/+-=*]*)?(?:&[a-z0-9_.%-;]+(?:=[a-z0-9_.,%:/+-=*]*)?)*)?(?:#[a-z0-9_.,%]+)?)(\\1)?~i", &Controller::linkInsertion, txt.c_str());
     txt = RegEx::doReplace("~([\"|']mailto:)?((?:[a-z0-9_'+*$%\\^&!\\.-]+)@(?:(?:[a-z0-9-])+\\.)+(?:[a-z]{2,6}))~i", &Controller::eMailInsertion, txt.c_str());
 
     return PassStringRef(txt);
@@ -1041,18 +1082,18 @@ namespace kIEview2 {
   }
 
   String Controller::htmlEscape(StringRef& txt) {
-    return tplHandler.runFunc("htmlEscape", txt);
+    return styleHandler.runFunc("htmlEscape", txt);
   }
 
   String Controller::nl2br(StringRef& txt) {
-    return tplHandler.runFunc("nl2br", txt);
+    return styleHandler.runFunc("nl2br", txt);
   }
 
   String Controller::getDisplayFromMsg(Konnekt::UI::Notify::_insertMsg* an) {
     cMessage* msg = an->_message;
-    String display = GetExtParam(msg->ext, MEX_DISPLAY);
     tCntId cnt = getCntFromMsg(msg);
 
+    String display = GetExtParam(msg->ext, MEX_DISPLAY);
     if (display.length()) {
       return display;
     }
@@ -1151,7 +1192,7 @@ namespace kIEview2 {
     if (an->_status & ST_IGNORED) {
       data.hash_insert_new_var("ignored?", "1");
     }
-    return tplHandler.parseTpl(&data, "status", wndCtrl->getStyleSet());
+    return styleHandler.parseTpl(&data, "status", wndCtrl);
   }
 
   String Controller::_parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an) {
@@ -1224,7 +1265,7 @@ namespace kIEview2 {
     wndCtrl->clearGroupedMsgs();
     groupedMsgs.push_back(sGroupedMsg(senderID, msg->type, date));
 
-    return tplHandler.parseTpl(&data, ("content-types/" + type).c_str(), wndCtrl->getStyleSet());
+    return styleHandler.parseTpl(&data, ("content-types\\" + type).c_str(), wndCtrl);
   }
 
   /*
@@ -1323,47 +1364,6 @@ namespace kIEview2 {
     }
     if (an->_message->flag & MF_SEND) {
       data.hash_insert_new_var("sent?", "1");
-    }
-  }
-
-  namespace JS {
-    Controller::Controller(): iObject(NULL, true), pCtrl(::Controller::getInstance()) {
-      bindMethod("getPluginVersion", bind(&Controller::getPluginVersion, this, _1, _2));
-      bindMethod("getPluginName", bind(&Controller::getPluginName, this, _1, _2));
-
-      setProperty("ieVersion", (int) pCtrl->ieVersion);
-      setProperty("name", "oController");
-    }
-
-    IECtrl::Var Controller::getPluginName(IECtrl::Var& args, IECtrl::iObject* obj) {
-      if (args.empty() || !args[0].isInteger()) return false;
-
-      if (int plugID = pluginExists(args[0].getInteger())) {
-        return getPlugName(plugID);
-      }
-      throw IECtrl::JSException("Plugin not found");
-    }
-
-    IECtrl::Var Controller::getPluginVersion(IECtrl::Var& args, IECtrl::iObject* obj) {
-      if (args.empty()) return false;
-
-      int plugID = 0;
-      if (args[0].isString()) {
-        plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) args[0].getString());
-      } else if (args[0].isInteger()) {
-        plugID = Ctrl->ICMessage(IMC_FINDPLUG, args[0].getInteger(), IMT_ALL);
-      } else {
-        return false;
-      }
-
-      if (plugID) {
-        char ver[50] = {0};
-        Ctrl->ICMessage(IMC_PLUG_VERSION, Ctrl->ICMessage(IMC_PLUGID_POS, plugID, 0), (int) ver);
-        if (Ctrl->getError() != IMERROR_NORESULT) {
-          return ver;
-        }
-      }
-      throw IECtrl::JSException("Plugin not found");
     }
   }
 }

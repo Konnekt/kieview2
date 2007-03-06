@@ -64,6 +64,11 @@ public:
     _parsers.push_back(parser);
   }
   virtual void addPackage(iPackage* package) {
+    for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+      if ((*it)->getID() == package->getID()) {
+        throw ExceptionString("Package with id = '" + package->getID() + "' already exists");
+      }
+    }
     _packages.push_back(package);
   }
 
@@ -104,7 +109,7 @@ public:
 protected:
   virtual string getDir(tColId dirColID);
 
-  virtual void loadPackage(iPackageParser* parser, FindFile::Found& dir);
+  virtual iPackage* loadPackage(iPackageParser* parser, FindFile::Found& dir);
   virtual void loadPackages(const string& dir);
 
 protected:

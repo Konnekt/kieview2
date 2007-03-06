@@ -2060,18 +2060,6 @@ STDMETHODIMP IECtrl::iObject::GetNameSpaceParent(IUnknown **ppunk) {
   return S_FALSE;
 }
 
-bool IECtrl::iObject::__call(const string& name, Var& args, Var& ret) {
-  return false;
-}
-
-bool IECtrl::iObject::__get(const string& name, Var& ret) {
-  return false;
-}
-
-bool IECtrl::iObject::__set(const string& name, Var& arg, Var& ret) {
-  return false;
-}
-
 IECtrl::Var IECtrl::External::getGlobal(Var& args, iObject* obj) {
   return IECtrl::getGlobal();
 }

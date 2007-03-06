@@ -422,6 +422,19 @@ public:
     IDispatch* getDispatch();
     IDispatch** getDispatchRef();
 
+    operator std::string() {
+      return this->getStdString();
+    }
+    operator Stamina::String() {
+      return this->getStaminaString();
+    }
+    operator ByteBuffer() {
+      return this->getByteBuffer();
+    }
+    operator Date64() {
+      return this->getDate();
+    }
+
     bool isUnknown();
     bool isInteger();
     bool isUint();
@@ -625,10 +638,10 @@ public:
   public:
     typedef std::vector<sProperty*> tProperties;
     typedef std::vector<sCallback*> tCallbacks;
-    typedef std::map<int, std::string> tOverloadPropertyNames;
+    typedef std::map<int, std::string> tNotFoundProps;
 
   public:
-    iObject(IECtrl* pCtrl = 0, bool extModificate = true);
+    iObject(IECtrl* pCtrl = 0, bool extModificate = false);
     virtual ~iObject();
 
     IECtrl* getIECtrl();
@@ -655,6 +668,16 @@ public:
     STDMETHOD(GetNextDispID)(DWORD grfdex, DISPID id, DISPID *pid);
     STDMETHOD(GetNameSpaceParent)(IUnknown **ppunk);
 
+    virtual bool __call(const string& name, Var& args, Var& ret) {
+      return false;
+    }
+    virtual bool __get(const string& name, Var& ret) {
+      return false;
+    }
+    virtual bool __set(const string& name, Var& arg, Var& ret) {
+      return false;
+    }
+
     virtual void bindMethod(const string& name, fCallback f, bool getter = false);
     virtual bool unbindMethod(const string& name);
 
@@ -672,10 +695,6 @@ public:
     virtual sProperty* getProperty(const string& name);
     virtual sProperty* getProperty(long id);
 
-    virtual bool __call(const string& name, Var& args, Var& ret);
-    virtual bool __get(const string& name, Var& ret);
-    virtual bool __set(const string& name, Var& arg, Var& ret);
-
     static HRESULT __stdcall fillExceptionData(EXCEPINFO *pExcepInfo);
 
   protected:
@@ -691,7 +710,7 @@ public:
     static EXCEPINFO _excepInfo;
     bool _extModificate;
 
-    tOverloadPropertyNames _ovNames;
+    tNotFoundProps _ovNames;
   };
 
 protected:

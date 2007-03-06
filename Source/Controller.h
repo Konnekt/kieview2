@@ -36,8 +36,24 @@ using namespace kIEview2;
 using namespace Helpers;
 
 namespace kIEview2 {
+  class Controller;
+
   namespace JS {
-    class Controller;
+    class UdfBridge : public IECtrl::iObject {
+    public:
+      UdfBridge() {
+        setProperty("name", "JavaScript front-end to UDF (User Defined Functions) functions (used mostly in templates)");
+      }
+      bool __call(const string& name, IECtrl::Var& args, IECtrl::Var& ret);
+    };
+
+    class Controller : public IECtrl::iObject {
+    public:
+      Controller();
+
+    protected:
+      ::Controller* pCtrl;
+    };
   }
 
   class Controller : public PlugController<Controller> {
@@ -119,8 +135,12 @@ namespace kIEview2 {
     int getIEVersion();
 
     void switchStyle(StyleSet* oldStyle, StyleSet* newStyle) {
+      string id;
       for (tWndControllers::iterator it = wndControllers.begin(); it != wndControllers.end(); it++) {
-        if ((*it)->getStyleSet() == oldStyle) (*it)->switchStyle(newStyle);
+        id = (*it)->getStyleSetID();
+        if (!id.length() || id == oldStyle->getID() || !styleHandler.hasStyle(id)) {
+          (*it)->switchStyle(newStyle);
+        }
       }
     }
 
@@ -167,8 +187,8 @@ namespace kIEview2 {
     EmotHandler* getEmotHandler() {
       return &emotHandler;
     }
-    TplHandler* getTplHandler() {
-      return &tplHandler;
+    StyleHandler* getStyleHandler() {
+      return &styleHandler;
     }
 
     static DWORD CALLBACK streamOut(DWORD, LPBYTE, LONG, LONG*);
@@ -191,8 +211,9 @@ namespace kIEview2 {
     CriticalSection _locker;
     Tables::oTable historyTable;
     JS::Controller* jsController;
+    JS::UdfBridge udfBridge;
     EmotHandler emotHandler;
-    TplHandler tplHandler;
+    StyleHandler styleHandler;
     WNDPROC oldMsgWndProc;
     StyleLV* styleLV;
     EmotLV* emotLV;
@@ -201,20 +222,6 @@ namespace kIEview2 {
     tEmailInsertions eMailInsertions;
     tLinkInsertions linkInsertions;
   };
-
-  namespace JS {
-    class Controller : public IECtrl::iObject {
-    public:
-      Controller();
-
-    public:
-      IECtrl::Var getPluginVersion(IECtrl::Var& args, IECtrl::iObject* obj);
-      IECtrl::Var getPluginName(IECtrl::Var& args, IECtrl::iObject* obj);
-
-    protected:
-      ::Controller* pCtrl;
-    };
-  }
 }
 
 #endif // __CONTROLLER_H__

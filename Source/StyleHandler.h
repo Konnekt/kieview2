@@ -20,8 +20,10 @@
 #include <functions/std_fn_list.hpp>
 
 #include "kIEview2.h"
-#include "iPackageHandler.h"
 #include "Helpers.h"
+
+#include "iPackageHandler.h"
+#include "WndController.h"
 
 #pragma comment(lib, "ctpp.lib")
 
@@ -30,133 +32,149 @@ using namespace Stamina;
 using namespace boost;
 using namespace Helpers;
 
-class StyleSet : public iPackage {
-public:
-  /* Class version */
-  STAMINA_OBJECT_CLASS_VERSION(StyleSet, iPackage, Version(0,1,0,0));
+namespace kIEview2 {
+  class StyleSet : public iPackage {
+  public:
+    /* Class version */
+    STAMINA_OBJECT_CLASS_VERSION(StyleSet, iPackage, Version(0,1,0,0));
 
-public:
-  StyleSet(): _savable(true), _system(false) { }
+  public:
+    StyleSet(): _savable(true), _system(false) { }
 
-public:
-  virtual bool isSavable() const {
-    return _savable;
-  }
-  virtual void isSavable(bool value) {
-    _savable = value;
-  }
+  public:
+    virtual bool isSavable() const {
+      return _savable;
+    }
+    virtual void isSavable(bool value) {
+      _savable = value;
+    }
 
-  virtual bool isSystem() const {
-    return _system;
-  }
-  virtual void isSystem(bool value) {
-    _system = value;
-  }
+    virtual bool isSystem() const {
+      return _system;
+    }
+    virtual void isSystem(bool value) {
+      _system = value;
+    }
 
-  virtual string getExt() {
-    return _ext;
-  }
-  virtual void setExt(const string& newExt) {
-    _ext = newExt;
-  }
+    virtual string getExt() {
+      return _ext;
+    }
+    virtual void setExt(const string& newExt) {
+      _ext = newExt;
+    }
 
-  virtual bool hasPreview() const {
-    return _preview.length();
-  }
-  virtual string getPreview() {
-    return _preview;
-  }
-  virtual void setPreview(const string& img_path) {
-    _preview = fileExists(img_path.c_str()) ? img_path : "";
-  }
+    virtual bool hasPreview() const {
+      return _preview.length();
+    }
+    virtual string getPreview() {
+      return _preview;
+    }
+    virtual void setPreview(const string& img_path) {
+      _preview = fileExists(img_path.c_str()) ? img_path : "";
+    }
 
-protected:
-  string _preview;
-  string _ext;
+  protected:
+    string _preview;
+    string _ext;
 
-  bool _savable;
-  bool _system;
-};
+    bool _savable;
+    bool _system;
+  };
 
-typedef SharedPtr<StyleSet> oStyleSet;
+  typedef SharedPtr<StyleSet> oStyleSet;
 
-class TplPackageParser: public iPackageParser {
-public:
-  string getDefinitionMask() {
-    return "template.xml";
-  }
-  string getArchiveMask() {
-    return "*.ktpl";
-  }
-  bool fromArchive() {
-    return true;
-  }
-  iPackage* parse(const FindFile::Found& defFile);
-};
+  class TplPackageParser: public iPackageParser {
+  public:
+    string getDefinitionMask() {
+      return "template.xml";
+    }
+    string getArchiveMask() {
+      return "*.ktpl";
+    }
+    bool fromArchive() {
+      return true;
+    }
+    iPackage* parse(const FindFile::Found& defFile);
+  };
 
-class TplHandler : public iPackageHandler {
-public:
-  /* Class version */
-  STAMINA_OBJECT_CLASS_VERSION(TplHandler, iPackageHandler, Version(0,1,0,0));
+  class StyleHandler : public iPackageHandler {
+  public:
+    /* Class version */
+    STAMINA_OBJECT_CLASS_VERSION(StyleHandler, iPackageHandler, Version(0,1,0,0));
 
-public:
-  TplHandler();
+  public:
+    StyleHandler();
 
-  /* CTPP helpers */
-  String runFunc(const string& name, udf_fn_param& params);
-  String runFunc(const string& name, const StringRef& param1);
-  String runFunc(const string& name, const StringRef& param1, const StringRef& param2);
-  String runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3);
+    /* CTPP helpers */
+    String runFunc(const string& name, udf_fn_param& params);
+    String runFunc(const string& name, const StringRef& param1);
+    String runFunc(const string& name, const StringRef& param1, const StringRef& param2);
+    String runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3);
 
-  /* CTPP related */
-  inline udf_fn_factory* getUdfFactory() {
-    return &_udfFactory;
-  }
-  inline void bindUdf(const string& name, udf_fn* function) {
-    getUdfFactory()->install_udf_fn(name, function);
-  }
-  void bindStdFunctions();
+    /* CTPP related */
+    inline udf_fn_factory* getUdfFactory() {
+      return &_udfFactory;
+    }
+    inline void bindUdf(const string& name, udf_fn* function) {
+      getUdfFactory()->install_udf_fn(name, function);
+    }
+    void bindStdFunctions();
 
-  /* iPackageHandler derived methods */
-  void fillLV(iLV* lv);
+    /* iPackageHandler derived methods */
+    void fillLV(iLV* lv);
 
-  void loadPackages();
-  void loadSettings();
-  void saveSettings();
+    void loadPackages();
+    void loadSettings();
+    void saveSettings();
 
-  /* Styleset handling */
-  StyleSet* getByID(const string& id);
-  StyleSet* getCurrentStyle();
+    /* Styleset handling */
+    inline bool hasStyle(const string& id) {
+      for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+        if ((*it)->getID() == id) return true;
+      }
+      return false;
+    }
+    StyleSet* getByID(const string& id);
+    StyleSet* getCurrentStyle();
 
-  /* Styleset parsing */
-  String parseString(param_data* data, const StringRef& text, StyleSet* styleSet);
-  String parseTpl(param_data* data, const char* tplName, StyleSet* styleSet);
-  String parseException(const exception &e, StyleSet* styleSet);
+    /* Styleset parsing */
+    String parseString(param_data* data, const StringRef& text, StyleSet* styleSet);
+    String parseTpl(param_data* data, const char* tplName, StyleSet* styleSet);
+    String parseException(const exception &e, StyleSet* styleSet);
 
-  /* directory paths obtaining related methods */
-  inline string getDir() {
-    return __super::getDir(kIEview2::cfg::stylesDir);
-  }
+    String parseString(param_data* data, const StringRef& text, oWndController wndCtrl) {
+      return parseString(data, text, wndCtrl->getStyleSet());
+    }
+    String parseTpl(param_data* data, const char* tplName, oWndController wndCtrl) {
+      return parseTpl(data, tplName, wndCtrl->getStyleSet());
+    }
+    String parseException(const exception &e, oWndController wndCtrl) {
+      return parseException(e, wndCtrl->getStyleSet());
+    }
 
-  string getStyleDir(StyleSet* set);
-  string getSystemStylesDir();
+    /* directory paths obtaining related methods */
+    inline string getDir() {
+      return __super::getDir(kIEview2::cfg::stylesDir);
+    }
+    string getSystemStylesDir();
 
-  inline void clearDirs() {
-    _includeDirs.clear();
-  }
-  inline void addIncludeDir(const string& dir) {
-    _includeDirs.push_back(dir);
-  }
+    inline void clearDirs() {
+      _includeDirs.clear();
+    }
+    inline void addIncludeDir(const string& dir) {
+      _includeDirs.push_back(dir);
+    }
 
-  string getTplPath(const char* tplName, StyleSet* styleSet);
-  String getTpl(const char* tplName, StyleSet* styleSet);
+    string getTplPath(const char* tplName, StyleSet* styleSet);
+    String getTpl(const char* tplName, StyleSet* styleSet);
 
-protected:
-  static const char _sysStylesPath[];
-  StyleSet _emptySet;
+  protected:
+    static const char _sysStylesPath[];
+    StyleSet _emptySet;
 
-  udf_fn_factory _udfFactory;
-  v_include_dir _includeDirs;
-};
+    udf_fn_factory _udfFactory;
+    v_include_dir _includeDirs;
+  };
+}
 
 #endif // __TPLHANDLER_H__

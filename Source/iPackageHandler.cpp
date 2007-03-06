@@ -45,7 +45,7 @@ string iPackageHandler::getDir(tColId dirColID) {
   return dir;
 }
 
-void iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& dir) {
+iPackage* iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& dir) {
   string defPath = dir.getFilePath() + "\\";
 
   FindFileFiltered files(defPath + "*");
@@ -64,24 +64,18 @@ void iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& dir) 
   files.find();
 
   if (files.nothingFound() || files.found().empty()) {
-    return;
+    throw ExceptionString("Brak pliku z definicj¹ paczki");
   }
-  try {
-    iPackage* package = parser->parse(files.found());
-    package->setDir(dir.getFileName());
+  iPackage* package = parser->parse(files.found());
+  package->setDir(dir.getFilePath());
 
-    if (!package->getName().length()) {
-      package->setName(dir.getFileName());
-    }
-    if (!package->getID().length()) {
-      package->setID(RegEx::doReplace("/[^a-z0-9-_.]/i", "", package->getName().c_str()));
-    }
-
-    *this << package;
-  } catch (const Exception& e) {
-    IMLOG("[iPackageHandler::loadPackages()] b³¹d podczas parsowania paczki (%s): %s", 
-      dir.getFileName().c_str(), e.getReason().c_str());
+  if (!package->getName().length()) {
+    package->setName(dir.getFileName());
   }
+  if (!package->getID().length()) {
+    package->setID(RegEx::doReplace("/[^a-z0-9-_.]/i", "", package->getName().c_str()));
+  }
+  return package;
 }
 
 void iPackageHandler::loadPackages(const string& dir) {
@@ -94,18 +88,19 @@ void iPackageHandler::loadPackages(const string& dir) {
   FindFile::tFoundFiles dirs;
   dirs = find.makeList();
 
-  if (find.nothingFound()) {
-    IMLOG("[iPackageHandler::loadPackages()] Nie znaleziono katalogu z pakietami !");
-    return;
-  }
-  if (!dirs.size()) {
-    IMLOG("[iPackageHandler::loadPackages()] Brak katalogów z pakietami !");
+  if (find.nothingFound() || !dirs.size()) {
+    IMLOG("[iPackageHandler::loadPackages()] Brak katalogów z paczkami !");
     return;
   }
 
   for (tParsers::iterator parser = _parsers.begin(); parser != _parsers.end(); parser++) {
     for (FindFile::tFoundFiles::iterator dir = dirs.begin(); dir != dirs.end(); dir++) {
-      loadPackage(*parser, *dir);
+      try {
+        *this << loadPackage(*parser, *dir);
+      } catch (const Exception& e) {
+        IMLOG("[iPackageHandler::loadPackages()] b³¹d podczas parsowania paczki (%s): %s", 
+          dir->getFileName().c_str(), e.getReason().c_str());
+      }
     }
   }
 }

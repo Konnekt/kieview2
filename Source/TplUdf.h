@@ -20,6 +20,8 @@
 #include <functions/std_fn_list.hpp>
 
 #include <boost/format.hpp>
+
+#include "Helpers.h"
 #include "Controller.h"
 
 #pragma comment(lib, "ctpp.lib")
@@ -27,6 +29,68 @@
 using namespace template_parser_ns;
 using namespace Stamina;
 using namespace boost;
+
+class udf_get_plugin_version: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return ONE_PARAM;
+  }
+  inline void param(const string& param) {
+    _buff = param;
+  }
+
+  inline void handler() {
+    int plugID = 0;
+    if (RegEx::doMatch("/^\\d+$/", _buff.c_str())) {
+      plugID = Ctrl->ICMessage(IMC_FINDPLUG, atoi(_buff.c_str()), IMT_ALL);
+    } else {
+      plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) _buff.c_str());
+    }
+
+    if (plugID) {
+      char ver[50] = {0};
+      Ctrl->ICMessage(IMC_PLUG_VERSION, Ctrl->ICMessage(IMC_PLUGID_POS, plugID, 0), (int) ver);
+      if (Ctrl->getError() != IMERROR_NORESULT) {
+        _buff = ver; return;
+      }
+    }
+    throw exception("Plugin not found");
+  }
+  inline string& result() {
+    return _buff;
+  }
+
+protected:
+  string _buff;
+};
+
+class udf_get_plugin_name: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return ONE_PARAM;
+  }
+  inline void param(const string& net) {
+    _net = atoi(net.c_str());
+    if (!_net && net != "0") {
+      throw exception("Conversion problem");
+    }
+  }
+
+  inline void handler() {
+    if (int plugID = pluginExists(_net)) {
+      _result = getPlugName(plugID);
+    } else {
+      throw exception("Plugin not found");
+    }
+  }
+  inline string& result() {
+    return _result;
+  }
+
+protected:
+  string _result;
+  int _net;
+};
 
 class udf_get_cfg_setting: public udf_fn {
 public:

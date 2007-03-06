@@ -20,7 +20,6 @@
 #include "Helpers.h"
 
 #include "IECtrl.h"
-#include "StyleHandler.h"
 
 using namespace kIEview2;
 using namespace Helpers;
@@ -51,6 +50,7 @@ namespace kIEview2 {
   }
   class ActionHandler;
   class Controller;
+  class StyleSet;
 
   class WndController : public SharedObject<iSharedObject> {
   public:
@@ -74,11 +74,13 @@ namespace kIEview2 {
       SetProp(GetParent(pIECtrl->getHWND()), "MsgSession", (HANDLE) value);
     }
 
+    string getStyleSetID() {
+      return styleSetID;
+    }
+    StyleSet* getStyleSet();
+
     tCntId getCntID() const {
       return cntID;
-    }
-    StyleSet* getStyleSet() {
-      return styleSet;
     }
     IECtrl* getIECtrl() {
       return pIECtrl;
@@ -93,7 +95,7 @@ namespace kIEview2 {
 
     UINT insertedMsgs;
     bool pasteSession;
-    StyleSet* styleSet;
+    string styleSetID;
     tCntId cntID;
 
     tGroupedMsgs groupedMsgs;
