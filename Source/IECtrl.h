@@ -625,6 +625,7 @@ public:
   public:
     typedef std::vector<sProperty*> tProperties;
     typedef std::vector<sCallback*> tCallbacks;
+    typedef std::map<int, std::string> tOverloadPropertyNames;
 
   public:
     iObject(IECtrl* pCtrl = 0, bool extModificate = true);
@@ -671,6 +672,10 @@ public:
     virtual sProperty* getProperty(const string& name);
     virtual sProperty* getProperty(long id);
 
+    virtual Var __call(const string& name, Var& args);
+    virtual Var __get(const string& name);
+    virtual bool __set(const string& name, Var& arg);
+
     static HRESULT __stdcall fillExceptionData(EXCEPINFO *pExcepInfo);
 
   protected:
@@ -685,6 +690,8 @@ public:
 
     static EXCEPINFO _excepInfo;
     bool _extModificate;
+
+    tOverloadPropertyNames _ovNames;
   };
 
 protected:
