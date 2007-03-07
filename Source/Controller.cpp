@@ -590,8 +590,11 @@ namespace kIEview2 {
         text = text.substr(29, text.length() - 29 - 13); // @debug chwilowe obejscie buga z przymusowym kolorem wysylanego tekstu
 
         if (an->code == Konnekt::UI::Notify::getMessage) {
+          Konnekt::UI::Notify::_getMessage* an = (Konnekt::UI::Notify::_getMessage*) getAN();
+
           strcpy(an->_message->body, text.a_str());
           an->_message->flag |= MF_HTML;
+
           return;
         } else {
           return setReturnCode(text.length());
