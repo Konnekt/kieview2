@@ -586,9 +586,10 @@ namespace kIEview2 {
         text.replaceChars(sla, xsla);
         text = htmlEscape(text);
         text.replaceChars(xsla, sla);
+        text = rtfHtml.rtfParse((char*)text.a_str(), text.length());
         text = text.substr(29, text.length() - 29 - 13); // @debug chwilowe obejscie buga z przymusowym kolorem wysylanego tekstu
 
-        return setReturnCode(text.size());
+        return setReturnCode(text.length());
       }
 
       case Konnekt::UI::Notify::getMessage: {
@@ -608,7 +609,7 @@ namespace kIEview2 {
         text.replaceChars(sla, xsla);
         text = htmlEscape(text);
         text.replaceChars(xsla, sla);
-        text = rtfHtml.rtfParse((char*)text.a_str(), text.size());
+        text = rtfHtml.rtfParse((char*)text.a_str(), text.length());
         text = text.substr(29, text.length() - 29 - 13); // @debug chwilowe obejscie buga z przymusowym kolorem wysylanego tekstu
 
         strcpy(an->_message->body, text.a_str());
