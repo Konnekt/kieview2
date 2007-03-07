@@ -428,7 +428,6 @@ namespace kIEview2 {
         sUIActionNotify_createWindow* an = (sUIActionNotify_createWindow*)this->getAN();
 
         oldMsgWndProc = (WNDPROC) SetWindowLong(an->hwndParent, GWL_WNDPROC, (LONG)Controller::msgWndProc);
-
         SetProp(an->hwndParent, "CntID", (HANDLE)an->act.cnt);
 
         oWndController wndCtrl = new WndController(an);
@@ -555,6 +554,7 @@ namespace kIEview2 {
       case Konnekt::UI::Notify::supportsFormatting: {
         return setSuccess();
       }
+
       case Konnekt::UI::Notify::insertMsg: {
         HWND hwnd = (HWND)UIActionHandleDirect(getAN()->act);
         SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
@@ -568,6 +568,7 @@ namespace kIEview2 {
         InvalidateRect(hwnd, NULL, FALSE);
         return;
       }
+
       case Konnekt::UI::Notify::getMessageSize: {
         sUIActionNotify_2params* an = (sUIActionNotify_2params*) getAN();
 
@@ -656,6 +657,7 @@ namespace kIEview2 {
               }
               break;
             }
+
             case EN_SELCHANGE: {
               int cntID = (int) GetProp(hWnd, "CntID");
               HWND hEdit = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, cntID));
@@ -700,6 +702,7 @@ namespace kIEview2 {
         cf_old.dwMask = CFM_SIZE | CFM_CHARSET | CFM_FACE;
         SendMessage(hWnd, EM_GETCHARFORMAT, SCF_ALL, (LPARAM)&cf_old);
         LRESULT hr = CallWindowProc(getInstance()->oldREWndProc, hWnd, msg, wParam, lParam);
+
         CHARFORMAT2 cf;
         ZeroMemory(&cf, sizeof(CHARFORMAT2));
         cf.cbSize = sizeof(CHARFORMAT2);
@@ -709,6 +712,7 @@ namespace kIEview2 {
         cf.bPitchAndFamily = cf_old.bPitchAndFamily;
         strcpy(cf.szFaceName, cf_old.szFaceName);
         SendMessage(hWnd, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+
         return hr;
       }
     }

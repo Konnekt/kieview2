@@ -132,11 +132,10 @@ namespace kIEview2 {
     __super::loadPackages(unifyPath(getSystemStylesDir()));
     if (!_packages.size()) {
       IMLOG("[StyleHandler::loadPackages()] Brak katalogów ze stylami systemowymi !");
-      return;
-    }
-
-    for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-      ((StyleSet*)*it)->isSystem(true);
+    } else {
+      for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
+        ((StyleSet*)*it)->isSystem(true);
+      }
     }
     Controller::getInstance()->onStylesReload();
   }

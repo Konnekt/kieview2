@@ -63,7 +63,11 @@ namespace kIEview2 {
     // czyscimy wiadomosci grupowania
     clearGroupedMsgs();
     // ladujemy bootstrapa
-    pIECtrl->navigate(("file:///" + unifyPath(getStyleSet()->getDir(), false, '/') + "/__bootstrap.html").c_str());
+    if (!getStyleSet()->empty()) {
+      pIECtrl->navigate(("file:///" + unifyPath(getStyleSet()->getDir(), false, '/') + "/__bootstrap.html").c_str());
+    } else {
+      pIECtrl->navigate("about:blank");
+    }
     // pIECtrl->clear();
 
     insertedMsgs = 0;

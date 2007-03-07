@@ -24,10 +24,10 @@ using namespace Konnekt::Tables;
 
 class iPackageParser {
 public:
-  virtual bool fromArchive() { return false; }
+  virtual bool fromArchive() const { return false; }
 
-  virtual string getDefinitionMask() = 0;
-  virtual string getArchiveMask() { return ""; }
+  virtual string getDefinitionMask() const = 0;
+  virtual string getArchiveMask() const { return ""; }
 
   virtual iPackage* parse(const FindFile::Found& defFile) = 0;
 };

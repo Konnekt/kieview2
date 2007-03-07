@@ -45,13 +45,13 @@ public:
   };
 
 public:
-  string getDefinitionMask() {
+  string getDefinitionMask() const {
     return "icondef.xml";
   }
-  string getArchiveMask() {
+  string getArchiveMask() const {
     return "*.jisp";
   }
-  bool fromArchive() {
+  bool fromArchive() const {
     return true;
   }
   iPackage* parse(const FindFile::Found& defFile);
@@ -62,13 +62,13 @@ public:
  */
 class GGParser: public iPackageParser {
 public:
-  string getDefinitionMask() {
+  string getDefinitionMask() const {
     return "emots.txt";
   }
-  string getArchiveMask() {
+  string getArchiveMask() const {
     return "*.zip";
   }
-  bool fromArchive() {
+  bool fromArchive() const {
     return true;
   }
   iPackage* parse(const FindFile::Found& defFile);

@@ -42,6 +42,10 @@ namespace kIEview2 {
     StyleSet(): _savable(true), _system(false) { }
 
   public:
+    virtual bool empty() {
+      return getID().length() == 0;
+    }
+
     virtual bool isSavable() const {
       return _savable;
     }
@@ -56,7 +60,7 @@ namespace kIEview2 {
       _system = value;
     }
 
-    virtual string getExt() {
+    virtual string getExt() const {
       return _ext;
     }
     virtual void setExt(const string& newExt) {
@@ -66,7 +70,7 @@ namespace kIEview2 {
     virtual bool hasPreview() const {
       return _preview.length();
     }
-    virtual string getPreview() {
+    virtual string getPreview() const {
       return _preview;
     }
     virtual void setPreview(const string& img_path) {
@@ -85,13 +89,13 @@ namespace kIEview2 {
 
   class TplPackageParser: public iPackageParser {
   public:
-    string getDefinitionMask() {
+    string getDefinitionMask() const {
       return "template.xml";
     }
-    string getArchiveMask() {
+    string getArchiveMask() const {
       return "*.ktpl";
     }
-    bool fromArchive() {
+    bool fromArchive() const {
       return true;
     }
     iPackage* parse(const FindFile::Found& defFile);
