@@ -77,7 +77,7 @@ public:
   virtual string getDir() = 0;
 
   virtual string getRepoPath(const string& path); 
-  virtual void prepareRepo(const string& path); 
+  virtual void prepareRepo(const string& path, iPackageParser* parser); 
 
   virtual void fillLV(iLV* lv) = 0;
 

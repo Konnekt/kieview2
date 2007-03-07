@@ -20,13 +20,13 @@ string iPackageHandler::getRepoPath(const string& path) {
   return getFileDirectory(path) + "\\~local";
 }
 
-void iPackageHandler::prepareRepo(const string& path) {
+void iPackageHandler::prepareRepo(const string& path, iPackageParser* parser) {
   string localPath = getRepoPath(path);
 
   if (!isDirectory(localPath.c_str())) {
     try {
       Zip zip(path);
-      zip.unzipDir(localPath, zip.get(0).getDirectory());
+      zip.unzipDir(localPath, zip.find(parser->getDefinitionMask()).getDirectory());
       zip.close();
     } catch(const Exception& e) {
       throw CannotOpen(e.getReason());
@@ -55,7 +55,7 @@ iPackage* iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& 
     files.setMask(defPath + parser->getArchiveMask());
     files.find();
     if (!files.nothingFound() && !files.found().empty()) {
-      prepareRepo(files.found().getFilePath());
+      prepareRepo(files.found().getFilePath(), parser);
       defPath = getRepoPath(defPath) + "\\";
     }
   }
@@ -67,7 +67,7 @@ iPackage* iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& 
     throw ExceptionString("Brak pliku z definicj¹ paczki");
   }
   iPackage* package = parser->parse(files.found());
-  package->setDir(dir.getFilePath());
+  package->setDir(files.found().getDirectory());
 
   if (!package->getName().length()) {
     package->setName(dir.getFileName());

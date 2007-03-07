@@ -52,8 +52,8 @@ public:
     inline ZIPENTRY* getDataRef() {
       return &_data;
     }
-    inline const ZIPENTRY& operator -> () {
-      return _data;
+    inline ZIPENTRY* operator -> () {
+      return &_data;
     }
 
     inline bool empty() const {
@@ -94,14 +94,14 @@ public:
     }
 
     inline string getDirectory() const {
-      return getFileDirectory(getFilePath());
+      return getFileDirectory(getPath());
     }
 
-    inline string getFileName() const {
-      return ::getFileName(getFilePath());
+    inline string getName() const {
+      return ::getFileName(getPath());
     }
 
-    inline string getFilePath() const {
+    inline string getPath() const {
       return _data.name;
     }
 
@@ -141,7 +141,7 @@ public:
 public:
   bool handleResult(ZRESULT resultCode) {
     if (resultCode != ZR_OK) {
-      throw ExceptionString("ZIP Error { " + getErrorMsg(resultCode) + " }");
+      throw ExceptionString("ZIP Error [" + inttostr(resultCode) + "] { " + getErrorMsg(resultCode) + " }");
     }
     return true;
   }
@@ -158,9 +158,24 @@ public:
   }
 
 public:
-  Entry find(const string& filename) {
+  inline UINT count() {
+    return get(-1)->index;
+  }
+
+  Entry find(const string& name) {
+    Entry item;
+    for (int i = 0; i < count(); i++) {
+      item = get(i);
+      if (item.getName() == name) {
+        return item;
+      }
+    }
+    throw ExceptionString("Item not found");
+  }
+
+  Entry get(const string& name) {
     Entry entry;
-    handleResult(FindZipItem(_handle, filename.c_str(), true, &entry.getDataRef()->index, entry.getDataRef()));
+    handleResult(FindZipItem(_handle, name.c_str(), true, &entry->index, entry.getDataRef()));
 
     return entry;
   }
