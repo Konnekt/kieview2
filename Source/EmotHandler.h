@@ -65,9 +65,6 @@ protected:
   static string __stdcall emotInsertion(RegEx* reg, void* param);
   static string __stdcall replaceEmot(RegEx* reg, void* param);
 
-  static bool sort(iPackage* one, iPackage* other) {
-    return ((eMSet*) one)->getPos() < ((eMSet*) other)->getPos();
-  }
 protected:
   tEmotInsertions emotInsertions;
 };

@@ -73,12 +73,22 @@ public:
   }
 
 public:
+  static bool _sort(iPackage* one, iPackage* other) {
+    return one->getPos() < other->getPos();
+  }
+  virtual void sort() {
+    _packages.sort(&iPackageHandler::_sort);
+  }
+
   static string getKonnektPath();
   virtual string getDir() = 0;
 
-  virtual string getRepoPath(const string& path); 
-  virtual void prepareRepo(const string& path, iPackageParser* parser); 
+  virtual string getRepoPath(const string& path);
+  virtual void prepareRepo(const string& path, iPackageParser* parser);
 
+  virtual string makeID(const string& name) {
+    return RegEx::doReplace("/[^a-z0-9-_.]/i", "", name.c_str());
+  }
   virtual void fillLV(iLV* lv) = 0;
 
   virtual void load() {

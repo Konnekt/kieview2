@@ -33,13 +33,13 @@ void EmotHandler::loadSettings() {
     if (rows.size() != 3) continue;
     for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
       if ((*it)->getID() == rows[2]) {
-        ((eMSet*) *it)->setPos(atoi(rows[0].c_str()));
         (*it)->setEnabled(atoi(rows[1].c_str()));
+        (*it)->setPos(atoi(rows[0].c_str()));
         break;
       }
     }
   }
-  _packages.sort(&EmotHandler::sort);
+  sort();
 }
 
 void EmotHandler::saveSettings() {
@@ -47,7 +47,7 @@ void EmotHandler::saveSettings() {
   String result;
 
   for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
-    result += stringf("%d|%d|%s\n", ((eMSet*)*it)->getPos(), (int) (*it)->isEnabled(), (*it)->getID().c_str());
+    result += stringf("%d|%d|%s\n", (*it)->getPos(), (int) (*it)->isEnabled(), (*it)->getID().c_str());
   }
   Controller::getConfig()->set(cfg::emotPacks, result);
 }

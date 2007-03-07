@@ -107,15 +107,6 @@ public:
   typedef vector<eM> tEmots;
 
 public:
-  eMSet(): _pos(-1) { }
-  virtual ~eMSet() { }
-
-public:
-  bool operator < (eMSet& other) const {
-    return getPos() < other.getPos();
-  }
-
-public:
   virtual const Date64& getCTime() const {
     return _creationTime;
   }
@@ -128,13 +119,6 @@ public:
   }
   virtual void setUrl(const StringRef& url) {
     _url = url;
-  }
-
-  virtual int getPos() const {
-    return _pos;
-  }
-  virtual void setPos(int value) {
-    _pos = value;
   }
 
   virtual const tAuthors& getAuthors() const {
@@ -157,8 +141,6 @@ protected:
 
   Date64 _creationTime;
   String _url;
-
-  int _pos;
 };
 
 #endif // __EMOTS_H__

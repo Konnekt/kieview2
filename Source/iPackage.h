@@ -22,7 +22,7 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(iPackage, iSharedObject, Version(0,1,0,0));
 
 public:
-  iPackage(): _enabled(false) { }
+  iPackage(): _enabled(false), _pos(-1) { }
 
 public:
   virtual string getID() {
@@ -47,6 +47,13 @@ public:
   virtual iPackage& setName(const StringRef& name) {
     _name = name;
     return *this;
+  }
+
+  virtual int getPos() const {
+    return _pos;
+  }
+  virtual void setPos(int value) {
+    _pos = value;
   }
 
   virtual string getVersion() {
@@ -81,6 +88,7 @@ protected:
   bool _enabled;
   string _id;
   string _dir;
+  int _pos;
 };
 
 typedef SharedPtr<iPackage> oPackage;

@@ -138,6 +138,9 @@ public:
     _handle = NULL;
   }
 
+  UINT count() {
+    return get(-1)->index;
+  }
 public:
   bool handleResult(ZRESULT resultCode) {
     if (resultCode != ZR_OK) {
@@ -158,10 +161,6 @@ public:
   }
 
 public:
-  inline UINT count() {
-    return get(-1)->index;
-  }
-
   Entry find(const string& name) {
     Entry item;
     for (int i = 0; i < count(); i++) {

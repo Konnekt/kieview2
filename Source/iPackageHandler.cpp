@@ -73,7 +73,7 @@ iPackage* iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& 
     package->setName(dir.getFileName());
   }
   if (!package->getID().length()) {
-    package->setID(RegEx::doReplace("/[^a-z0-9-_.]/i", "", package->getName().c_str()));
+    package->setID(makeID(package->getName()));
   }
   return package;
 }
