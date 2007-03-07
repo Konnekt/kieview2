@@ -491,7 +491,6 @@ namespace kIEview2 {
 
         pCtrl->waitTillLoaded();
         pCtrl->callJScript("addStatus", args, &ret);
-        wndCtrl->insertedMsgs++;
         if (autoScroll) pCtrl->scrollToBottom();
         break;
       }
@@ -570,6 +569,7 @@ namespace kIEview2 {
       }
 
       case Konnekt::UI::Notify::getMessageSize: {
+      case Konnekt::UI::Notify::getMessage:
         sUIActionNotify_2params* an = (sUIActionNotify_2params*) getAN();
 
         String text;
@@ -589,32 +589,14 @@ namespace kIEview2 {
         text = rtfHtml.rtfParse((char*)text.a_str(), text.length());
         text = text.substr(29, text.length() - 29 - 13); // @debug chwilowe obejscie buga z przymusowym kolorem wysylanego tekstu
 
-        return setReturnCode(text.length());
-      }
-
-      case Konnekt::UI::Notify::getMessage: {
-        Konnekt::UI::Notify::_getMessage* an = (Konnekt::UI::Notify::_getMessage*) getAN();
-
-        String text;
-        EDITSTREAM es;
-
-        es.dwError = 0;
-        es.pfnCallback = Controller::streamOut;
-        es.dwCookie = (DWORD)&text;
-        SendMessage((HWND)UIActionHandleDirect(an->act), EM_STREAMOUT, SF_RTF, (LPARAM)&es);
-
-        char sla[] = {'\\', '\'', 0};
-        char xsla[] = {253, 254, 0};
-
-        text.replaceChars(sla, xsla);
-        text = htmlEscape(text);
-        text.replaceChars(xsla, sla);
-        text = rtfHtml.rtfParse((char*)text.a_str(), text.length());
-        text = text.substr(29, text.length() - 29 - 13); // @debug chwilowe obejscie buga z przymusowym kolorem wysylanego tekstu
-
-        strcpy(an->_message->body, text.a_str());
-        an->_message->flag |= MF_HTML;
-        return;
+        if (an->code == Konnekt::UI::Notify::getMessage) {
+          strcpy(an->_message->body, text.a_str());
+          an->_message->flag |= MF_HTML;
+          return;
+        } else {
+          return setReturnCode(text.length());
+        }
+        break;
       }
     }
     forwardAction();

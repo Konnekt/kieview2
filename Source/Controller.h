@@ -198,6 +198,7 @@ namespace kIEview2 {
     static DWORD CALLBACK streamOut(DWORD, LPBYTE, LONG, LONG*);
     static LRESULT CALLBACK msgWndProc(HWND, UINT, WPARAM, LPARAM);
     static LRESULT CALLBACK msgREWndProc(HWND, UINT, WPARAM, LPARAM);
+
   public:
     UINT ieVersion;
     string kPath;
