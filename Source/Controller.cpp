@@ -631,7 +631,7 @@ namespace kIEview2 {
                   switch (m->wParam) {
                     case 'B':
                     case 'b':
-                      if (GetKeyState(VK_CONTROL) < 0) {
+                      if (HIBYTE(GetKeyState(VK_CONTROL))) {
                         handleTextFlag(CFE_BOLD, CFM_BOLD, m->nmhdr.hwndFrom);
                         return 0;
                       }
@@ -639,7 +639,7 @@ namespace kIEview2 {
 
                     case 'I':
                     case 'i':
-                    if (GetKeyState(VK_CONTROL) < 0) {
+                    if (HIBYTE(GetKeyState(VK_CONTROL))) {
                       handleTextFlag(CFE_ITALIC, CFM_ITALIC, m->nmhdr.hwndFrom);
                       return 0;
                     }
@@ -647,7 +647,7 @@ namespace kIEview2 {
 
                     case 'U':
                     case 'u':
-                    if (GetKeyState(VK_CONTROL) < 0) {
+                    if (HIBYTE(GetKeyState(VK_CONTROL))) {
                       handleTextFlag(CFE_UNDERLINE, CFM_UNDERLINE, m->nmhdr.hwndFrom);
                       return 0;
                     }

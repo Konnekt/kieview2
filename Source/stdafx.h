@@ -90,6 +90,7 @@
 #include <stamina/findfile.h>
 #include <stamina/findfilefiltered.h>
 #include <stamina/simxml.h>
+#include <stamina/winhelper.h>
 
 #include <stamina/DataTable/DataTable.h>
 #include <stamina/DataTable/FileBin.h>
