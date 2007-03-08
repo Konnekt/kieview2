@@ -17,6 +17,7 @@
 #pragma comment(lib, "Advapi32.lib")
 
 #define DISPID_BEFORENAVIGATE2 250
+#define DISPID_DOCUMENTCOMPLETE 259
 
 IECtrl::Global* IECtrl::m_pGlobal = NULL;
 IECtrl* IECtrl::m_pList = NULL;
@@ -125,7 +126,7 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
   m_pList = this;
   LeaveCriticalSection(&m_mutex);
 
-  clear();
+  //clear();
 }
 
 IECtrl::~IECtrl() {
@@ -988,6 +989,9 @@ STDMETHODIMP IECtrl::EventSink::Invoke(DISPID dispIdMember, REFIID riid, LCID lc
                       pDispParams->rgvarg[2].pvarVal,
                       pDispParams->rgvarg[1].pvarVal,
                       pDispParams->rgvarg[0].pboolVal);
+      return S_OK;
+    case DISPID_DOCUMENTCOMPLETE:
+      EventSink::DocumentComplete(pDispParams->rgvarg[1].pdispVal, pDispParams->rgvarg[0].pvarVal);
       return S_OK;
   }
   return DISP_E_MEMBERNOTFOUND;

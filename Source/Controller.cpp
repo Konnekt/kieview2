@@ -593,7 +593,8 @@ namespace kIEview2 {
           Konnekt::UI::Notify::_getMessage* an = (Konnekt::UI::Notify::_getMessage*) getAN();
 
           strcpy(an->_message->body, text.a_str());
-          an->_message->flag |= MF_HTML;
+
+          if (text.find("<") != -1) an->_message->flag |= MF_HTML;
 
           return;
         } else {
