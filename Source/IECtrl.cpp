@@ -277,8 +277,12 @@ bool IECtrl::waitTillLoaded(int timeout) {
     m_pWebBrowser->get_Busy(&busy);
 
     if (result != READYSTATE_COMPLETE || busy) {
+#ifdef PLUGEXPORTH
       Ctrl->WMProcess();
       Ctrl->Sleep(250);
+#else
+      Sleep(250);
+#endif
     }
     if (timeout > 0) {
       if ((GetTickCount() - firstTick) > timeout) {
@@ -833,7 +837,7 @@ void IECtrl::saveDocument() {
   }
 }
 
-bool IECtrl::callJScript(const char* szFunc, Var &args, Var *ret) {
+bool IECtrl::callFunc(const char* szFunc, Var &args, Var *ret) {
   IHTMLDocument2 *document = getDocument();
   bool bRet = false;
 
@@ -1432,7 +1436,7 @@ STDMETHODIMP IECtrl::ClientSite::ProcessUrlAction(LPCWSTR pwszUrl, DWORD dwActio
   PBOOL pBool = (PBOOL)pPolicy;
 
   if (dwAction == URLACTION_SCRIPT_RUN) {
-    *pBool = URLPOLICY_DISALLOW;
+    *pBool = URLPOLICY_ALLOW;
   } else if (dwAction == URLACTION_JAVA_PERMISSIONS) {
     *pBool = URLPOLICY_JAVA_PROHIBIT;
   } else {

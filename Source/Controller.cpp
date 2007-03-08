@@ -466,7 +466,7 @@ namespace kIEview2 {
         }
 
         pCtrl->waitTillLoaded();
-        pCtrl->callJScript("addMessage", args, &ret);
+        pCtrl->callFunc("addMessage", args, &ret);
         wndCtrl->insertedMsgs++;
         if (autoScroll) pCtrl->scrollToBottom();
         break;
@@ -490,7 +490,7 @@ namespace kIEview2 {
         }
 
         pCtrl->waitTillLoaded();
-        pCtrl->callJScript("addStatus", args, &ret);
+        pCtrl->callFunc("addStatus", args, &ret);
         if (autoScroll) pCtrl->scrollToBottom();
         break;
       }
@@ -593,9 +593,9 @@ namespace kIEview2 {
           Konnekt::UI::Notify::_getMessage* an = (Konnekt::UI::Notify::_getMessage*) getAN();
 
           strcpy(an->_message->body, text.a_str());
-
-          if (text.find("<") != -1) an->_message->flag |= MF_HTML;
-
+          if (text.find("<") != text.npos) {
+            an->_message->flag |= MF_HTML;
+          }
           return;
         } else {
           return setReturnCode(text.length());
@@ -646,7 +646,7 @@ namespace kIEview2 {
             }
 
             case EN_SELCHANGE: {
-              int cntID = (int) GetProp(hWnd, "CntID");
+              tCntId cntID = (int) GetProp(hWnd, "CntID");
               HWND hEdit = (HWND)UIActionHandleDirect(sUIAction(IMIG_MSGWND, Konnekt::UI::ACT::msg_ctrlsend, cntID));
 
               if (hEdit == ((NMHDR*)lParam)->hwndFrom) {

@@ -139,7 +139,7 @@ public:
   void scrollToBottom();
   void saveDocument();
   void selectAll();
-  bool callJScript(const char* szFunc, Var &args, Var *ret);
+  bool callFunc(const char* szFunc, Var &args, Var *ret);
   bool waitTillLoaded(int timeout = 0);
 
   static std::string humanize(const char* text);
