@@ -69,6 +69,7 @@ namespace kIEview2 {
       pIECtrl->navigate("about:blank");
     }
     // pIECtrl->clear();
+    pIECtrl->waitTillLoaded();
 
     insertedMsgs = 0;
     setSession(false);

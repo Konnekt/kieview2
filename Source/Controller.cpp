@@ -883,14 +883,15 @@ namespace kIEview2 {
     }
 
     // locking
-    //LockerCS lock(_locker);
-    ObjLocker lock(this);
+    LockerCS lock(_locker);
+    //ObjLocker lock(this);
 
     IMLOG("[Controller::readMsgs()]: cnt = %i, howMany = %i, sessionOffset = %i",
       cnt, howMany, sessionOffset);
 
     Tables::oTable table = historyTable;
     bool dataLoaded = loadMsgTable(cnt);
+    if (!dataLoaded) return 0;
 
     list<Konnekt::UI::Notify::_insertMsg> msgs;
     int m = 0;
@@ -955,11 +956,10 @@ namespace kIEview2 {
 
   int Controller::readLastMsgSession(tCntId cnt, int sessionOffset, bool setSession) {
     // locking
-    //LockerCS lock(_locker);
-    ObjLocker lock(this);
+    LockerCS lock(_locker);
 
     Tables::oTable table = historyTable;
-    loadMsgTable(cnt);
+    if (!loadMsgTable(cnt)) return 0;
 
     int howMany = 0;
 
@@ -979,8 +979,8 @@ namespace kIEview2 {
       }
     }
 
-    int msgCount = readMsgs(cnt, howMany, sessionOffset, setSession);
     table->unloadData();
+    int msgCount = readMsgs(cnt, howMany, sessionOffset, setSession);
 
     return msgCount;
   }
