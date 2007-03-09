@@ -16,6 +16,8 @@
 #ifndef __IPACKAGEHANDLER_H__
 #define __IPACKAGEHANDLER_H__
 
+#include <fstream>
+
 #include "iPackage.h"
 #include "oZip.h"
 #include "iLV.h"
@@ -109,7 +111,7 @@ public:
   virtual string getDir() = 0;
 
   virtual string getRepoPath(const string& path, bool inPackageDir);
-  virtual void prepareRepo(const string& path, iPackageParser* parser, bool inPackageDir);
+  virtual void prepareRepo(FindFile::Found& package, iPackageParser* parser, bool inPackageDir);
 
   virtual string makeID(const string& name) {
     return RegEx::doReplace("/[^a-z0-9-_.]/i", "", name.c_str());

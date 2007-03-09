@@ -17,8 +17,6 @@
 #ifndef __EMOTPARSER_H__
 #define __EMOTPARSER_H__
 
-#include <fstream>
-
 #include "iPackageHandler.h"
 #include "Emots.h"
 

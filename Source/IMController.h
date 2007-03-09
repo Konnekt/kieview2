@@ -92,7 +92,7 @@ namespace Konnekt {
     };
 
     typedef std::deque<sSubclassedAction> tSubclassedActions;
-    typedef std::deque<sIMsgStackItem> tIMsgStack;
+    typedef std::stack<sIMsgStackItem> tIMsgStack;
     typedef std::map<int, sObserver*> tObservers;
     typedef std::map<int, int> tStaticValues;
 
@@ -167,7 +167,7 @@ namespace Konnekt {
       }
 
       int returnCode = getReturnCode();
-      _imStack.pop_back();
+      _imStack.pop();
 
       return returnCode;
     }
@@ -351,7 +351,7 @@ namespace Konnekt {
 
   protected:
     inline sIMsgStackItem* getIMsgStackItem() {
-      return &_imStack.at(_imStack.size() - 1);
+      return &_imStack.top();
     }
 
     inline bool notifyGlobalObservers(sGlobalObserver type) {
@@ -385,7 +385,7 @@ namespace Konnekt {
       // locking
       LockerCS lock(_locker);
 
-      _imStack.push_back(sIMsgStackItem(msgBase));
+      _imStack.push(sIMsgStackItem(msgBase));
     }
 
     /* Actions subclassing */

@@ -28,18 +28,23 @@ string iPackageHandler::getRepoPath(const string& path, bool inPackageDir) {
   return repoPath;
 }
 
-void iPackageHandler::prepareRepo(const string& path, iPackageParser* parser, bool inPackageDir) {
-  string localPath = getRepoPath(path, inPackageDir);
+void iPackageHandler::prepareRepo(FindFile::Found& package, iPackageParser* parser, bool inPackageDir) {
+  string localPath = getRepoPath(package.getFilePath(), inPackageDir);
 
   if (!isDirectory(localPath.c_str())) {
     try {
-      Zip zip(path);
+      Zip zip(package.getFilePath());
       zip.unzipDir(localPath, zip.find(parser->getDefinitionMask()).getDirectory());
       zip.close();
     } catch(const Exception& e) {
+      if (isDirectory(localPath.c_str())) {
+        removeDirTree(localPath);
+      }
       throw CannotOpen(e.getReason());
     }
     SetFileAttributes(localPath.c_str(), GetFileAttributes(localPath.c_str()) | FILE_ATTRIBUTE_HIDDEN);
+    /* ofstream locker((localPath + "\\template.lock").c_str());
+    locker.close(); */
   }
 }
 
@@ -63,7 +68,7 @@ iPackage* iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& 
     files.setMask(defPath + parser->getArchiveMask());
 
     if (files.find() && !files.found().empty()) {
-      prepareRepo(files.found().getFilePath(), parser, true);
+      prepareRepo((FindFile::Found&) files.found(), parser, true);
       defPath = getRepoPath(defPath, true) + "\\";
     }
   }
@@ -98,7 +103,7 @@ void iPackageHandler::preparePackages(iPackageParser* parser, FindFile::Found& d
     return;
   }
   for (FindFile::tFoundFiles::iterator file = files.begin(); file != files.end(); file++) {
-    prepareRepo(file->getFilePath(), parser, false);
+    prepareRepo(*file, parser, false);
   }
 }
 

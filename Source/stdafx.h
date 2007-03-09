@@ -52,6 +52,7 @@
 #include <map>
 #include <list>
 #include <deque>
+#include <stack>
 #include <stdstring.h>
 #include <string>
 
