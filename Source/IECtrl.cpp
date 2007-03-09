@@ -21,7 +21,7 @@
 
 IECtrl::Global* IECtrl::m_pGlobal = NULL;
 IECtrl* IECtrl::m_pList = NULL;
-CRITICAL_SECTION IECtrl::m_mutex;
+CriticalSection IECtrl::m_locker;
 
 bool IECtrl::m_bInited = false;
 bool IECtrl::m_bOnCopyEmptySel = true;
@@ -29,9 +29,7 @@ bool IECtrl::m_bAutoCopySel = false;
 
 void IECtrl::init() {
   if (m_bInited) return;
-
   m_bInited = true;
-  InitializeCriticalSection(&m_mutex);
 
   if (FAILED(OleInitialize(NULL))) {
     MessageBox(NULL, "OleInitialize failed", "IECtrl", MB_ICONERROR);
@@ -43,7 +41,6 @@ void IECtrl::deinit() {
     delete m_pList;
   }
   delete m_pGlobal;
-  DeleteCriticalSection(&m_mutex);
   m_bInited = false;
 }
 
@@ -118,15 +115,15 @@ IECtrl::IECtrl(HWND parent, int x, int y, int cx, int cy, bool staticEdge) {
   m_pExternal = new External;
   getExternal()->setIECtrl(this);
 
-  EnterCriticalSection(&m_mutex);
+  m_locker.lock();
   m_pNext = m_pList;
   if (m_pNext != NULL) {
     m_pNext->m_pPrev = this;
   }
   m_pList = this;
-  LeaveCriticalSection(&m_mutex);
+  m_locker.unlock();
 
-  //clear();
+  // clear();
 }
 
 IECtrl::~IECtrl() {
@@ -139,7 +136,7 @@ IECtrl::~IECtrl() {
     MessageBox(NULL, "IOleObject failed", "IECtrl", MB_ICONERROR);
   }
 
-  EnterCriticalSection(&m_mutex);
+  m_locker.lock();
   if (m_pList == this) {
     m_pList = m_pNext;
   } else if (m_pPrev != NULL) {
@@ -148,7 +145,7 @@ IECtrl::~IECtrl() {
   if (m_pNext != NULL) {
     m_pNext->m_pPrev = m_pPrev;
   }
-  LeaveCriticalSection(&m_mutex);
+  m_locker.unlock();
 
   if (m_pConnectionPoint != NULL) {
     m_pConnectionPoint->Unadvise(m_dwCookie);
@@ -718,11 +715,11 @@ IECtrl* IECtrl::get(HWND hwnd) {
   if (m_pList == NULL) {
     return NULL;
   }
-  EnterCriticalSection(&m_mutex);
+  m_locker.lock();
   for (ptr = m_pList; ptr != NULL; ptr = ptr->m_pNext) {
     if (ptr->m_hWnd == hwnd) break;
   }
-  LeaveCriticalSection(&m_mutex);
+  m_locker.unlock();
   return ptr;
 }
 

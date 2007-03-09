@@ -227,7 +227,7 @@ namespace kIEview2 {
 
     UIActionCfgAddPluginInfoBox2(ui::cfgGroup, 
       "Wtyczka kIEview2 zastêpuje standardowe okno rozmowy Konnekta dziêki czemu mo¿liwe jest wyœwietlanie "
-      "emotikon oraz modyfikacja wygl¹du okna przy pomocy szablonów, styli <b>CSS</b> i <b>J</b>ava<b>S</b>cript-u.",
+      "emotikon oraz modyfikacja wygl¹du okna przy pomocy szablonów, stylów <b>CSS</b> i <b>J</b>ava<b>S</b>cript-u.",
       desc, icon16(ico::logo).a_str(), -3);
     UIActionCfgAddPluginInfoBox2(ui::styleCfgGroup, 
       "{{<b>Szablony</b>}}",
@@ -285,7 +285,7 @@ namespace kIEview2 {
     UIActionCfgAdd(ui::emotCfgGroup, 0, ACTT_GROUPEND);
 
     UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_GROUP, "Style");
-    UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê \"pakiety\" styli");
+    UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_SEPARATOR, "Katalog w którym znajduj¹ siê \"pakiety\" stylów");
     UIActionCfgAdd(ui::styleCfgGroup, cfg::stylesDir, ACTT_DIR, "", cfg::stylesDir);
     UIActionCfgAdd(ui::styleCfgGroup, 0, ACTT_SEPARATOR, "Wybierz aktywny styl:");
     UIActionCfgAdd(ui::styleCfgGroup, ui::styleLV, ACTT_HWND | ACTSC_INLINE | ACTSC_FULLWIDTH);
@@ -589,11 +589,15 @@ namespace kIEview2 {
         text = rtfHtml.rtfParse((char*)text.a_str(), text.length());
         text = text.substr(29, text.length() - 29 - 13); // @debug chwilowe obejscie buga z przymusowym kolorem wysylanego tekstu
 
+        bool isHTML = text.find("</") != text.npos;
+        if (!isHTML) {
+          text = RegEx::doReplace("#<br ?/?>#i", "\r\n", text.c_str());
+        }
         if (an->code == Konnekt::UI::Notify::getMessage) {
           Konnekt::UI::Notify::_getMessage* an = (Konnekt::UI::Notify::_getMessage*) getAN();
 
           strcpy(an->_message->body, text.a_str());
-          if (text.find("<") != text.npos) {
+          if (isHTML) {
             an->_message->flag |= MF_HTML;
           }
           return;

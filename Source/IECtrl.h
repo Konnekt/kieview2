@@ -33,6 +33,7 @@
 #include <crtdbg.h>
 
 // Stamina.Lib includes
+#include <stamina/criticalsection.h>
 #include <stamina/exception.h>
 #include <stamina/regex.h>
 
@@ -198,7 +199,7 @@ protected:
   HWND m_hParentWnd;
   HWND m_hWnd;
 
-  static CRITICAL_SECTION m_mutex;
+  static CriticalSection m_locker;
   static Global* m_pGlobal;
   static IECtrl * m_pList;
   IECtrl * m_pPrev;
