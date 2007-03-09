@@ -300,6 +300,10 @@ void IECtrl::setWindowPos(int x, int y, int cx, int cy)  {
   SetWindowPos(getHWND(), HWND_TOP, x, y, cx, cy, 0);
 }
 
+bool IECtrl::isReady() {
+  return m_bIsReady;
+}
+
 void IECtrl::setScrollPosByMouse(int x, int y) {
   IHTMLDocument2 *document = getDocument();
   if (document != NULL) {
@@ -802,9 +806,10 @@ bool IECtrl::mouseClick(POINT pt) {
         if (m_pAnchorClickListener != NULL) {
           m_pAnchorClickListener->anchorClicked(tTemp, this);
         }
+        result = false;
+
         delete tTemp;
         delete url;
-        result = true;
       }
       element->Release();
     }
@@ -993,7 +998,7 @@ STDMETHODIMP IECtrl::EventSink::Invoke(DISPID dispIdMember, REFIID riid, LCID lc
                       pDispParams->rgvarg[0].pboolVal);
       return S_OK;
     case DISPID_DOCUMENTCOMPLETE:
-      EventSink::DocumentComplete(pDispParams->rgvarg[1].pdispVal, pDispParams->rgvarg[0].pvarVal);
+      DocumentComplete(pDispParams->rgvarg[1].pdispVal, pDispParams->rgvarg[0].pvarVal);
       return S_OK;
   }
   return DISP_E_MEMBERNOTFOUND;
@@ -1023,6 +1028,7 @@ void IECtrl::EventSink::PropertyChange(BSTR text) {
 
 void IECtrl::EventSink::BeforeNavigate2(IDispatch* pDisp, VARIANT* url, VARIANT* flags, VARIANT* targetFrameName, VARIANT* postData, VARIANT* headers, VARIANT_BOOL* cancel) 
 {
+  m_pCtrl->m_bIsReady = false;
   /*
   int i = wcslen(url->bstrVal);
   char* tTemp = new char[i+1];
@@ -1046,6 +1052,7 @@ void IECtrl::EventSink::NavigateComplete(IDispatch* pDisp, VARIANT* url) {
 }
 
 void IECtrl::EventSink::DocumentComplete(IDispatch* pDisp, VARIANT* url) {
+  m_pCtrl->m_bIsReady = true;
 }
 
 void IECtrl::EventSink::OnQuit() {

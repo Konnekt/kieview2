@@ -70,6 +70,16 @@ namespace kIEview2 {
     }
     // pIECtrl->clear();
     pIECtrl->waitTillLoaded();
+    /*
+    while (!pIECtrl->isReady()) {
+#ifdef PLUGEXPORTH
+      Ctrl->WMProcess();
+      Ctrl->Sleep(250);
+#else
+      Sleep(250);
+#endif
+    }
+    */
 
     insertedMsgs = 0;
     setSession(false);

@@ -31,11 +31,40 @@ string iPackageHandler::getRepoPath(const string& path, bool inPackageDir) {
 void iPackageHandler::prepareRepo(FindFile::Found& package, iPackageParser* parser, bool inPackageDir) {
   string localPath = getRepoPath(package.getFilePath(), inPackageDir);
 
+  HANDLE lockfile = CreateFile((localPath + "\\template.lock").c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
+  HANDLE zipfile = CreateFile(package.getFilePath().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
+
+  bool canDelete = false;
+
+  if (lockfile != (HANDLE)-1 && zipfile != (HANDLE)-1) {
+    FILETIME ctLock, ctZip;
+    GetFileTime(zipfile, &ctZip, NULL, NULL);
+    GetFileTime(lockfile, &ctLock, NULL, NULL);
+    if (CompareFileTime(&ctZip, &ctLock)) {
+      canDelete = true;
+    }
+  }
+
+  CloseHandle(lockfile);
+  CloseHandle(zipfile);
+
+  if (canDelete) removeDirTree(localPath);
+
   if (!isDirectory(localPath.c_str())) {
     try {
       Zip zip(package.getFilePath());
       zip.unzipDir(localPath, zip.find(parser->getDefinitionMask()).getDirectory());
       zip.close();
+
+      HANDLE lockfile = CreateFile((localPath + "\\template.lock").c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, NULL, NULL);
+      HANDLE zipfile = CreateFile(package.getFilePath().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
+
+      FILETIME ct;
+      GetFileTime(zipfile, &ct, NULL, NULL);
+      SetFileTime(lockfile, &ct, &ct, &ct);
+      CloseHandle(lockfile);
+      CloseHandle(zipfile);
+
     } catch(const Exception& e) {
       if (isDirectory(localPath.c_str())) {
         removeDirTree(localPath);
@@ -43,8 +72,6 @@ void iPackageHandler::prepareRepo(FindFile::Found& package, iPackageParser* pars
       throw CannotOpen(e.getReason());
     }
     SetFileAttributes(localPath.c_str(), GetFileAttributes(localPath.c_str()) | FILE_ATTRIBUTE_HIDDEN);
-    /* ofstream locker((localPath + "\\template.lock").c_str());
-    locker.close(); */
   }
 }
 
