@@ -51,6 +51,8 @@ namespace kIEview2 {
 
   StyleHandler::StyleHandler() {
     bindStdFunctions();
+    bindUdf("getExtParam", new udf_get_ext_param);
+
     bindUdf("getPluginVersion", new udf_get_plugin_version);
     bindUdf("getPluginName", new udf_get_plugin_name);
 
@@ -60,8 +62,9 @@ namespace kIEview2 {
     bindUdf("formatString", new udf_stringf);
     bindUdf("formatTime", new udf_strftime);
 
-    bindUdf("getExtParam", new udf_get_ext_param);
+    bindUdf("htmlUnescape", new udf_htmlunescape);
     bindUdf("nl2br", new udf_nl2br);
+    bindUdf("br2nl", new udf_br2nl);
     bindUdf("replace", new udf_replace);
     bindUdf("match?", new udf_match);
 

@@ -591,7 +591,8 @@ namespace kIEview2 {
 
         bool isHTML = text.find("</") != text.npos;
         if (!isHTML) {
-          text = RegEx::doReplace("#<br ?/?>#i", "\r\n", text.c_str());
+          text = styleHandler.runFunc("htmlUnescape", text);
+          text = styleHandler.runFunc("br2nl", text);
         }
         if (an->code == Konnekt::UI::Notify::getMessage) {
           Konnekt::UI::Notify::_getMessage* an = (Konnekt::UI::Notify::_getMessage*) getAN();

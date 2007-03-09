@@ -757,8 +757,8 @@ BSTR IECtrl::getHrefFromAnchor(IHTMLElement *element) {
   if (!element) return NULL;
 
   IHTMLAnchorElement* pAnchor;
-  if (SUCCEEDED(element->QueryInterface(IID_IHTMLAnchorElement, (void**)&pAnchor)) && (pAnchor!=NULL)) {
-    VARIANT  variant;
+  if (SUCCEEDED(element->QueryInterface(IID_IHTMLAnchorElement, (void**)&pAnchor)) && (pAnchor != NULL)) {
+    VARIANT variant;
     BSTR url;
     if (SUCCEEDED(element->getAttribute(L"href", 2, &variant) && variant.vt == VT_BSTR)) {
       wchar_t *newtext = new wchar_t[wcslen(variant.bstrVal)+1];
@@ -790,10 +790,11 @@ bool IECtrl::mouseClick(POINT pt) {
     IHTMLElement *element;
     if (SUCCEEDED(document->elementFromPoint(pt.x, pt.y, &element)) && element != NULL) {
       BSTR url = getHrefFromAnchor(element);
-      if (url != NULL) {
+      if (url != NULL && url[0] != '#') {
         /*
-        if ((GetKeyState(VK_SHIFT) & 0x8000) && !(GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_MENU) & 0x8000)) 
+        if ((GetKeyState(VK_SHIFT) & 0x8000) && !(GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_MENU) & 0x8000)) {
           SendMessage(GetParent(m_hWnd), WM_COMMAND, IDCANCEL, 0);
+        }
         */
         int i = wcslen(url);
         char *tTemp = new char[i + 1];

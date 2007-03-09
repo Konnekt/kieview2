@@ -174,6 +174,55 @@ protected:
   string _str;
 };
 
+class udf_br2nl: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return ONE_PARAM;
+  }
+  inline void param(const string& str) {
+    _str = str;
+  }
+
+  inline void handler() {
+    _str = RegEx::doReplace("#<br ?/?>#i", "\r\n", _str.c_str());
+  }
+  inline string& result() {
+    return _str;
+  }
+
+protected:
+  string _str;
+};
+
+class udf_htmlunescape: public udf_fn {
+public:
+  inline e_accept_params accept_params() {
+    return ONE_PARAM;
+  }
+  inline void param(const string& str) {
+    _str = str;
+  }
+
+  inline void handler() {
+    RegEx reg;
+    reg.setSubject(_str);
+
+    reg.replaceItself("/&amp;/", "&");
+    reg.replaceItself("/&lt;/", "<");
+    reg.replaceItself("/&gt;/", ">");
+    reg.replaceItself("/&quot;/", "\"");
+    reg.replaceItself("/&(apos|#0?39);/", "'");
+
+    _str = reg.getSubject();
+  }
+  inline string& result() {
+    return _str;
+  }
+
+protected:
+  string _str;
+};
+
 class udf_stringf: public udf_fn {
 public:
   inline e_accept_params accept_params() {
