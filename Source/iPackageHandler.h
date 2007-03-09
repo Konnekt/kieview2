@@ -22,7 +22,32 @@
 
 using namespace Konnekt::Tables;
 
-class iPackageParser {
+class kException : public ExceptionString {
+public:
+  enum enType {
+    typeUnknown,
+    typeMinor,
+    typeMajor,
+    typeCritical
+  };
+
+public:
+  kException(enType type, const StringRef& reason = ""): ExceptionString(reason), _type(type) { }
+  kException(const StringRef& reason = ""): ExceptionString(reason), _type(typeUnknown) { }
+
+  inline bool isType(enType type) const {
+    return _type == type;
+  }
+
+protected:
+  enType _type;
+};
+
+class iPackageParser : public iObject {
+public:
+  /* Class version */
+  STAMINA_OBJECT_CLASS_VERSION(iPackageParser, iObject, Version(0,1,0,0));
+
 public:
   virtual bool fromArchive() const { return false; }
 
@@ -83,8 +108,8 @@ public:
   static string getKonnektPath();
   virtual string getDir() = 0;
 
-  virtual string getRepoPath(const string& path);
-  virtual void prepareRepo(const string& path, iPackageParser* parser);
+  virtual string getRepoPath(const string& path, bool inPackageDir);
+  virtual void prepareRepo(const string& path, iPackageParser* parser, bool inPackageDir);
 
   virtual string makeID(const string& name) {
     return RegEx::doReplace("/[^a-z0-9-_.]/i", "", name.c_str());
@@ -120,6 +145,7 @@ protected:
   virtual string getDir(tColId dirColID);
 
   virtual iPackage* loadPackage(iPackageParser* parser, FindFile::Found& dir);
+  virtual void preparePackages(iPackageParser* parser, FindFile::Found& dir);
   virtual void loadPackages(const string& dir);
 
 protected:

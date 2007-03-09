@@ -16,12 +16,20 @@
 #include "iPackageHandler.h"
 #include "Controller.h"
 
-string iPackageHandler::getRepoPath(const string& path) {
-  return getFileDirectory(path) + "\\~local";
+string iPackageHandler::getRepoPath(const string& path, bool inPackageDir) {
+  string repoPath = getFileDirectory(path) + "\\";
+
+  if (inPackageDir) {
+    return repoPath + "~local";
+  }
+  repoPath += getFileName(path);
+  repoPath = repoPath.substr(0, repoPath.find_last_of('.')) + "\\";
+
+  return repoPath;
 }
 
-void iPackageHandler::prepareRepo(const string& path, iPackageParser* parser) {
-  string localPath = getRepoPath(path);
+void iPackageHandler::prepareRepo(const string& path, iPackageParser* parser, bool inPackageDir) {
+  string localPath = getRepoPath(path, inPackageDir);
 
   if (!isDirectory(localPath.c_str())) {
     try {
@@ -53,19 +61,18 @@ iPackage* iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& 
 
   if (parser->fromArchive()) {
     files.setMask(defPath + parser->getArchiveMask());
-    files.find();
-    if (!files.nothingFound() && !files.found().empty()) {
-      prepareRepo(files.found().getFilePath(), parser);
-      defPath = getRepoPath(defPath) + "\\";
+
+    if (files.find() && !files.found().empty()) {
+      prepareRepo(files.found().getFilePath(), parser, true);
+      defPath = getRepoPath(defPath, true) + "\\";
     }
   }
 
   files.setMask(defPath + parser->getDefinitionMask());
-  files.find();
-
-  if (files.nothingFound() || files.found().empty()) {
-    throw ExceptionString("Brak pliku z definicj¹ paczki");
+  if (!files.find() || files.found().empty()) {
+    throw kException(kException::typeMajor, "Brak pliku z definicj¹ paczki");
   }
+
   iPackage* package = parser->parse(files.found());
   package->setDir(files.found().getDirectory());
 
@@ -78,28 +85,55 @@ iPackage* iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& 
   return package;
 }
 
+void iPackageHandler::preparePackages(iPackageParser* parser, FindFile::Found& dir) {
+  if (!parser->fromArchive()) return;
+
+  FindFileFiltered ff(dir.getFilePath() + "\\" + parser->getArchiveMask());
+  ff.setFileOnly();
+
+  FindFile::tFoundFiles files;
+  files = ff.makeList();
+
+  if (!files.size()) {
+    return;
+  }
+  for (FindFile::tFoundFiles::iterator file = files.begin(); file != files.end(); file++) {
+    prepareRepo(file->getFilePath(), parser, false);
+  }
+}
+
 void iPackageHandler::loadPackages(const string& dir) {
   clearPackages();
 
-  FindFile find;
-  find.setMask(dir + "\\*");
-  find.setDirOnly();
+  for (tParsers::iterator parser = _parsers.begin(); parser != _parsers.end(); parser++) {
+    if (!(*parser)->fromArchive()) continue;
+    try {
+      preparePackages(*parser, FindFile::Found(dir));
+    } catch(...) { }
+  }
+
+  FindFile ff;
+  ff.setMask(dir + "\\*");
+  ff.setDirOnly();
 
   FindFile::tFoundFiles dirs;
-  dirs = find.makeList();
+  dirs = ff.makeList();
 
-  if (find.nothingFound() || !dirs.size()) {
+  if (ff.nothingFound() || !dirs.size()) {
     IMLOG("[iPackageHandler::loadPackages()] Brak katalogów z paczkami !");
     return;
   }
 
-  for (tParsers::iterator parser = _parsers.begin(); parser != _parsers.end(); parser++) {
-    for (FindFile::tFoundFiles::iterator dir = dirs.begin(); dir != dirs.end(); dir++) {
+  for (FindFile::tFoundFiles::iterator dir = dirs.begin(); dir != dirs.end(); dir++) {
+    for (tParsers::iterator parser = _parsers.begin(); parser != _parsers.end(); parser++) {
       try {
         *this << loadPackage(*parser, *dir);
-      } catch (const Exception& e) {
-        IMLOG("[iPackageHandler::loadPackages()] b³¹d podczas parsowania paczki (%s): %s", 
-          dir->getFileName().c_str(), e.getReason().c_str());
+        break;
+      } catch (const ExceptionString& e) {
+        if (e.hasReason()) {
+          IMLOG("[iPackageHandler::loadPackages()] b³¹d podczas parsowania paczki (%s): %s", 
+            dir->getFileName().c_str(), e.getReason().c_str());
+        }
       }
     }
   }
