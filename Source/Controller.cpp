@@ -1275,6 +1275,7 @@ namespace kIEview2 {
     cMessage* msg = an->_message;
     string type = getMsgTypeLabel(msg->type);
     String body = msg->body;
+    String display = getDisplayFromMsg(an);
     tCntId cnt = getCntFromMsg(msg);
     Date64 date;
     date = msg->time;
@@ -1293,7 +1294,7 @@ namespace kIEview2 {
     data.hash_insert_new_var("@id", inttostr(msg->id));
     data.hash_insert_new_var("@cnt", inttostr(cnt));
 
-    data.hash_insert_new_var("display", getDisplayFromMsg(an));
+    data.hash_insert_new_var("display", display);
     data.hash_insert_new_var("type", type);
     data.hash_insert_new_var("ext", msg->ext);
     data.hash_insert_new_var("time", date.strftime(!inHistory ? "%H:%M" : "%A, %d.%m.%Y - %H:%M"));
@@ -1315,7 +1316,7 @@ namespace kIEview2 {
       int timeFromLastMsg = date.getTime64() - lastMsg.time.getTime64();
       bool relativeTime = config->getInt(cfg::relativeTime);
 
-      if (lastMsg.cnt == senderID) {
+      if (lastMsg.cnt == senderID && lastMsg.display == display) {
         groupTime = timeFromLastMsg <= (relativeTime ? (60 * 60 * 24 * 21) : (60 * 60));
         groupDisplay = true;
       }
@@ -1336,7 +1337,7 @@ namespace kIEview2 {
     }
 
     wndCtrl->clearGroupedMsgs();
-    groupedMsgs.push_back(sGroupedMsg(senderID, msg->type, date));
+    groupedMsgs.push_back(sGroupedMsg(senderID, msg->type, date, display));
 
     return styleHandler.parseTpl(&data, ("content-types\\" + type).c_str(), wndCtrl);
   }

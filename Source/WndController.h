@@ -26,11 +26,13 @@ using namespace Helpers;
 
 namespace kIEview2 {
   struct sGroupedMsg {
+    String display;
     Date64 time;
     tCntId cnt;
     tMsgType type;
 
-    sGroupedMsg(tCntId _cnt, tMsgType _type, const Date64& _time): cnt(_cnt), type(_type), time(_time) { }
+    sGroupedMsg(tCntId _cnt, tMsgType _type, const Date64& _time, const StringRef& _display): 
+      cnt(_cnt), type(_type), time(_time), display(_display) { }
     sGroupedMsg(): cnt(0), type(0) { }
   };
   typedef vector<sGroupedMsg> tGroupedMsgs;
