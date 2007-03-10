@@ -1,7 +1,7 @@
 {{if grouped}}
 <div class="row grouped quickevent" style="margin-top: -10px">
   <div class="context-grouped">
-    {{if showTime?}}<span class="floating time">{{if groupTime}}<b>{{$timeFromLastSt}}</b> póŸniej{{else}}{{$time}}{{/if}}</span>{{/if}}
+    {{if showTime?}}<span class="floating time">{{$time}}</span>{{/if}}
     <div class="body">{{$body}}</div>
   </div>
 </div>

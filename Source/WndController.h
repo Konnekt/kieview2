@@ -30,22 +30,23 @@ namespace kIEview2 {
     Date64 time;
     tCntId cnt;
     tMsgType type;
+    bool empty;
 
     sGroupedMsg(tCntId _cnt, tMsgType _type, const Date64& _time, const StringRef& _display): 
-      cnt(_cnt), type(_type), time(_time), display(_display) { }
-    sGroupedMsg(): cnt(0), type(0) { }
+      cnt(_cnt), type(_type), time(_time), display(_display), empty(false) { }
+    sGroupedMsg(): cnt(0), type(0), empty(true) { }
   };
-  typedef vector<sGroupedMsg> tGroupedMsgs;
 
   struct sGroupedSt {
     Date64 time;
     String info;
     int status;
+    bool empty;
 
-    sGroupedSt(int _status, const Date64& _time, const StringRef& _info = ""): status(_status), time(_time), info(_info) { }
-    sGroupedSt(): status(0) { }
+    sGroupedSt(int _status, const Date64& _time, const StringRef& _info): 
+      status(_status), time(_time), info(_info), empty(false) { }
+    sGroupedSt(): status(0), empty(true) { }
   };
-  typedef vector<sGroupedSt> tGroupedSt;
 
   namespace JS {
     class WndController;
@@ -100,8 +101,8 @@ namespace kIEview2 {
     string styleSetID;
     tCntId cntID;
 
-    tGroupedMsgs groupedMsgs;
-    tGroupedSt groupedSt;
+    sGroupedMsg lastMsg;
+    sGroupedSt lastSt;
 
   protected:
     CriticalSection _locker;

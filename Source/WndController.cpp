@@ -104,8 +104,8 @@ namespace kIEview2 {
   void WndController::clearGroupedMsgs() {
     LockerCS lock(_locker);
 
-    groupedMsgs.clear();
-    groupedSt.clear();
+    lastMsg = sGroupedMsg();
+    lastSt = sGroupedSt();
   }
 
   namespace JS {

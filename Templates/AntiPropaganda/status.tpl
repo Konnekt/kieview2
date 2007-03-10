@@ -1,7 +1,7 @@
 {{if grouped}}
 <div class="row grouped status" style="margin-top: -10px">
   <div class="context-grouped">
-    <span class="floating time">{{if groupTime}}<b>{{$timeFromLastSt}}</b> póŸniej{{else}}{{$time}}{{/if}}</span>
+    {{if time}}<span class="floating time">{{$time}}</span>{{/if}}
     {{unless groupStatus}}<span class="floating name">{{$status}}</span>{{/unless}}
     <div class="body">{{if info}}{{$nl2br(info)}}{{else}}<em>void</em>{{/if}}</div>
   </div>

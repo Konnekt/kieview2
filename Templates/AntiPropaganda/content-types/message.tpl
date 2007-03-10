@@ -1,7 +1,7 @@
 {{if grouped}}
 <div class="row grouped {{if sent?}}outgoing{{else}}incoming{{/if}}" style="margin-top: -10px">
   <div class="context-grouped">
-    <span class="floating time">{{if groupTime}}<b>{{$timeFromLastMsg}}</b> póŸniej{{else}}{{$time}}{{/if}}</span>
+    {{if time}}<span class="floating time">{{$time}}</span>{{/if}}
     {{if title}}<span class="floating title">{{$title}}</span>{{/if}}
     <div class="body">{{$body}}</div>
   </div>
@@ -13,9 +13,11 @@
     <div class="header">
       <span class="sender">{{$htmlEscape(display)}}</span>
       <span class="time">{{$time}}</span>
-      {{if timeFromLastMsg}}<span class="time"><b>{{$timeFromLastMsg}}</b> póŸniej</span>{{/if}}
-      {{if title}}<span class="title">{{$title}}</span>{{/if}}
-      {{if extInfo}}<span class="ext">{{$extInfo}}</span>{{/if}}
+      {{if title}}
+        <span class="title">{{$title}}</span>
+      {{else}}
+        {{if extInfo}}<span class="ext">{{$extInfo}}</span>{{/if}}
+      {{/if}}
     </div>
     <div class="body">{{$body}}</div>
   </div>

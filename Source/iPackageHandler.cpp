@@ -46,9 +46,9 @@ void iPackageHandler::prepareRepo(FindFile::Found& package, iPackageParser* pars
       if (CompareFileTime(&ctZip, &ctLock) == 1) {
         expired = true;
       }
+      CloseHandle(lockfile);
+      CloseHandle(zipfile);
     }
-    CloseHandle(lockfile);
-    CloseHandle(zipfile);
 
     if (expired) {
       removeDirTree(repoPath);

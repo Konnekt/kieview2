@@ -889,14 +889,12 @@ namespace kIEview2 {
 
     // locking
     LockerCS lock(_locker);
-    //ObjLocker lock(this);
 
     IMLOG("[Controller::readMsgs()]: cnt = %i, howMany = %i, sessionOffset = %i",
       cnt, howMany, sessionOffset);
 
     Tables::oTable table = historyTable;
     bool dataLoaded = loadMsgTable(cnt);
-    if (!dataLoaded) return 0;
 
     list<Konnekt::UI::Notify::_insertMsg> msgs;
     int m = 0;
@@ -964,7 +962,7 @@ namespace kIEview2 {
     LockerCS lock(_locker);
 
     Tables::oTable table = historyTable;
-    if (!loadMsgTable(cnt)) return 0;
+    loadMsgTable(cnt);
 
     int howMany = 0;
 
@@ -984,8 +982,8 @@ namespace kIEview2 {
       }
     }
 
-    table->unloadData();
     int msgCount = readMsgs(cnt, howMany, sessionOffset, setSession);
+    table->unloadData();
 
     return msgCount;
   }
@@ -1231,15 +1229,13 @@ namespace kIEview2 {
     }
 
     oWndController wndCtrl = getWndController(an);
-    tGroupedSt& groupedSt = wndCtrl->groupedSt;
+    sGroupedSt& lastSt = wndCtrl->lastSt;
 
     bool groupStatus = false;
     bool groupTime = false;
     bool groupInfo = false;
 
-    if (groupedSt.size()) {
-      sGroupedSt& lastSt = groupedSt[0];
-
+    if (!lastSt.empty) {
       int timeFromLastSt = date.getTime64() - lastSt.time.getTime64();
       bool relativeTime = config->getInt(cfg::relativeTime);
 
@@ -1247,25 +1243,30 @@ namespace kIEview2 {
       groupStatus = lastSt.status == an->_status;
       groupInfo = lastSt.info == an->_info;
 
-      // @debug dodac opcje w konfiguracjis
+      // @warning dodac opcje w konfiguracji (?)
       if (groupStatus && groupInfo) {
         throw ExceptionString("Duplicated status change notification");
       }
+
       if (groupStatus) data.hash_insert_new_var("groupStatus", "1");
       if (groupTime) data.hash_insert_new_var("groupTime", "1");
       if (groupInfo) data.hash_insert_new_var("groupInfo", "1");
 
+      string timeFromLastStString;
+      if (timeFromLastSt) {
+        timeFromLastStString = "<b>" + timeToString(timeFromLastSt) + "</b> póŸniej";
+      }
       if (groupStatus && groupTime) {
         data.hash_erase_var("time");
-        data.hash_insert_new_var("time", timeToString(timeFromLastSt) + " póŸniej");
+        data.hash_insert_new_var("time", timeFromLastStString);
       }
       data.hash_insert_new_var("@lastStTime", i64tostr(lastSt.time.getInt64()));
-      data.hash_insert_new_var("timeFromLastSt", timeToString(timeFromLastSt));
+      data.hash_insert_new_var("timeFromLastSt", timeFromLastStString);
       data.hash_insert_new_var("grouped", "1");
     }
 
     wndCtrl->clearGroupedMsgs();
-    groupedSt.push_back(sGroupedSt(an->_status, date, an->_info));
+    lastSt = sGroupedSt(an->_status, date, an->_info);
 
     if (an->_status & ST_IGNORED) {
       data.hash_insert_new_var("ignored?", "1");
@@ -1310,14 +1311,12 @@ namespace kIEview2 {
     }
 
     tCntId senderID = !(msg->flag & MF_SEND) ? Ctrl->ICMessage(IMC_CNT_FIND, msg->net, (int) msg->fromUid) : 0;
-    tGroupedMsgs& groupedMsgs = wndCtrl->groupedMsgs;
+    sGroupedMsg& lastMsg = wndCtrl->lastMsg;
 
     bool groupDisplay = false;
     bool groupTime = false;
 
-    if (groupedMsgs.size() && groupedMsgs[0].type == msg->type) {
-      sGroupedMsg& lastMsg = groupedMsgs[0];
-
+    if (!lastMsg.empty && lastMsg.type == msg->type) {
       int timeFromLastMsg = date.getTime64() - lastMsg.time.getTime64();
       bool relativeTime = config->getInt(cfg::relativeTime);
 
@@ -1329,12 +1328,16 @@ namespace kIEview2 {
       if (groupDisplay) data.hash_insert_new_var("grouped", "1");
       if (groupTime) data.hash_insert_new_var("groupTime", "1");
 
+      string timeFromLastMsgString;
+      if (timeFromLastMsg) {
+        timeFromLastMsgString = "<b>" + timeToString(timeFromLastMsg) + "</b> póŸniej";
+      }
       if (groupTime) {
         data.hash_erase_var("time");
-        data.hash_insert_new_var("time", timeToString(timeFromLastMsg) + " póŸniej");
+        data.hash_insert_new_var("time", timeFromLastMsgString);
       }
       data.hash_insert_new_var("@lastMsgTime", i64tostr(lastMsg.time.getInt64()));
-      data.hash_insert_new_var("timeFromLastMsg", timeToString(timeFromLastMsg));
+      data.hash_insert_new_var("timeFromLastMsg", timeFromLastMsgString);
     }
 
     if (msgHandlers.find(msg->type) != msgHandlers.end()) {
@@ -1342,7 +1345,7 @@ namespace kIEview2 {
     }
 
     wndCtrl->clearGroupedMsgs();
-    groupedMsgs.push_back(sGroupedMsg(senderID, msg->type, date, display));
+    lastMsg = sGroupedMsg(senderID, msg->type, date, display);
 
     return styleHandler.parseTpl(&data, ("content-types\\" + type).c_str(), wndCtrl);
   }
