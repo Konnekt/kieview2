@@ -899,7 +899,7 @@ void template_text::parse_param_string(unsigned int &iPosition, const e_token_ty
 
   bool bLeftBracketFound  = false;
   bool bRightBracketFound = false;
-
+  e_token_type eFoundTokenl = eFoundToken;
   char chQuote = '\0';
 
   string sParam;
@@ -1040,15 +1040,24 @@ void template_text::parse_param_string(unsigned int &iPosition, const e_token_ty
   switch (eFoundToken)
   {
     case TMPL_VAR:
-      if (sStackRef.function_parameters.size() != 1) { throw std::logic_error("Only one parameter are allowed for TMPL_var at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-      sStackRef.elem_name.assign(sStackRef.function_parameters[0].param);
+      if (sStackRef.function_parameters.size() == 0) { throw std::logic_error("Need least one parameter at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
 
-      sStackRef.template_elem = new template_var(sStackRef.function);
-      sStackRef.function      = NULL;
       sReturnType.line        = iLine;
       sReturnType.column      = iPos;
       sReturnType.parse_pos   = itmData;
-      sReturnType.token_type  = TMPL_VAR;
+
+      if (sStackRef.function_parameters.size() == 1) {
+        sStackRef.elem_name.assign(sStackRef.function_parameters[0].param);
+
+        sStackRef.template_elem = new template_var(sStackRef.function);
+        sStackRef.function      = NULL;
+        sReturnType.token_type  = TMPL_VAR;
+
+      } else {
+        sStackRef.template_elem = new template_udf(sStackRef, bGlobalVars);
+        sReturnType.token_type  = TMPL_UDF;
+        eFoundTokenl            = TMPL_UDF;
+      }
       break;
 
     case TMPL_IF:
@@ -1099,10 +1108,10 @@ void template_text::parse_param_string(unsigned int &iPosition, const e_token_ty
   iLine = sReturnType.line;
   iPos  = sReturnType.column;
 
-  if (eFoundToken != sReturnType.token_type)
+  if (eFoundTokenl != sReturnType.token_type)
   {
     delete sStackRef.template_elem;
-    fatal_parsing_error(eFoundToken, sReturnType.token_type);
+    fatal_parsing_error(eFoundTokenl, sReturnType.token_type);
   }
 
   vStack.push_back(sStackRef);
