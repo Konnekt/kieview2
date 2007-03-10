@@ -19,18 +19,18 @@
 string iPackageHandler::getRepoPath(const string& path, bool inPackageDir) {
   string repoPath = getFileDirectory(path) + "\\";
 
-  if (inPackageDir) {
-    return repoPath + "~local";
+  if (!inPackageDir) {
+    repoPath += getFileName(path);
+    repoPath = repoPath.substr(0, repoPath.find_last_of('.'));
+  } else {
+    repoPath += "~local";
   }
-  repoPath += getFileName(path);
-  repoPath = repoPath.substr(0, repoPath.find_last_of('.')) + "\\";
-
-  return repoPath;
+  return repoPath + "\\";
 }
 
 void iPackageHandler::prepareRepo(FindFile::Found& package, iPackageParser* parser, bool inPackageDir) {
   string repoPath = getRepoPath(package.getFilePath(), inPackageDir);
-  string lockFile = repoPath + "\\package.lock";
+  string lockFile = repoPath + "package.lock";
 
   if (isDirectory(repoPath.c_str()) && fileExists(lockFile.c_str())) {
     bool expired = false;
@@ -41,7 +41,7 @@ void iPackageHandler::prepareRepo(FindFile::Found& package, iPackageParser* pars
     if (lockfile != INVALID_HANDLE_VALUE && zipfile != INVALID_HANDLE_VALUE) {
       FILETIME ctLock, ctZip;
       GetFileTime(lockfile, &ctLock, NULL, NULL);
-      GetFileTime(zipfile, &ctZip, NULL, NULL);
+      GetFileTime(zipfile, NULL, NULL, &ctZip);
 
       if (CompareFileTime(&ctZip, &ctLock) == 1) {
         expired = true;
@@ -65,7 +65,7 @@ void iPackageHandler::prepareRepo(FindFile::Found& package, iPackageParser* pars
       HANDLE zipfile = CreateFile(package.getFilePath().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
 
       FILETIME ct;
-      GetFileTime(zipfile, &ct, NULL, NULL);
+      GetFileTime(zipfile, NULL, NULL, &ct);
       SetFileTime(lockfile, &ct, &ct, &ct);
 
       CloseHandle(lockfile);
@@ -104,7 +104,7 @@ iPackage* iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& 
 
     if (files.find() && !files.found().empty()) {
       prepareRepo((FindFile::Found&) files.found(), parser, true);
-      defPath = getRepoPath(defPath, true) + "\\";
+      defPath = getRepoPath(defPath, true);
     }
   }
 
