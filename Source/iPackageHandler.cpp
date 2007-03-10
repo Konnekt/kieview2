@@ -29,49 +29,57 @@ string iPackageHandler::getRepoPath(const string& path, bool inPackageDir) {
 }
 
 void iPackageHandler::prepareRepo(FindFile::Found& package, iPackageParser* parser, bool inPackageDir) {
-  string localPath = getRepoPath(package.getFilePath(), inPackageDir);
+  string repoPath = getRepoPath(package.getFilePath(), inPackageDir);
+  string lockFile = repoPath + "\\package.lock";
 
-  HANDLE lockfile = CreateFile((localPath + "\\template.lock").c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
-  HANDLE zipfile = CreateFile(package.getFilePath().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
+  if (isDirectory(repoPath.c_str()) && fileExists(lockFile.c_str())) {
+    bool expired = false;
 
-  bool canDelete = false;
+    HANDLE lockfile = CreateFile(lockFile.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
+    HANDLE zipfile = CreateFile(package.getFilePath().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
 
-  if (lockfile != (HANDLE)-1 && zipfile != (HANDLE)-1) {
-    FILETIME ctLock, ctZip;
-    GetFileTime(zipfile, &ctZip, NULL, NULL);
-    GetFileTime(lockfile, &ctLock, NULL, NULL);
-    if (CompareFileTime(&ctZip, &ctLock)) {
-      canDelete = true;
+    if (lockfile != INVALID_HANDLE_VALUE && zipfile != INVALID_HANDLE_VALUE) {
+      FILETIME ctLock, ctZip;
+      GetFileTime(lockfile, &ctLock, NULL, NULL);
+      GetFileTime(zipfile, &ctZip, NULL, NULL);
+
+      if (CompareFileTime(&ctZip, &ctLock) == 1) {
+        expired = true;
+      }
+    }
+    CloseHandle(lockfile);
+    CloseHandle(zipfile);
+
+    if (expired) {
+      removeDirTree(repoPath);
     }
   }
 
-  CloseHandle(lockfile);
-  CloseHandle(zipfile);
-
-  if (canDelete) removeDirTree(localPath);
-
-  if (!isDirectory(localPath.c_str())) {
+  if (!isDirectory(repoPath.c_str())) {
     try {
       Zip zip(package.getFilePath());
-      zip.unzipDir(localPath, zip.find(parser->getDefinitionMask()).getDirectory());
+      zip.unzipDir(repoPath, zip.find(parser->getDefinitionMask()).getDirectory());
       zip.close();
 
-      HANDLE lockfile = CreateFile((localPath + "\\template.lock").c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, NULL, NULL);
+      HANDLE lockfile = CreateFile(lockFile.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, NULL, NULL);
       HANDLE zipfile = CreateFile(package.getFilePath().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
 
       FILETIME ct;
       GetFileTime(zipfile, &ct, NULL, NULL);
       SetFileTime(lockfile, &ct, &ct, &ct);
+
       CloseHandle(lockfile);
       CloseHandle(zipfile);
 
+      SetFileAttributes(lockFile.c_str(), GetFileAttributes(lockFile.c_str()) | FILE_ATTRIBUTE_HIDDEN);
+      SetFileAttributes(repoPath.c_str(), GetFileAttributes(repoPath.c_str()) | FILE_ATTRIBUTE_HIDDEN);
+
     } catch(const Exception& e) {
-      if (isDirectory(localPath.c_str())) {
-        removeDirTree(localPath);
+      if (isDirectory(repoPath.c_str())) {
+        removeDirTree(repoPath);
       }
       throw CannotOpen(e.getReason());
     }
-    SetFileAttributes(localPath.c_str(), GetFileAttributes(localPath.c_str()) | FILE_ATTRIBUTE_HIDDEN);
   }
 }
 

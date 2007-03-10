@@ -806,7 +806,7 @@ bool IECtrl::mouseClick(POINT pt) {
         if (m_pAnchorClickListener != NULL) {
           m_pAnchorClickListener->anchorClicked(tTemp, this);
         }
-        result = false;
+        result = true;
 
         delete tTemp;
         delete url;
