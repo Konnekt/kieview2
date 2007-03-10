@@ -896,7 +896,7 @@ namespace kIEview2 {
     Tables::oTable table = historyTable;
     bool dataLoaded = loadMsgTable(cnt);
 
-    list<Konnekt::UI::Notify::_insertMsg> msgs;
+    vector<Konnekt::UI::Notify::_insertMsg> msgs;
     int m = 0;
 
     for (int i = table->getRowCount() - 1, s = 0; (i >= 0) && (m < howMany); i--) {
@@ -934,7 +934,7 @@ namespace kIEview2 {
       Message::quickEvent(cnt, "Wczytujê wiadomoœci z historii.");
     }
 
-    for (list<Konnekt::UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
+    for (vector<Konnekt::UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
       Message::inject(it->_message, cnt, it->_display);
 
       delete it->_message;

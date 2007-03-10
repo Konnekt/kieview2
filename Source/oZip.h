@@ -141,6 +141,7 @@ public:
   UINT count() {
     return get(-1)->index;
   }
+
 public:
   bool handleResult(ZRESULT resultCode) {
     if (resultCode != ZR_OK) {

@@ -231,6 +231,9 @@ namespace kIEview2 {
   }
 
   String StyleHandler::parseString(param_data* data, const StringRef& text, StyleSet* styleSet) {
+    if (!text.length()) {
+      throw exception("No input text to parse");
+    }
     template_text parser(getUdfFactory());
 
     // Set allowed list of catalogs to include

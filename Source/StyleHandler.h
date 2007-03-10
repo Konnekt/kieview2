@@ -89,11 +89,11 @@ namespace kIEview2 {
 
   class TplPackageParser: public iPackageParser {
   public:
-    string getDefinitionMask() const {
-      return "template.xml";
+    void setArchiveFilter(FindFileFiltered& ff) {
+      ff.addFilter(new FileFilter_RegEx("/\\.(zip|ktpl)$/i"));
     }
-    string getArchiveMask() const {
-      return "*.ktpl";
+    string getDefinitionFileName() const {
+      return "template.xml";
     }
     bool fromArchive() const {
       return true;

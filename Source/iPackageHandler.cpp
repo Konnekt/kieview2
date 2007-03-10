@@ -58,7 +58,7 @@ void iPackageHandler::prepareRepo(FindFile::Found& package, iPackageParser* pars
   if (!isDirectory(repoPath.c_str())) {
     try {
       Zip zip(package.getFilePath());
-      zip.unzipDir(repoPath, zip.find(parser->getDefinitionMask()).getDirectory());
+      zip.unzipDir(repoPath, zip.find(parser->getDefinitionFileName()).getDirectory());
       zip.close();
 
       HANDLE lockfile = CreateFile(lockFile.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, NULL, NULL);
@@ -96,11 +96,10 @@ string iPackageHandler::getDir(tColId dirColID) {
 iPackage* iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& dir) {
   string defPath = dir.getFilePath() + "\\";
 
-  FindFileFiltered files(defPath + "*");
-  files.setFileOnly();
-
   if (parser->fromArchive()) {
-    files.setMask(defPath + parser->getArchiveMask());
+    FindFileFiltered files(defPath + parser->getArchiveMask());
+    parser->setArchiveFilter(files);
+    files.setFileOnly();
 
     if (files.find() && !files.found().empty()) {
       prepareRepo((FindFile::Found&) files.found(), parser, true);
@@ -108,7 +107,9 @@ iPackage* iPackageHandler::loadPackage(iPackageParser* parser, FindFile::Found& 
     }
   }
 
-  files.setMask(defPath + parser->getDefinitionMask());
+  FindFileFiltered files(defPath + parser->getDefinitionFileName());
+  files.setFileOnly();
+
   if (!files.find() || files.found().empty()) {
     throw kException(kException::typeMajor, "Brak pliku z definicj¹ paczki");
   }
@@ -129,6 +130,7 @@ void iPackageHandler::preparePackages(iPackageParser* parser, FindFile::Found& d
   if (!parser->fromArchive()) return;
 
   FindFileFiltered ff(dir.getFilePath() + "\\" + parser->getArchiveMask());
+  parser->setArchiveFilter(ff);
   ff.setFileOnly();
 
   FindFile::tFoundFiles files;

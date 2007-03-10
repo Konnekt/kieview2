@@ -21,7 +21,7 @@
 #include "Emots.h"
 
 /*
- * Base emot definition parser
+ * Base emot definition parser exceptions
  */
 class EmotParserException: public ExceptionString {
 public:
@@ -43,7 +43,7 @@ public:
   };
 
 public:
-  string getDefinitionMask() const {
+  string getDefinitionFileName() const {
     return "icondef.xml";
   }
   string getArchiveMask() const {
@@ -60,7 +60,7 @@ public:
  */
 class GGParser: public iPackageParser {
 public:
-  string getDefinitionMask() const {
+  string getDefinitionFileName() const {
     return "emots.txt";
   }
   string getArchiveMask() const {

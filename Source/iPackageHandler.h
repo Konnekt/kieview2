@@ -51,10 +51,11 @@ public:
   STAMINA_OBJECT_CLASS_VERSION(iPackageParser, iObject, Version(0,1,0,0));
 
 public:
+  virtual void setArchiveFilter(FindFileFiltered& ff) { }
   virtual bool fromArchive() const { return false; }
 
-  virtual string getDefinitionMask() const = 0;
-  virtual string getArchiveMask() const { return ""; }
+  virtual string getDefinitionFileName() const = 0;
+  virtual string getArchiveMask() const { return "*"; }
 
   virtual iPackage* parse(const FindFile::Found& defFile) = 0;
 };
