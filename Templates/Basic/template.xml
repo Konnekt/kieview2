@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<template>
+  <meta>
+    <name>Basic</name>
+    <version>1.1</version>
+    <description>Port stylu o tej samej nazwie na Mirandę</description>
+    <creation>2007-03-23</creation>
+    <author>project19</author>
+    <author jid="sija@khrone.pl">Sija</author>
+	  <url>http://konnekt.info/</url>
+    <preview>img/preview.png</preview>
+  </meta>
+</template>

@@ -1262,7 +1262,7 @@ namespace kIEview2 {
       }
       data.hash_insert_new_var("@lastStTime", i64tostr(lastSt.time.getInt64()));
       data.hash_insert_new_var("timeFromLastSt", timeFromLastStString);
-      data.hash_insert_new_var("grouped", "1");
+      data.hash_insert_new_var("grouped?", "1");
     }
 
     wndCtrl->clearGroupedMsgs();

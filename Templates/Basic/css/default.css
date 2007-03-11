@@ -1,0 +1,190 @@
+/********************************************************
+font-family controls the overall font style
+font-size is the keystone size control that cascades into every aspect of the layout
+making everything larger or smaller proporitionately using "ems"
+********************************************************/
+body {
+	word-wrap: break-word;
+	font-family: "Trebuchet MS", "Century Gothic", sans-serif;
+	font-size: 12px;
+	margin: 0;
+	padding: 0;
+}
+
+/********************************************************
+below controls the space between each in/out message box, and status changes etc...
+********************************************************/
+div {
+	/* padding-bottom: 1em; */
+}
+div.row {
+	padding: .1em .75em;
+	line-height: 1.3em;
+}
+.notGrouped {
+  margin-top: 1em;
+}
+
+div.status {
+	text-align: right;
+	font-size: .9em;
+}
+div.status em, div.qe em {
+	text-align: right;
+	color: #999;
+}
+div.smsFooter {
+	position: relative;
+	padding: .1em .3em .1em .3em;
+	float: right;
+	font-size: .8em;
+	color: #999;
+}
+/* just some general sizing initialization */
+dl, h2, h3 {
+	font-size: 1em;
+	margin: 0;
+	padding-right: .2em;
+	padding-left: .2em;
+}
+h5 {
+	padding: .1em .75em;
+	font-size: .8em;
+  text-align: right;
+	color: #ddd;
+	margin: 0;
+	margin-top: -1em;
+}
+/********************************************************
+below controls the overall display of the in/out name display
+height controls the height starting the chopped look
+line-height actually controls how much the text is chopped
+overflow actually creates the chop
+color is the overall text color
+********************************************************/
+h2 {
+	font-family: Garamond, "Times New Roman", serif;
+	font-size: 2.75em;
+	text-transform: lowercase;
+	letter-spacing: -0.1em;
+	line-height: 0.56em;
+	height: .5em;
+	overflow: hidden;
+	color: #fff;
+}
+/********************************************************
+VERY IMPORTANT - color scheme
+below is the main color of the color scheme.
+it is incoming header background, the status change text, and the links within the body text
+look for all of those occurances of the color "#XXYYZZ" and modify it as you please.
+********************************************************/
+.in h2 {
+	background-color: #A3DD2B;
+}
+/********************************************************
+IMPORTANT - color scheme
+below is the outgoing header background color.
+********************************************************/
+.out h2 {
+	background-color: #525252;
+}
+/********************************************************
+below controls the header date
+********************************************************/
+h2 em {
+	float: right;
+	font-size: 0.27em;
+	letter-spacing: 0;
+	font-family: "Trebuchet MS", "Century Gothic", sans-serif;
+	text-transform: uppercase;
+	margin-top: -0.6em;
+}
+/********************************************************
+VERY IMPORTANT - color scheme
+below controls the text fot status change, sent file, and sent url
+********************************************************/
+/********************************************************
+below controls the main message text area per entry
+********************************************************/
+dl, div.row {
+	background-color: #f9f9f9;
+	border-bottom-width: 0.1em;
+	border-bottom-style: solid;
+	border-bottom-color: #ebebeb;
+  padding-bottom: .1em;
+  padding-top: .1em;
+  zoom: 1;
+}
+/********************************************************
+below is the main message date control
+********************************************************/
+dt {
+	color: #999;
+	float: left;
+	text-align: right;
+	width: 5em;
+	vertical-align: middle;
+}
+/********************************************************
+below controls the actual message text
+********************************************************/
+dd {
+	/* text-align: justify; */
+	margin-left: 6em;
+	text-indent: -0.25em;
+	margin-right: 0.25em;
+	padding-top: .12em;
+	line-height: 1.3em;
+	vertical-align: top;
+	position: relative;
+}
+/********************************************************
+overall date/time control to make it slightly smaller
+********************************************************/
+em {
+	font-style: normal;
+	font-size: 0.8em;
+}
+/********************************************************
+VERY IMPORTANT - color scheme
+below controls what the link looks like when someone sends you one in a message
+********************************************************/
+a {
+	color: #88bb1e;
+	text-decoration: none;
+}
+a:visited {
+	color: #777;
+}
+/* when you mouse over that link */
+a:hover {
+	text-decoration: underline;
+}
+/********************************************************
+below controls the overall history text.
+i chose to make it all just a bit smaller (.8em aka 80% of its original height) because 
+its de-emphasized but still legible
+********************************************************/
+.h {
+	font-size: 0.8em;
+}
+/********************************************************
+below fades the background colors using a 50% white 50% invisible gif
+again its used to de-emphasise and distinguish the history text
+********************************************************/
+.h h2, .h dl {
+	/* background-image: url(img/whiteScreen.gif); */
+}
+/* minor layout fix for the history header date position */
+.h h2 em {
+	margin-top: -0.65em;
+}
+/* slightly fading the history text color */
+.h dl {
+	color: #999;
+	border-bottom-color: #f9f9f9;
+}
+
+img.emoticon {
+  vertical-align: middle;
+}

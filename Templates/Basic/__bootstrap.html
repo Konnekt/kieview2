@@ -1,0 +1,30 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <link rel="stylesheet" type="text/css" href="css/default.css" />
+
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript">
+    var oExternal = window.external;
+    var oController = oExternal.oGlobal.oController;
+    var oWindow = oExternal.oGlobal.oWindow(oExternal.refID);
+
+    $(document).ready(function() {
+      try {
+
+      } catch(e) {
+        insertString('<b>Exception</b> (<b>' + e.name + '</b>): ' + e.message);
+      }
+    });
+
+    function insertString(string) {
+      $('#container').append(string);
+    }
+
+    addMessage = insertString;
+    addStatus = insertString;
+  </script>
+</head>
+<body>
+  <div id="container"></div>
+</body>
+</html>

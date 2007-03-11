@@ -8,7 +8,7 @@
 {else}
 <div class="row quickevent">
   <div class="context">
-    <a class="closer" href="#closeThread" onclick="$(this.parentNode.parentNode).hideThread('slow'); return false;">x</a>
+    <span class="closer" onclick="$(this.parentNode.parentNode).hideThread('slow');">x</span>
     <div class="header">
       {if showTime?}<span class="time">{$time}</span>{/if}
       <span class="type">{if warning}warning{else}info{/if}</span>

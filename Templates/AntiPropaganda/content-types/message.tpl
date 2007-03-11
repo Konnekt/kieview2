@@ -9,7 +9,7 @@
 {else}
 <div class="row {if sent?}outgoing{else}incoming{/if}">
   <div class="context">
-    <a class="closer" href="#closeThread" onclick="$(this.parentNode.parentNode).hideThread('slow'); return false;">x</a>
+    <span class="closer" onclick="$(this.parentNode.parentNode).hideThread('slow');">x</span>
     <div class="header">
       <span class="sender">{$htmlEscape(display)}</span>
       <span class="time">{$time}</span>

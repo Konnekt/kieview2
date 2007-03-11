@@ -9,7 +9,7 @@
 {else}
 <div class="row status">
   <div class="context">
-    <a class="closer" href="#closeThread" onclick="$(this.parentNode.parentNode).hideThread('slow'); return false;">x</a>
+    <span class="closer" onclick="$(this.parentNode.parentNode).hideThread('slow');">x</span>
     <div class="header">
       <span class="name">{$status}</span>
       <span class="time">{$time}</span>
