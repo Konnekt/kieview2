@@ -1,4 +1,4 @@
-{if grouped}
+{if grouped?}
 <div class="row grouped {if sent?}outgoing{else}incoming{/if}" style="margin-top: -10px">
   <div class="context-grouped">
     {if time}<span class="floating time">{$time}</span>{/if}
@@ -9,7 +9,7 @@
 {else}
 <div class="row {if sent?}outgoing{else}incoming{/if}">
   <div class="context">
-    <span class="closer" onclick="$(this.parentNode.parentNode).hideThread('slow');">x</span>
+    <a class="closer" href="#closeThread" onclick="$(this.parentNode.parentNode).hideThread('slow'); return false;">x</a>
     <div class="header">
       <span class="sender">{$htmlEscape(display)}</span>
       <span class="time">{$time}</span>

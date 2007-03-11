@@ -1248,9 +1248,9 @@ namespace kIEview2 {
         throw ExceptionString("Duplicated status change notification");
       }
 
-      if (groupStatus) data.hash_insert_new_var("groupStatus", "1");
-      if (groupTime) data.hash_insert_new_var("groupTime", "1");
-      if (groupInfo) data.hash_insert_new_var("groupInfo", "1");
+      if (groupStatus) data.hash_insert_new_var("groupStatus?", "1");
+      if (groupTime) data.hash_insert_new_var("groupTime?", "1");
+      if (groupInfo) data.hash_insert_new_var("groupInfo?", "1");
 
       string timeFromLastStString;
       if (timeFromLastSt) {
@@ -1325,8 +1325,8 @@ namespace kIEview2 {
         groupDisplay = true;
       }
 
-      if (groupDisplay) data.hash_insert_new_var("grouped", "1");
-      if (groupTime) data.hash_insert_new_var("groupTime", "1");
+      if (groupDisplay) data.hash_insert_new_var("grouped?", "1");
+      if (groupTime) data.hash_insert_new_var("groupTime?", "1");
 
       string timeFromLastMsgString;
       if (timeFromLastMsg) {

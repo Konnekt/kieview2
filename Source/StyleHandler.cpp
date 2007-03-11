@@ -212,7 +212,7 @@ namespace kIEview2 {
 
     exceptionString = 
       "<div class=\"exception\">"
-        "<b>Exception caught</b> ({{$htmlEscape(reason)}}) !"
+        "<b>Exception caught</b> ({$htmlEscape(reason)}) !"
       "</div>";
 
     try {

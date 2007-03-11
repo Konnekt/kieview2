@@ -18,6 +18,7 @@ namespace template_parser_ns
 //
 // Класс udf_fn
 //
+void udf_fn::param() { ;; }
 void udf_fn::param(udf_fn_param & vParams) { ;; }
 void udf_fn::param(const std::string &sParam) { ;; }
 void udf_fn::param(const std::string &sParam1, const std::string &sParam2) { ;; }

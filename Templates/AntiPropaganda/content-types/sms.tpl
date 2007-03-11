@@ -1,4 +1,4 @@
-{if grouped}
+{if grouped?}
 <div class="row grouped sms" style="margin-top: -10px">
   <div class="context-grouped">
     <div class="body">{$body}</div>

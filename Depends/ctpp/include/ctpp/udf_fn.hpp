@@ -41,9 +41,10 @@ class udf_fn
 {
 public:
 	// Количество принимаемых параметров
-	enum e_accept_params {ONE_PARAM, TWO_PARAMS, THREE_PARAMS, ANY_PARAMS};
+	enum e_accept_params {NO_PARAMS, ONE_PARAM, TWO_PARAMS, THREE_PARAMS, ANY_PARAMS};
 
 	// Передача параметров
+	virtual void param();
 	virtual void param(udf_fn_param & vParams);
 	virtual void param(const std::string &sParam);
 	virtual void param(const std::string &sParam1, const std::string &sParam2);

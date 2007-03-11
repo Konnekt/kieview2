@@ -107,11 +107,24 @@ std::string t_template::execute_udf_fn(stack_ref &sStackRef, param_data * pParam
 	using std::string;
 	using std::vector;
 
+	int iParamCount = sStackRef.function_parameters.size();
+
+  if (!iParamCount && sStackRef.function -> accept_params() != udf_fn::NO_PARAMS) {
+    throw std::logic_error("Attempt to call function with no parameters.");
+  }
 	// Функция принимает всего один параметр
-	if (sStackRef.function -> accept_params() == udf_fn::ONE_PARAM)
+	if (sStackRef.function -> accept_params() == udf_fn::NO_PARAMS)
 	{
 		// Попытка передать функции > 1 параметра
-		int iParamCount = sStackRef.function_parameters.size();
+		if (iParamCount > 0) { throw std::logic_error("Attempt to call function with parameters."); }
+
+		// Если параметр
+		sStackRef.function -> param();
+	}
+	// Функция принимает всего один параметр
+	else if (sStackRef.function -> accept_params() == udf_fn::ONE_PARAM)
+	{
+		// Попытка передать функции > 1 параметра
 		if (iParamCount > 1) { throw std::logic_error("Attempt to call function with more than 1 parameter."); }
 
 		if (iParamCount == 1)
@@ -141,7 +154,6 @@ std::string t_template::execute_udf_fn(stack_ref &sStackRef, param_data * pParam
 	else if (sStackRef.function -> accept_params() == udf_fn::TWO_PARAMS)
 	{
 		// Попытка передать функции > 2 параметров
-		int iParamCount = sStackRef.function_parameters.size();
 		if (iParamCount > 2) { throw std::logic_error("Attempt to call function with more than 2 parameters."); }
 
 		string sFirstParam("");
@@ -185,7 +197,6 @@ std::string t_template::execute_udf_fn(stack_ref &sStackRef, param_data * pParam
 	else if (sStackRef.function -> accept_params() == udf_fn::THREE_PARAMS)
 	{
 		// Попытка передать функции > 3 параметров
-		int iParamCount = sStackRef.function_parameters.size();
 		if (iParamCount > 3) { throw std::logic_error("Attempt to call function with more than 3 parameters."); }
 
 		string sFirstParam("");
