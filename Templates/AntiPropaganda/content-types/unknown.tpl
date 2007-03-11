@@ -7,4 +7,4 @@
     </div>
   </div>
 </div>
-{{include message.tpl}}
+{include message.tpl}

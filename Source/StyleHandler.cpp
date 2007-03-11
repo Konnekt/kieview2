@@ -18,7 +18,7 @@
 #include "TplUdf.h"
 
 namespace kIEview2 {
-  iPackage* TplPackageParser::parse(const FindFile::Found& defFile) {
+  iPackage* StylePackageParser::parse(const FindFile::Found& defFile) {
     SXML xml;
     if (!xml.loadFile(defFile.getFilePath().c_str())) {
       throw ExceptionString("Brak pliku z definicj¹ szablonu");
@@ -68,7 +68,7 @@ namespace kIEview2 {
     bindUdf("replace", new udf_replace);
     bindUdf("match?", new udf_match);
 
-    *this << new TplPackageParser;
+    *this << new StylePackageParser;
   }
 
   String StyleHandler::runFunc(const string& name, udf_fn_param& params) {
@@ -115,7 +115,6 @@ namespace kIEview2 {
     bindUdf("isNum?", new udf_is_num);
     bindUdf("isInt?", new udf_is_int);
     bindUdf("isFloat?", new udf_is_float);
-    bindUdf("isTrue?", new istrue);
   }
 
   void StyleHandler::fillLV(iLV* _lv) {

@@ -87,7 +87,7 @@ namespace kIEview2 {
 
   typedef SharedPtr<StyleSet> oStyleSet;
 
-  class TplPackageParser: public iPackageParser {
+  class StylePackageParser: public iPackageParser {
   public:
     void setArchiveFilter(FindFileFiltered& ff) {
       ff.addFilter(new FileFilter_RegEx("/\\.(zip|ktpl)$/i"));
