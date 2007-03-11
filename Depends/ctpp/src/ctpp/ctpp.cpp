@@ -1010,10 +1010,10 @@ void template_text::parse_param_string(unsigned int &iPosition, const e_token_ty
     itmData ++;
   }
 
-  if (sStackRef.function_parameters.size() == 0) { throw std::logic_error("Need at least one parameter at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
-
   if (!bFunctionSet)
   {
+    if (sStackRef.function_parameters.size() == 0) { throw std::logic_error("Need at least one parameter at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
+
     if (sStackRef.function_parameters.size() != 1) { throw std::logic_error("Only one parameter are allowed at line " + d2str<int>(iLine) + " column " + d2str<int>(iPos)); }
     sFunctionName.assign(sStackRef.function_parameters[0].param);
   }
@@ -1026,7 +1026,7 @@ void template_text::parse_param_string(unsigned int &iPosition, const e_token_ty
       sReturnType.column      = iPos;
       sReturnType.parse_pos   = itmData;
 
-      if (sStackRef.function_parameters.size() == 1) {
+      if (sStackRef.function_parameters.size() == 1 && !bLeftBracketFound) {
         sStackRef.elem_name.assign(sStackRef.function_parameters[0].param);
 
         sStackRef.template_elem = new template_var(sStackRef.function);
