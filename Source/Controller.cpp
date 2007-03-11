@@ -15,7 +15,6 @@
 
 #include "WndController.h"
 #include "Controller.h"
-#include "Message.h"
 
 namespace kIEview2 {
   namespace JS {
@@ -147,10 +146,8 @@ namespace kIEview2 {
   }
 
   void Controller::_onPrepare() {
-    historyTable = Tables::registerTable(Ctrl, tableNotFound, optPrivate);
-    kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
-
     IECtrl::setAutoCopySel(config->getInt(CFG_UIMSGVIEW_COPY));
+    kPath = (char*) Ctrl->ICMessage(IMC_KONNEKTDIR);
 
     // emotHandler << new JispParser;
     emotHandler << new GGParser;
@@ -828,40 +825,6 @@ namespace kIEview2 {
       !(showEmot || showAutoScroll || showFormat || showColor) ? -1 : 0, ACTS_HIDDEN);
   }
 
-  bool Controller::loadMsgTable(tCntId cnt) {
-    if (historyTable->isLoaded()) return false;
-
-    string dir = (const char*) Ctrl->ICMessage(IMC_PROFILEDIR);
-    dir += "history\\messages\\";
-
-    string file = "u";
-    file += urlEncode(config->getChar(CNT_UID, cnt), '#') + ".";
-    file += inttostr(config->getInt(CNT_NET, cnt)) + ".dtb";
-
-    historyTable->setDirectory(dir.c_str());
-    historyTable->setFilename(file.c_str());
-    historyTable->load(true);
-
-    return true;
-  }
-
-  char* Controller::getStringCol(Tables::oTable& table, tRowId row, int pos) {
-    const char encryptKey[] = "\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84";
-    const char decryptKey[] = "\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d";
-
-    Value v(Tables::ctypeString);
-    v.vCChar = (char*) table->getStr(row, table->getColIdByPos(pos));
-    v.buffSize = strlen(v.vCChar);
-
-    if (table->getColType(table->getColIdByPos(pos)) & cflagXor) {
-      DT::xor1_encrypt((unsigned char*)encryptKey, (unsigned char*)v.vCChar, v.buffSize);
-      DT::xor1_decrypt((unsigned char*)decryptKey, (unsigned char*)v.vCChar, v.buffSize);
-
-      IMLOG("colPos = %i, value = %s", pos, v.vCChar);
-    }
-    return (char*) v.vCChar;
-  }
-
   String Controller::getSettingStr(const string& name, tTable table, tRowId row) {
     tColId col = Ctrl->DTgetNameID(table, name.c_str());
     if (col == colNotFound) {
@@ -879,113 +842,6 @@ namespace kIEview2 {
       case ctypeString: return Ctrl->DTgetStr(table, row, col);
     }
     throw logic_error("Unknown column type in '" + name + "'.");
-  }
-
-  int Controller::readMsgs(tCntId cnt, int howMany, int sessionOffset, bool setSession) {
-    if (!howMany) {
-      Message::quickEvent(cnt, "Brak wiadomoœci do wczytania.", false, false, true);
-      return 0;
-    }
-
-    // locking
-    LockerCS lock(_locker);
-
-    IMLOG("[Controller::readMsgs()]: cnt = %i, howMany = %i, sessionOffset = %i",
-      cnt, howMany, sessionOffset);
-
-    Tables::oTable table = historyTable;
-    bool dataLoaded = loadMsgTable(cnt);
-
-    vector<Konnekt::UI::Notify::_insertMsg> msgs;
-    int m = 0;
-
-    for (int i = table->getRowCount() - 1, s = 0; (i >= 0) && (m < howMany); i--) {
-      if (sessionOffset) {
-        if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
-          if (++s == sessionOffset) {
-            continue;
-          }
-        }
-        if (s < sessionOffset) {
-          continue;
-        }
-      }
-      IMLOG("[Controller::readMsgs()]: i = %i, m = %i, s = %i", i, m, s);
-
-      cMessage* msg = new cMessage;
-      msg->id = table->getInt(i, table->getColIdByPos(fieldId));
-      msg->net = table->getInt(i, table->getColIdByPos(fieldNet));
-      msg->type = table->getInt(i, table->getColIdByPos(fieldType));
-      msg->fromUid = getStringCol(table, i, fieldFromUid);
-      msg->toUid = getStringCol(table, i, fieldToUid);
-      msg->body = getStringCol(table, i, fieldBody);
-      msg->ext = getStringCol(table, i, fieldExt);
-      msg->flag = table->getInt(i, table->getColIdByPos(fieldFlag));
-      msg->time = table->getInt64(i, table->getColIdByPos(fieldTime));
-
-      msgs.push_back(Konnekt::UI::Notify::_insertMsg(msg, getStringCol(table, i, fieldDisplay), false));
-      m++;
-    }
-
-    if (m) {
-      if (setSession) {
-        getWndController(cnt)->setSession(true);
-      }
-      Message::quickEvent(cnt, "Wczytujê wiadomoœci z historii.");
-    }
-
-    for (vector<Konnekt::UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
-      Message::inject(it->_message, cnt, it->_display);
-
-      delete it->_message;
-    }
-
-    String msg;
-    if (!m) {
-      msg = "Nie wczytano ¿adnych wiadomoœci.";
-    } else if (m == 1) {
-      msg = "Wczytano <b>jedn¹</b> wiadomoœæ.";
-    } else {
-      msg = "Wczytano <b>" + inttostr(m) + "</b> ostatnich wiadomoœci.";
-    }
-
-    Message::quickEvent(cnt, msg, true);
-
-    if (dataLoaded) {
-      table->unloadData();
-    }
-    return m;
-  }
-
-  int Controller::readLastMsgSession(tCntId cnt, int sessionOffset, bool setSession) {
-    // locking
-    LockerCS lock(_locker);
-
-    Tables::oTable table = historyTable;
-    loadMsgTable(cnt);
-
-    int howMany = 0;
-
-    for (int i = table->getRowCount() - 1, s = 0; i >= 0; i--) {
-      if (sessionOffset) {
-        if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
-          s++;
-        }
-        if (s == sessionOffset) {
-          howMany++;
-        }
-        continue;
-      }
-      howMany++;
-      if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
-        break;
-      }
-    }
-
-    int msgCount = readMsgs(cnt, howMany, sessionOffset, setSession);
-    table->unloadData();
-
-    return msgCount;
   }
 
   DWORD CALLBACK Controller::streamOut(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) {

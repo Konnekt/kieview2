@@ -12,14 +12,16 @@
   */
 
 #include "stdafx.h"
+#include "Message.h"
 
-#include "ActionHandler.h"
 #include "WndController.h"
 #include "Controller.h"
+#include "ActionHandler.h"
 #include "StyleHandler.h"
 
 namespace kIEview2 {
   WndController::WndController(sUIActionNotify_createWindow* an): jsController(0), insertedMsgs(0) {
+    historyTable = Tables::registerTable(Ctrl, tableNotFound, optPrivate);
     pIECtrl = new IECtrl(an->hwndParent, an->x, an->y, an->w, an->h);
     actionHandler = new ActionHandler(this);
 
@@ -83,21 +85,24 @@ namespace kIEview2 {
     if (getCntID()) {
       if (int showOnLoad = pCtrl->getConfig()->getInt(cfg::showOnLoad)) {
         if (showOnLoad == showLastSession) {
-          pCtrl->readLastMsgSession(cntID);
+          readLastMsgSession();
         } else {
-          pCtrl->readMsgs(cntID, pCtrl->getConfig()->getInt(cfg::lastMsgCount));
+          readMsgs(pCtrl->getConfig()->getInt(cfg::lastMsgCount));
         }
       }
     }
   }
 
   void WndController::switchStyle(StyleSet* style) {
-    bool isEmpty = empty();
     styleSetID = style->getID();
-    clearWnd();
 
-    if (!isEmpty) {
-      pCtrl->readLastMsgSession(cntID);
+    if (getCntID()) {
+      bool isEmpty = empty();
+      clearWnd();
+
+      if (!isEmpty) {
+        readLastMsgSession();
+      }
     }
   }
 
@@ -106,6 +111,148 @@ namespace kIEview2 {
 
     lastMsg = sGroupedMsg();
     lastSt = sGroupedSt();
+  }
+
+  bool WndController::loadMsgTable() {
+    if (historyTable->isLoaded()) return false;
+    tCntId cnt = getCntID();
+
+    string dir = (const char*) Ctrl->ICMessage(IMC_PROFILEDIR);
+    dir += "history\\messages\\";
+
+    string file = "u";
+    file += urlEncode(pCtrl->config->getChar(CNT_UID, cnt), '#') + ".";
+    file += inttostr(pCtrl->config->getInt(CNT_NET, cnt)) + ".dtb";
+
+    historyTable->setDirectory(dir.c_str());
+    historyTable->setFilename(file.c_str());
+    historyTable->load(true);
+
+    return true;
+  }
+
+  char* WndController::getStringCol(tRowId row, int pos) {
+    const char encryptKey[] = "\x16\x48\xf0\x85\xa9\x12\x03\x98\xbe\xcf\x42\x08\x76\xa5\x22\x84";
+    const char decryptKey[] = "\x40\x13\xf8\xb2\x84\x23\x04\xae\x6f\x3d";
+
+    Value v(Tables::ctypeString);
+    v.vCChar = (char*) historyTable->getStr(row, historyTable->getColIdByPos(pos));
+    v.buffSize = strlen(v.vCChar);
+
+    if (historyTable->getColType(historyTable->getColIdByPos(pos)) & cflagXor) {
+      DT::xor1_encrypt((unsigned char*)encryptKey, (unsigned char*)v.vCChar, v.buffSize);
+      DT::xor1_decrypt((unsigned char*)decryptKey, (unsigned char*)v.vCChar, v.buffSize);
+
+      IMLOG("[WndController::getStringCol()]: colPos = %i, value = %s", pos, v.vCChar);
+    }
+    return (char*) v.vCChar;
+  }
+
+  int WndController::readMsgs(int howMany, int sessionOffset, bool setSession) {
+    tCntId cnt = getCntID();
+    if (!howMany) {
+      Message::quickEvent(cnt, "Brak wiadomoœci do wczytania.", false, false, true);
+      return 0;
+    }
+
+    // locking
+    LockerCS lock(_locker);
+
+    IMLOG("[WndController::readMsgs()]: cnt = %i, howMany = %i, sessionOffset = %i",
+      cnt, howMany, sessionOffset);
+
+    Tables::oTable table = historyTable;
+    bool dataLoaded = loadMsgTable();
+
+    vector<Konnekt::UI::Notify::_insertMsg> msgs;
+    int m = 0;
+
+    for (int i = table->getRowCount() - 1, s = 0; (i >= 0) && (m < howMany); i--) {
+      if (sessionOffset) {
+        if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
+          if (++s == sessionOffset) {
+            continue;
+          }
+        }
+        if (s < sessionOffset) {
+          continue;
+        }
+      }
+      IMLOG("[WndController::readMsgs()]: i = %i, m = %i, s = %i", i, m, s);
+
+      cMessage* msg = new cMessage;
+      msg->id = table->getInt(i, table->getColIdByPos(fieldId));
+      msg->net = table->getInt(i, table->getColIdByPos(fieldNet));
+      msg->type = table->getInt(i, table->getColIdByPos(fieldType));
+      msg->fromUid = getStringCol(i, fieldFromUid);
+      msg->toUid = getStringCol(i, fieldToUid);
+      msg->body = getStringCol(i, fieldBody);
+      msg->ext = getStringCol(i, fieldExt);
+      msg->flag = table->getInt(i, table->getColIdByPos(fieldFlag));
+      msg->time = table->getInt64(i, table->getColIdByPos(fieldTime));
+
+      msgs.push_back(Konnekt::UI::Notify::_insertMsg(msg, getStringCol(i, fieldDisplay), false));
+      m++;
+    }
+
+    if (m) {
+      if (setSession) this->setSession(true);
+      Message::quickEvent(cnt, "Wczytujê wiadomoœci z historii.");
+    }
+
+    for (vector<Konnekt::UI::Notify::_insertMsg>::reverse_iterator it = msgs.rbegin(); it != msgs.rend(); it++) {
+      Message::inject(it->_message, cnt, it->_display);
+
+      delete it->_message;
+    }
+
+    String msg;
+    if (!m) {
+      msg = "Nie wczytano ¿adnych wiadomoœci.";
+    } else if (m == 1) {
+      msg = "Wczytano <b>jedn¹</b> wiadomoœæ.";
+    } else {
+      msg = "Wczytano <b>" + inttostr(m) + "</b> ostatnich wiadomoœci.";
+    }
+
+    Message::quickEvent(cnt, msg, true);
+
+    if (dataLoaded) {
+      table->unloadData();
+    }
+    return m;
+  }
+
+  int WndController::readLastMsgSession(int sessionOffset, bool setSession) {
+    // locking
+    LockerCS lock(_locker);
+
+    tCntId cnt = getCntID();
+    Tables::oTable table = historyTable;
+    loadMsgTable();
+
+    int howMany = 0;
+
+    for (int i = table->getRowCount() - 1, s = 0; i >= 0; i--) {
+      if (sessionOffset) {
+        if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
+          s++;
+        }
+        if (s == sessionOffset) {
+          howMany++;
+        }
+        continue;
+      }
+      howMany++;
+      if (!table->getInt(i, table->getColIdByPos(fieldSession))) {
+        break;
+      }
+    }
+
+    int msgCount = readMsgs(howMany, sessionOffset, setSession);
+    table->unloadData();
+
+    return msgCount;
   }
 
   namespace JS {

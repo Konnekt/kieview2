@@ -155,14 +155,14 @@ namespace kIEview2 {
       }
       case act::popup::lastMsgs: {
         if (cntID) {
-          Controller::getInstance()->readMsgs(cntID, Controller::getConfig()->getInt(cfg::lastMsgCount), 
+          wndCtrl->readMsgs(Controller::getConfig()->getInt(cfg::lastMsgCount), 
             wndCtrl->getSession() && wndCtrl->pasteSession, wndCtrl->pasteSession);
         }
         break;
       }
       case act::popup::lastSession: {
         if (cntID) {
-          Controller::getInstance()->readLastMsgSession(cntID, wndCtrl->getSession() && wndCtrl->pasteSession, wndCtrl->pasteSession);
+          wndCtrl->readLastMsgSession(wndCtrl->getSession() && wndCtrl->pasteSession, wndCtrl->pasteSession);
         }
         break;
       }

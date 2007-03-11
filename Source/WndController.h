@@ -21,6 +21,7 @@
 
 #include "IECtrl.h"
 
+using namespace Konnekt::Tables;
 using namespace kIEview2;
 using namespace Helpers;
 
@@ -57,10 +58,22 @@ namespace kIEview2 {
 
   class WndController : public SharedObject<iSharedObject> {
   public:
+    enum enMsgFields {
+      fieldId, fieldNet, fieldType, fieldFromUid, fieldToUid, fieldBody, 
+      fieldExt, fieldFlag, fieldTime, fieldSession, fieldDisplay
+    };
+
+  public:
     WndController(sUIActionNotify_createWindow* an);
     ~WndController();
 
   public:
+    bool loadMsgTable();
+    char* getStringCol(tRowId row, int pos); // do zmiany
+
+    int readMsgs(int howMany, int sessionOffset = 0, bool setSession = false);
+    int readLastMsgSession(int sessionOffset = 0, bool setSession = false);
+
     void switchStyle(StyleSet* style);
     void clearGroupedMsgs();
 
@@ -93,6 +106,7 @@ namespace kIEview2 {
   public:
     JS::WndController* jsController;
     ActionHandler* actionHandler;
+    Tables::oTable historyTable;
     Controller* pCtrl;
     IECtrl* pIECtrl;
 

@@ -59,6 +59,7 @@ namespace kIEview2 {
   class Controller : public PlugController<Controller> {
   public:
     friend class PlugController<Controller>;
+    friend class WndController;
 
   public:
     typedef function<void(param_data&, Konnekt::UI::Notify::_insertMsg*)> fMessageHandler;
@@ -94,11 +95,6 @@ namespace kIEview2 {
     typedef vector<sEmailInsertion> tEmailInsertions;
     typedef vector<sLinkInsertion> tLinkInsertions;
 
-    enum enMsgFields {
-      fieldId, fieldNet, fieldType, fieldFromUid, fieldToUid, fieldBody, 
-      fieldExt, fieldFlag, fieldTime, fieldSession, fieldDisplay
-    };
-
   public:
     /* Class version */
     STAMINA_OBJECT_CLASS_VERSION(Controller, PlugController, Version(0,1,0,0));
@@ -112,9 +108,6 @@ namespace kIEview2 {
 
     IECtrl::Var getJSWndController(IECtrl::Var& args, IECtrl::iObject* obj);
     IECtrl::Var getJSController();
-
-    int readMsgs(tCntId cnt, int howMany, int sessionOffset = 0, bool setSession = false);
-    int readLastMsgSession(tCntId cnt, int sessionOffset = 0, bool setSession = false);
 
     String getSettingStr(const string& name, tTable table, tRowId row = 0);
     string getMsgTypeLabel(tMsgType type);
@@ -167,11 +160,7 @@ namespace kIEview2 {
     String getDisplayFromMsg(Konnekt::UI::Notify::_insertMsg* an);
     bool isMsgFromHistory(sUIActionNotify_base* an);
 
-    bool loadMsgTable(tCntId cnt);
-    char* getStringCol(Tables::oTable& table, tRowId row, int pos); // do zmiany
-
     void setActionsStatus();
-
     static void handleTextFlag(int flag, int mask, HWND hwnd);
 
     String _parseStatusTpl(Konnekt::UI::Notify::_insertStatus* an);
@@ -214,7 +203,6 @@ namespace kIEview2 {
     tWndControllers wndControllers;
     tMsgHandlers msgHandlers;
     CriticalSection _locker;
-    Tables::oTable historyTable;
     JS::Controller* jsController;
     JS::UdfBridge udfBridge;
     EmotHandler emotHandler;
