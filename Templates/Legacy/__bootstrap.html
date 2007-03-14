@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <link rel="stylesheet" type="text/css" href="css/base.css" />
+  <!-- css z kIEv1 -->
+  <!-- <link rel="stylesheet" type="text/css" href="css/variants/..." /> -->
+
+  <script type="text/javascript">
+    var oExternal = window.external;
+    var oController = oExternal.oGlobal.oController;
+    var oWindow = oExternal.oGlobal.oWindow(oExternal.refID);
+
+    function insertString(string) {
+      document.getElementById('chat').innerHTML += string;
+    }
+    addMessage = insertString;
+    addStatus = insertString;
+  </script>
+</head>
+<body>
+  <div id="chat"></div>
+</body>
+</html>

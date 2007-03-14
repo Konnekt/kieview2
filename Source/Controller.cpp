@@ -19,9 +19,6 @@
 namespace kIEview2 {
   namespace JS {
     bool UdfBridge::__call(const string& name, IECtrl::Var& args, IECtrl::Var& ret) {
-      if (args.empty()) {
-        throw IECtrl::JSException("You didn't provide any arguments");
-      }
       try {
         udf_fn* func = ::Controller::getInstance()->getStyleHandler()->getUdfFactory()->get(name);
         udf_fn::e_accept_params paramsCount = func->accept_params();
@@ -33,10 +30,11 @@ namespace kIEview2 {
           }
           func->param(params);
         } else {
-          if (args.length() < (int(paramsCount) + 1)) {
+          if (args.length() < int(paramsCount)) {
             throw IECtrl::JSException("Too few arguments provided");
           }
           switch (paramsCount) {
+            case udf_fn::NO_PARAMS: func->param(); break;
             case udf_fn::ONE_PARAM: func->param(args[0]); break;
             case udf_fn::TWO_PARAMS: func->param(args[0], args[1]); break;
             case udf_fn::THREE_PARAMS: func->param(args[0], args[1], args[2]); break;

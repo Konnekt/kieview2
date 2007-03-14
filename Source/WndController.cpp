@@ -248,7 +248,6 @@ namespace kIEview2 {
         break;
       }
     }
-
     int msgCount = readMsgs(howMany, sessionOffset, setSession);
     table->unloadData();
 

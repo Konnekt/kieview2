@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="Windows-1250"?>
+<template>
+  <meta>
+    <name>kIEview v1 legacy style</name>
+    <id>legacy</id>
+    <version>1.1</version>
+    <description>Cudowne, istniejące już CSSy ? wpinaj waść śmiało, i tak będzie mało ;)</description>
+    <creation>2007-03-23</creation>
+	  <url>http://konnekt.info/</url>
+  </meta>
+</template>
