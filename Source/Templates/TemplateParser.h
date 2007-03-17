@@ -8,15 +8,23 @@
 class TemplateParser {
 public:
   enum enParseRes {
-  PF_ETF = 1, //end token found {/abc}
-  PF_ERR = 2, //error in syntax
-  PF_STF = 3, //stop token found
-  PF_OK = 4, //done of parsing
-};
+    tplEndTokenFound = 1, //end token found {/abc}
+    tplBadSyntax = 2, //error in syntax
+    tplStopTokenFound = 3, //stop token found
+    tplParseOK = 4, //done of parsing
+  };
+
+  enum enParseParamRes {
+    paramParseOK = 1,
+    paramError = 2,
+    paramBadSyntax = 3,
+    paramInvalidArg = 4, // unknown param
+  };
+
 
 public:
   static enParseRes parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
-  static void parseParam();
+  static enParseParamRes parseParam();
 
   static iTemplateToken* getToken(int type);
   static int getType(string& text);

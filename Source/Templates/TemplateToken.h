@@ -61,8 +61,48 @@ public:
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
   virtual string output();
   virtual void clear();
+
 protected:
   string _text;
+};
+
+
+class IFToken: public iBlockToken {
+public:
+  typedef vector<iBlockToken*> tBlocks;
+
+public:
+  static const int T_IF = T_BLOCK | 15;
+
+public:
+  virtual int getType() {
+    return T_IF;
+  }
+
+  virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
+
+  virtual void add(iTemplateToken* token);
+  virtual iTemplateToken* get(UINT id);
+  virtual bool remove(UINT id);
+  virtual UINT count();
+  virtual void clear();
+
+protected:
+  tBlocks _blocks;
+  int _active;
+};
+
+class UnLessToken: public iBlockToken {
+public:
+  static const int T_UNLESS = T_BLOCK | 20;
+
+public:
+  virtual int getType() {
+    return T_UNLESS;
+  }
+
+  virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
+  virtual string output();
 };
 
 #endif // __TEMPLATE_TOKEN_H__
