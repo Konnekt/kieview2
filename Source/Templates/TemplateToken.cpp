@@ -95,11 +95,13 @@ void IFToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iter
 
   int pr = TemplateParser::parse(ifToken, itData, itEnd, "else", itPos, allowCreateTokens);
   if (pr == TemplateParser::tplEndTokenFound) {
-      _blocks.push_back(ifToken);
-      return;
+    _blocks.push_back(ifToken);
+    return;
+
   } else if (pr == TemplateParser::tplStopTokenFound) { //znaleziono stopowy token czyli else(if)
     _blocks.push_back(ifToken);
     iBlockToken* blockElse = new iBlockToken;
+
     int nt = TemplateParser::parse(blockElse, itPos, itEnd, "", itPos, allowCreateTokens); //parsowanie kolejnych elementow
     if (nt == TemplateParser::tplEndTokenFound) {
       _blocks.push_back(blockElse);
@@ -156,6 +158,7 @@ void UnLessToken::parse(iBlockToken* block, string::iterator itCurrPos, string::
 
   while(*itData++ != '}');
   int pr = TemplateParser::parse(this, itData, itEnd, "/unless", itPos, allowCreateTokens);
+
   if (pr == TemplateParser::tplEndTokenFound) {
   } else if (pr == TemplateParser::tplStopTokenFound){
   } else if (pr == TemplateParser::tplParseOK) {

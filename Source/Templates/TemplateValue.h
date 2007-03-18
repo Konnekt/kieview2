@@ -42,28 +42,42 @@ protected:
   tWords _words;
 };
 
-class TemplateVar {
+class iTemplateVar {
+public:
+  iTemplateVar(const string& name): _name(name) { }
+
+public:
+  virtual TemplateValue get() = 0;
+
+protected:
+  string _name;
+};
+
+class TemplateVariable: public iTemplateVar {
+public:
+  TemplateVariable(const string& name): iTemplateVar(name) { }
+
+public:
+  TemplateValue get();
+};
+
+class TemplateFunction: public iTemplateVar {
 public:
   typedef vector<TemplateParam*> tParams;
 
 public:
-  TemplateVar(const string& name, bool isFunction = false);
-  TemplateVar(const TemplateVar& copy);
-  const TemplateVar& operator = (const TemplateVar& copy);
-  TemplateVar& operator = (TemplateVar& copy);
-  ~TemplateVar();
+  TemplateFunction(const string& name): iTemplateVar(name) { }
 
 public:
-  bool isFunction();
-  void copy(TemplateVar& value);
-  void addArg(TemplateParam& value);
-  void removeArg(UINT id);
+  void addParam(TemplateParam* param);
+  void removeParam(UINT id);
+  UINT countParam();
+  void clearParam();
+
   TemplateValue get();
 
-protected:
-  string _name;
+private:
   tParams _params;
-  bool _isFunction;
 };
 
 class TemplateValue {
@@ -83,29 +97,29 @@ public:
     __int64 vInt64;
     bool vBool;
     Date64* vDate64;
-    TemplateVar* vVar;
+    iTemplateVar* vVar;
   };
 
 public:
-  TemplateValue& operator + (TemplateValue& value) {
+  TemplateValue operator + (TemplateValue& value) {
     return plus(value);
   }
-  TemplateValue& operator - (TemplateValue& value) {
+  TemplateValue operator - (TemplateValue& value) {
     return minus(value);
   }
-  TemplateValue& operator! () {
+  TemplateValue operator! () {
     return not();
   }
-  TemplateValue& operator != (TemplateValue& value) {
+  TemplateValue operator != (TemplateValue& value) {
     return diff(value);
   }
-  TemplateValue& operator == (TemplateValue& value) {
+  TemplateValue operator == (TemplateValue& value) {
     return comp(value);
   }
-  TemplateValue& operator && (TemplateValue& value) {
+  TemplateValue operator && (TemplateValue& value) {
     return and(value);
   }
-  TemplateValue& operator || (TemplateValue& value) {
+  TemplateValue operator || (TemplateValue& value) {
     return or(value);
   }
 
@@ -115,13 +129,14 @@ public:
 
 public:
   TemplateValue();
+  TemplateValue(const char* value);
   TemplateValue(const string& value);
   TemplateValue(int value);
   TemplateValue(__int64 value);
   TemplateValue(const Date64& value);
   TemplateValue(bool value);
-  TemplateValue(const TemplateVar& value);
-  TemplateValue(const TemplateValue& value);
+  TemplateValue(iTemplateVar* value);
+  TemplateValue(TemplateValue& value);
   const TemplateValue& operator = (const TemplateValue& copy);
   TemplateValue& operator = (TemplateValue& copy);
 

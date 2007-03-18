@@ -1,51 +1,13 @@
 #include "stdafx.h"
 #include "TemplateValue.h"
+#include "Template.h"
 
-TemplateVar::TemplateVar(const string& name, bool isFunction) {
-  _name = name;
-  _isFunction = isFunction;
+TemplateValue TemplateVariable::get() {
+  return Template::get(_name);
 }
 
-TemplateVar::TemplateVar(const TemplateVar& copy) {
-  this->copy((TemplateVar&) copy);
-}
-
-const TemplateVar& TemplateVar::operator = (const TemplateVar& copy) {
-  if (this == &copy) return *this;
-  this->copy((TemplateVar&) copy);
-  return *this;
-}
-
-TemplateVar& TemplateVar::operator = (TemplateVar& copy) {
-  if (this == &copy) return *this;
-  this->copy(copy);
-  return *this;
-}
-
-TemplateValue TemplateVar::get() {
-  return TemplateValue();
-}
-
-TemplateVar::~TemplateVar() {
-  for (tParams::iterator it = _params.begin(); it != _params.end(); it++) {
-    delete (*it);
-  }
-}
-void TemplateVar::copy(TemplateVar& value) {
-  _isFunction = value.isFunction();
-  _name = value._name;
-  for (tParams::iterator it = value._params.begin(); it != value._params.end(); it++) {
-//    _params.push_back(new TemplateParam((*it));
-  }
-}
-
-bool TemplateVar::isFunction() {
-  return _isFunction;
-}
-
-
-TemplateValue::TemplateValue(const TemplateValue& value) {
-  this->copy((TemplateValue&) value);
+TemplateValue::TemplateValue(TemplateValue& value) {
+  this->copy(value);
 }
 
 void TemplateValue::copy(TemplateValue& value) {
@@ -61,7 +23,7 @@ void TemplateValue::copy(TemplateValue& value) {
   } else if (_type == tDate64) {
     vDate64 = new Date64(value.getDate());
   } else if (_type == tVar) {
-    vVar = new TemplateVar(*value.vVar);
+    vVar = value.vVar;
   }
 }
 
@@ -70,8 +32,6 @@ const TemplateValue& TemplateValue::operator = (const TemplateValue& copy) {
   this->copy((TemplateValue&) copy);
   return *this;
 }
-
-
 
 TemplateValue::TemplateValue() {
   vBool = false;
@@ -93,6 +53,11 @@ TemplateValue::TemplateValue(const string& value) {
   _type = tString;
 }
 
+TemplateValue::TemplateValue(const char* value) {
+  vString = new string(value);
+  _type = tString;
+}
+
 TemplateValue::TemplateValue(__int64 value) {
   vInt64 = value;
   _type = tInteger64;
@@ -103,8 +68,8 @@ TemplateValue::TemplateValue(const Date64& value) {
   _type = tDate64;
 }
 
-TemplateValue::TemplateValue(const TemplateVar& value) {
-  vVar = new TemplateVar(value);
+TemplateValue::TemplateValue(iTemplateVar* value) {
+  vVar = value;
   _type = tVar;
 }
 
@@ -115,9 +80,6 @@ void TemplateValue::clear() {
   } else if (_type == tString) {
     if (vString)
       delete vString;
-  } else if (_type == tVar) {
-    if (vVar)
-      delete vVar;
   }
 }
 
@@ -156,7 +118,9 @@ int TemplateValue::getInt() {
 }
 
 __int64 TemplateValue::getInt64() {
-  if (_type == tInteger64) {
+  if(_type == tString) {
+    return _atoi64(vString->c_str());
+  } else if (_type == tInteger64) {
     return vInt64;
   } else if (_type == tDate64) {
     return vDate64->getInt64();
@@ -172,6 +136,9 @@ Date64 TemplateValue::getDate() {
 }
 
 bool TemplateValue::getBool() {
+  if (_type == tString) {
+    return vString->size();
+  }
   return getInt();
 }
 
@@ -180,7 +147,7 @@ TemplateValue::enTypes TemplateValue::getType() {
 }
 
 TemplateValue TemplateValue::plus(TemplateValue& value) {
-  if (_type == tString) {
+  if (_type == tString || value._type == tString) {
     return TemplateValue(getString() + value.getString());
   } else if (_type == tBoolean) {
     return TemplateValue(getBool() + value.getBool()); //err
@@ -258,3 +225,7 @@ TemplateValue TemplateValue::or(TemplateValue &value) {
 TemplateValue TemplateValue::not() {
   return TemplateValue(!getBool());
 }
+
+/* to do:
+konwersja int64 to stirng
+*/
