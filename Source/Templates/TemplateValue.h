@@ -14,16 +14,8 @@ class TemplateValue;
 
 class TemplateParam {
 public:
-  struct sWord {
-    bool not;
-    TemplateValue* value;
-
-    sWord(TemplateValue* value, bool not);
-  };
-
-  typedef vector<sWord*> tWords;
-
   enum enOperators {
+    opNone = 0,
     opPlus = 1,
     opMinus = 2,
     opNot = 3,
@@ -33,13 +25,24 @@ public:
     opOr = 7,
   };
 
-public:
-  void addOperator(enOperators operator_);
-  void addWord(sWord& word);
+  struct sArgument {
+    bool not;
+    TemplateValue* value;
+    enOperators nextOperator;
 
+    sArgument(TemplateValue* value, enOperators nextOperator, bool not): value(value), nextOperator(nextOperator), not(not) { }
+  };
+
+  typedef vector<sArgument*> tArguments;
+
+public:
+  void add(TemplateValue* value, enOperators nextOperator, bool not);
+  void clear();
+  UINT count();
+  TemplateValue output();
 
 protected:
-  tWords _words;
+  tArguments _arguments;
 };
 
 class iTemplateVar {
@@ -89,6 +92,7 @@ public:
     tBoolean = 4,
     tDate64 = 5,
     tVar = 6,
+    tParam = 7,
   };
 
   union {
@@ -98,6 +102,7 @@ public:
     bool vBool;
     Date64* vDate64;
     iTemplateVar* vVar;
+    TemplateParam* vParam;
   };
 
 public:
@@ -123,9 +128,9 @@ public:
     return or(value);
   }
 
-  virtual enTypes getType();
-  virtual void clear();
-  virtual void copy(TemplateValue& value);
+  enTypes getType();
+  void clear();
+  void copy(TemplateValue& value);
 
 public:
   TemplateValue();
@@ -136,25 +141,26 @@ public:
   TemplateValue(const Date64& value);
   TemplateValue(bool value);
   TemplateValue(iTemplateVar* value);
+  TemplateValue(TemplateParam* value);
   TemplateValue(TemplateValue& value);
   const TemplateValue& operator = (const TemplateValue& copy);
   TemplateValue& operator = (TemplateValue& copy);
 
 public:
-  virtual string getString();
-  virtual bool getBool();
-  virtual int getInt();
-  virtual __int64 getInt64();
-  virtual Date64 getDate();
+  string getString();
+  bool getBool();
+  int getInt();
+  __int64 getInt64();
+  Date64 getDate();
 
 protected:
-  virtual TemplateValue plus(TemplateValue& value);
-  virtual TemplateValue minus(TemplateValue& value);
-  virtual TemplateValue not();
-  virtual TemplateValue comp(TemplateValue& value);
-  virtual TemplateValue and(TemplateValue& value);
-  virtual TemplateValue or(TemplateValue& value);
-  virtual TemplateValue diff(TemplateValue& value);
+  TemplateValue plus(TemplateValue& value);
+  TemplateValue minus(TemplateValue& value);
+  TemplateValue not();
+  TemplateValue comp(TemplateValue& value);
+  TemplateValue and(TemplateValue& value);
+  TemplateValue or(TemplateValue& value);
+  TemplateValue diff(TemplateValue& value);
 
 protected:
   enTypes _type;

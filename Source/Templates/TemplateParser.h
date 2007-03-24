@@ -4,6 +4,7 @@
 #define __TEMPLATE_PARSER_H__
 
 #include "TemplateToken.h"
+#include "TemplateValue.h"
 
 class TemplateParser {
 public:
@@ -24,10 +25,11 @@ public:
 
 public:
   static enParseRes parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
-  static enParseParamRes parseParam();
+  static enParseParamRes parseParam(TemplateParam* param, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos);
 
   static iTemplateToken* getToken(int type);
   static int getType(string& text);
 };
+
 
 #endif // __TEMPLATE_PARSER_H__
