@@ -18,8 +18,6 @@ public:
   enum enParseParamRes {
     paramParseOK = 1,
     paramError = 2,
-    paramBadSyntax = 3,
-    paramInvalidArg = 4, // unknown param
   };
 
 

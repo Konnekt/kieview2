@@ -36,6 +36,11 @@ public:
   typedef vector<sArgument*> tArguments;
 
 public:
+  TemplateParam();
+  TemplateParam(const TemplateParam& param);
+  ~TemplateParam();
+
+public:
   void add(TemplateValue* value, enOperators nextOperator, bool not);
   void clear();
   UINT count();
@@ -59,6 +64,7 @@ protected:
 class TemplateVariable: public iTemplateVar {
 public:
   TemplateVariable(const string& name): iTemplateVar(name) { }
+  TemplateVariable(const TemplateVariable& var);
 
 public:
   TemplateValue get();
@@ -70,6 +76,8 @@ public:
 
 public:
   TemplateFunction(const string& name): iTemplateVar(name) { }
+  TemplateFunction(const TemplateFunction& func);
+  ~TemplateFunction();
 
 public:
   void addParam(TemplateParam* param);
@@ -92,7 +100,8 @@ public:
     tBoolean = 4,
     tDate64 = 5,
     tVar = 6,
-    tParam = 7,
+    tFunction = 7,
+    tParam = 8,
   };
 
   union {
@@ -101,7 +110,8 @@ public:
     __int64 vInt64;
     bool vBool;
     Date64* vDate64;
-    iTemplateVar* vVar;
+    TemplateVariable* vVar;
+    TemplateFunction* vFunction;
     TemplateParam* vParam;
   };
 
@@ -140,11 +150,14 @@ public:
   TemplateValue(__int64 value);
   TemplateValue(const Date64& value);
   TemplateValue(bool value);
-  TemplateValue(iTemplateVar* value);
+  TemplateValue(TemplateVariable* value);
+  TemplateValue(TemplateFunction* value);
   TemplateValue(TemplateParam* value);
   TemplateValue(TemplateValue& value);
   const TemplateValue& operator = (const TemplateValue& copy);
   TemplateValue& operator = (TemplateValue& copy);
+
+  ~TemplateValue();
 
 public:
   string getString();
@@ -165,6 +178,5 @@ protected:
 protected:
   enTypes _type;
 };
-
 
 #endif // __TEMPLATE_VALUE_H__

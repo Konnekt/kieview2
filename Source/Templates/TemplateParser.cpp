@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TemplateParser.h"
 #include "TemplateValue.h"
+#include "Template.h"
 
 iTemplateToken* TemplateParser::getToken(int type) {
   if (type == TextToken::T_TEXT) {
@@ -9,6 +10,10 @@ iTemplateToken* TemplateParser::getToken(int type) {
     return new UnLessToken;
   } else if (type == IFToken::T_IF) {
     return new IFToken;
+  } else if (type == ArgumentToken::T_ARGUMENT) {
+    return new ArgumentToken;
+  } else if (type == IncludeToken::T_INCLUDE) {
+    return new IncludeToken;
   }
   return NULL;
 }
@@ -18,6 +23,12 @@ int TemplateParser::getType(string& text) {
     return UnLessToken::T_UNLESS;
   } else if (text == "if") {
     return IFToken::T_IF;
+  } else if (text == "include") {
+    return IFToken::T_IF;
+  } else if (text[0] == '$' || text[0] == '-' || text[0] == 'f' || text[0] == 't' || (text[0] >= 'a' && text[0] <= 'z')
+    || (text[0] >= 'A' && text[0] <= 'Z') || (text[0] >= '0' && text[0] <= '9') || text[0] == '(' || text[0] == ')' || text[0] == '\"') 
+  {
+    return ArgumentToken::T_ARGUMENT;
   }
   return 0;
 }
@@ -49,6 +60,9 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
       int sPos = token.find(" ");
       if (sPos != string::npos) {
         token = token.substr(0, sPos);
+      }
+      if (!token.size()) {
+        throw TemplateException("Syntax error. Token does not have name.");
       }
       if (token == stopToken) {
         itPos = itCurrPos;
@@ -114,8 +128,11 @@ void parseText(TemplateParam* param, TemplateParam::enOperators oper, bool not, 
         text += '\t';
       } else if (*itCurrPos == 'v') {
         text += '\v';
+      } else if (*itCurrPos == '}') {
+        text += '}';
       } else {
-        text += *itCurrPos;
+        //text += *itCurrPos;
+        throw TemplateException(stringf("Syntax error. Invalid special character: \\%c", *itCurrPos));
       }
       backSlash = false;
     } else if (*itCurrPos == '\\') {
@@ -128,18 +145,18 @@ void parseText(TemplateParam* param, TemplateParam::enOperators oper, bool not, 
     itCurrPos++;
   }
 
-  if (*itCurrPos != '\"' || backSlash) {
-    //err
+  if (itCurrPos == itEnd || *itCurrPos != '\"' || backSlash) {
+    throw TemplateException("Syntax error. The text does not have end sign.");
   }
   param->add(new TemplateValue(text), oper, not);
   itPos = itCurrPos + 1;
 }
 
-void parseBool(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
+void parseConst(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   string text;
 
   while (itCurrPos != itEnd) {
-    if ((*itCurrPos >= 'a' && *itCurrPos <= 'z') || (*itCurrPos >= 'A' && *itCurrPos <= 'Z')) {
+    if ((*itCurrPos >= 'a' && *itCurrPos <= 'z') || (*itCurrPos >= 'A' && *itCurrPos <= 'Z') || *itCurrPos == '_' || (*itCurrPos >= '0' && *itCurrPos <= '9')) {
       text += *itCurrPos;
     } else {
       break;
@@ -151,14 +168,20 @@ void parseBool(TemplateParam* param, TemplateParam::enOperators oper, bool not, 
   } else if (text == "true") {
     param->add(new TemplateValue(true), oper, not);
   } else {
-    //err
+    throw TemplateException("Syntax error. Const value does not true/false type.");
   }
   itPos = itCurrPos;
 }
 
 void parseInt(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   string intstr;
-
+  int multipler;
+  if (itCurrPos != itEnd && *itCurrPos == '-') {
+    multipler = -1;
+    itCurrPos++;
+  } else {
+    multipler = 1;
+  }
   while (itCurrPos != itEnd) {
     if (*itCurrPos >= '0' && *itCurrPos <= '9') {
       intstr += *itCurrPos;
@@ -167,8 +190,10 @@ void parseInt(TemplateParam* param, TemplateParam::enOperators oper, bool not, s
     }
     itCurrPos++;
   }
-
-  param->add(new TemplateValue(atoi(intstr.c_str())), oper, not);
+  if (!intstr.size()) {
+    throw TemplateException("Syntax error. This value does not integer type.");
+  }
+  param->add(new TemplateValue(multipler * atoi(intstr.c_str())), oper, not);
   itPos = itCurrPos;
 }
 
@@ -191,28 +216,37 @@ void parseVar(TemplateParam* param, TemplateParam::enOperators oper, bool not, s
   if (isFunc) {
     TemplateFunction* func = new TemplateFunction(name);
     param->add(new TemplateValue(func), oper, not);
+
     TemplateParam* newParam;
+    bool lastComma = false;
+
     do {
       newParam = new TemplateParam;
       TemplateParser::parseParam(newParam, itCurrPos + 1, itEnd, itCurrPos);
+      if ((lastComma ||(itCurrPos != itEnd && *itCurrPos == ','))&& !newParam->count()) {
+        throw TemplateException("Syntax error. Too many comma signs in function: " + name);
+      }
       if (newParam->count()) {
         func->addParam(newParam);
+        lastComma = true;
       } else {
         delete newParam;
       }
     } while (itCurrPos != itEnd && *itCurrPos == ',');
-    if (*itCurrPos != ')') {
-      //err
+
+    if (itCurrPos == itEnd || *itCurrPos != ')') {
+      throw TemplateException("Syntax error. Right bracked not found in function: " + name);
     }
     itPos = itCurrPos + 1;
     return;
   } else if (!isFunc){
     param->add(new TemplateValue(new TemplateVariable(name)), oper, not);
   } else {
-    //err
+    throw TemplateException("Syntax error. Wrong var/funcion declaration.");
   }
   itPos = itCurrPos;
 }
+
 bool parseArgument(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   if (*itCurrPos == '\"') {
     parseText(param, oper, not, itCurrPos + 1, itEnd, itPos);
@@ -221,14 +255,14 @@ bool parseArgument(TemplateParam* param, TemplateParam::enOperators oper, bool n
     TemplateParser::parseParam(newParam, itCurrPos + 1, itEnd, itPos);
     if (itPos == itEnd && *itPos != ')') {
       delete newParam;
-      //err
+      throw TemplateException("Syntax error. Right bracked in block not found.");
     }
     itPos++;
     param->add(new TemplateValue(newParam), oper, not);
-  } else if (*itCurrPos >= '0' && *itCurrPos <= '9') {
+  } else if (*itCurrPos >= '0' && *itCurrPos <= '9' || *itCurrPos == '-') {
     parseInt(param, oper, not, itCurrPos, itEnd, itPos);
-  } else if (*itCurrPos == 't' || *itCurrPos == 'f') {
-    parseBool(param, oper, not, itCurrPos, itEnd, itPos);
+  } else if ((*itCurrPos >= 'a' && *itCurrPos <= 'z') || (*itCurrPos >= 'A' && *itCurrPos <= 'Z') || *itCurrPos == '_') {
+    parseConst(param, oper, not, itCurrPos, itEnd, itPos);
   } else if (*itCurrPos == '$') {
     parseVar(param, oper, not, itCurrPos + 1, itEnd, itPos);
   } else {
@@ -264,8 +298,10 @@ TemplateParam::enOperators parseOperator(string::iterator itCurrPos, string::ite
     return TemplateParam::opMinus;
   } else if (oper == "!") {
     return TemplateParam::opNot;
-  } else {
+  } else if (!oper.size()){
     return TemplateParam::opNone;
+  } else {
+    throw TemplateException("Syntax error. Invalid operator: " + oper);
   }
 }
 
@@ -284,6 +320,10 @@ TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param,
         notOperator = parseOperator(itCurrPos, itEnd, itCurrPos);
         if (notOperator == TemplateParam::opNone || notOperator == TemplateParam::opNot) {
           not = notOperator == TemplateParam::opNot;
+        } else if (notOperator == TemplateParam::opMinus) {
+          itCurrPos = itCurrPos - 1;
+        } else {
+          throw TemplateException("Syntax error. First parameter is operator.");
         }
         if(!parseArgument(param, lastOperator, not, itCurrPos, itEnd, itCurrPos)) {
           itPos = itCurrPos;
@@ -293,14 +333,14 @@ TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param,
       } else {
         lastOperator = parseOperator(itCurrPos, itEnd, itCurrPos);
         if (lastOperator == TemplateParam::opNot) {
-          //err
+          throw TemplateException("Syntax error. Invalid operator.");
         }
         da = true;
       }
     }
   }
   if (da && lastOperator != TemplateParam::opNone) {
-    //err
+    throw TemplateException("Syntax error. The operator ending a code.");
   }
   itPos = itCurrPos;
   return paramParseOK;

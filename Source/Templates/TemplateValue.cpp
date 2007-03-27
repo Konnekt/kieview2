@@ -2,12 +2,22 @@
 #include "TemplateValue.h"
 #include "Template.h"
 
+TemplateParam::TemplateParam() {
+}
+
+TemplateParam::TemplateParam(const TemplateParam& param) {
+  for (tArguments::const_iterator it = param._arguments.begin(); it != param._arguments.end(); it++) {
+    add(new TemplateValue(&(*it)->value), (*it)->nextOperator, (*it)->not);
+  }
+}
+
 void TemplateParam::add(TemplateValue* value, enOperators nextOperator, bool not) {
   _arguments.push_back(new sArgument(value, nextOperator, not));
 }
 
 void TemplateParam::clear() {
   for (tArguments::iterator it = _arguments.begin(); it != _arguments.end(); it++) {
+    delete (*it)->value;
     delete *it;
   }
   _arguments.clear();
@@ -57,16 +67,37 @@ TemplateValue TemplateParam::output() {
   return val;
 }
 
+TemplateParam::~TemplateParam() {
+  clear();
+}
+
+TemplateVariable::TemplateVariable(const TemplateVariable& var): iTemplateVar(var._name) {
+}
+
 TemplateValue TemplateVariable::get() {
   return Template::get(_name);
 }
+
 
 TemplateValue TemplateFunction::get() {
   return TemplateValue();
 }
 
+TemplateFunction::TemplateFunction(const TemplateFunction& func): iTemplateVar(func._name) {
+  for (tParams::const_iterator it = func._params.begin(); it != func._params.end(); it++) {
+    addParam(new TemplateParam(*(*it)));
+  }
+}
+
 void TemplateFunction::addParam(TemplateParam* param) {
   _params.push_back(param);
+}
+
+TemplateFunction::~TemplateFunction() {
+  for (tParams::iterator it = _params.begin(); it != _params.end(); it++) {
+    delete *it;
+  }
+  _params.clear();
 }
 
 TemplateValue::TemplateValue(TemplateValue& value) {
@@ -86,18 +117,24 @@ void TemplateValue::copy(TemplateValue& value) {
   } else if (_type == tDate64) {
     vDate64 = new Date64(value.getDate());
   } else if (_type == tVar) {
-    vVar = value.vVar;
+    vVar = new TemplateVariable(*(value.vVar));
+  } else if (_type == tFunction) {
+    vFunction = new TemplateFunction(*(value.vFunction));
+  } else if (_type == tParam) {
+    vParam = new TemplateParam(*(value.vParam));
   }
 }
 
 const TemplateValue& TemplateValue::operator = (const TemplateValue& copy) {
   if (this == &copy) return *this;
+  clear();
   this->copy((TemplateValue&) copy);
   return *this;
 }
 
 TemplateValue& TemplateValue::operator = (TemplateValue& copy) {
   if (this == &copy) return *this;
+  clear();
   this->copy((TemplateValue&) copy);
   return *this;
 }
@@ -136,13 +173,20 @@ TemplateValue::TemplateValue(const Date64& value) {
   vDate64 = new Date64(value);
   _type = tDate64;
 }
+
 TemplateValue::TemplateValue(TemplateParam* value) {
   vParam = value;
   _type = tParam;
 }
-TemplateValue::TemplateValue(iTemplateVar* value) {
+
+TemplateValue::TemplateValue(TemplateVariable* value) {
   vVar = value;
   _type = tVar;
+}
+
+TemplateValue::TemplateValue(TemplateFunction* value) {
+  vFunction = value;
+  _type = tFunction;
 }
 
 void TemplateValue::clear() {
@@ -152,6 +196,15 @@ void TemplateValue::clear() {
   } else if (_type == tString) {
     if (vString)
       delete vString;
+  } else if (_type == tVar) {
+    if (vVar)
+      delete vVar;
+  } else if (_type == tFunction) {
+    if (vFunction)
+      delete vFunction;
+  } else if (_type == tParam) {
+    if (vParam)
+      delete vParam;
   }
 }
 
@@ -168,6 +221,8 @@ string TemplateValue::getString() {
     return stringf("%ll", vDate64->getInt64());
   } else if (_type == tVar) {
     return vVar->get().getString();
+  } else if (_type == tFunction) {
+    return vFunction->get().getString();
   } else if (_type == tParam) {
     return vParam->output().getString();
   }
@@ -187,6 +242,8 @@ int TemplateValue::getInt() {
     return vDate64->getTime64();
   } else if (_type == tVar) {
     return vVar->get().getInt();
+  } else if (_type == tFunction) {
+    return vFunction->get().getInt();
   } else if (_type == tParam) {
     return vParam->output().getInt();
   }
@@ -202,6 +259,8 @@ __int64 TemplateValue::getInt64() {
     return vDate64->getInt64();
   } else if (_type == tVar) {
     return vVar->get().getInt64();
+  } else if (_type == tFunction) {
+    return vFunction->get().getInt64();
   } else if (_type == tParam) {
     return vParam->output().getInt64();
   }
@@ -239,6 +298,8 @@ TemplateValue TemplateValue::plus(TemplateValue& value) {
     return TemplateValue(Date64(Time64(getInt64() + value.getInt64())));
   } else if (_type == tVar) {
     return TemplateValue(this->vVar->get() + value);
+  } else if (_type == tVar) {
+    return TemplateValue(this->vFunction->get() + value);
   } else if (_type == tParam) {
     return TemplateValue(this->vParam->output() + value);
   }
@@ -258,6 +319,8 @@ TemplateValue TemplateValue::minus(TemplateValue& value) {
     return TemplateValue(Date64(Time64(getInt64() - value.getInt64())));
   } else if (_type == tVar) {
     return TemplateValue(this->vVar->get() - value);
+  } else if (_type == tVar) {
+    return TemplateValue(this->vFunction->get() + value);
   } else if (_type == tParam) {
     return TemplateValue(this->vParam->output() - value);
   }
@@ -277,6 +340,8 @@ TemplateValue TemplateValue::comp(TemplateValue &value) {
     return TemplateValue(getInt64() == value.getInt64());
   } else if (_type == tVar) {
     return TemplateValue(this->vVar->get() == value);
+  } else if (_type == tFunction) {
+    return TemplateValue(this->vFunction->get() == value);
   } else if (_type == tParam) {
     return TemplateValue(this->vParam->output() == value);
   }
@@ -296,6 +361,8 @@ TemplateValue TemplateValue::diff(TemplateValue &value) {
     return TemplateValue(getInt64() != value.getInt64());
   } else if (_type == tVar) {
     return TemplateValue(this->vVar->get() != value);
+  } else if (_type == tFunction) {
+    return TemplateValue(this->vFunction->get() != value);
   } else if (_type == tParam) {
     return TemplateValue(this->vParam->output() != value);
   }
@@ -312,6 +379,10 @@ TemplateValue TemplateValue::or(TemplateValue &value) {
 
 TemplateValue TemplateValue::not() {
   return TemplateValue(!getBool());
+}
+
+TemplateValue::~TemplateValue() {
+  clear();
 }
 
 /* to do:
