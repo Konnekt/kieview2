@@ -24,7 +24,7 @@ int TemplateParser::getType(string& text) {
   } else if (text == "if") {
     return IFToken::T_IF;
   } else if (text == "include") {
-    return IFToken::T_IF;
+    return IncludeToken::T_INCLUDE;
   } else if (text[0] == '$' || text[0] == '-' || text[0] == 'f' || text[0] == 't' || (text[0] >= 'a' && text[0] <= 'z')
     || (text[0] >= 'A' && text[0] <= 'Z') || (text[0] >= '0' && text[0] <= '9') || text[0] == '(' || text[0] == ')' || text[0] == '\"') 
   {
@@ -130,6 +130,8 @@ void parseText(TemplateParam* param, TemplateParam::enOperators oper, bool not, 
         text += '\v';
       } else if (*itCurrPos == '}') {
         text += '}';
+      } else if (*itCurrPos == '\\') {
+        text += '\\';
       } else {
         //text += *itCurrPos;
         throw TemplateException(stringf("Syntax error. Invalid special character: \\%c", *itCurrPos));

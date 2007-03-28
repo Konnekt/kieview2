@@ -34,8 +34,8 @@ TemplateValue TemplateParam::output() {
   TemplateValue val;
   if (_arguments.size()) {
     val = *(*it)->value;
-    it++;
     enOperators op = (*it)->nextOperator;
+    it++;
 
     while (it != itEnd) {
       switch (op) {

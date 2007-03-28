@@ -3,22 +3,45 @@
 #include "TemplateParser.h"
 #include "Template.h"
 
-/* do skonczenia
+/*
+ iSection Interface
+*/
 void iSectionToken::parseArguments(string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   TemplateParam* newParam;
   bool lastComma = false;
   string name;
   UINT index = 0;
 
+  while (itCurrPos != itEnd && (*itCurrPos == ' ' || *itCurrPos == '\t')) {
+    ++itCurrPos++;
+  }
   do {
+    if (*itCurrPos == ',') itCurrPos++;
+    while (itCurrPos != itEnd && (*itCurrPos == ' ' || *itCurrPos == '\t')) {
+    itCurrPos++;
+    }
     if (getSectionType() == tNamed) {
+      string::iterator it = itCurrPos;
       while(itCurrPos != itEnd) {
-        if (*itCurrPos == '}') {
-          throw TemplateException("Syntax error. Bad argument definition.");
-        } else if (*itCurrPos == '=') {
+        //if (*itCurrPos == '}') {
+       //   throw TemplateException("Syntax error. Bad argument definition.");
+       // } else 
+        if (*itCurrPos == '=') {
+          itCurrPos++;
           break;
+        } else if ((*itCurrPos >= 'a' && *itCurrPos <= 'z') || (*itCurrPos >= 'A' && *itCurrPos <= 'Z') || *itCurrPos == '_' ||
+          (*itCurrPos >= '0' && *itCurrPos <= '9')) 
+        {
+          name += *itCurrPos;
+        }
+        else {
+          throw TemplateException("Syntax error. Bad argument definition.");
         }
         itCurrPos++;
+      }
+      name = string(it, itCurrPos - 1);
+      if (name.empty()) {
+        throw TemplateException("Syntax error. Argument is unnamed.");
       }
     }
     newParam = new TemplateParam;
@@ -38,13 +61,25 @@ void iSectionToken::parseArguments(string::iterator itCurrPos, string::iterator 
     }
   } while (itCurrPos != itEnd && *itCurrPos == ',');
 
-  if (itCurrPos == itEnd || *itCurrPos != ')') {
+  if (itCurrPos == itEnd) {
     throw TemplateException("Syntax error. Right bracked not found in xxx");
   }
-  itPos = itCurrPos + 1;
+  itPos = itCurrPos;
 }
-*/
 
+iSectionToken::enSectionType iSectionToken::getSectionType() {
+  return tUnnamed;
+}
+
+iSectionToken::~iSectionToken() {
+  for (tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
+    if (getSectionType() == tNamed) {
+      delete (*it)->name;
+    }
+    delete (*it)->param;
+    delete *it;
+  }
+}
 
 /*
  BlockToken
@@ -64,6 +99,10 @@ iTemplateToken* iBlockToken::get(UINT id) {
     it++;
   }
   return *it;
+}
+
+iSectionToken::enSectionType iBlockToken::getSectionType() {
+  return tUnnamed;
 }
 
 void iBlockToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
@@ -129,105 +168,119 @@ void TextToken::clear() {
 /*
  IFToken
 */
-IFToken::IFToken() {
-  _param = new TemplateParam;
-}
+IFToken::IFToken(): _ifBlock(NULL), _elseBlock(NULL) { }
+
 IFToken::~IFToken() {
-  delete _param;
+  if (_ifBlock) {
+    delete _ifBlock;
+  }
+  if (_elseBlock) {
+    delete _elseBlock;
+  }
 }
 
 void IFToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
-  iBlockToken* ifToken = new iBlockToken;
+  _ifBlock = new iBlockToken;
+
   string::iterator itData = itCurrPos;
   bool foundElse = false;
 
   itData += 3;
-  TemplateParser::parseParam(_param, itData, itEnd, itData);
+  parseArguments(itData, itEnd, itData);
+
+  if (!_sectionArgs.size()) {
+    throw TemplateException("Syntax error. The if token powinien miec przynajmniej jeden argument.");
+  }
   if (itData == itEnd || *itData != '}') {
-    throw TemplateException("Syntax error. brakuje znaku }.");
+    throw TemplateException("Syntax error. The if token bledne zakonczenie tokena.");
   }
-  if (!_param->count()) {
-    TemplateException("Syntax error. The if token powinien miec przynajmniej jeden argument.");
-  }
-  int pr = TemplateParser::parse(ifToken, itData, itEnd, "else", itPos, allowCreateTokens);
+  itData++;
+  int pr = TemplateParser::parse(_ifBlock, itData, itEnd, "else", itPos, allowCreateTokens);
   if (pr == TemplateParser::tplEndTokenFound) {
-    _blocks.push_back(ifToken);
     return;
 
   } else if (pr == TemplateParser::tplStopTokenFound) { //znaleziono stopowy token czyli else(if)
-    _blocks.push_back(ifToken);
-    iBlockToken* blockElse = new iBlockToken;
+    _elseBlock = new iBlockToken;
 
-    int nt = TemplateParser::parse(blockElse, itPos, itEnd, "", itPos, allowCreateTokens); //parsowanie kolejnych elementow
+    int nt = TemplateParser::parse(_elseBlock, ++itPos, itEnd, "", itPos, allowCreateTokens); //parsowanie kolejnych elementow
     if (nt == TemplateParser::tplEndTokenFound) {
-      _blocks.push_back(blockElse);
       return;
     }
-    delete blockElse;
+    delete _elseBlock;
+    _elseBlock = NULL;
+    return;
   }
-  delete ifToken;
+
+  delete _ifBlock;
+  _ifBlock = NULL;
   throw TemplateException("Syntax error. If does not have an end token");
 }
 
 void IFToken::add(iTemplateToken* token) {
-  if (_active == -1 || _active < _blocks.size())
-    return;
-
-  _blocks[_active]->add(token);
+  return;
 }
 
 iTemplateToken* IFToken::get(UINT id) {
-  if (_active == -1 || _active < _blocks.size())
-    return NULL;
-
-  return _blocks[_active]->get(id);
+  return NULL;
 }
 
 bool IFToken::remove(UINT id){
-  if (_active == -1 || _active < _blocks.size())
-    return false;
-
-  return _blocks[_active]->remove(id);
+  return true;
 }
 
 UINT IFToken::count() {
-  if (_active == -1 || _active < _blocks.size())
-    return 0;
-
-  return _blocks[_active]->count();
+  return 0;
 }
 
 void IFToken::clear() {
-  if (_active == -1 || _active < _blocks.size())
-    return;
+  if (_ifBlock) {
+    _ifBlock->clear();
+  }
+  if (_elseBlock) {
+    _elseBlock->clear();
+  }
+}
 
-  return _blocks[_active]->clear();
+string IFToken::output() {
+  bool arg = false;
+
+  for (iSectionToken::tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
+    arg |= (*it)->param->output().getBool();
+  }
+  if (arg) {
+    if (_ifBlock) {
+      return _ifBlock->output();
+    }
+  } else {
+    if (_elseBlock) {
+      return _elseBlock->output();
+    }
+  }
+  return "";
 }
 
 /*
  UnLessToken
 */
 
-UnLessToken::UnLessToken() {
-  _param = new TemplateParam;
-}
-UnLessToken::~UnLessToken() {
-  delete _param;
+iSectionToken::enSectionType UnLessToken::getSectionType() {
+  return tUnnamed;
 }
 
 void UnLessToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
   string::iterator itData = itCurrPos;
 
   itData += 7;
-  TemplateParser::parseParam(_param, itData, itEnd, itData);
-  if (itData == itEnd || *itData != '}') {
-    throw TemplateException("Syntax error. Invalid token end.");
+  parseArguments(itData, itEnd, itData);
+
+  if (!_sectionArgs.size()) {
+    throw TemplateException("Syntax error. The Unless token powinien miec przynajmniej jeden argument.");
   }
-  if (!_param->count()) {
-    TemplateException("Syntax error. The Unless token powinien miec przynajmniej jeden argument.");
+  if (itData == itEnd || *itData != '}') {
+    throw TemplateException("Syntax error. The Unless token bledne zakonczenie tokena.");
   }
 
-  int pr = TemplateParser::parse(this, itData, itEnd, "/unless", itPos, allowCreateTokens);
+  int pr = TemplateParser::parse(this, ++itData, itEnd, "/unless", itPos, allowCreateTokens);
 
   if (pr == TemplateParser::tplEndTokenFound) {
   } else if (pr == TemplateParser::tplStopTokenFound){
@@ -237,7 +290,13 @@ void UnLessToken::parse(iBlockToken* block, string::iterator itCurrPos, string::
 
 string UnLessToken::output() {
   string out;
-  if (_param->output().getBool()) {
+
+  bool arg = false;
+
+  for (iSectionToken::tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
+    arg |= (*it)->param->output().getBool();
+  }
+  if (!arg) {
     tTokenList::iterator it = _token.begin();
     tTokenList::iterator itEnd = _token.end();
 
@@ -290,21 +349,35 @@ IncludeToken::~IncludeToken() {
   clear();
 }
 
+iSectionToken::enSectionType IncludeToken::getSectionType() {
+  return tNamed;
+}
+
 void IncludeToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
   string::iterator itData = itCurrPos;
 
   itData += 8;
-/*  TemplateParser::parseParam(_param, itData, itEnd, itData);
-  if (itData == itEnd || *itData != '}') {
-    throw TemplateException("Syntax error. Invalid token end.");
-  }
-  if (!_param->count()) {
-    TemplateException("Syntax error. The include token powinien miec argument.");
-  }
 
-  _tpl = new Template(_param->output().getString());
-  */
-  itPos = itCurrPos;
+  parseArguments(itData, itEnd, itData);
+
+  if (!_sectionArgs.size()) {
+    throw TemplateException("Syntax error. The Unless token powinien miec przynajmniej jeden argument.");
+  }
+  if (itData == itEnd || *itData != '}') {
+    throw TemplateException("Syntax error. The Unless token bledne zakonczenie tokena.");
+  }
+  iSectionToken::tSectionArgs::iterator it;
+  for (it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
+    if (*(*it)->name == "file") {
+      break;
+    }
+  }
+  if (it == _sectionArgs.end()) {
+    throw TemplateException("Syntax error. Brak dyrektywy file.");
+  }
+  _tpl = new Template((*it)->param->output().getString());
+
+  itPos = itData;
 }
 
 string IncludeToken::output() {

@@ -26,12 +26,12 @@ class iSectionToken: public iTemplateToken {
 public:
   struct sSectionArg {
     union {
-      string name;
+      string* name;
       UINT index;
     };
     TemplateParam* param;
 
-    sSectionArg(string name, TemplateParam* param): name(name), param(param) { }
+    sSectionArg(string name, TemplateParam* param): name(new string(name)), param(param) { }
     sSectionArg(UINT index, TemplateParam* param): index(index), param(param) { }
   };
 
@@ -46,21 +46,15 @@ public:
   virtual ~iSectionToken();
 
 public:
-  virtual enSectionType getSectionType();
+  virtual enSectionType getSectionType() = 0;
   void parseArguments(string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos);
 
 protected:
   tSectionArgs _sectionArgs;
 };
 
-iSectionToken::~iSectionToken() {
-  for (tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
-    delete (*it)->param;
-    delete *it;
-  }
-}
 
-class iBlockToken: public iTemplateToken {
+class iBlockToken: public iSectionToken {
 public:
   static const int T_BLOCK = 0xFFF00000;
 
@@ -77,6 +71,7 @@ public:
   }
 
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
+  virtual iSectionToken::enSectionType getSectionType();
 
   virtual void add(iTemplateToken* token);
   virtual iTemplateToken* get(UINT id);
@@ -110,15 +105,13 @@ protected:
 
 class IFToken: public iBlockToken {
 public:
-  typedef vector<iBlockToken*> tBlocks;
-
-public:
   static const int T_IF = T_BLOCK | 15;
 
 public:
   virtual int getType() {
     return T_IF;
   }
+
 public:
   IFToken();
   ~IFToken();
@@ -130,10 +123,11 @@ public:
   virtual bool remove(UINT id);
   virtual UINT count();
   virtual void clear();
+  virtual string output();
 
 protected:
-  tBlocks _blocks;
-  TemplateParam* _param;
+  iBlockToken* _ifBlock;
+  iBlockToken* _elseBlock;
   int _active;
 };
 
@@ -147,15 +141,9 @@ public:
   }
 
 public:
-  UnLessToken();
-  ~UnLessToken();
-
-public:
+  iSectionToken::enSectionType getSectionType();
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
   virtual string output();
-
-public:
-  TemplateParam* _param;
 };
 
 class ArgumentToken: public iTemplateToken {
@@ -178,7 +166,7 @@ public:
   TemplateParam* _param;
 };
 
-class IncludeToken: public iTemplateToken {
+class IncludeToken: public iSectionToken {
 public:
   static const int T_INCLUDE = 35;
 
@@ -190,6 +178,7 @@ public:
   virtual int getType() {
     return T_INCLUDE;
   }
+  iSectionToken::enSectionType getSectionType();
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
   virtual string output();
   virtual void clear();
