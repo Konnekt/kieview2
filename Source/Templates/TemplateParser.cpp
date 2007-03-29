@@ -14,15 +14,19 @@ iTemplateToken* TemplateParser::getToken(int type) {
     return new ArgumentToken;
   } else if (type == IncludeToken::T_INCLUDE) {
     return new IncludeToken;
+  } else if (type == SetToken::T_SET) {
+    return new SetToken;
   }
   return NULL;
 }
 
 int TemplateParser::getType(string& text) {
-  if (text == "unless") {
-    return UnLessToken::T_UNLESS;
-  } else if (text == "if") {
+  if (text == "if") {
     return IFToken::T_IF;
+  } else if (text == "set") {
+    return SetToken::T_SET;
+  } else if (text == "unless") {
+    return UnLessToken::T_UNLESS;
   } else if (text == "include") {
     return IncludeToken::T_INCLUDE;
   } else if (text[0] == '$' || text[0] == '-' || text[0] == 'f' || text[0] == 't' || (text[0] >= 'a' && text[0] <= 'z')
@@ -312,13 +316,13 @@ TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param,
   TemplateParam::enOperators lastOperator = TemplateParam::opNone;
   TemplateParam::enOperators notOperator;
   bool not = false;
-  bool da = true;
+  bool isArgument = true;
 
   while (itCurrPos != itEnd) {
     if (*itCurrPos == ' ' || *itCurrPos == '\t') {
       itCurrPos++;
     } else {
-      if (da) {
+      if (isArgument) {
         notOperator = parseOperator(itCurrPos, itEnd, itCurrPos);
         if (notOperator == TemplateParam::opNone || notOperator == TemplateParam::opNot) {
           not = notOperator == TemplateParam::opNot;
@@ -331,17 +335,17 @@ TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param,
           itPos = itCurrPos;
           return paramError;
         }
-        da = false;
+        isArgument = false;
       } else {
         lastOperator = parseOperator(itCurrPos, itEnd, itCurrPos);
         if (lastOperator == TemplateParam::opNot) {
           throw TemplateException("Syntax error. Invalid operator.");
         }
-        da = true;
+        isArgument = true;
       }
     }
   }
-  if (da && lastOperator != TemplateParam::opNone) {
+  if (isArgument && lastOperator != TemplateParam::opNone) {
     throw TemplateException("Syntax error. The operator ending a code.");
   }
   itPos = itCurrPos;

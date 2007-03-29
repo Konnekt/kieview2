@@ -75,7 +75,7 @@ TemplateVariable::TemplateVariable(const TemplateVariable& var): iTemplateVar(va
 }
 
 TemplateValue TemplateVariable::get() {
-  return Template::get(_name);
+  return Template::getVar(_name);
 }
 
 

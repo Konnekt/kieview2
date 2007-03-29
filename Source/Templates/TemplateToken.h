@@ -187,7 +187,19 @@ public:
   Template* _tpl;
 };
 
+class SetToken: public iSectionToken {
+public:
+  static const int T_SET = 40;
 
+public:
+  virtual int getType() {
+    return T_SET;
+  }
+  iSectionToken::enSectionType getSectionType();
+  virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
+  virtual string output();
+  virtual void clear();
+};
 
 
 #endif // __TEMPLATE_TOKEN_H__

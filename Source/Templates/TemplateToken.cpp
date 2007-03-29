@@ -395,3 +395,32 @@ void IncludeToken::clear() {
   }
   _tpl = NULL;
 }
+
+iSectionToken::enSectionType SetToken::getSectionType() {
+  return tNamed;
+}
+
+void SetToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
+  string::iterator itData = itCurrPos;
+
+  itData += 8;
+
+  parseArguments(itData, itEnd, itData);
+
+  if (!_sectionArgs.size()) {
+    throw TemplateException("Syntax error. The Set token powinien miec przynajmniej jeden argument.");
+  }
+  if (itData == itEnd || *itData != '}') {
+    throw TemplateException("Syntax error. The Set token bledne zakonczenie tokena.");
+  }
+
+  itPos = itData;
+}
+
+string SetToken::output() {
+  return "";
+}
+
+void SetToken::clear() {
+
+}
