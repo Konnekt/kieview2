@@ -63,7 +63,7 @@ public:
 
 public:
   iBlockToken(iBlockToken* token);
-  iBlockToken() {}
+  iBlockToken() { }
 
 public:
   virtual int getType() {

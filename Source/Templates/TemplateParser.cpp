@@ -37,6 +37,10 @@ int TemplateParser::getType(string& text) {
   return 0;
 }
 
+void TemplateParser::parse(Template* tpl) {
+  //parse(tpl->_token, tpl->, tpl->, "", it, true);
+}
+
 TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
   bool inToken = false;
   string::iterator itTokenPos = itCurrPos;
@@ -114,9 +118,6 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
   }
   return tplParseOK;
 }
-
-
-
 
 void parseText(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   bool backSlash = false;

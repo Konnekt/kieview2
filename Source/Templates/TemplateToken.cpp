@@ -373,7 +373,7 @@ void IncludeToken::parse(iBlockToken* block, string::iterator itCurrPos, string:
     }
   }
   if (it == _sectionArgs.end()) {
-    throw TemplateException("Syntax error. Brak dyrektywy file.");
+    throw TemplateException("Syntax error. File directive does not found.");
   }
   _tpl = new Template((*it)->param->output().getString());
 
@@ -418,9 +418,17 @@ void SetToken::parse(iBlockToken* block, string::iterator itCurrPos, string::ite
 }
 
 string SetToken::output() {
+  for (tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
+    if (!TemplateVarController::get()->hasVariable(*(*it)->name)) {
+      throw TemplateException("variable not found.");
+    } else if (!TemplateVarController::get()->isWritableVariable(*(*it)->name)){
+      throw TemplateException("read only var.");
+    } else {
+      TemplateVarController::get()->setVariable(*(*it)->name, (*it)->param);
+    }
+  }
   return "";
 }
 
 void SetToken::clear() {
-
 }
