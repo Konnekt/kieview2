@@ -3,6 +3,8 @@
 #include "TemplateParser.h"
 #include "TemplateToken.h"
 
+SharedPtr<TemplateVarController> TemplateVarController::instance = 0;
+
 Template::Template(const string& path) {
   ifstream tpl(path.c_str());
   throw TemplateException("Template does not exist in path: " + path);
@@ -38,19 +40,19 @@ string Template::output() {
 }
 
 
-bool TemplateVarController::addVariable(const string& name, TemplateValue& value, bool attrWrite) {
+bool TemplateVarController::addVariable(const string& name, oTemplateValue& value, bool attrWrite) {
   if (hasVariable(name)) {
     return false;
   }
-  variables[name] = new sVariable(new TemplateValue(value), attrWrite);
+  variables[name] = new sVariable(oTemplateValue(new TemplateValue(value.get())), attrWrite);
   return true;
 }
 
 bool TemplateVarController::hasVariable(const string& name) {
-  return !name.empty() || variables.find(name) != variables.end();
+  return !name.empty() && variables.find(name) != variables.end();
 }
 
-TemplateValue TemplateVarController::getVariable(const string& name) {
+oTemplateValue TemplateVarController::getVariable(const string& name) {
   if (!hasVariable(name)) {
     //throw
   }
@@ -64,12 +66,12 @@ bool TemplateVarController::isWritableVariable(const string& name) {
   return variables[name]->attrWrite;
 }
 
-bool TemplateVarController::setVariable(const string& name, const TemplateValue& value) {
+bool TemplateVarController::setVariable(const string& name, const oTemplateValue& value) {
   if (!hasVariable(name)) {
     return false;
   }
   if (variables[name]->attrWrite) {
-    *(variables[name]->value) = value;
+    variables[name]->value = value;
   } else {
     //throw xxx
   }
@@ -103,7 +105,7 @@ bool TemplateVarController::addFunction(const string& name, enArgs cArgs, Templa
   return true;
 }
 
-TemplateValue TemplateVarController::callFunction(const string& name) {
+oTemplateValue TemplateVarController::callFunction(const string& name) {
   if (!hasFunction(name)) {
     //throw
   }
@@ -113,7 +115,7 @@ TemplateValue TemplateVarController::callFunction(const string& name) {
   return functions[name]->signal(argsZero, TemplateValue(), TemplateValue(), TemplateValue(), TemplateValue());
 }
 
-TemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1) {
+oTemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1) {
   if (!hasFunction(name)) {
     //throw
   }
@@ -123,7 +125,7 @@ TemplateValue TemplateVarController::callFunction(const string& name, TemplateVa
   return functions[name]->signal(argsOne, arg1, TemplateValue(), TemplateValue(), TemplateValue());
 }
 
-TemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2) {
+oTemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2) {
   if (!hasFunction(name)) {
     //throw
   }
@@ -133,7 +135,7 @@ TemplateValue TemplateVarController::callFunction(const string& name, TemplateVa
   return functions[name]->signal(argsTwo, arg1, arg2, TemplateValue(), TemplateValue());
 }
 
-TemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3) {
+oTemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3) {
   if (!hasFunction(name)) {
     //throw
   }
@@ -143,7 +145,7 @@ TemplateValue TemplateVarController::callFunction(const string& name, TemplateVa
   return functions[name]->signal(argsThree, arg1, arg2, arg3, TemplateValue());
 }
 
-TemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3, TemplateValue& arg4) {
+oTemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3, TemplateValue& arg4) {
   if (!hasFunction(name)) {
     //throw
   }

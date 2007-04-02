@@ -29,14 +29,14 @@ public:
     argsCustom = 5,
   };
 
-  typedef function<TemplateValue (enArgs, TemplateValue&, TemplateValue&, TemplateValue&, TemplateValue&)> fOnCallFunction;
-  typedef signal<TemplateValue (enArgs, TemplateValue&, TemplateValue&, TemplateValue&, TemplateValue&)> sigOnCallFunction;
+  typedef function<oTemplateValue (enArgs, TemplateValue&, TemplateValue&, TemplateValue&, TemplateValue&)> fOnCallFunction;
+  typedef signal<oTemplateValue (enArgs, TemplateValue&, TemplateValue&, TemplateValue&, TemplateValue&)> sigOnCallFunction;
 
   struct sVariable {
-    TemplateValue* value;
+    oTemplateValue value;
     bool attrWrite;
 
-    sVariable(TemplateValue* value, bool attrWrite): value(value), attrWrite(attrWrite) { }
+    sVariable(oTemplateValue& value, bool attrWrite): value(value), attrWrite(attrWrite) { }
   };
 
   struct sFunction {
@@ -52,23 +52,23 @@ public:
   typedef map<string, sVariable*> tVariables;
 
 public:
-  TemplateValue callFunction(const string& name);
-  TemplateValue callFunction(const string& name, TemplateValue& arg1);
-  TemplateValue callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2);
-  TemplateValue callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3);
-  TemplateValue callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3, TemplateValue& arg4);
+  oTemplateValue callFunction(const string& name);
+  oTemplateValue callFunction(const string& name, TemplateValue& arg1);
+  oTemplateValue callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2);
+  oTemplateValue callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3);
+  oTemplateValue callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3, TemplateValue& arg4);
 
   bool addFunction(const string& name, enArgs cArgs, fOnCallFunction& func);
   bool hasFunction(const string& name);
-  bool clearFunction(const string& name);
+  bool removeFunction(const string& name);
   void clearFunctions();
 
-  bool addVariable(const string& name, TemplateValue& value = TemplateValue(), bool attrWrite = true);
-  TemplateValue getVariable(const string& name);
+  bool addVariable(const string& name, oTemplateValue& value, bool attrWrite = true);
+  oTemplateValue getVariable(const string& name);
   bool hasVariable(const string& name);
   bool isWritableVariable(const string& name);
-  bool setVariable(const string& name, const TemplateValue& value);
-  bool clearVariable(const string& name);
+  bool setVariable(const string& name, const oTemplateValue& value);
+  bool removeVariable(const string& name);
   void clearVariables();
 
 private:
@@ -90,8 +90,6 @@ private:
 private:
   static SharedPtr<TemplateVarController> instance;
 };
-
-SharedPtr<TemplateVarController> TemplateVarController::instance = 0;
 
 
 class Template {

@@ -7,17 +7,17 @@ TemplateParam::TemplateParam() {
 
 TemplateParam::TemplateParam(const TemplateParam& param) {
   for (tArguments::const_iterator it = param._arguments.begin(); it != param._arguments.end(); it++) {
-    add(new TemplateValue(&(*it)->value), (*it)->nextOperator, (*it)->not);
+    add(oTemplateValue(new TemplateValue((*it)->value)), (*it)->nextOperator, (*it)->not);
   }
 }
 
-void TemplateParam::add(TemplateValue* value, enOperators nextOperator, bool not) {
+void TemplateParam::add(oTemplateValue& value, enOperators nextOperator, bool not) {
   _arguments.push_back(new sArgument(value, nextOperator, not));
 }
 
 void TemplateParam::clear() {
   for (tArguments::iterator it = _arguments.begin(); it != _arguments.end(); it++) {
-    delete (*it)->value;
+    //delete (*it)->value;
     delete *it;
   }
   _arguments.clear();
@@ -27,13 +27,13 @@ UINT TemplateParam::count() {
   return _arguments.size();
 }
 
-TemplateValue TemplateParam::output() {
+oTemplateValue TemplateParam::output() {
   tArguments::iterator it = _arguments.begin();
   tArguments::iterator itEnd = _arguments.end();
 
-  TemplateValue val;
+  oTemplateValue value = new TemplateValue();
   if (_arguments.size()) {
-    val = *(*it)->value;
+    value = new TemplateValue(((*it)->value).get());
     enOperators op = (*it)->nextOperator;
     it++;
 
@@ -42,29 +42,29 @@ TemplateValue TemplateParam::output() {
         case opNone:
           break;
         case opPlus:
-          val = val + ((*it)->not ? !(*(*it)->value) : *(*it)->value);
+          value = value.plus((*it)->not ? !(*it)->value : (*it)->value);
           break;
         case opMinus:
-          val = val - ((*it)->not ? !(*(*it)->value) : *(*it)->value);
+          value = value.minus((*it)->not ? !(*it)->value : (*it)->value);
           break;
         case opOr:
-          val = val || ((*it)->not ? !(*(*it)->value) : *(*it)->value);
+          value = value.or((*it)->not ? !(*it)->value : (*it)->value);
           break;
         case opAnd:
-          val = val && ((*it)->not ? !(*(*it)->value) : *(*it)->value);
+          value = value.and((*it)->not ? !(*it)->value : (*it)->value);
           break;
         case opDiff:
-          val = val != ((*it)->not ? !(*(*it)->value) : *(*it)->value);
+          value = value.diff((*it)->not ? !(*it)->value : (*it)->value);
           break;
         case opComp:
-          val = val == ((*it)->not ? !(*(*it)->value) : *(*it)->value);
+          value = value.comp((*it)->not ? !(*it)->value : (*it)->value);
           break;
       }
       op = (*it)->nextOperator;
       it++;
     }
   }
-  return val;
+  return value;
 }
 
 TemplateParam::~TemplateParam() {
@@ -74,13 +74,13 @@ TemplateParam::~TemplateParam() {
 TemplateVariable::TemplateVariable(const TemplateVariable& var): iTemplateVar(var._name) {
 }
 
-TemplateValue TemplateVariable::get() {
+oTemplateValue TemplateVariable::get() {
   return TemplateVarController::get()->getVariable(_name);
 }
 
 
-TemplateValue TemplateFunction::get() {
-  return TemplateValue();
+oTemplateValue TemplateFunction::get() {
+  return new TemplateValue();
 }
 
 TemplateFunction::TemplateFunction(const TemplateFunction& func): iTemplateVar(func._name) {
@@ -100,43 +100,43 @@ TemplateFunction::~TemplateFunction() {
   _params.clear();
 }
 
-TemplateValue::TemplateValue(TemplateValue& value) {
+TemplateValue::TemplateValue(TemplateValue* value) {
   this->copy(value);
 }
 
-void TemplateValue::copy(TemplateValue& value) {
-  _type = value._type;
+void TemplateValue::copy(TemplateValue* value) {
+  _type = value->_type;
   if(_type == tString) {
-    vString = new string(value.getString());
+    vString = new string(value->getString());
   } else if (_type == tBoolean) {
-    vBool = value.getBool();
+    vBool = value->getBool();
   } else if (_type == tInteger) {
-    vInt= value.getInt();
+    vInt= value->getInt();
   } else if (_type == tInteger64) {
-    vInt64 = value.getInt64();
+    vInt64 = value->getInt64();
   } else if (_type == tDate64) {
-    vDate64 = new Date64(value.getDate());
+    vDate64 = new Date64(value->getDate());
   } else if (_type == tVar) {
-    vVar = new TemplateVariable(*(value.vVar));
+    vVar = new TemplateVariable(*(value->vVar));
   } else if (_type == tFunction) {
-    vFunction = new TemplateFunction(*(value.vFunction));
+    vFunction = new TemplateFunction(*(value->vFunction));
   } else if (_type == tParam) {
-    vParam = new TemplateParam(*(value.vParam));
+    vParam = new TemplateParam(*(value->vParam));
   }
 }
 
-const TemplateValue& TemplateValue::operator = (const TemplateValue& copy) {
-  if (this == &copy) return *this;
+const TemplateValue* TemplateValue::operator = (const TemplateValue* copy) {
+  if (this == copy) return this;
   clear();
-  this->copy((TemplateValue&) copy);
-  return *this;
+  this->copy((TemplateValue*) copy);
+  return this;
 }
 
-TemplateValue& TemplateValue::operator = (TemplateValue& copy) {
-  if (this == &copy) return *this;
+TemplateValue* TemplateValue::operator = (TemplateValue* copy) {
+  if (this == copy) return this;
   clear();
-  this->copy((TemplateValue&) copy);
-  return *this;
+  this->copy((TemplateValue*) copy);
+  return this;
 }
 
 TemplateValue::TemplateValue() {
@@ -220,11 +220,11 @@ string TemplateValue::getString() {
   } else if (_type == tDate64) {
     return stringf("%ll", vDate64->getInt64());
   } else if (_type == tVar) {
-    return vVar->get().getString();
+    return vVar->get()->getString();
   } else if (_type == tFunction) {
-    return vFunction->get().getString();
+    return vFunction->get()->getString();
   } else if (_type == tParam) {
-    return vParam->output().getString();
+    return vParam->output()->getString();
   }
   return "";
 }
@@ -241,11 +241,11 @@ int TemplateValue::getInt() {
   } else if (_type == tDate64) {
     return vDate64->getTime64();
   } else if (_type == tVar) {
-    return vVar->get().getInt();
+    return vVar->get()->getInt();
   } else if (_type == tFunction) {
-    return vFunction->get().getInt();
+    return vFunction->get()->getInt();
   } else if (_type == tParam) {
-    return vParam->output().getInt();
+    return vParam->output()->getInt();
   }
   return 0;
 }
@@ -258,11 +258,11 @@ __int64 TemplateValue::getInt64() {
   } else if (_type == tDate64) {
     return vDate64->getInt64();
   } else if (_type == tVar) {
-    return vVar->get().getInt64();
+    return vVar->get()->getInt64();
   } else if (_type == tFunction) {
-    return vFunction->get().getInt64();
+    return vFunction->get()->getInt64();
   } else if (_type == tParam) {
-    return vParam->output().getInt64();
+    return vParam->output()->getInt64();
   }
   return getInt();
 }
@@ -285,104 +285,132 @@ TemplateValue::enTypes TemplateValue::getType() {
   return _type;
 }
 
-TemplateValue TemplateValue::plus(TemplateValue& value) {
-  if (_type == tString || value._type == tString) {
-    return TemplateValue(getString() + value.getString());
+oTemplateValue TemplateValue::plus(TemplateValue* value) {
+  if (_type == tString || value->_type == tString) {
+    return new TemplateValue(getString() + value->getString());
   } else if (_type == tBoolean) {
-    return TemplateValue(getBool() + value.getBool()); //err
+    return new TemplateValue(getBool() + value->getBool()); //err
   } else if (_type == tInteger) {
-    return TemplateValue(getInt() + value.getInt());
+    return new TemplateValue(getInt() + value->getInt());
   } else if (_type == tInteger64) {
-    return TemplateValue(getInt64() + value.getInt64());
+    return new TemplateValue(getInt64() + value->getInt64());
   } else if (_type == tDate64) {
-    return TemplateValue(Date64(Time64(getInt64() + value.getInt64())));
+    return new TemplateValue(Date64(Time64(getInt64() + value->getInt64())));
   } else if (_type == tVar) {
-    return TemplateValue(this->vVar->get() + value);
+    return new TemplateValue((this->vVar->get() + value).get());
   } else if (_type == tVar) {
-    return TemplateValue(this->vFunction->get() + value);
+    return new TemplateValue((this->vFunction->get() + value).get());
   } else if (_type == tParam) {
-    return TemplateValue(this->vParam->output() + value);
+    return new TemplateValue((this->vParam->output() + value).get());
   }
-  return TemplateValue();
+  return new TemplateValue();
 }
 
-TemplateValue TemplateValue::minus(TemplateValue& value) {
+oTemplateValue TemplateValue::minus(TemplateValue* value) {
   if (_type == tString) {
     //err
   } else if (_type == tBoolean) {
     //err
   } else if (_type == tInteger) {
-    return TemplateValue(getInt() - value.getInt());
+    return new TemplateValue(getInt() - value->getInt());
   } else if (_type == tInteger64) {
-    return TemplateValue(getInt64() - value.getInt64());
+    return new TemplateValue(getInt64() - value->getInt64());
   } else if (_type == tDate64) {
-    return TemplateValue(Date64(Time64(getInt64() - value.getInt64())));
+    return new TemplateValue(Date64(Time64(getInt64() - value->getInt64())));
   } else if (_type == tVar) {
-    return TemplateValue(this->vVar->get() - value);
-  } else if (_type == tVar) {
-    return TemplateValue(this->vFunction->get() + value);
-  } else if (_type == tParam) {
-    return TemplateValue(this->vParam->output() - value);
-  }
-  return TemplateValue();
-}
-
-TemplateValue TemplateValue::comp(TemplateValue &value) {
-  if (_type == tString) {
-    return TemplateValue(getString() == value.getString());
-  } else if (_type == tBoolean) {
-    return TemplateValue(getBool() == value.getBool());
-  } else if (_type == tInteger) {
-    return TemplateValue(getInt() == value.getInt());
-  } else if (_type == tInteger64) {
-    return TemplateValue(getInt64() == value.getInt64());
-  } else if (_type == tDate64) {
-    return TemplateValue(getInt64() == value.getInt64());
-  } else if (_type == tVar) {
-    return TemplateValue(this->vVar->get() == value);
+    return new TemplateValue(this->vVar->get() - value);
   } else if (_type == tFunction) {
-    return TemplateValue(this->vFunction->get() == value);
+    return new TemplateValue(this->vFunction->get() - value);
   } else if (_type == tParam) {
-    return TemplateValue(this->vParam->output() == value);
+    return new TemplateValue(this->vParam->output() - value);
   }
-  return TemplateValue();
+  return new TemplateValue();
 }
 
-TemplateValue TemplateValue::diff(TemplateValue &value) {
+oTemplateValue TemplateValue::comp(TemplateValue* value) {
   if (_type == tString) {
-    return TemplateValue(getString() != value.getString());
+    return new TemplateValue(getString() == value->getString());
   } else if (_type == tBoolean) {
-    return TemplateValue(getBool() != value.getBool());
+    return new TemplateValue(getBool() == value->getBool());
   } else if (_type == tInteger) {
-    return TemplateValue(getInt() != value.getInt());
+    return new TemplateValue(getInt() == value->getInt());
   } else if (_type == tInteger64) {
-    return TemplateValue(getInt64() != value.getInt64());
+    return new TemplateValue(getInt64() == value->getInt64());
   } else if (_type == tDate64) {
-    return TemplateValue(getInt64() != value.getInt64());
+    return new TemplateValue(getInt64() == value->getInt64());
   } else if (_type == tVar) {
-    return TemplateValue(this->vVar->get() != value);
+    return new TemplateValue((this->vVar->get() == value).get());
   } else if (_type == tFunction) {
-    return TemplateValue(this->vFunction->get() != value);
+    return new TemplateValue((this->vFunction->get() == value).get());
   } else if (_type == tParam) {
-    return TemplateValue(this->vParam->output() != value);
+    return new TemplateValue((this->vParam->output() == value).get());
   }
-  return TemplateValue(true);
+  return new TemplateValue();
 }
 
-TemplateValue TemplateValue::and(TemplateValue &value) {
-  return TemplateValue(getBool() && value.getBool());
+oTemplateValue TemplateValue::diff(TemplateValue* value) {
+  if (_type == tString) {
+    return new TemplateValue(getString() != value->getString());
+  } else if (_type == tBoolean) {
+    return new TemplateValue(getBool() != value->getBool());
+  } else if (_type == tInteger) {
+    return new TemplateValue(getInt() != value->getInt());
+  } else if (_type == tInteger64) {
+    return new TemplateValue(getInt64() != value->getInt64());
+  } else if (_type == tDate64) {
+    return new TemplateValue(getInt64() != value->getInt64());
+  } else if (_type == tVar) {
+    return new TemplateValue((this->vVar->get() != value).get());
+  } else if (_type == tFunction) {
+    return new TemplateValue((this->vFunction->get() != value).get());
+  } else if (_type == tParam) {
+    return new TemplateValue((this->vParam->output() != value).get());
+  }
+  return new TemplateValue(true);
 }
 
-TemplateValue TemplateValue::or(TemplateValue &value) {
-  return TemplateValue(getBool() || value.getBool());
+oTemplateValue TemplateValue::and(TemplateValue* value) {
+  return new TemplateValue(getBool() && value->getBool());
 }
 
-TemplateValue TemplateValue::not() {
-  return TemplateValue(!getBool());
+oTemplateValue TemplateValue::or(TemplateValue* value) {
+  return new TemplateValue(getBool() || value->getBool());
+}
+
+oTemplateValue TemplateValue::not() {
+  return new TemplateValue(!getBool());
 }
 
 TemplateValue::~TemplateValue() {
   clear();
+}
+
+oTemplateValue oTemplateValue::plus(TemplateValue* value) {
+  return get()->plus(value);
+}
+
+oTemplateValue oTemplateValue::minus(TemplateValue* value) {
+  return get()->minus(value);
+}
+
+oTemplateValue oTemplateValue::comp(TemplateValue* value) {
+  return get()->comp(value);
+}
+
+oTemplateValue oTemplateValue::diff(TemplateValue* value) {
+  return get()->diff(value);
+}
+
+oTemplateValue oTemplateValue::and(TemplateValue* value) {
+  return get()->and(value);
+}
+
+oTemplateValue oTemplateValue::or(TemplateValue* value) {
+  return get()->or(value);
+}
+
+oTemplateValue oTemplateValue::not() {
+  return get()->not();
 }
 
 /* to do:

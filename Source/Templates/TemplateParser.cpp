@@ -155,7 +155,7 @@ void parseText(TemplateParam* param, TemplateParam::enOperators oper, bool not, 
   if (itCurrPos == itEnd || *itCurrPos != '\"' || backSlash) {
     throw TemplateException("Syntax error. The text does not have end sign.");
   }
-  param->add(new TemplateValue(text), oper, not);
+  param->add(oTemplateValue(new TemplateValue(text)), oper, not);
   itPos = itCurrPos + 1;
 }
 
@@ -171,9 +171,9 @@ void parseConst(TemplateParam* param, TemplateParam::enOperators oper, bool not,
     itCurrPos++;
   }
   if (text == "false") {
-    param->add(new TemplateValue(false), oper, not);
+    param->add(oTemplateValue(new TemplateValue(false)), oper, not);
   } else if (text == "true") {
-    param->add(new TemplateValue(true), oper, not);
+    param->add(oTemplateValue(new TemplateValue(true)), oper, not);
   } else {
     throw TemplateException("Syntax error. Const value does not true/false type.");
   }
@@ -200,7 +200,7 @@ void parseInt(TemplateParam* param, TemplateParam::enOperators oper, bool not, s
   if (!intstr.size()) {
     throw TemplateException("Syntax error. This value does not integer type.");
   }
-  param->add(new TemplateValue(multipler * atoi(intstr.c_str())), oper, not);
+  param->add(oTemplateValue(new TemplateValue(multipler * atoi(intstr.c_str()))), oper, not);
   itPos = itCurrPos;
 }
 
@@ -222,7 +222,7 @@ void parseVar(TemplateParam* param, TemplateParam::enOperators oper, bool not, s
 
   if (isFunc) {
     TemplateFunction* func = new TemplateFunction(name);
-    param->add(new TemplateValue(func), oper, not);
+    param->add(oTemplateValue(new TemplateValue(func)), oper, not);
 
     TemplateParam* newParam;
     bool lastComma = false;
@@ -247,7 +247,7 @@ void parseVar(TemplateParam* param, TemplateParam::enOperators oper, bool not, s
     itPos = itCurrPos + 1;
     return;
   } else if (!isFunc){
-    param->add(new TemplateValue(new TemplateVariable(name)), oper, not);
+    param->add(oTemplateValue(new TemplateValue(new TemplateVariable(name))), oper, not);
   } else {
     throw TemplateException("Syntax error. Wrong var/funcion declaration.");
   }
@@ -265,7 +265,7 @@ bool parseArgument(TemplateParam* param, TemplateParam::enOperators oper, bool n
       throw TemplateException("Syntax error. Right bracked in block not found.");
     }
     itPos++;
-    param->add(new TemplateValue(newParam), oper, not);
+    param->add(oTemplateValue(new TemplateValue(newParam)), oper, not);
   } else if (*itCurrPos >= '0' && *itCurrPos <= '9' || *itCurrPos == '-') {
     parseInt(param, oper, not, itCurrPos, itEnd, itPos);
   } else if ((*itCurrPos >= 'a' && *itCurrPos <= 'z') || (*itCurrPos >= 'A' && *itCurrPos <= 'Z') || *itCurrPos == '_') {

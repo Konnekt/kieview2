@@ -189,10 +189,10 @@ void IFToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iter
   parseArguments(itData, itEnd, itData);
 
   if (!_sectionArgs.size()) {
-    throw TemplateException("Syntax error. The if token powinien miec przynajmniej jeden argument.");
+    throw TemplateException("Syntax error. The if token should have got least one argument.");
   }
   if (itData == itEnd || *itData != '}') {
-    throw TemplateException("Syntax error. The if token bledne zakonczenie tokena.");
+    throw TemplateException("Syntax error. The if token bad token end.");
   }
   itData++;
   int pr = TemplateParser::parse(_ifBlock, itData, itEnd, "else", itPos, allowCreateTokens);
@@ -245,7 +245,7 @@ string IFToken::output() {
   bool arg = false;
 
   for (iSectionToken::tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
-    arg |= (*it)->param->output().getBool();
+    arg |= (*it)->param->output()->getBool();
   }
   if (arg) {
     if (_ifBlock) {
@@ -294,7 +294,7 @@ string UnLessToken::output() {
   bool arg = false;
 
   for (iSectionToken::tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
-    arg |= (*it)->param->output().getBool();
+    arg |= (*it)->param->output()->getBool();
   }
   if (!arg) {
     tTokenList::iterator it = _token.begin();
@@ -330,7 +330,7 @@ void ArgumentToken::parse(iBlockToken* block, string::iterator itCurrPos, string
 }
 
 string ArgumentToken::output() {
-  return _param->output().getString();
+  return _param->output()->getString();
 }
 
 void ArgumentToken::clear() {
@@ -375,7 +375,7 @@ void IncludeToken::parse(iBlockToken* block, string::iterator itCurrPos, string:
   if (it == _sectionArgs.end()) {
     throw TemplateException("Syntax error. File directive does not found.");
   }
-  _tpl = new Template((*it)->param->output().getString());
+  _tpl = new Template((*it)->param->output()->getString());
 
   itPos = itData;
 }
@@ -408,10 +408,10 @@ void SetToken::parse(iBlockToken* block, string::iterator itCurrPos, string::ite
   parseArguments(itData, itEnd, itData);
 
   if (!_sectionArgs.size()) {
-    throw TemplateException("Syntax error. The Set token powinien miec przynajmniej jeden argument.");
+    throw TemplateException("Syntax error. The Set token should have at least one token.");
   }
   if (itData == itEnd || *itData != '}') {
-    throw TemplateException("Syntax error. The Set token bledne zakonczenie tokena.");
+    throw TemplateException("Syntax error. The Set token bad end of token.");
   }
 
   itPos = itData;
@@ -424,7 +424,7 @@ string SetToken::output() {
     } else if (!TemplateVarController::get()->isWritableVariable(*(*it)->name)){
       throw TemplateException("read only var.");
     } else {
-      TemplateVarController::get()->setVariable(*(*it)->name, (*it)->param);
+      TemplateVarController::get()->setVariable(*(*it)->name, (*it)->param->output());
     }
   }
   return "";
