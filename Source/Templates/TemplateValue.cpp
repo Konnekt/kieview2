@@ -34,10 +34,10 @@ oTemplateValue TemplateParam::output() {
   oTemplateValue value = new TemplateValue();
   if (_arguments.size()) {
     value = new TemplateValue(((*it)->value).get());
-    enOperators op = (*it)->nextOperator;
     it++;
-
+    enOperators op;
     while (it != itEnd) {
+      op = (*it)->nextOperator;
       switch (op) {
         case opNone:
           break;
@@ -60,7 +60,6 @@ oTemplateValue TemplateParam::output() {
           value = value.comp((*it)->not ? !(*it)->value : (*it)->value);
           break;
       }
-      op = (*it)->nextOperator;
       it++;
     }
   }
@@ -80,7 +79,18 @@ oTemplateValue TemplateVariable::get() {
 
 
 oTemplateValue TemplateFunction::get() {
-  return new TemplateValue();
+  int count = _params.size();
+  if (count == 0) {
+    return TemplateVarController::get()->callFunction(this->_name);
+  } else if (count == 1) {
+    return TemplateVarController::get()->callFunction(this->_name, *_params[0]->output().get());
+  } else if (count == 2) {
+    return TemplateVarController::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get());
+  } else if (count == 3) {
+    return TemplateVarController::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get(), *_params[2]->output().get());
+  } else if (count == 4) {
+  return TemplateVarController::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get(), *_params[2]->output().get(), *_params[3]->output().get());
+  }
 }
 
 TemplateFunction::TemplateFunction(const TemplateFunction& func): iTemplateVar(func._name) {

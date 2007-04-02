@@ -78,7 +78,7 @@ bool TemplateVarController::setVariable(const string& name, const oTemplateValue
   return true;
 }
 
-bool TemplateVarController::clearVariable(const string& name) {
+bool TemplateVarController::removeVariable(const string& name) {
   if (!hasVariable(name)) {
     return false;
   }
@@ -156,10 +156,10 @@ oTemplateValue TemplateVarController::callFunction(const string& name, TemplateV
 }
 
 bool TemplateVarController::hasFunction(const string& name) {
-  return !name.empty() || functions.find(name) != functions.end();
+  return !name.empty() && functions.find(name) != functions.end();
 }
 
-bool TemplateVarController::clearFunction(const string& name) {
+bool TemplateVarController::removeFunction(const string& name) {
   if (!hasFunction(name)) {
     return false;
   }
