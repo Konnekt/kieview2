@@ -101,12 +101,12 @@ public:
 
 public:
   bool loaded();
-  void tokenize();
   string output();
 
 private:
   iBlockToken* _token;
   bool _loaded;
+  string _data;
 };
 
 #endif // __TEMPLATE_H__

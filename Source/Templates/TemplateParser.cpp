@@ -37,8 +37,18 @@ int TemplateParser::getType(string& text) {
   return 0;
 }
 
-void TemplateParser::parse(Template* tpl) {
-  //parse(tpl->_token, tpl->, tpl->, "", it, true);
+void TemplateParser::parse(Template **tpl) {
+  string::iterator it;
+  try {
+    parse((*tpl)->_token, (*tpl)->_data.begin(), (*tpl)->_data.end(), "", it, true);
+  } catch (const TemplateException& ex) {
+    delete *tpl;
+    *tpl = NULL;
+    throw;
+  }
+  if (it != (*tpl)->_data.end()) {
+    throw TemplateException("Syntax error. Bad template declaration.");
+  }
 }
 
 TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
@@ -119,7 +129,7 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
   return tplParseOK;
 }
 
-void parseText(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
+void TemplateParser::parseText(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   bool backSlash = false;
   string text;
 
@@ -159,7 +169,7 @@ void parseText(TemplateParam* param, TemplateParam::enOperators oper, bool not, 
   itPos = itCurrPos + 1;
 }
 
-void parseConst(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
+void TemplateParser::parseConst(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   string text;
 
   while (itCurrPos != itEnd) {
@@ -180,7 +190,7 @@ void parseConst(TemplateParam* param, TemplateParam::enOperators oper, bool not,
   itPos = itCurrPos;
 }
 
-void parseInt(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
+void TemplateParser::parseInt(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   string intstr;
   int multipler;
   if (itCurrPos != itEnd && *itCurrPos == '-') {
@@ -204,7 +214,7 @@ void parseInt(TemplateParam* param, TemplateParam::enOperators oper, bool not, s
   itPos = itCurrPos;
 }
 
-void parseVar(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
+void TemplateParser::parseVar(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   bool isFunc = false;
   string name;
 
@@ -229,7 +239,7 @@ void parseVar(TemplateParam* param, TemplateParam::enOperators oper, bool not, s
 
     do {
       newParam = new TemplateParam;
-      TemplateParser::parseParam(newParam, itCurrPos + 1, itEnd, itCurrPos);
+      parseParam(newParam, itCurrPos + 1, itEnd, itCurrPos);
       if ((lastComma ||(itCurrPos != itEnd && *itCurrPos == ','))&& !newParam->count()) {
         throw TemplateException("Syntax error. Too many comma signs in function: " + name);
       }
@@ -254,7 +264,7 @@ void parseVar(TemplateParam* param, TemplateParam::enOperators oper, bool not, s
   itPos = itCurrPos;
 }
 
-bool parseArgument(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
+bool TemplateParser::parseArgument(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   if (*itCurrPos == '\"') {
     parseText(param, oper, not, itCurrPos + 1, itEnd, itPos);
   } else if (*itCurrPos == '(') {
@@ -278,7 +288,7 @@ bool parseArgument(TemplateParam* param, TemplateParam::enOperators oper, bool n
   return true;
 }
 
-TemplateParam::enOperators parseOperator(string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
+TemplateParam::enOperators TemplateParser::parseOperator(string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   string oper;
 
   while (itCurrPos != itEnd) {

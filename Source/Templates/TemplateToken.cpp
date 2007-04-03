@@ -13,7 +13,7 @@ void iSectionToken::parseArguments(string::iterator itCurrPos, string::iterator 
   UINT index = 0;
 
   while (itCurrPos != itEnd && (*itCurrPos == ' ' || *itCurrPos == '\t')) {
-    ++itCurrPos++;
+    itCurrPos++;
   }
   do {
     if (*itCurrPos == ',') itCurrPos++;
@@ -375,13 +375,21 @@ void IncludeToken::parse(iBlockToken* block, string::iterator itCurrPos, string:
   if (it == _sectionArgs.end()) {
     throw TemplateException("Syntax error. File directive does not found.");
   }
-  _tpl = new Template((*it)->param->output()->getString());
 
   itPos = itData;
 }
 
 string IncludeToken::output() {
-  string out;
+  clear();
+  iSectionToken::tSectionArgs::iterator it;
+  for (it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
+    if (*(*it)->name == "file") {
+      break;
+    }
+  }
+
+  _tpl = new Template((*it)->param->output()->getString());
+  TemplateParser::parse(&_tpl);
   if (_tpl && _tpl->loaded()) {
     return _tpl->output();
   } else {
@@ -403,7 +411,7 @@ iSectionToken::enSectionType SetToken::getSectionType() {
 void SetToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
   string::iterator itData = itCurrPos;
 
-  itData += 8;
+  itData += 5;
 
   parseArguments(itData, itEnd, itData);
 

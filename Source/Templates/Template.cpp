@@ -7,23 +7,18 @@ SharedPtr<TemplateVarController> TemplateVarController::instance = 0;
 
 Template::Template(const string& path) {
   ifstream tpl(path.c_str());
-  throw TemplateException("Template does not exist in path: " + path);
-  string data, line;
+
+  string line;
   if (!tpl.is_open()) {
     throw TemplateException("Template does not exist in path: " + path);
   }
   while (!tpl.eof()) {
     getline(tpl, line);
-    data += line;
+    _data += line;
   }
   tpl.close();
   _token = new iBlockToken();
 
-  string::iterator it;
-  TemplateParser::parse(_token, data.begin(), data.end(), "", it, true);
-  if (it != data.end()) {
-    throw TemplateException("Template have got a error in path: " + path);
-  }
   _loaded = true;
 }
 
@@ -44,7 +39,7 @@ bool TemplateVarController::addVariable(const string& name, oTemplateValue& valu
   if (hasVariable(name)) {
     return false;
   }
-  variables[name] = new sVariable(oTemplateValue(new TemplateValue(value.get())), attrWrite);
+  variables[name] = new sVariable(value, attrWrite);
   return true;
 }
 
@@ -54,7 +49,7 @@ bool TemplateVarController::hasVariable(const string& name) {
 
 oTemplateValue TemplateVarController::getVariable(const string& name) {
   if (!hasVariable(name)) {
-    //throw
+    return oTemplateValue(new TemplateValue("Var " + name + "does not exist."));
   }
   return variables[name]->value;
 }
@@ -70,7 +65,7 @@ bool TemplateVarController::setVariable(const string& name, const oTemplateValue
   if (!hasVariable(name)) {
     return false;
   }
-  if (variables[name]->attrWrite) {
+  if (isWritableVariable(name)) {
     variables[name]->value = value;
   } else {
     //throw xxx
