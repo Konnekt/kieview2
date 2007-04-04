@@ -13,13 +13,22 @@ public:
   static const int T_NONE = 1;
 
 public:
+  iTemplateToken(oTemplate& tpl): _tpl(tpl) { }
+
+public:
   virtual int getType() {
     return T_NONE;
+  }
+  virtual oTemplate getTemplate() {
+    return _tpl;
   }
 public:
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) = 0;
   virtual string output() = 0;
   virtual void clear() = 0;
+
+public:
+  oTemplate _tpl;
 };
 
 class iSectionToken: public iTemplateToken {
@@ -43,6 +52,7 @@ public:
   typedef vector<sSectionArg*> tSectionArgs;
 
 public:
+  iSectionToken(oTemplate& tpl): iTemplateToken(tpl) { }
   virtual ~iSectionToken();
 
 public:
@@ -62,8 +72,8 @@ public:
   typedef vector<iTemplateToken*> tTokenList;
 
 public:
-  iBlockToken(iBlockToken* token);
-  iBlockToken() { }
+  //iBlockToken(iBlockToken* token);
+  iBlockToken(oTemplate& tpl): iSectionToken(tpl) { }
 
 public:
   virtual int getType() {
@@ -90,6 +100,9 @@ public:
   static const int T_TEXT = 10;
 
 public:
+  TextToken(oTemplate& tpl): iTemplateToken(tpl) { }
+
+public:
   virtual int getType() {
     return T_TEXT;
   }
@@ -113,8 +126,8 @@ public:
   }
 
 public:
-  IFToken();
-  ~IFToken();
+  IFToken(oTemplate& tpl);
+  virtual ~IFToken();
 
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
 
@@ -136,6 +149,9 @@ public:
   static const int T_UNLESS = T_BLOCK | 20;
 
 public:
+  UnLessToken(oTemplate& tpl): iBlockToken(tpl) { }
+
+public:
   virtual int getType() {
     return T_UNLESS;
   }
@@ -151,8 +167,8 @@ public:
   static const int T_ARGUMENT = 30;
 
 public:
-  ArgumentToken();
-  ~ArgumentToken();
+  ArgumentToken(oTemplate& tpl);
+  virtual ~ArgumentToken();
 
 public:
   virtual int getType() {
@@ -171,8 +187,8 @@ public:
   static const int T_INCLUDE = 35;
 
 public:
-  IncludeToken();
-  ~IncludeToken();
+  IncludeToken(oTemplate& tpl);
+  virtual ~IncludeToken();
 
 public:
   virtual int getType() {
@@ -184,12 +200,15 @@ public:
   virtual void clear();
 
 public:
-  Template* _tpl;
+  oTemplate _includeTpl;
 };
 
 class SetToken: public iSectionToken {
 public:
   static const int T_SET = 40;
+
+public:
+  SetToken(oTemplate& tpl): iSectionToken(tpl) { }
 
 public:
   virtual int getType() {

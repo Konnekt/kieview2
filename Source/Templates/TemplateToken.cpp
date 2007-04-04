@@ -45,7 +45,7 @@ void iSectionToken::parseArguments(string::iterator itCurrPos, string::iterator 
       }
     }
     newParam = new TemplateParam;
-    TemplateParser::parseParam(newParam, itCurrPos, itEnd, itCurrPos);
+    getTemplate()->getParser()->parseParam(newParam, itCurrPos, itEnd, itCurrPos);
     if ((lastComma ||(itCurrPos != itEnd && *itCurrPos == ',')) && !newParam->count()) {
       throw TemplateException("Syntax error. Too many comma signs in xxx");
     }
@@ -106,7 +106,7 @@ iSectionToken::enSectionType iBlockToken::getSectionType() {
 }
 
 void iBlockToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
-  TemplateParser::parse(this, itCurrPos, itEnd, stopToken, itPos, allowCreateTokens);
+  getTemplate()->getParser()->parse(this, itCurrPos, itEnd, stopToken, itPos, allowCreateTokens);
 }
 
 bool iBlockToken::remove(UINT id) {
@@ -168,7 +168,7 @@ void TextToken::clear() {
 /*
  IFToken
 */
-IFToken::IFToken(): _ifBlock(NULL), _elseBlock(NULL) { }
+IFToken::IFToken(oTemplate& tpl): iBlockToken(tpl), _ifBlock(NULL), _elseBlock(NULL) { }
 
 IFToken::~IFToken() {
   if (_ifBlock) {
@@ -180,7 +180,7 @@ IFToken::~IFToken() {
 }
 
 void IFToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
-  _ifBlock = new iBlockToken;
+  _ifBlock = new iBlockToken(getTemplate());
 
   string::iterator itData = itCurrPos;
   bool foundElse = false;
@@ -195,14 +195,14 @@ void IFToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iter
     throw TemplateException("Syntax error. The if token bad token end.");
   }
   itData++;
-  int pr = TemplateParser::parse(_ifBlock, itData, itEnd, "else", itPos, allowCreateTokens);
+  int pr = getTemplate()->getParser()->parse(_ifBlock, itData, itEnd, "else", itPos, allowCreateTokens);
   if (pr == TemplateParser::tplEndTokenFound) {
     return;
 
   } else if (pr == TemplateParser::tplStopTokenFound) { //znaleziono stopowy token czyli else(if)
-    _elseBlock = new iBlockToken;
+    _elseBlock = new iBlockToken(getTemplate());
 
-    int nt = TemplateParser::parse(_elseBlock, ++itPos, itEnd, "", itPos, allowCreateTokens); //parsowanie kolejnych elementow
+    int nt = getTemplate()->getParser()->parse(_elseBlock, ++itPos, itEnd, "", itPos, allowCreateTokens); //parsowanie kolejnych elementow
     if (nt == TemplateParser::tplEndTokenFound) {
       return;
     }
@@ -280,7 +280,7 @@ void UnLessToken::parse(iBlockToken* block, string::iterator itCurrPos, string::
     throw TemplateException("Syntax error. The Unless token bledne zakonczenie tokena.");
   }
 
-  int pr = TemplateParser::parse(this, ++itData, itEnd, "/unless", itPos, allowCreateTokens);
+  int pr = getTemplate()->getParser()->parse(this, ++itData, itEnd, "/unless", itPos, allowCreateTokens);
 
   if (pr == TemplateParser::tplEndTokenFound) {
   } else if (pr == TemplateParser::tplStopTokenFound){
@@ -312,7 +312,7 @@ string UnLessToken::output() {
  ArgumentToken
 */
 
-ArgumentToken::ArgumentToken() {
+ArgumentToken::ArgumentToken(oTemplate& tpl): iTemplateToken(tpl) {
   _param = new TemplateParam;
 }
 
@@ -322,7 +322,7 @@ ArgumentToken::~ArgumentToken() {
 
 void ArgumentToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
   itCurrPos += 1;
-  TemplateParser::parseParam(_param, itCurrPos, itEnd, itCurrPos);
+  getTemplate()->getParser()->parseParam(_param, itCurrPos, itEnd, itCurrPos);
   if (itCurrPos == itEnd || *itCurrPos != '}') {
     throw TemplateException("Syntax error. Nieoczekiwane zakoñczenie tokena.");
   }
@@ -341,8 +341,8 @@ void ArgumentToken::clear() {
  IncludeToken
 */
 
-IncludeToken::IncludeToken() {
-  _tpl = NULL;
+IncludeToken::IncludeToken(oTemplate& tpl): iSectionToken(tpl) {
+  _includeTpl = NULL;
 }
 
 IncludeToken::~IncludeToken() {
@@ -388,20 +388,17 @@ string IncludeToken::output() {
     }
   }
 
-  _tpl = new Template((*it)->param->output()->getString());
-  TemplateParser::parse(&_tpl);
-  if (_tpl && _tpl->loaded()) {
-    return _tpl->output();
+  _includeTpl = oTemplate(new Template((*it)->param->output()->getString()));
+  getTemplate()->getParser()->parse(_includeTpl);
+  if (_includeTpl && _includeTpl->loaded()) {
+    return _includeTpl->output();
   } else {
     return "";
   }
 }
 
 void IncludeToken::clear() {
-  if (_tpl) {
-    delete _tpl;
-  }
-  _tpl = NULL;
+  _includeTpl = NULL;
 }
 
 iSectionToken::enSectionType SetToken::getSectionType() {
@@ -427,12 +424,12 @@ void SetToken::parse(iBlockToken* block, string::iterator itCurrPos, string::ite
 
 string SetToken::output() {
   for (tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
-    if (!TemplateVarController::get()->hasVariable(*(*it)->name)) {
+    if (!GlobalManager::get()->hasVariable(*(*it)->name)) {
       throw TemplateException("variable not found.");
-    } else if (!TemplateVarController::get()->isWritableVariable(*(*it)->name)){
+    } else if (!GlobalManager::get()->isWritableVariable(*(*it)->name)){
       throw TemplateException("read only var.");
     } else {
-      TemplateVarController::get()->setVariable(*(*it)->name, (*it)->param->output());
+      GlobalManager::get()->setVariable(*(*it)->name, (*it)->param->output());
     }
   }
   return "";

@@ -3,19 +3,19 @@
 #include "TemplateValue.h"
 #include "Template.h"
 
-iTemplateToken* TemplateParser::getToken(int type) {
+iTemplateToken* TemplateParser::getToken(int type, oTemplate& tpl) {
   if (type == TextToken::T_TEXT) {
-    return new TextToken;
+    return new TextToken(tpl);
   } else if (type == UnLessToken::T_UNLESS) {
-    return new UnLessToken;
+    return new UnLessToken(tpl);
   } else if (type == IFToken::T_IF) {
-    return new IFToken;
+    return new IFToken(tpl);
   } else if (type == ArgumentToken::T_ARGUMENT) {
-    return new ArgumentToken;
+    return new ArgumentToken(tpl);
   } else if (type == IncludeToken::T_INCLUDE) {
-    return new IncludeToken;
+    return new IncludeToken(tpl);
   } else if (type == SetToken::T_SET) {
-    return new SetToken;
+    return new SetToken(tpl);
   }
   return NULL;
 }
@@ -29,24 +29,26 @@ int TemplateParser::getType(string& text) {
     return UnLessToken::T_UNLESS;
   } else if (text == "include") {
     return IncludeToken::T_INCLUDE;
-  } else if (text[0] == '$' || text[0] == '-' || text[0] == 'f' || text[0] == 't' || (text[0] >= 'a' && text[0] <= 'z')
-    || (text[0] >= 'A' && text[0] <= 'Z') || (text[0] >= '0' && text[0] <= '9') || text[0] == '(' || text[0] == ')' || text[0] == '\"') 
+  } else if (text[0] == '$' || text[0] == '-' || text[0] == 'f' || text[0] == 't' || (text[0] >= 'a' && text[0] <= 'z') || text[0] == '!'
+    || (text[0] >= 'A' && text[0] <= 'Z') || (text[0] >= '0' && text[0] <= '9') || text[0] == '(' || text[0] == ')'
+    || text[0] == '\"' || text[0] == '\'')
   {
     return ArgumentToken::T_ARGUMENT;
   }
   return 0;
 }
 
-void TemplateParser::parse(Template **tpl) {
+void TemplateParser::parse(oTemplate& tpl) {
+  tpl->clear();
+  tpl->_parser = this;
+  tpl->_token = new iBlockToken(tpl);
   string::iterator it;
   try {
-    parse((*tpl)->_token, (*tpl)->_data.begin(), (*tpl)->_data.end(), "", it, true);
+    parse(tpl->_token, tpl->_data.begin(), tpl->_data.end(), "", it, true);
   } catch (const TemplateException& ex) {
-    delete *tpl;
-    *tpl = NULL;
     throw;
   }
-  if (it != (*tpl)->_data.end()) {
+  if (it != tpl->_data.end()) {
     throw TemplateException("Syntax error. Bad template declaration.");
   }
 }
@@ -61,7 +63,7 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
       inToken = true;
 
       if (itTokenPos != itCurrPos && allowCreateTokens && block) {
-        iTemplateToken* pToken = getToken(TextToken::T_TEXT);
+        iTemplateToken* pToken = getToken(TextToken::T_TEXT, block->getTemplate());
         pToken->parse(block, itTokenPos, itCurrPos, "", itPos, true);
         block->add(pToken);
       }
@@ -96,7 +98,7 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
 
       int type = getType(token);//token);
       if (block && allowCreateTokens && type != 0) {
-        iTemplateToken* pToken = getToken(type);//, block);
+        iTemplateToken* pToken = getToken(type, block->getTemplate());//, block);
         if (pToken) {
           pToken->parse(block, itTokenPos, itEnd, ("/" + token), itPos, true);
           itCurrPos = itPos;
@@ -122,7 +124,7 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
     itCurrPos++;
   }
   if (itTokenPos != itCurrPos && allowCreateTokens && block) {
-    iTemplateToken* pToken = getToken(TextToken::T_TEXT);
+    iTemplateToken* pToken = getToken(TextToken::T_TEXT, block->getTemplate());
     pToken->parse(block, itTokenPos, itCurrPos, "", itPos, true);
     block->add(pToken);
   }
@@ -132,6 +134,7 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
 void TemplateParser::parseText(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   bool backSlash = false;
   string text;
+  bool apostrophe = (*itCurrPos++) == '\'';
 
   while (itCurrPos != itEnd) {
     if (backSlash) {
@@ -154,15 +157,14 @@ void TemplateParser::parseText(TemplateParam* param, TemplateParam::enOperators 
       backSlash = false;
     } else if (*itCurrPos == '\\') {
       backSlash = true;
-    } else if (*itCurrPos == '\"') {
+    } else if ((*itCurrPos == '\"' && !apostrophe) || (*itCurrPos == '\'' && apostrophe)) {
       break;
     } else {
       text += *itCurrPos;
     }
     itCurrPos++;
   }
-
-  if (itCurrPos == itEnd || *itCurrPos != '\"' || backSlash) {
+  if (itCurrPos == itEnd || (*itCurrPos != '\"' && !apostrophe) || (*itCurrPos != '\'' && apostrophe) || backSlash) {
     throw TemplateException("Syntax error. The text does not have end sign.");
   }
   param->add(oTemplateValue(new TemplateValue(text)), oper, not);
@@ -265,8 +267,8 @@ void TemplateParser::parseVar(TemplateParam* param, TemplateParam::enOperators o
 }
 
 bool TemplateParser::parseArgument(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
-  if (*itCurrPos == '\"') {
-    parseText(param, oper, not, itCurrPos + 1, itEnd, itPos);
+  if (*itCurrPos == '\"' || *itCurrPos == '\'') {
+    parseText(param, oper, not, itCurrPos, itEnd, itPos);
   } else if (*itCurrPos == '(') {
     TemplateParam* newParam = new TemplateParam;
     TemplateParser::parseParam(newParam, itCurrPos + 1, itEnd, itPos);

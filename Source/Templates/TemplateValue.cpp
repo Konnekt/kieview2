@@ -33,7 +33,7 @@ oTemplateValue TemplateParam::output() {
 
   oTemplateValue value = new TemplateValue();
   if (_arguments.size()) {
-    value = new TemplateValue(((*it)->value).get());
+    value = new TemplateValue((*it)->not ? (!(*it)->value).get() : ((*it)->value).get());
     it++;
     enOperators op;
     while (it != itEnd) {
@@ -74,22 +74,22 @@ TemplateVariable::TemplateVariable(const TemplateVariable& var): iTemplateVar(va
 }
 
 oTemplateValue TemplateVariable::get() {
-  return TemplateVarController::get()->getVariable(_name);
+  return GlobalManager::get()->getVariable(_name);
 }
 
 
 oTemplateValue TemplateFunction::get() {
   int count = _params.size();
   if (count == 0) {
-    return TemplateVarController::get()->callFunction(this->_name);
+    return GlobalManager::get()->callFunction(this->_name);
   } else if (count == 1) {
-    return TemplateVarController::get()->callFunction(this->_name, *_params[0]->output().get());
+    return GlobalManager::get()->callFunction(this->_name, *_params[0]->output().get());
   } else if (count == 2) {
-    return TemplateVarController::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get());
+    return GlobalManager::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get());
   } else if (count == 3) {
-    return TemplateVarController::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get(), *_params[2]->output().get());
+    return GlobalManager::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get(), *_params[2]->output().get());
   } else if (count == 4) {
-  return TemplateVarController::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get(), *_params[2]->output().get(), *_params[3]->output().get());
+    return GlobalManager::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get(), *_params[2]->output().get(), *_params[3]->output().get());
   }
 }
 
@@ -287,6 +287,12 @@ Date64 TemplateValue::getDate() {
 bool TemplateValue::getBool() {
   if (_type == tString) {
     return vString->size();
+  } else if (_type == tVar) {
+    return vVar->get()->getString().size();
+  } else if (_type == tFunction) {
+    return vFunction->get()->getString().size();
+  } else if (_type == tParam) {
+    return vParam->output()->getString().size();
   }
   return getInt();
 }

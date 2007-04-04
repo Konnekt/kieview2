@@ -4,6 +4,7 @@
 #define __TEMPLATE_H__
 
 class Template;
+typedef SharedPtr<class Template> oTemplate;
 
 #include <fstream>
 #include "TemplateValue.h"
@@ -15,9 +16,33 @@ public:
   TemplateException(const StringRef& reason): ExceptionString(reason) { }
 };
 
-class TemplateVarController: public SharedObject<iSharedObject>, public signals::trackable {
+class iVariableManager {
+public:
+  struct sVariable {
+    oTemplateValue value;
+    bool attrWrite;
+
+    sVariable(oTemplateValue& value, bool attrWrite): value(value), attrWrite(attrWrite) { }
+  };
+
+  typedef map<string, sVariable*> tVariables;
+
+public:
+  virtual bool addVariable(const string& name, oTemplateValue& value, bool attrWrite = true);
+  virtual oTemplateValue getVariable(const string& name);
+  virtual bool hasVariable(const string& name);
+  virtual bool isWritableVariable(const string& name);
+  virtual bool setVariable(const string& name, const oTemplateValue& value);
+  virtual bool removeVariable(const string& name);
+  virtual void clearVariables();
+
+protected:
+  tVariables variables;
+};
+
+class GlobalManager: public SharedObject<iSharedObject>, public iVariableManager, public signals::trackable {
   /* Class version */
-  STAMINA_OBJECT_CLASS_VERSION(TemplateVarController, iSharedObject, Version(0,0,0,1));
+  STAMINA_OBJECT_CLASS_VERSION(GlobalManager, iSharedObject, Version(0,0,0,1));
 
 public:
   enum enArgs {
@@ -32,13 +57,6 @@ public:
   typedef function<oTemplateValue (enArgs, TemplateValue&, TemplateValue&, TemplateValue&, TemplateValue&)> fOnCallFunction;
   typedef signal<oTemplateValue (enArgs, TemplateValue&, TemplateValue&, TemplateValue&, TemplateValue&)> sigOnCallFunction;
 
-  struct sVariable {
-    oTemplateValue value;
-    bool attrWrite;
-
-    sVariable(oTemplateValue& value, bool attrWrite): value(value), attrWrite(attrWrite) { }
-  };
-
   struct sFunction {
     enArgs cArgs;
     sigOnCallFunction signal;
@@ -49,7 +67,6 @@ public:
   };
 
   typedef map<string, sFunction*> tFunctions;
-  typedef map<string, sVariable*> tVariables;
 
 public:
   oTemplateValue callFunction(const string& name);
@@ -63,36 +80,30 @@ public:
   bool removeFunction(const string& name);
   void clearFunctions();
 
-  bool addVariable(const string& name, oTemplateValue& value, bool attrWrite = true);
-  oTemplateValue getVariable(const string& name);
-  bool hasVariable(const string& name);
-  bool isWritableVariable(const string& name);
-  bool setVariable(const string& name, const oTemplateValue& value);
-  bool removeVariable(const string& name);
-  void clearVariables();
-
 private:
-  TemplateVarController() { }
-  ~TemplateVarController() { }
+  GlobalManager() { }
+  ~GlobalManager() { }
 
 public:
-  static TemplateVarController* get() {
+  static GlobalManager* get() {
     if (!instance.isValid()) {
-      instance = new TemplateVarController;
+      instance = new GlobalManager;
     }
     return instance;
   }
 
 private:
-  tVariables variables;
   tFunctions functions;
 
 private:
-  static SharedPtr<TemplateVarController> instance;
+  static SharedPtr<GlobalManager> instance;
 };
 
 
-class Template {
+class Template: public SharedObject<iSharedObject>, public iVariableManager {
+  /* Class version */
+  STAMINA_OBJECT_CLASS_VERSION(Template, iSharedObject, Version(0,0,0,1));
+
   friend class TemplateParser;
 
 public:
@@ -100,10 +111,16 @@ public:
   ~Template();
 
 public:
+  TemplateParser* getParser();
   bool loaded();
   string output();
+  void clear();
+
+public:
+  oTemplateValue getVariable(const string& name);
 
 private:
+  TemplateParser* _parser;
   iBlockToken* _token;
   bool _loaded;
   string _data;

@@ -3,7 +3,7 @@
 #include "TemplateParser.h"
 #include "TemplateToken.h"
 
-SharedPtr<TemplateVarController> TemplateVarController::instance = 0;
+SharedPtr<GlobalManager> GlobalManager::instance = 0;
 
 Template::Template(const string& path) {
   ifstream tpl(path.c_str());
@@ -17,17 +17,34 @@ Template::Template(const string& path) {
     _data += line;
   }
   tpl.close();
-  _token = new iBlockToken();
+  _token = NULL;
 
   _loaded = true;
 }
 
 Template::~Template() {
-  delete _token;
+  clear();
 }
 
 bool Template::loaded() {
   return _loaded;
+}
+
+void Template::clear() {
+  if (_token) {
+    delete _token;
+  }
+}
+
+TemplateParser* Template::getParser() {
+  return _parser;
+}
+
+oTemplateValue Template::getVariable(const std::string &name) {
+  if (hasVariable(name)) {
+    return iVariableManager::getVariable(name);
+  }
+  return GlobalManager::get()->getVariable(name);
 }
 
 string Template::output() {
@@ -35,7 +52,7 @@ string Template::output() {
 }
 
 
-bool TemplateVarController::addVariable(const string& name, oTemplateValue& value, bool attrWrite) {
+bool iVariableManager::addVariable(const string& name, oTemplateValue& value, bool attrWrite) {
   if (hasVariable(name)) {
     return false;
   }
@@ -43,25 +60,25 @@ bool TemplateVarController::addVariable(const string& name, oTemplateValue& valu
   return true;
 }
 
-bool TemplateVarController::hasVariable(const string& name) {
+bool iVariableManager::hasVariable(const string& name) {
   return !name.empty() && variables.find(name) != variables.end();
 }
 
-oTemplateValue TemplateVarController::getVariable(const string& name) {
+oTemplateValue iVariableManager::getVariable(const string& name) {
   if (!hasVariable(name)) {
     return oTemplateValue(new TemplateValue("Var " + name + "does not exist."));
   }
   return variables[name]->value;
 }
 
-bool TemplateVarController::isWritableVariable(const string& name) {
+bool iVariableManager::isWritableVariable(const string& name) {
   if (!hasVariable(name)) {
     return false;
   }
   return variables[name]->attrWrite;
 }
 
-bool TemplateVarController::setVariable(const string& name, const oTemplateValue& value) {
+bool iVariableManager::setVariable(const string& name, const oTemplateValue& value) {
   if (!hasVariable(name)) {
     return false;
   }
@@ -73,7 +90,7 @@ bool TemplateVarController::setVariable(const string& name, const oTemplateValue
   return true;
 }
 
-bool TemplateVarController::removeVariable(const string& name) {
+bool iVariableManager::removeVariable(const string& name) {
   if (!hasVariable(name)) {
     return false;
   }
@@ -84,7 +101,7 @@ bool TemplateVarController::removeVariable(const string& name) {
   return true;
 }
 
-void TemplateVarController::clearVariables() {
+void iVariableManager::clearVariables() {
   for (tVariables::iterator it = variables.begin(); it != variables.end(); it++) {
     delete it->second->value;
     delete it->second;
@@ -92,7 +109,7 @@ void TemplateVarController::clearVariables() {
   variables.clear();
 }
 
-bool TemplateVarController::addFunction(const string& name, enArgs cArgs, TemplateVarController::fOnCallFunction& func) {
+bool GlobalManager::addFunction(const string& name, enArgs cArgs, GlobalManager::fOnCallFunction& func) {
   if (hasFunction(name)) {
     return false;
   }
@@ -100,7 +117,7 @@ bool TemplateVarController::addFunction(const string& name, enArgs cArgs, Templa
   return true;
 }
 
-oTemplateValue TemplateVarController::callFunction(const string& name) {
+oTemplateValue GlobalManager::callFunction(const string& name) {
   if (!hasFunction(name)) {
     //throw
   }
@@ -110,7 +127,7 @@ oTemplateValue TemplateVarController::callFunction(const string& name) {
   return functions[name]->signal(argsZero, TemplateValue(), TemplateValue(), TemplateValue(), TemplateValue());
 }
 
-oTemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1) {
+oTemplateValue GlobalManager::callFunction(const string& name, TemplateValue& arg1) {
   if (!hasFunction(name)) {
     //throw
   }
@@ -120,7 +137,7 @@ oTemplateValue TemplateVarController::callFunction(const string& name, TemplateV
   return functions[name]->signal(argsOne, arg1, TemplateValue(), TemplateValue(), TemplateValue());
 }
 
-oTemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2) {
+oTemplateValue GlobalManager::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2) {
   if (!hasFunction(name)) {
     //throw
   }
@@ -130,7 +147,7 @@ oTemplateValue TemplateVarController::callFunction(const string& name, TemplateV
   return functions[name]->signal(argsTwo, arg1, arg2, TemplateValue(), TemplateValue());
 }
 
-oTemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3) {
+oTemplateValue GlobalManager::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3) {
   if (!hasFunction(name)) {
     //throw
   }
@@ -140,7 +157,7 @@ oTemplateValue TemplateVarController::callFunction(const string& name, TemplateV
   return functions[name]->signal(argsThree, arg1, arg2, arg3, TemplateValue());
 }
 
-oTemplateValue TemplateVarController::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3, TemplateValue& arg4) {
+oTemplateValue GlobalManager::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3, TemplateValue& arg4) {
   if (!hasFunction(name)) {
     //throw
   }
@@ -150,11 +167,11 @@ oTemplateValue TemplateVarController::callFunction(const string& name, TemplateV
   return functions[name]->signal(argsFour, arg1, arg2, arg3, arg4);
 }
 
-bool TemplateVarController::hasFunction(const string& name) {
+bool GlobalManager::hasFunction(const string& name) {
   return !name.empty() && functions.find(name) != functions.end();
 }
 
-bool TemplateVarController::removeFunction(const string& name) {
+bool GlobalManager::removeFunction(const string& name) {
   if (!hasFunction(name)) {
     return false;
   }
@@ -164,7 +181,7 @@ bool TemplateVarController::removeFunction(const string& name) {
   return true;
 }
 
-void TemplateVarController::clearFunctions() {
+void GlobalManager::clearFunctions() {
   for (tFunctions::iterator it = functions.begin(); it != functions.end(); it++) {
     delete it->second;
   }
