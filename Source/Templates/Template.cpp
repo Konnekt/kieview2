@@ -3,7 +3,7 @@
 #include "TemplateParser.h"
 #include "TemplateToken.h"
 
-SharedPtr<GlobalManager> GlobalManager::instance = 0;
+SharedPtr<GlobalsManager> GlobalsManager::instance = 0;
 
 Template::Template(const string& path) {
   ifstream tpl(path.c_str());
@@ -44,7 +44,7 @@ oTemplateValue Template::getVariable(const std::string &name) {
   if (hasVariable(name)) {
     return iVariableManager::getVariable(name);
   }
-  return GlobalManager::get()->getVariable(name);
+  return GlobalsManager::get()->getVariable(name);
 }
 
 string Template::output() {
@@ -66,7 +66,7 @@ bool iVariableManager::hasVariable(const string& name) {
 
 oTemplateValue iVariableManager::getVariable(const string& name) {
   if (!hasVariable(name)) {
-    return oTemplateValue(new TemplateValue("Var " + name + "does not exist."));
+    return oTemplateValue(new TemplateValue());
   }
   return variables[name]->value;
 }
@@ -109,69 +109,26 @@ void iVariableManager::clearVariables() {
   variables.clear();
 }
 
-bool GlobalManager::addFunction(const string& name, enArgs cArgs, GlobalManager::fOnCallFunction& func) {
+bool GlobalsManager::addFunction(const string& name, GlobalsManager::fOnCallFunction& func) {
   if (hasFunction(name)) {
     return false;
   }
-  functions[name] = new sFunction(cArgs, func);
+  functions[name] = new sFunction(func);
   return true;
 }
 
-oTemplateValue GlobalManager::callFunction(const string& name) {
+oTemplateValue GlobalsManager::callFunction(const string& name, const tFuncArguments& arguments) {
   if (!hasFunction(name)) {
-    //throw
+    return oTemplateValue(new TemplateValue());
   }
-  if (functions[name]->cArgs != argsZero || functions[name]->cArgs != argsCustom) {
-    //throw
-  }
-  return functions[name]->signal(argsZero, TemplateValue(), TemplateValue(), TemplateValue(), TemplateValue());
+  return functions[name]->signal(arguments);
 }
 
-oTemplateValue GlobalManager::callFunction(const string& name, TemplateValue& arg1) {
-  if (!hasFunction(name)) {
-    //throw
-  }
-  if (functions[name]->cArgs != argsOne || functions[name]->cArgs != argsCustom) {
-    //throw
-  }
-  return functions[name]->signal(argsOne, arg1, TemplateValue(), TemplateValue(), TemplateValue());
-}
-
-oTemplateValue GlobalManager::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2) {
-  if (!hasFunction(name)) {
-    //throw
-  }
-  if (functions[name]->cArgs != argsTwo || functions[name]->cArgs != argsCustom) {
-    //throw
-  }
-  return functions[name]->signal(argsTwo, arg1, arg2, TemplateValue(), TemplateValue());
-}
-
-oTemplateValue GlobalManager::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3) {
-  if (!hasFunction(name)) {
-    //throw
-  }
-  if (functions[name]->cArgs != argsThree || functions[name]->cArgs != argsCustom) {
-    //throw
-  }
-  return functions[name]->signal(argsThree, arg1, arg2, arg3, TemplateValue());
-}
-
-oTemplateValue GlobalManager::callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3, TemplateValue& arg4) {
-  if (!hasFunction(name)) {
-    //throw
-  }
-  if (functions[name]->cArgs != argsFour || functions[name]->cArgs != argsCustom) {
-    //throw
-  }
-  return functions[name]->signal(argsFour, arg1, arg2, arg3, arg4);
-}
-
-bool GlobalManager::hasFunction(const string& name) {
+bool GlobalsManager::hasFunction(const string& name) {
   return !name.empty() && functions.find(name) != functions.end();
 }
 
-bool GlobalManager::removeFunction(const string& name) {
+bool GlobalsManager::removeFunction(const string& name) {
   if (!hasFunction(name)) {
     return false;
   }
@@ -181,7 +138,7 @@ bool GlobalManager::removeFunction(const string& name) {
   return true;
 }
 
-void GlobalManager::clearFunctions() {
+void GlobalsManager::clearFunctions() {
   for (tFunctions::iterator it = functions.begin(); it != functions.end(); it++) {
     delete it->second;
   }

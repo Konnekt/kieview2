@@ -74,23 +74,16 @@ TemplateVariable::TemplateVariable(const TemplateVariable& var): iTemplateVar(va
 }
 
 oTemplateValue TemplateVariable::get() {
-  return GlobalManager::get()->getVariable(_name);
+  return GlobalsManager::get()->getVariable(_name);
 }
 
 
 oTemplateValue TemplateFunction::get() {
-  int count = _params.size();
-  if (count == 0) {
-    return GlobalManager::get()->callFunction(this->_name);
-  } else if (count == 1) {
-    return GlobalManager::get()->callFunction(this->_name, *_params[0]->output().get());
-  } else if (count == 2) {
-    return GlobalManager::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get());
-  } else if (count == 3) {
-    return GlobalManager::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get(), *_params[2]->output().get());
-  } else if (count == 4) {
-    return GlobalManager::get()->callFunction(this->_name, *_params[0]->output().get(), *_params[1]->output().get(), *_params[2]->output().get(), *_params[3]->output().get());
+  GlobalsManager::tFuncArguments arguments;
+  for (tParams::iterator it = _params.begin(); it != _params.end(); it++) {
+    arguments.push_back((*it)->output());
   }
+  return GlobalsManager::get()->callFunction(_name, arguments);
 }
 
 TemplateFunction::TemplateFunction(const TemplateFunction& func): iTemplateVar(func._name) {

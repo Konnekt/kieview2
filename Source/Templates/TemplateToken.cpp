@@ -424,12 +424,12 @@ void SetToken::parse(iBlockToken* block, string::iterator itCurrPos, string::ite
 
 string SetToken::output() {
   for (tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
-    if (!GlobalManager::get()->hasVariable(*(*it)->name)) {
+    if (!GlobalsManager::get()->hasVariable(*(*it)->name)) {
       throw TemplateException("variable not found.");
-    } else if (!GlobalManager::get()->isWritableVariable(*(*it)->name)){
+    } else if (!GlobalsManager::get()->isWritableVariable(*(*it)->name)){
       throw TemplateException("read only var.");
     } else {
-      GlobalManager::get()->setVariable(*(*it)->name, (*it)->param->output());
+      GlobalsManager::get()->setVariable(*(*it)->name, (*it)->param->output());
     }
   }
   return "";

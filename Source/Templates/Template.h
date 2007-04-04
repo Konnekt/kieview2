@@ -40,9 +40,9 @@ protected:
   tVariables variables;
 };
 
-class GlobalManager: public SharedObject<iSharedObject>, public iVariableManager, public signals::trackable {
+class GlobalsManager: public SharedObject<iSharedObject>, public iVariableManager, public signals::trackable {
   /* Class version */
-  STAMINA_OBJECT_CLASS_VERSION(GlobalManager, iSharedObject, Version(0,0,0,1));
+  STAMINA_OBJECT_CLASS_VERSION(GlobalsManager, iSharedObject, Version(0,0,0,1));
 
 public:
   enum enArgs {
@@ -54,14 +54,14 @@ public:
     argsCustom = 5,
   };
 
-  typedef function<oTemplateValue (enArgs, TemplateValue&, TemplateValue&, TemplateValue&, TemplateValue&)> fOnCallFunction;
-  typedef signal<oTemplateValue (enArgs, TemplateValue&, TemplateValue&, TemplateValue&, TemplateValue&)> sigOnCallFunction;
+  typedef vector<oTemplateValue> tFuncArguments;
+  typedef function<oTemplateValue (const tFuncArguments& arguments)> fOnCallFunction;
+  typedef signal<oTemplateValue (const tFuncArguments& arguments)> sigOnCallFunction;
 
   struct sFunction {
-    enArgs cArgs;
     sigOnCallFunction signal;
 
-    sFunction(enArgs cArgs, fOnCallFunction& func): cArgs(cArgs) {
+    sFunction(fOnCallFunction& func) {
       signal.connect(func);
     }
   };
@@ -69,25 +69,21 @@ public:
   typedef map<string, sFunction*> tFunctions;
 
 public:
-  oTemplateValue callFunction(const string& name);
-  oTemplateValue callFunction(const string& name, TemplateValue& arg1);
-  oTemplateValue callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2);
-  oTemplateValue callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3);
-  oTemplateValue callFunction(const string& name, TemplateValue& arg1, TemplateValue& arg2, TemplateValue& arg3, TemplateValue& arg4);
+  oTemplateValue callFunction(const string& name, const tFuncArguments& arguments);
 
-  bool addFunction(const string& name, enArgs cArgs, fOnCallFunction& func);
+  bool addFunction(const string& name, fOnCallFunction& func);
   bool hasFunction(const string& name);
   bool removeFunction(const string& name);
   void clearFunctions();
 
 private:
-  GlobalManager() { }
-  ~GlobalManager() { }
+  GlobalsManager() { }
+  ~GlobalsManager() { }
 
 public:
-  static GlobalManager* get() {
+  static GlobalsManager* get() {
     if (!instance.isValid()) {
-      instance = new GlobalManager;
+      instance = new GlobalsManager;
     }
     return instance;
   }
@@ -96,7 +92,7 @@ private:
   tFunctions functions;
 
 private:
-  static SharedPtr<GlobalManager> instance;
+  static SharedPtr<GlobalsManager> instance;
 };
 
 

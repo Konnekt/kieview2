@@ -29,8 +29,8 @@ int TemplateParser::getType(string& text) {
     return UnLessToken::T_UNLESS;
   } else if (text == "include") {
     return IncludeToken::T_INCLUDE;
-  } else if (text[0] == '$' || text[0] == '-' || text[0] == 'f' || text[0] == 't' || (text[0] >= 'a' && text[0] <= 'z') || text[0] == '!'
-    || (text[0] >= 'A' && text[0] <= 'Z') || (text[0] >= '0' && text[0] <= '9') || text[0] == '(' || text[0] == ')'
+  } else if (text[0] == '$' || text[0] == '-' || text[0] == 'f' || text[0] == 't' || /*(text[0] >= 'a' && text[0] <= 'z') ||*/ text[0] == '!'
+    || /*(text[0] >= 'A' && text[0] <= 'Z') || */(text[0] >= '0' && text[0] <= '9') || text[0] == '(' || text[0] == ')'
     || text[0] == '\"' || text[0] == '\'')
   {
     return ArgumentToken::T_ARGUMENT;
@@ -128,6 +128,7 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
     pToken->parse(block, itTokenPos, itCurrPos, "", itPos, true);
     block->add(pToken);
   }
+  itPos = itCurrPos;
   return tplParseOK;
 }
 
@@ -150,6 +151,10 @@ void TemplateParser::parseText(TemplateParam* param, TemplateParam::enOperators 
         text += '}';
       } else if (*itCurrPos == '\\') {
         text += '\\';
+      } else if (*itCurrPos == '\'') {
+        text += '\'';
+      } else if (*itCurrPos == '\"') {
+        text += '\"';
       } else {
         //text += *itCurrPos;
         throw TemplateException(stringf("Syntax error. Invalid special character: \\%c", *itCurrPos));
@@ -324,7 +329,6 @@ TemplateParam::enOperators TemplateParser::parseOperator(string::iterator itCurr
   }
 }
 
-
 TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   TemplateParam::enOperators lastOperator = TemplateParam::opNone;
   TemplateParam::enOperators notOperator;
@@ -363,4 +367,8 @@ TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param,
   }
   itPos = itCurrPos;
   return paramParseOK;
+}
+
+oTemplateValue functionabc(const GlobalsManager::tFuncArguments& args) {
+  return oTemplateValue(new TemplateValue("hi"));
 }
