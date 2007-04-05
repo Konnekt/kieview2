@@ -299,7 +299,7 @@ TemplateParam::enOperators TemplateParser::parseOperator(string::iterator itCurr
   string oper;
 
   while (itCurrPos != itEnd) {
-    if (*itCurrPos == '&' || *itCurrPos == '!' || *itCurrPos == '+' || *itCurrPos == '-' || *itCurrPos == '=' || *itCurrPos == '|') {
+    if (*itCurrPos == '&' || *itCurrPos == '!' || *itCurrPos == '+' || *itCurrPos == '-' || *itCurrPos == '~' || *itCurrPos == '=' || *itCurrPos == '|') {
       oper += *itCurrPos;
     } else {
       break;
@@ -316,6 +316,10 @@ TemplateParam::enOperators TemplateParser::parseOperator(string::iterator itCurr
     return TemplateParam::opComp;
   } else if (oper == "!=") {
     return TemplateParam::opDiff;
+  } else if (oper == "=~") {
+    return TemplateParam::opRegExComp;
+  } else if (oper == "!~") {
+    return TemplateParam::opRegExDiff;
   } else if (oper == "+") {
     return TemplateParam::opPlus;
   } else if (oper == "-") {
@@ -367,8 +371,4 @@ TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param,
   }
   itPos = itCurrPos;
   return paramParseOK;
-}
-
-oTemplateValue functionabc(const GlobalsManager::tFuncArguments& args) {
-  return oTemplateValue(new TemplateValue("hi"));
 }

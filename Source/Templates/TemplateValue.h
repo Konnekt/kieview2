@@ -5,7 +5,7 @@
 
 #include <string>
 #include <Stamina/Time64.h>
-#include <Stamina/helpers.h>
+#include <Stamina/Helpers.h>
 
 using namespace std;
 using namespace Stamina;
@@ -147,14 +147,16 @@ public:
 class TemplateParam {
 public:
   enum enOperators {
-    opNone = 0,
-    opPlus = 1,
-    opMinus = 2,
-    opNot = 3,
-    opComp = 4,
-    opDiff = 5,
-    opAnd = 6,
-    opOr = 7,
+    opNone,
+    opPlus,
+    opMinus,
+    opNot,
+    opComp,
+    opDiff,
+    opRegExComp,
+    opRegExDiff,
+    opAnd,
+    opOr,
   };
 
   struct sArgument {

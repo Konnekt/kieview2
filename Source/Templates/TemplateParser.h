@@ -3,6 +3,13 @@
 #ifndef __TEMPLATE_PARSER_H__
 #define __TEMPLATE_PARSER_H__
 
+#include <Stamina/Object.h>
+#include <Stamina/ObjectImpl.h>
+#include <Stamina/Exception.h>
+#include <Stamina/CriticalSection.h>
+#include <Stamina/String.h>
+#include <Stamina/RegEx.h>
+
 #include "TemplateToken.h"
 #include "TemplateValue.h"
 
