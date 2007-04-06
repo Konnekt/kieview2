@@ -5,11 +5,11 @@
 
 class Template;
 typedef SharedPtr<class Template> oTemplate;
+class iVariableManager;
 
 #include <fstream>
-#include "TemplateValue.h"
-#include "TemplateToken.h"
 #include <Stamina/Exception.h>
+#include "TemplateToken.h"
 
 class TemplateException: public ExceptionString {
 public:
@@ -18,21 +18,18 @@ public:
 
 class iVariableManager {
 public:
-  struct sVariable {
-    oTemplateValue value;
-    bool attrWrite;
-
-    sVariable(oTemplateValue& value, bool attrWrite): value(value), attrWrite(attrWrite) { }
-  };
+  struct sVariable;
 
   typedef map<string, sVariable*> tVariables;
+  typedef map<string, TemplateValue> tVariableData;
 
 public:
-  virtual bool addVariable(const string& name, oTemplateValue& value, bool attrWrite = true);
-  virtual oTemplateValue getVariable(const string& name);
+  virtual bool addVariable(const string& name, TemplateValue& value, bool attrWrite = true);
+  virtual TemplateValue getVariable(const string& name);
   virtual bool hasVariable(const string& name);
   virtual bool isWritableVariable(const string& name);
-  virtual bool setVariable(const string& name, const oTemplateValue& value);
+  virtual bool setVariable(const string& name, const TemplateValue& value, bool create = false);
+  virtual void setData(const tVariableData& data);
   virtual bool removeVariable(const string& name);
   virtual void clearVariables();
 
@@ -54,9 +51,9 @@ public:
     argsCustom = 5,
   };
 
-  typedef vector<oTemplateValue> tFuncArguments;
-  typedef function<oTemplateValue (const tFuncArguments& arguments)> fOnCallFunction;
-  typedef signal<oTemplateValue (const tFuncArguments& arguments)> sigOnCallFunction;
+  typedef vector<TemplateValue> tFuncArguments;
+  typedef function<TemplateValue (const tFuncArguments& arguments)> fOnCallFunction;
+  typedef signal<TemplateValue (const tFuncArguments& arguments)> sigOnCallFunction;
 
   struct sFunction {
     sigOnCallFunction signal;
@@ -69,7 +66,7 @@ public:
   typedef map<string, sFunction*> tFunctions;
 
 public:
-  oTemplateValue callFunction(const string& name, const tFuncArguments& arguments);
+  TemplateValue callFunction(const string& name, const tFuncArguments& arguments);
 
   bool addFunction(const string& name, fOnCallFunction& func);
   bool hasFunction(const string& name);
@@ -113,7 +110,8 @@ public:
   void clear();
 
 public:
-  oTemplateValue getVariable(const string& name);
+  TemplateValue getVariable(const string& name);
+  bool setVariable(const string& name, const TemplateValue& value, bool create = false);
 
 private:
   TemplateParser* _parser;

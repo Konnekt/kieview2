@@ -5,22 +5,24 @@
 
 class iBlockToken;
 
-#include "Template.h"
-#include "TemplateValue.h"
+#include "TemplateParser.h"
 
 class iTemplateToken {
 public:
   static const int T_NONE = 1;
 
 public:
-  iTemplateToken(oTemplate& tpl): _tpl(tpl) { }
+  iTemplateToken(TemplateParser* parser, iBlockToken* parent): _parser(parser), _parent(parent) { }
 
 public:
   virtual int getType() {
     return T_NONE;
   }
-  virtual oTemplate getTemplate() {
-    return _tpl;
+  virtual TemplateParser* getParser() const {
+    return _parser;
+  }
+  virtual iBlockToken* getParent() const {
+    return _parent;
   }
 public:
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) = 0;
@@ -28,7 +30,8 @@ public:
   virtual void clear() = 0;
 
 public:
-  oTemplate _tpl;
+  TemplateParser* _parser;
+  iBlockToken* _parent;
 };
 
 class iSectionToken: public iTemplateToken {
@@ -52,7 +55,7 @@ public:
   typedef vector<sSectionArg*> tSectionArgs;
 
 public:
-  iSectionToken(oTemplate& tpl): iTemplateToken(tpl) { }
+  iSectionToken(TemplateParser* parser, iBlockToken* parent): iTemplateToken(parser, parent) { }
   virtual ~iSectionToken();
 
 public:
@@ -64,7 +67,7 @@ protected:
 };
 
 
-class iBlockToken: public iSectionToken {
+class iBlockToken: public iSectionToken, public iVariableManager {
 public:
   static const int T_BLOCK = 0xFFF00000;
 
@@ -73,7 +76,7 @@ public:
 
 public:
   //iBlockToken(iBlockToken* token);
-  iBlockToken(oTemplate& tpl): iSectionToken(tpl) { }
+  iBlockToken(TemplateParser* parser, iBlockToken* parent): iSectionToken(parser, parent) { }
 
 public:
   virtual int getType() {
@@ -100,7 +103,7 @@ public:
   static const int T_TEXT = 10;
 
 public:
-  TextToken(oTemplate& tpl): iTemplateToken(tpl) { }
+  TextToken(TemplateParser* parser, iBlockToken* parent): iTemplateToken(parser, parent) { }
 
 public:
   virtual int getType() {
@@ -126,7 +129,7 @@ public:
   }
 
 public:
-  IFToken(oTemplate& tpl);
+  IFToken(TemplateParser* parser, iBlockToken* parent);
   virtual ~IFToken();
 
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
@@ -149,7 +152,7 @@ public:
   static const int T_UNLESS = T_BLOCK | 20;
 
 public:
-  UnLessToken(oTemplate& tpl): iBlockToken(tpl) { }
+  UnLessToken(TemplateParser* parser, iBlockToken* parent): iBlockToken(parser, parent) { }
 
 public:
   virtual int getType() {
@@ -167,7 +170,7 @@ public:
   static const int T_ARGUMENT = 30;
 
 public:
-  ArgumentToken(oTemplate& tpl);
+  ArgumentToken(TemplateParser* parser, iBlockToken* parent);
   virtual ~ArgumentToken();
 
 public:
@@ -187,7 +190,7 @@ public:
   static const int T_INCLUDE = 35;
 
 public:
-  IncludeToken(oTemplate& tpl);
+  IncludeToken(TemplateParser* parser, iBlockToken* parent);
   virtual ~IncludeToken();
 
 public:
@@ -208,7 +211,7 @@ public:
   static const int T_SET = 40;
 
 public:
-  SetToken(oTemplate& tpl): iSectionToken(tpl) { }
+  SetToken(TemplateParser* parser, iBlockToken* parent): iSectionToken(parser, parent) { }
 
 public:
   virtual int getType() {

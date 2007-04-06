@@ -12,10 +12,12 @@ using namespace Stamina;
 
 class TemplateVariable;
 class TemplateFunction;
+class TemplateValue;
 class TemplateParam;
-class oTemplateValue;
 
-class TemplateValue: public SharedObject<iSharedObject> {
+#include "TemplateParser.h"
+
+class TemplateValue {
 public:
   enum enTypes {
     tString = 1,
@@ -42,7 +44,29 @@ public:
 public:
   enTypes getType();
   void clear();
-  void copy(TemplateValue* value);
+  void copy(TemplateValue& value);
+
+  TemplateValue operator + (TemplateValue& value) {
+    return plus(value);
+  }
+  TemplateValue operator - (TemplateValue& value) {
+    return minus(value);
+  }
+  TemplateValue operator ! () {
+    return not();
+  }
+  TemplateValue operator != (TemplateValue& value) {
+    return diff(value);
+  }
+  TemplateValue operator == (TemplateValue& value) {
+    return comp(value);
+  }
+  TemplateValue operator && (TemplateValue& value) {
+    return and(value);
+  }
+  TemplateValue operator || (TemplateValue& value) {
+    return or(value);
+  }
 
 public:
   TemplateValue();
@@ -55,9 +79,9 @@ public:
   TemplateValue(TemplateVariable* value);
   TemplateValue(TemplateFunction* value);
   TemplateValue(TemplateParam* value);
-  TemplateValue(TemplateValue* value);
-  const TemplateValue* operator = (const TemplateValue* copy);
-  TemplateValue* operator = (TemplateValue* copy);
+  TemplateValue(TemplateValue& value);
+  const TemplateValue& operator = (const TemplateValue& copy);
+  TemplateValue& operator = (TemplateValue& copy);
 
   ~TemplateValue();
 
@@ -69,18 +93,18 @@ public:
   Date64 getDate();
 
 public:
-  oTemplateValue plus(TemplateValue* value);
-  oTemplateValue minus(TemplateValue* value);
-  oTemplateValue not();
-  oTemplateValue comp(TemplateValue* value);
-  oTemplateValue and(TemplateValue* value);
-  oTemplateValue or(TemplateValue* value);
-  oTemplateValue diff(TemplateValue* value);
+  TemplateValue plus(TemplateValue& value);
+  TemplateValue minus(TemplateValue& value);
+  TemplateValue not();
+  TemplateValue comp(TemplateValue& value);
+  TemplateValue and(TemplateValue& value);
+  TemplateValue or(TemplateValue& value);
+  TemplateValue diff(TemplateValue& value);
 
 protected:
   enTypes _type;
 };
-
+/*
 class oTemplateValue: public SharedPtr<TemplateValue> {
 public:
   oTemplateValue(const oTemplateValue& value): SharedPtr<TemplateValue>(value) { }
@@ -143,53 +167,43 @@ public:
   oTemplateValue or(TemplateValue* value);
   oTemplateValue diff(TemplateValue* value);
 };
-
+*/
 class TemplateParam {
 public:
-  enum enOperators {
-    opNone,
-    opPlus,
-    opMinus,
-    opNot,
-    opComp,
-    opDiff,
-    opRegExComp,
-    opRegExDiff,
-    opAnd,
-    opOr,
-  };
+  enum enOperators;
 
   struct sArgument {
     bool not;
-    oTemplateValue value;
+    TemplateValue value;
     enOperators nextOperator;
 
-    sArgument(oTemplateValue& value, enOperators nextOperator, bool not): value(value), nextOperator(nextOperator), not(not) { }
+    sArgument(TemplateValue& value, enOperators nextOperator, bool not): value(value), nextOperator(nextOperator), not(not) { }
   };
 
   typedef vector<sArgument*> tArguments;
 
 public:
-  TemplateParam();
+  TemplateParam(TemplateParser* parser, iBlockToken* parent);
   TemplateParam(const TemplateParam& param);
   ~TemplateParam();
 
 public:
-  void add(oTemplateValue& value, enOperators nextOperator, bool not);
+  void add(TemplateValue& value, enOperators nextOperator, bool not);
   void clear();
   UINT count();
-  oTemplateValue output();
+  TemplateValue output();
 
 protected:
   tArguments _arguments;
+  TemplateParser* _parser;
+  iBlockToken* _block;
 };
-
 class iTemplateVar {
 public:
   iTemplateVar(const string& name): _name(name) { }
 
 public:
-  virtual oTemplateValue get() = 0;
+  virtual TemplateValue get() = 0;
 
 protected:
   string _name;
@@ -201,7 +215,7 @@ public:
   TemplateVariable(const TemplateVariable& var);
 
 public:
-  oTemplateValue get();
+  TemplateValue get();
 };
 
 class TemplateFunction: public iTemplateVar {
@@ -219,7 +233,7 @@ public:
   UINT countParam();
   void clearParam();
 
-  oTemplateValue get();
+  TemplateValue get();
 
 private:
   tParams _params;

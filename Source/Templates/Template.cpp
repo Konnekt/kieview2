@@ -14,7 +14,7 @@ Template::Template(const string& path) {
   }
   while (!tpl.eof()) {
     getline(tpl, line);
-    _data += line;
+    _data += line + '\n';
   }
   tpl.close();
   _token = NULL;
@@ -35,22 +35,20 @@ void Template::clear() {
     delete _token;
   }
 }
+struct Template::sVariable {
+  TemplateValue value;
+  bool attrWrite;
+
+  sVariable(TemplateValue& value, bool attrWrite): value(value), attrWrite(attrWrite) { }
+};
 
 TemplateParser* Template::getParser() {
   return _parser;
 }
 
-oTemplateValue Template::getVariable(const std::string &name) {
-  if (hasVariable(name)) {
-    return iVariableManager::getVariable(name);
-  }
-  return GlobalsManager::get()->getVariable(name);
-}
-
 string Template::output() {
   return _token->output();
 }
-
 
 bool iVariableManager::addVariable(const string& name, oTemplateValue& value, bool attrWrite) {
   if (hasVariable(name)) {
@@ -78,23 +76,28 @@ bool iVariableManager::isWritableVariable(const string& name) {
   return variables[name]->attrWrite;
 }
 
-bool iVariableManager::setVariable(const string& name, const oTemplateValue& value) {
-  if (!hasVariable(name)) {
+bool iVariableManager::setVariable(const string& name, const oTemplateValue& value, bool create) {
+  if (!hasVariable(name) && !create) {
     return false;
   }
   if (isWritableVariable(name)) {
     variables[name]->value = value;
   } else {
-    //throw xxx
+    addVariable(name, (oTemplateValue&)value);
   }
   return true;
+}
+
+void iVariableManager::setData(const iVariableManager::tVariableData& data) {
+  for (iVariableManager::tVariableData::const_iterator it = data.begin(); it != data.end(); it++) {
+    setVariable(it->first, it->second, true);
+  }
 }
 
 bool iVariableManager::removeVariable(const string& name) {
   if (!hasVariable(name)) {
     return false;
   }
-  delete variables[name]->value;
   delete variables[name];
 
   variables.erase(variables.find(name));
@@ -103,7 +106,6 @@ bool iVariableManager::removeVariable(const string& name) {
 
 void iVariableManager::clearVariables() {
   for (tVariables::iterator it = variables.begin(); it != variables.end(); it++) {
-    delete it->second->value;
     delete it->second;
   }
   variables.clear();

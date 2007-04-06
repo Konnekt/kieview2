@@ -3,19 +3,19 @@
 #include "TemplateValue.h"
 #include "Template.h"
 
-iTemplateToken* TemplateParser::getToken(int type, oTemplate& tpl) {
+iTemplateToken* TemplateParser::getToken(iBlockToken* token) {
   if (type == TextToken::T_TEXT) {
-    return new TextToken(tpl);
+    return new TextToken(this, token);
   } else if (type == UnLessToken::T_UNLESS) {
-    return new UnLessToken(tpl);
+    return new UnLessToken(this, token);
   } else if (type == IFToken::T_IF) {
-    return new IFToken(tpl);
+    return new IFToken(this, token);
   } else if (type == ArgumentToken::T_ARGUMENT) {
-    return new ArgumentToken(tpl);
+    return new ArgumentToken(this, token);
   } else if (type == IncludeToken::T_INCLUDE) {
-    return new IncludeToken(tpl);
+    return new IncludeToken(this, token);
   } else if (type == SetToken::T_SET) {
-    return new SetToken(tpl);
+    return new SetToken(this, token);
   }
   return NULL;
 }
@@ -63,7 +63,7 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
       inToken = true;
 
       if (itTokenPos != itCurrPos && allowCreateTokens && block) {
-        iTemplateToken* pToken = getToken(TextToken::T_TEXT, block->getTemplate());
+        iTemplateToken* pToken = getToken(TextToken::T_TEXT, block);
         pToken->parse(block, itTokenPos, itCurrPos, "", itPos, true);
         block->add(pToken);
       }
@@ -96,9 +96,9 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
 
       iTemplateToken* pToken = NULL;
 
-      int type = getType(token);//token);
+      int type = getType(token);
       if (block && allowCreateTokens && type != 0) {
-        iTemplateToken* pToken = getToken(type, block->getTemplate());//, block);
+        iTemplateToken* pToken = getToken(type, block);
         if (pToken) {
           pToken->parse(block, itTokenPos, itEnd, ("/" + token), itPos, true);
           itCurrPos = itPos;
@@ -124,7 +124,7 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
     itCurrPos++;
   }
   if (itTokenPos != itCurrPos && allowCreateTokens && block) {
-    iTemplateToken* pToken = getToken(TextToken::T_TEXT, block->getTemplate());
+    iTemplateToken* pToken = getToken(TextToken::T_TEXT, block);
     pToken->parse(block, itTokenPos, itCurrPos, "", itPos, true);
     block->add(pToken);
   }
@@ -176,6 +176,8 @@ void TemplateParser::parseText(TemplateParam* param, TemplateParam::enOperators 
   itPos = itCurrPos + 1;
 }
 
+void parseRegExp() {
+}
 void TemplateParser::parseConst(TemplateParam* param, TemplateParam::enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   string text;
 
@@ -340,7 +342,7 @@ TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param,
   bool isArgument = true;
 
   while (itCurrPos != itEnd) {
-    if (*itCurrPos == ' ' || *itCurrPos == '\t') {
+    if (*itCurrPos == ' ' || *itCurrPos == '\t' || *itCurrPos == '\n') {
       itCurrPos++;
     } else {
       if (isArgument) {
