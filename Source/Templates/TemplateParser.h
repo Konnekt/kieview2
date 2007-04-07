@@ -10,7 +10,11 @@
 #include <Stamina/String.h>
 #include <Stamina/RegEx.h>
 
-class TemplateParser;
+class iTemplateToken;
+class iBlockToken;
+
+class TemplateParam;
+typedef SharedPtr<class iTemplate> oTemplate;
 
 enum enOperators {
   opNone,
@@ -22,25 +26,21 @@ enum enOperators {
   opRegExDiff,
   opRegExComp,
   opAnd,
-  opOr,
+  opOr
 };
-
-#include "TemplateToken.h"
-#include "TemplateValue.h"
-#include "Template.h"
 
 class TemplateParser {
 public:
   enum enParseRes {
-    tplEndTokenFound = 1, //end token found {/abc}
-    tplBadSyntax = 2, //error in syntax
-    tplStopTokenFound = 3, //stop token found
-    tplParseOK = 4, //done of parsing
+    tplEndTokenFound = 1, // end token found {/abc}
+    tplBadSyntax = 2, // syntax error
+    tplStopTokenFound = 3, // stop token found
+    tplParseOK = 4 // done parsing
   };
 
   enum enParseParamRes {
     paramParseOK = 1,
-    paramError = 2,
+    paramError = 2
   };
 
 public:

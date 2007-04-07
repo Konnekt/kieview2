@@ -3,41 +3,23 @@
 #include "TemplateParser.h"
 #include "TemplateToken.h"
 
-Template::Template(const string& path) {
-  ifstream tpl(path.c_str());
+FileTemplate::FileTemplate(const string& path) {
+  ifstream file(path.c_str());
+  string buff;
 
-  string line;
-  if (!tpl.is_open()) {
-    throw TemplateException("Template does not exist in path: " + path);
+  if (!file.is_open()) {
+    throw TemplateException("Template file '" + path + "' does not exist");
   }
-  while (!tpl.eof()) {
-    getline(tpl, line);
-    _data += line + '\n';
+  while (!file.eof()) {
+    getline(file, buff);
+    _data += buff + '\n';
   }
-  tpl.close();
-  _token = NULL;
+  file.close();
 
   _loaded = true;
+  _token = NULL;
 }
 
-Template::~Template() {
-  clear();
-}
-
-bool Template::loaded() {
-  return _loaded;
-}
-
-void Template::clear() {
-  if (_token) {
-    delete _token;
-  }
-}
-
-TemplateParser* Template::getParser() {
-  return _parser;
-}
-
-string Template::output() {
-  return _token->output();
+string iTemplate::output() {
+  return _token ? _token->output() : "";
 }

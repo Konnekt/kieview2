@@ -5,7 +5,7 @@
 #include "TemplateVar.h"
 SharedPtr<GlobalsManager> GlobalsManager::instance = 0;
 
-bool iVariableManager::addVariable(const string& name, TemplateValue& value, bool attrWrite) {
+bool iVariableManager::addVariable(const string& name, TemplateValue value, bool attrWrite) {
   if (hasVariable(name)) {
     return false;
   }
@@ -31,7 +31,7 @@ bool iVariableManager::isWritableVariable(const string& name) {
   return variables[name]->attrWrite;
 }
 
-bool iVariableManager::setVariable(const string& name, const TemplateValue& value, bool create) {
+bool iVariableManager::setVariable(const string& name, const TemplateValue value, bool create) {
   if (!hasVariable(name) && !create) {
     return false;
   }

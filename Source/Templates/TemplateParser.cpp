@@ -1,5 +1,7 @@
 #include "stdafx.h"
+
 #include "TemplateParser.h"
+#include "TemplateTokens.h"
 #include "TemplateValue.h"
 #include "Template.h"
 

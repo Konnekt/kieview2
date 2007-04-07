@@ -18,11 +18,11 @@ public:
   typedef map<string, TemplateValue> tVariableData;
 
 public:
-  virtual bool addVariable(const string& name, TemplateValue& value, bool attrWrite = true);
+  virtual bool addVariable(const string& name, TemplateValue value, bool attrWrite = true);
   virtual TemplateValue getVariable(const string& name);
   virtual bool hasVariable(const string& name);
   virtual bool isWritableVariable(const string& name);
-  virtual bool setVariable(const string& name, const TemplateValue& value, bool create = false);
+  virtual bool setVariable(const string& name, const TemplateValue value, bool create = false);
   virtual void setData(const tVariableData& data);
   virtual bool removeVariable(const string& name);
   virtual void clearVariables();

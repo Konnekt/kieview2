@@ -243,7 +243,7 @@ public:
 
   TemplateValue get();
 
-private:
+protected:
   tParams _params;
 };
 
