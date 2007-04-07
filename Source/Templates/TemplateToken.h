@@ -4,9 +4,12 @@
 #define __TEMPLATE_TOKEN_H__
 
 class iBlockToken;
+class iTemplateToken;
 
 #include "TemplateParser.h"
-
+#include "TemplateValue.h"
+#include "Template.h"
+#include "TemplateVar.h"
 class iTemplateToken {
 public:
   static const int T_NONE = 1;
@@ -18,10 +21,10 @@ public:
   virtual int getType() {
     return T_NONE;
   }
-  virtual TemplateParser* getParser() const {
+  virtual TemplateParser* getParser() {
     return _parser;
   }
-  virtual iBlockToken* getParent() const {
+  virtual iBlockToken* getParent() {
     return _parent;
   }
 public:

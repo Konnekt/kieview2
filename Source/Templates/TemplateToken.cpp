@@ -7,7 +7,7 @@
  iSection Interface
 */
 
-oTemplateValue iTemplateToken::getVariable(const std::string &name) {
+/*TemplateValue iTemplateToken::getVariable(const std::string &name) {
   if (getParent() && getParent()->hasVariable(name)) {
     return getParent()->getVariable(name);
   }
@@ -23,7 +23,7 @@ bool Template::setVariable(const string& name, const oTemplateValue& value, bool
     return getParent()->setVariable(name, value, true);
   }
   return false;
-}
+}*/
 
 void iSectionToken::parseArguments(string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   TemplateParam* newParam;
@@ -214,14 +214,14 @@ void IFToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iter
     throw TemplateException("Syntax error. The if token bad token end.");
   }
   itData++;
-  int pr = getTemplate()->getParser()->parse(_ifBlock, itData, itEnd, "else", itPos, allowCreateTokens);
+  int pr = getParser()->parse(_ifBlock, itData, itEnd, "else", itPos, allowCreateTokens);
   if (pr == TemplateParser::tplEndTokenFound) {
     return;
 
   } else if (pr == TemplateParser::tplStopTokenFound) { //znaleziono stopowy token czyli else(if)
     _elseBlock = new iBlockToken(getParser(), getParent());
 
-    int nt = getTemplate()->getParser()->parse(_elseBlock, ++itPos, itEnd, "", itPos, allowCreateTokens); //parsowanie kolejnych elementow
+    int nt = getParser()->parse(_elseBlock, ++itPos, itEnd, "", itPos, allowCreateTokens); //parsowanie kolejnych elementow
     if (nt == TemplateParser::tplEndTokenFound) {
       return;
     }
@@ -264,7 +264,7 @@ string IFToken::output() {
   bool arg = false;
 
   for (iSectionToken::tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
-    arg |= (*it)->param->output()->getBool();
+    arg |= (*it)->param->output().getBool();
   }
   if (arg) {
     if (_ifBlock) {
@@ -313,7 +313,7 @@ string UnLessToken::output() {
   bool arg = false;
 
   for (iSectionToken::tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
-    arg |= (*it)->param->output()->getBool();
+    arg |= (*it)->param->output().getBool();
   }
   if (!arg) {
     tTokenList::iterator it = _token.begin();
@@ -349,7 +349,7 @@ void ArgumentToken::parse(iBlockToken* block, string::iterator itCurrPos, string
 }
 
 string ArgumentToken::output() {
-  return _param->output()->getString();
+  return _param->output().getString();
 }
 
 void ArgumentToken::clear() {
@@ -407,7 +407,7 @@ string IncludeToken::output() {
     }
   }
 
-  _includeTpl = oTemplate(new Template((*it)->param->output()->getString()));
+  _includeTpl = Template((*it)->param->output().getString());
   getParser()->parse(_includeTpl);
   if (_includeTpl && _includeTpl->loaded()) {
     return _includeTpl->output();
@@ -443,7 +443,7 @@ void SetToken::parse(iBlockToken* block, string::iterator itCurrPos, string::ite
 
 string SetToken::output() {
   for (tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
-    getTemplate()->setVariable(*(*it)->name, (*it)->param->output());
+    //getTemplate()->setVariable(*(*it)->name, (*it)->param->output());
   }
   return "";
 }

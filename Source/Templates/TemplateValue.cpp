@@ -1,19 +1,8 @@
 #include "stdafx.h"
 #include "TemplateValue.h"
 #include "Template.h"
-#include "TemplateParam.h"
+#include "TemplateVar.h"
 #include "TemplateToken.h"
-
-enum TemplateParam::enOperators {
-  opNone = 0,
-  opPlus = 1,
-  opMinus = 2,
-  opNot = 3,
-  opComp = 4,
-  opDiff = 5,
-  opAnd = 6,
-  opOr = 7,
-};
 
 TemplateParam::TemplateParam(TemplateParser* parser, iBlockToken* token): _parser(parser), _block(token) {
 }
@@ -22,6 +11,8 @@ TemplateParam::TemplateParam(const TemplateParam& param) {
   for (tArguments::const_iterator it = param._arguments.begin(); it != param._arguments.end(); it++) {
     add((*it)->value, (*it)->nextOperator, (*it)->not);
   }
+  _parser = param._parser;
+  _block = param._block;
 }
 
 void TemplateParam::add(TemplateValue& value, enOperators nextOperator, bool not) {
@@ -73,10 +64,10 @@ TemplateValue TemplateParam::output() {
           value = value.comp((*it)->not ? !(*it)->value : (*it)->value);
           break;
         case opRegExDiff:
-          value = new TemplateValue(!RegEx::doMatch((*it)->value->getString().c_str(), value->getString().c_str())); 
+          value = TemplateValue(!RegEx::doMatch((*it)->value.getString().c_str(), value.getString().c_str())); 
           break;
         case opRegExComp:
-          value = new TemplateValue(RegEx::doMatch((*it)->value->getString().c_str(), value->getString().c_str()));
+          value = TemplateValue(RegEx::doMatch((*it)->value.getString().c_str(), value.getString().c_str()));
           break;
       }
       it++;
@@ -122,8 +113,8 @@ TemplateFunction::~TemplateFunction() {
   _params.clear();
 }
 
-TemplateValue::TemplateValue(TemplateValue& value) {
-  this->copy(value);
+TemplateValue::TemplateValue(const TemplateValue& value) {
+  this->copy((TemplateValue&)value);
 }
 
 void TemplateValue::copy(TemplateValue& value) {
