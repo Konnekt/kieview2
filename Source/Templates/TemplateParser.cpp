@@ -423,17 +423,3 @@ TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param,
   itPos = itCurrPos;
   return paramParseOK;
 }
-
-int f() {
-  TemplateParser*p =new TemplateParser;
-  oTemplate tpl = new FileTemplate("c:\\psiak.tpl");
-  try {
-  p->parse(tpl);
-  OutputDebugStringA(tpl->output().c_str());
-  } catch(const TemplateException& ex) {
-    OutputDebugStringA(ex.getReason().a_str());
-  }
-  return 0;
-}
-
-int d = f();
