@@ -6,6 +6,7 @@
 #include <string>
 #include <Stamina/Time64.h>
 #include <Stamina/Helpers.h>
+#include <Stamina/RegEx.h>
 
 using namespace std;
 using namespace Stamina;
@@ -24,7 +25,15 @@ public:
     tDate64 = 5,
     tVar = 6,
     tFunction = 7,
-    tParam = 8
+    tParam = 8,
+    tRegExp = 9
+  };
+
+  struct sRegExpVal {
+    string pattern;
+    RegEx regEx;
+
+    sRegExpVal(const string& pattern, RegEx regEx): pattern(pattern), regEx(regEx) { }
   };
 
   union {
@@ -36,6 +45,7 @@ public:
     TemplateVariable* vVar;
     TemplateFunction* vFunction;
     TemplateParam* vParam;
+    sRegExpVal* vRegExp;
   };
 
 public:
@@ -49,6 +59,7 @@ public:
   TemplateValue(TemplateVariable* value);
   TemplateValue(TemplateFunction* value);
   TemplateValue(TemplateParam* value);
+  TemplateValue(const string& pattern, RegEx value);
   TemplateValue(const TemplateValue& value);
   const TemplateValue& operator = (const TemplateValue& copy);
   TemplateValue& operator = (TemplateValue& copy);

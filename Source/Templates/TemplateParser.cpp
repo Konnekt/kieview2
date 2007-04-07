@@ -181,9 +181,10 @@ void TemplateParser::parseText(TemplateParam* param, enOperators oper, bool not,
   itPos = itCurrPos + 1;
 }
 
-void parseRegExp(TemplateParam* param, enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
+void TemplateParser::parseRegExp(TemplateParam* param, enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   bool backSlash = false;
   string text;
+  text += '/';
 
   //expr
   while (itCurrPos != itEnd) {
@@ -215,6 +216,12 @@ void parseRegExp(TemplateParam* param, enOperators oper, bool not, string::itera
     }
     itCurrPos++;
   }
+  if (itCurrPos == itEnd) {
+    throw TemplateException("Syntax error. ....");
+  }
+  RegEx reg;
+  reg.setPattern(text);
+  param->add(TemplateValue(text, reg), oper, not);
   itPos = itCurrPos + 1;
 }
 
@@ -331,6 +338,8 @@ bool TemplateParser::parseArgument(TemplateParam* param, enOperators oper, bool 
     parseConst(param, oper, not, itCurrPos, itEnd, itPos);
   } else if (*itCurrPos == '$') {
     parseVar(param, oper, not, itCurrPos + 1, itEnd, itPos);
+  } else if (*itCurrPos == '/') {
+    parseRegExp(param, oper, not, itCurrPos + 1, itEnd, itPos);
   } else {
     return false;
   }
@@ -414,3 +423,17 @@ TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param,
   itPos = itCurrPos;
   return paramParseOK;
 }
+
+int f() {
+  TemplateParser*p =new TemplateParser;
+  oTemplate tpl = new FileTemplate("c:\\psiak.tpl");
+  try {
+  p->parse(tpl);
+  OutputDebugStringA(tpl->output().c_str());
+  } catch(const TemplateException& ex) {
+    OutputDebugStringA(ex.getReason().a_str());
+  }
+  return 0;
+}
+
+int d = f();

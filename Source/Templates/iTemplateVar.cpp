@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "iTemplateVar.h"
+#include "GlobalsManager.h"
+#include "TemplateParam.h"
 
 TemplateVariable::TemplateVariable(const TemplateVariable& var): iTemplateVar(var._name) {
 }

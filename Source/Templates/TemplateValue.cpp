@@ -26,6 +26,8 @@ void TemplateValue::copy(TemplateValue& value) {
     vFunction = new TemplateFunction(*(value.vFunction));
   } else if (_type == tParam) {
     vParam = new TemplateParam(*(value.vParam));
+  } else if (_type == tRegExp) {
+    vRegExp = new sRegExpVal(value.vRegExp->pattern, value.vRegExp->regEx);
   }
 }
 
@@ -93,6 +95,11 @@ TemplateValue::TemplateValue(TemplateFunction* value) {
   _type = tFunction;
 }
 
+TemplateValue::TemplateValue(const string& pattern, RegEx value) {
+  vRegExp = new sRegExpVal(pattern, value);
+  _type = tRegExp;
+}
+
 void TemplateValue::clear() {
   if (_type == tDate64) {
     if (vDate64)
@@ -109,6 +116,9 @@ void TemplateValue::clear() {
   } else if (_type == tParam) {
     if (vParam)
       delete vParam;
+  } else if (_type == tRegExp) {
+    if (vRegExp)
+      delete vRegExp;
   }
 }
 
@@ -129,6 +139,8 @@ string TemplateValue::getString() {
     return vFunction->get().getString();
   } else if (_type == tParam) {
     return vParam->output().getString();
+  } else if (_type == tRegExp) {
+    return vRegExp->pattern;
   }
   return "";
 }
@@ -212,6 +224,8 @@ TemplateValue TemplateValue::plus(TemplateValue& value) {
     return vFunction->get() + value;
   } else if (_type == tParam) {
     return vParam->output() + value;
+  } else if (_type == tRegExp) {
+    //err
   }
   return TemplateValue();
 }
@@ -233,6 +247,8 @@ TemplateValue TemplateValue::minus(TemplateValue& value) {
     return vFunction->get() - value;
   } else if (_type == tParam) {
     return vParam->output() - value;
+  } else if (_type == tRegExp) {
+    //err
   }
   return TemplateValue();
 }
@@ -254,6 +270,8 @@ TemplateValue TemplateValue::comp(TemplateValue& value) {
     return vFunction->get() == value;
   } else if (_type == tParam) {
     return vParam->output() == value;
+  } else if (_type == tRegExp) {
+    return vRegExp->regEx.match(value.getString().c_str());
   }
   return TemplateValue();
 }
@@ -275,6 +293,8 @@ TemplateValue TemplateValue::diff(TemplateValue& value) {
     return vFunction->get() != value;
   } else if (_type == tParam) {
     return vParam->output() != value;
+  } else if (_type == tRegExp) {
+    return !vRegExp->regEx.match(value.getString().c_str());
   }
   return TemplateValue(true);
 }

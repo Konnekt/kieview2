@@ -3,6 +3,8 @@
 #ifndef __ITEMPLATE_VAR_H__
 #define __ITEMPLATE_VAR_H__
 
+#include "TemplateValue.h"
+
 /* iTemplateVar */
 class iTemplateVar {
 public:

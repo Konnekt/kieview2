@@ -1,3 +1,8 @@
+#pragma once
+
+#ifndef __TEMPLATE_PARAM_H__
+#define __TEMPLATE_PARAM_H__
+
 #include "TemplateParser.h"
 #include "iBlockToken.h"
 
@@ -36,3 +41,5 @@ protected:
   TemplateParser* _parser;
   iBlockToken* _block;
 };
+
+#endif // __TEMPLATE_PARAM_H__

@@ -56,16 +56,12 @@ TemplateValue TemplateParam::output() {
           value = value.and((*it)->not ? !(*it)->value : (*it)->value);
           break;
         case opDiff:
+        case opRegExDiff:
           value = value.diff((*it)->not ? !(*it)->value : (*it)->value);
           break;
         case opComp:
-          value = value.comp((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opRegExDiff:
-          value = TemplateValue(!RegEx::doMatch((*it)->value.getString().c_str(), value.getString().c_str())); 
-          break;
         case opRegExComp:
-          value = TemplateValue(RegEx::doMatch((*it)->value.getString().c_str(), value.getString().c_str()));
+          value = value.comp((*it)->not ? !(*it)->value : (*it)->value);
           break;
       }
       it++;

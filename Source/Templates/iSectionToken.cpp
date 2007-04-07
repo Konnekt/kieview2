@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "iSectionToken.h"
+#include "TemplateParam.h"
+#include "Template.h"
 
 void iSectionToken::parseArguments(string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   TemplateParam* newParam;
