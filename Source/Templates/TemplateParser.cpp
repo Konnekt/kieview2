@@ -2,8 +2,11 @@
 
 #include "TemplateParser.h"
 #include "TemplateTokens.h"
+#include "iBlockToken.h"
+#include "TemplateParam.h"
 #include "TemplateValue.h"
 #include "Template.h"
+#include "iTemplateVar.h"
 
 iTemplateToken* TemplateParser::getToken(int type, iBlockToken* token) {
   if (type == TextToken::T_TEXT) {

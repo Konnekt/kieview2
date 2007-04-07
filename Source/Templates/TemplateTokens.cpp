@@ -2,6 +2,7 @@
 
 #include "TemplateTokens.h"
 #include "TemplateParser.h"
+#include "TemplateParam.h"
 #include "Template.h"
 
 /*

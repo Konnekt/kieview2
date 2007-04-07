@@ -12,8 +12,8 @@
 
 class iTemplateToken;
 class iBlockToken;
-
 class TemplateParam;
+
 typedef SharedPtr<class iTemplate> oTemplate;
 
 enum enOperators {
@@ -45,7 +45,8 @@ public:
 
 public:
   void parse(oTemplate& tpl);
-  enParseRes parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens);
+  enParseRes parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
+    string::iterator& itPos, bool allowCreateTokens);
 
   enParseParamRes parseParam(TemplateParam* param, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos);
   enOperators parseOperator(string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos);

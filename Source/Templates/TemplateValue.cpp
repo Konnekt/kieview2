@@ -1,117 +1,8 @@
 #include "stdafx.h"
+
 #include "TemplateValue.h"
-#include "Template.h"
-#include "TemplateVar.h"
-#include "TemplateToken.h"
-
-TemplateParam::TemplateParam(TemplateParser* parser, iBlockToken* token): _parser(parser), _block(token) {
-}
-
-TemplateParam::TemplateParam(const TemplateParam& param) {
-  for (tArguments::const_iterator it = param._arguments.begin(); it != param._arguments.end(); it++) {
-    add((*it)->value, (*it)->nextOperator, (*it)->not);
-  }
-  _parser = param._parser;
-  _block = param._block;
-}
-
-void TemplateParam::add(TemplateValue& value, enOperators nextOperator, bool not) {
-  _arguments.push_back(new sArgument(value, nextOperator, not));
-}
-
-void TemplateParam::clear() {
-  for (tArguments::iterator it = _arguments.begin(); it != _arguments.end(); it++) {
-    //delete (*it)->value;
-    delete *it;
-  }
-  _arguments.clear();
-}
-
-UINT TemplateParam::count() {
-  return _arguments.size();
-}
-
-TemplateValue TemplateParam::output() {
-  tArguments::iterator it = _arguments.begin();
-  tArguments::iterator itEnd = _arguments.end();
-
-  TemplateValue value;
-  if (_arguments.size()) {
-    value = TemplateValue((*it)->not ? !(*it)->value : (*it)->value);
-    it++;
-    enOperators op;
-    while (it != itEnd) {
-      op = (*it)->nextOperator;
-      switch (op) {
-        case opNone:
-          break;
-        case opPlus:
-          value = value.plus((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opMinus:
-          value = value.minus((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opOr:
-          value = value.or((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opAnd:
-          value = value.and((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opDiff:
-          value = value.diff((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opComp:
-          value = value.comp((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opRegExDiff:
-          value = TemplateValue(!RegEx::doMatch((*it)->value.getString().c_str(), value.getString().c_str())); 
-          break;
-        case opRegExComp:
-          value = TemplateValue(RegEx::doMatch((*it)->value.getString().c_str(), value.getString().c_str()));
-          break;
-      }
-      it++;
-    }
-  }
-  return value;
-}
-
-TemplateParam::~TemplateParam() {
-  clear();
-}
-
-TemplateVariable::TemplateVariable(const TemplateVariable& var): iTemplateVar(var._name) {
-}
-
-TemplateValue TemplateVariable::get() {
-  return GlobalsManager::get()->getVariable(_name);
-}
-
-
-TemplateValue TemplateFunction::get() {
-  GlobalsManager::tFuncArguments arguments;
-  for (tParams::iterator it = _params.begin(); it != _params.end(); it++) {
-    arguments.push_back((*it)->output());
-  }
-  return GlobalsManager::get()->callFunction(_name, arguments);
-}
-
-TemplateFunction::TemplateFunction(const TemplateFunction& func): iTemplateVar(func._name) {
-  for (tParams::const_iterator it = func._params.begin(); it != func._params.end(); it++) {
-    addParam(new TemplateParam(*(*it)));
-  }
-}
-
-void TemplateFunction::addParam(TemplateParam* param) {
-  _params.push_back(param);
-}
-
-TemplateFunction::~TemplateFunction() {
-  for (tParams::iterator it = _params.begin(); it != _params.end(); it++) {
-    delete *it;
-  }
-  _params.clear();
-}
+#include "TemplateParam.h"
+#include "iTemplateVar.h"
 
 TemplateValue::TemplateValue(const TemplateValue& value) {
   this->copy((TemplateValue&)value);
@@ -403,36 +294,7 @@ TemplateValue TemplateValue::not() {
 TemplateValue::~TemplateValue() {
   clear();
 }
-/*
-oTemplateValue oTemplateValue::plus(TemplateValue* value) {
-  return get()->plus(value);
-}
 
-oTemplateValue oTemplateValue::minus(TemplateValue* value) {
-  return get()->minus(value);
-}
-
-oTemplateValue oTemplateValue::comp(TemplateValue* value) {
-  return get()->comp(value);
-}
-
-oTemplateValue oTemplateValue::diff(TemplateValue* value) {
-  return get()->diff(value);
-}
-
-oTemplateValue oTemplateValue::and(TemplateValue* value) {
-  return get()->and(value);
-}
-
-oTemplateValue oTemplateValue::or(TemplateValue* value) {
-  return get()->or(value);
-}
-
-oTemplateValue oTemplateValue::not() {
-  return get()->not();
-}
-
-*/
 /* to do:
 konwersja int64 to stirng
 */

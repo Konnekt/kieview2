@@ -3,7 +3,8 @@
 #ifndef __TEMPLATE_TOKENS
 #define __TEMPLATE_TOKENS
 
-#include "TemplateToken.h"
+#include "iTemplateToken.h"
+#include "iBlockToken.h"
 
 class TextToken: public iTemplateToken {
 public:

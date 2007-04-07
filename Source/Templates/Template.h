@@ -6,10 +6,8 @@
 #include <fstream>
 #include <Stamina/Exception.h>
 
-#include "TemplateToken.h"
-#include "TemplateVar.h"
+#include "iBlockToken.h"
 
-class iBlockToken;
 typedef SharedPtr<class iTemplate> oTemplate;
 
 class TemplateException: public ExceptionString {
@@ -37,14 +35,14 @@ public:
   virtual bool loaded() {
     return _loaded;
   }
-  virtual string output();
   virtual void clear() {
     if (_token) delete _token;
   }
+  virtual string output();
 
 public:
-//  TemplateValue getVariable(const string& name);
-//  bool setVariable(const string& name, const TemplateValue& value, bool create = false);
+  // TemplateValue getVariable(const string& name);
+  // bool setVariable(const string& name, const TemplateValue& value, bool create = false);
 
 protected:
   TemplateParser* _parser;

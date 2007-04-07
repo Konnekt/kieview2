@@ -1,7 +1,5 @@
 #include "stdafx.h"
 #include "Template.h"
-#include "TemplateParser.h"
-#include "TemplateToken.h"
 
 FileTemplate::FileTemplate(const string& path) {
   ifstream file(path.c_str());
