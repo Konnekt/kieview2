@@ -84,7 +84,7 @@ public:
 
 public:
   // iBlockToken(iBlockToken* token);
-  iBlockToken(TemplateParser* parser, iBlockToken* parent): iSectionToken(parser, parent) { }
+  iBlockToken(TemplateParser* parser, iBlockToken* parent): iSectionToken(parser, parent), iVariableManager(parent) { }
 
 public:
   virtual int getType() {

@@ -18,9 +18,14 @@ public:
   typedef map<string, TemplateValue> tVariableData;
 
 public:
+  iVariableManager(): _parent(NULL) { }
+  iVariableManager(iVariableManager* parent): _parent(parent) { }
+
+public:
   virtual bool addVariable(const string& name, TemplateValue value, bool attrWrite = true);
   virtual TemplateValue getVariable(const string& name);
   virtual bool hasVariable(const string& name);
+  virtual iVariableManager* find(const string& name);
   virtual bool isWritableVariable(const string& name);
   virtual bool setVariable(const string& name, const TemplateValue value, bool create = false);
   virtual void setData(const tVariableData& data);
@@ -28,6 +33,7 @@ public:
   virtual void clearVariables();
 
 protected:
+  iVariableManager* _parent;
   tVariables variables;
 };
 

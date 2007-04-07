@@ -3,6 +3,7 @@
 #include "Template.h"
 #include "TemplateToken.h"
 #include "TemplateVar.h"
+
 SharedPtr<GlobalsManager> GlobalsManager::instance = 0;
 
 bool iVariableManager::addVariable(const string& name, TemplateValue value, bool attrWrite) {
@@ -22,6 +23,14 @@ TemplateValue iVariableManager::getVariable(const string& name) {
     return TemplateValue();
   }
   return variables[name]->value;
+}
+
+iVariableManager* iVariableManager::find(const string& name) {
+  iVariableManager *pVM = this;
+  while (pVM != NULL && !hasVariable(name)) {
+    pVM = pVM->_parent;
+  }
+  return pVM;
 }
 
 bool iVariableManager::isWritableVariable(const string& name) {

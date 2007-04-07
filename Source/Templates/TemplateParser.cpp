@@ -178,8 +178,43 @@ void TemplateParser::parseText(TemplateParam* param, enOperators oper, bool not,
   itPos = itCurrPos + 1;
 }
 
-void parseRegExp() {
+void parseRegExp(TemplateParam* param, enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
+  bool backSlash = false;
+  string text;
+
+  //expr
+  while (itCurrPos != itEnd) {
+    if (backSlash) {
+      if (*itCurrPos == '/') {
+        text += *itCurrPos;
+      }
+      backSlash = false;
+    }
+    if (*itCurrPos == '/') {
+      text += *itCurrPos;
+      itCurrPos++;
+      break;
+    } else if (*itCurrPos == '\\') {
+      backSlash = true;
+      text += *itCurrPos;
+    } else {
+      text += *itCurrPos;
+    }
+    itCurrPos++;
+  }
+
+  //flags
+  while (itCurrPos != itEnd) {
+    if (*itCurrPos >= 'a' && *itCurrPos <= 'z') {
+      text += *itCurrPos;
+    } else {
+      break;
+    }
+    itCurrPos++;
+  }
+  itPos = itCurrPos + 1;
 }
+
 void TemplateParser::parseConst(TemplateParam* param, enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   string text;
 
