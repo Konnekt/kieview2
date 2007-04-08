@@ -42,7 +42,7 @@ UINT iBlockToken::count() {
   return _token.size();
 }
 
-string iBlockToken::output() {
+String iBlockToken::output() {
   string out;
   tTokenList::iterator it = _token.begin();
   tTokenList::iterator itEnd = _token.end();

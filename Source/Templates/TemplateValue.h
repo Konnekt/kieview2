@@ -14,20 +14,22 @@ using namespace Stamina;
 class TemplateVariable;
 class TemplateFunction;
 class TemplateParam;
+class TemplateHash;
 
 class TemplateValue {
 public:
   enum enTypes {
-    tVoid = 0,
-    tString = 1,
-    tInteger = 2,
-    tInteger64 = 3,
-    tBoolean = 4,
-    tDate64 = 5,
-    tVar = 6,
-    tFunction = 7,
-    tParam = 8,
-    tRegExp = 9
+    tVoid,
+    tString,
+    tInteger,
+    tInteger64,
+    tBoolean,
+    tDate64,
+    tVar,
+    tFunction,
+    tParam,
+    tRegExp,
+    tHash
   };
 
   union {
@@ -40,6 +42,7 @@ public:
     TemplateFunction* vFunction;
     TemplateParam* vParam;
     string* vRegExp;
+    TemplateHash* vHash;
   };
 
 public:
@@ -53,6 +56,7 @@ public:
   TemplateValue(TemplateVariable* value);
   TemplateValue(TemplateFunction* value);
   TemplateValue(TemplateParam* value);
+  TemplateValue(TemplateHash* value);
   TemplateValue(const TemplateValue& value);
 
   ~TemplateValue();
@@ -106,11 +110,12 @@ public:
   TemplateValue diff(TemplateValue& value);
 
 public:
-  string getString();
+  String getString();
   bool getBool();
   int getInt();
   __int64 getInt64();
   Date64 getDate();
+  TemplateHash* getHash();
 
   void clear();
   void copy(TemplateValue& value);

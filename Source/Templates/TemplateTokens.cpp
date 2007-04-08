@@ -14,7 +14,7 @@ void TextToken::parse(iBlockToken* block, string::iterator itCurrPos, string::it
   _text = string(itCurrPos, itEnd);
 }
 
-string TextToken::output() {
+String TextToken::output() {
   return _text;
 }
 
@@ -98,7 +98,7 @@ void IFToken::clear() {
   }
 }
 
-string IFToken::output() {
+String IFToken::output() {
   bool arg = false;
 
   for (iSectionToken::tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
@@ -145,7 +145,7 @@ void UnLessToken::parse(iBlockToken* block, string::iterator itCurrPos, string::
   }
 }
 
-string UnLessToken::output() {
+String UnLessToken::output() {
   string out;
 
   bool arg = false;
@@ -186,7 +186,7 @@ void ArgumentToken::parse(iBlockToken* block, string::iterator itCurrPos, string
   itPos = itCurrPos;
 }
 
-string ArgumentToken::output() {
+String ArgumentToken::output() {
   return _param->output().getString();
 }
 
@@ -236,7 +236,7 @@ void IncludeToken::parse(iBlockToken* block, string::iterator itCurrPos, string:
   itPos = itData;
 }
 
-string IncludeToken::output() {
+String IncludeToken::output() {
   clear();
   iSectionToken::tSectionArgs::iterator it;
   for (it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
@@ -296,7 +296,7 @@ void SetToken::parse(iBlockToken* block, string::iterator itCurrPos, string::ite
   itPos = itData;
 }
 
-string SetToken::output() {
+String SetToken::output() {
   iVariableManager* vm = NULL;
   for (tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
     if (vm = getParent()->find(*(*it)->name)) {

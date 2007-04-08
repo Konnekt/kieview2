@@ -28,7 +28,7 @@ public:
 public:
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
     string::iterator& itPos, bool allowCreateTokens) = 0;
-  virtual string output() = 0;
+  virtual String output() = 0;
   virtual void clear() = 0;
 
 public:

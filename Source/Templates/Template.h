@@ -38,7 +38,7 @@ public:
   virtual void clear() {
     if (_token) delete _token;
   }
-  virtual string output();
+  virtual String output();
 
 public:
   // TemplateValue getVariable(const string& name);

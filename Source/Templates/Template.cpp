@@ -18,6 +18,6 @@ FileTemplate::FileTemplate(const string& path, iVariableManager* vm): iTemplate(
   _token = NULL;
 }
 
-string iTemplate::output() {
-  return _token ? _token->output() : "";
+String iTemplate::output() {
+  return _token ? _token->output() : String();
 }

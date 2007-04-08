@@ -19,6 +19,17 @@ TemplateValue TemplateVariable::get() {
   return TemplateValue();
 }
 
+TemplateHashVariable::TemplateHashVariable(const TemplateHashVariable& var): TemplateVariable(var._name, var._vm), _key(var._key) {
+}
+
+TemplateValue TemplateHashVariable::get() {
+  TemplateValue val = TemplateVariable::get();
+  if (val.getType() == TemplateValue::tHash) {
+    return val.getHash()->get(_key);
+  }
+  return TemplateValue();
+}
+
 TemplateValue TemplateFunction::get() {
   GlobalsManager::tFuncArguments arguments;
   for (tParams::iterator it = _params.begin(); it != _params.end(); it++) {

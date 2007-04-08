@@ -19,7 +19,7 @@ public:
   }
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
     string::iterator& itPos, bool allowCreateTokens);
-  virtual string output();
+  virtual String output();
   virtual void clear();
 
 protected:
@@ -46,7 +46,7 @@ public:
   virtual bool remove(UINT id);
   virtual UINT count();
   virtual void clear();
-  virtual string output();
+  virtual String output();
 
 protected:
   iBlockToken* _ifBlock;
@@ -68,7 +68,7 @@ public:
   iSectionToken::enSectionType getSectionType();
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
     string::iterator& itPos, bool allowCreateTokens);
-  virtual string output();
+  virtual String output();
 };
 
 class ArgumentToken: public iTemplateToken {
@@ -85,7 +85,7 @@ public:
   }
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
     string::iterator& itPos, bool allowCreateTokens);
-  virtual string output();
+  virtual String output();
   virtual void clear();
 
 public:
@@ -107,7 +107,7 @@ public:
   iSectionToken::enSectionType getSectionType();
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
     string::iterator& itPos, bool allowCreateTokens);
-  virtual string output();
+  virtual String output();
   virtual void clear();
 
 public:
@@ -128,7 +128,7 @@ public:
   iSectionToken::enSectionType getSectionType();
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
     string::iterator& itPos, bool allowCreateTokens);
-  virtual string output();
+  virtual String output();
   virtual void clear();
 };
 

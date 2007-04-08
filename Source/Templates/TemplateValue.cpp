@@ -52,6 +52,11 @@ TemplateValue::TemplateValue(TemplateVariable* value) {
   _type = tVar;
 }
 
+TemplateValue::TemplateValue(TemplateHash* value) {
+  vHash = value;
+  _type = tHash;
+}
+
 TemplateValue::TemplateValue(TemplateFunction* value) {
   vFunction = value;
   _type = tFunction;
@@ -85,6 +90,8 @@ void TemplateValue::copy(TemplateValue& value) {
     vParam = new TemplateParam(*(value.vParam));
   } else if (_type == tRegExp) {
     vRegExp = new string(value.getString());
+  } else if (_type == tHash) {
+    vHash = new TemplateHash(*(value.getHash()));
   }
 }
 
@@ -107,10 +114,13 @@ void TemplateValue::clear() {
   } else if (_type == tRegExp) {
     if (vRegExp)
       delete vRegExp;
+  } else if (_type == tHash) {
+    if (vHash)
+      delete vHash;
   }
 }
 
-string TemplateValue::getString() {
+String TemplateValue::getString() {
   if (_type == tString) {
     return *vString;
   } else if (_type == tBoolean) {
@@ -129,6 +139,8 @@ string TemplateValue::getString() {
     return vParam->output().getString();
   } else if (_type == tRegExp) {
     return *vRegExp;
+  } else if (_type == tHash) {
+    return vHash->get().getString();
   }
   return "";
 }
@@ -150,6 +162,8 @@ int TemplateValue::getInt() {
     return vFunction->get().getInt();
   } else if (_type == tParam) {
     return vParam->output().getInt();
+  } else if (_type == tHash) {
+    return vHash->get().getInt();
   }
   return 0;
 }
@@ -189,8 +203,17 @@ bool TemplateValue::getBool() {
     return vFunction->get().getBool();
   } else if (_type == tParam) {
     return vParam->output().getBool();
+  } else if (_type == tHash) {
+    return vHash->get().getBool();
   }
   return getInt();
+}
+
+TemplateHash* TemplateValue::getHash() {
+  if (_type == tHash) {
+    return vHash;
+  }
+  return NULL;
 }
 
 TemplateValue::enTypes TemplateValue::getType() {
@@ -216,6 +239,8 @@ TemplateValue TemplateValue::plus(TemplateValue& value) {
     return vParam->output() + value;
   } else if (_type == tRegExp) {
     //err
+  } else if (_type == tHash) {
+    return vHash->get() + value;
   }
   return TemplateValue();
 }
@@ -239,6 +264,8 @@ TemplateValue TemplateValue::minus(TemplateValue& value) {
     return vParam->output() - value;
   } else if (_type == tRegExp) {
     //err
+  } else if (_type == tHash) {
+    return vHash->get() - value;
   }
   return TemplateValue();
 }
@@ -264,6 +291,8 @@ TemplateValue TemplateValue::comp(TemplateValue& value) {
     return vFunction->get() == value;
   } else if (_type == tParam) {
     return vParam->output() == value;
+  } else if (_type == tHash) {
+    return vHash->get() == value;
   }
   return false;
 }

@@ -42,4 +42,18 @@ protected:
   iBlockToken* _block;
 };
 
+class TemplateHash {
+public:
+  typedef map<string, TemplateValue> tKeys;
+
+public:
+  TemplateHash();
+
+  void set(const string& name, TemplateValue value);
+  TemplateValue get(const string& name = "default");
+
+private:
+  tKeys _keys;
+};
+
 #endif // __TEMPLATE_PARAM_H__

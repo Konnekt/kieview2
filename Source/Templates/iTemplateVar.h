@@ -25,10 +25,24 @@ public:
   TemplateVariable(const TemplateVariable& var);
 
 public:
-  TemplateValue get();
+  virtual TemplateValue get();
+
+protected:
+  iVariableManager* _vm;
+};
+
+/* TemplateHashVariable */
+class TemplateHashVariable: public TemplateVariable {
+
+public:
+  TemplateHashVariable(const string& name, const string& key, iVariableManager* lVM): TemplateVariable(name, lVM), _key(key) { }
+  TemplateHashVariable(const TemplateHashVariable& var);
+
+public:
+  virtual TemplateValue get();
 
 private:
-  iVariableManager* _vm;
+  string _key;
 };
 
 /* TemplateFunction */

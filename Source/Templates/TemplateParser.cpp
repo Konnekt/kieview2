@@ -272,6 +272,7 @@ void TemplateParser::parseInt(TemplateParam* param, enOperators oper, bool not, 
 
 void TemplateParser::parseVar(TemplateParam* param, enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   bool isFunc = false;
+  bool isHash = false;
   string name;
 
   while (itCurrPos != itEnd) {
@@ -280,10 +281,16 @@ void TemplateParser::parseVar(TemplateParam* param, enOperators oper, bool not, 
     } else if (*itCurrPos == '(') {
       isFunc = true;
       break;
+    } else if (*itCurrPos == '.'){
+      isHash = true;
+      break;
     } else {
       break;
     }
     itCurrPos++;
+  }
+  if (name.empty()) {
+    throw TemplateException("Syntax error. The var value does not have name.");
   }
 
   if (isFunc) {
@@ -312,10 +319,24 @@ void TemplateParser::parseVar(TemplateParam* param, enOperators oper, bool not, 
     }
     itPos = itCurrPos + 1;
     return;
+  } else if (isHash) {
+    string key;
+    while (itCurrPos != itEnd) {
+      if ((*itCurrPos >= '0' && *itCurrPos <= '9') || (*itCurrPos >= 'a' && *itCurrPos <= 'z') || (*itCurrPos >= 'A' && *itCurrPos <= 'Z') || *itCurrPos == '_') {
+        name += *itCurrPos;
+      } else {
+        break;
+      }
+      itCurrPos++;
+    }
+    if (key.empty()) {
+      throw TemplateException("Syntax error. The hash value does not have key after full stop."); ///!!!??
+    }
+    param->add(new TemplateHashVariable(name, key, param->getBlock()), oper, not);
   } else if (!isFunc){
     param->add(new TemplateVariable(name, param->getBlock()), oper, not);
   } else {
-    throw TemplateException("Syntax error. Wrong var/funcion declaration.");
+    throw TemplateException("Syntax error. Wrong var/hash/function declaration.");
   }
   itPos = itCurrPos;
 }

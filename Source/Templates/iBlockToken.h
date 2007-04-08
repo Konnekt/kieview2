@@ -32,7 +32,7 @@ public:
   virtual UINT count();
   virtual void clear();
 
-  virtual string output();
+  virtual String output();
 
 protected:
   tTokenList _token;

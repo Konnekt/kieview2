@@ -73,3 +73,15 @@ TemplateValue TemplateParam::output() {
 TemplateParam::~TemplateParam() {
   clear();
 }
+
+void TemplateHash::set(const string& name, TemplateValue value) {
+  _keys[name] = value;
+}
+
+TemplateValue TemplateHash::get(const string& name) {
+  tKeys::iterator it = _keys.find(name);
+  if (it == _keys.end()) {
+    return TemplateValue();
+  }
+  return it->second;
+}
