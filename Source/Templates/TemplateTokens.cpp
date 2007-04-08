@@ -288,15 +288,21 @@ void SetToken::parse(iBlockToken* block, string::iterator itCurrPos, string::ite
   if (itData == itEnd || *itData != '}') {
     throw TemplateException("Syntax error. The Set token bad end of token.");
   }
-
+  for (tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
+    if (!getParent()->find(*(*it)->name)) {
+      getParent()->setVariable(*(*it)->name, TemplateValue(), true);
+    }
+  }
   itPos = itData;
 }
 
 string SetToken::output() {
-  iVariableManager* vm;
+  iVariableManager* vm = NULL;
   for (tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
     if (vm = getParent()->find(*(*it)->name)) {
-     // vm->setVariable(*(*it)->name, (*it)->param->output());
+      vm->setVariable(*(*it)->name, (*it)->param->output());
+    } else {
+      getParent()->setVariable(*(*it)->name, (*it)->param->output());
     }
   }
   return "";
