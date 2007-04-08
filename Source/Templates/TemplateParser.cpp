@@ -11,18 +11,19 @@
 #include "GlobalsManager.h"
 
 iTemplateToken* TemplateParser::getToken(int type, iBlockToken* token) {
-  if (type == TextToken::T_TEXT) {
-    return new TextToken(this, token);
-  } else if (type == UnLessToken::T_UNLESS) {
-    return new UnLessToken(this, token);
-  } else if (type == IFToken::T_IF) {
-    return new IFToken(this, token);
-  } else if (type == ArgumentToken::T_ARGUMENT) {
-    return new ArgumentToken(this, token);
-  } else if (type == IncludeToken::T_INCLUDE) {
-    return new IncludeToken(this, token);
-  } else if (type == SetToken::T_SET) {
-    return new SetToken(this, token);
+  switch (type) {
+    case TextToken::T_TEXT:
+      return new TextToken(this, token);
+    case UnLessToken::T_UNLESS:
+      return new UnLessToken(this, token);
+    case IFToken::T_IF:
+      return new IFToken(this, token);
+    case ArgumentToken::T_ARGUMENT:
+      return new ArgumentToken(this, token);
+    case IncludeToken::T_INCLUDE:
+      return new IncludeToken(this, token);
+    case SetToken::T_SET:
+      return new SetToken(this, token);
   }
   return NULL;
 }
@@ -47,8 +48,9 @@ int TemplateParser::getType(string& text) {
 
 void TemplateParser::parse(oTemplate& tpl) {
   tpl->clear();
-  tpl->_parser = this;
   tpl->_token = new iBlockToken(this, tpl.get());
+  tpl->_parser = this;
+
   string::iterator it;
   try {
     parse(tpl->_token, tpl->_data.begin(), tpl->_data.end(), "", it, true);
@@ -61,11 +63,11 @@ void TemplateParser::parse(oTemplate& tpl) {
 }
 
 TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
-  bool inToken = false;
   string::iterator itTokenPos = itCurrPos;
+  bool inToken = false;
   bool allow = false;
 
-  while(itCurrPos != itEnd) {
+  while (itCurrPos != itEnd) {
     if (*itCurrPos == '{' && (*(itCurrPos + 1) != ' ' || *(itCurrPos + 1) != '\t') && !inToken) {
       inToken = true;
 
@@ -84,6 +86,7 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
       }
       inToken = false;
       string token(itTokenPos + 1, itCurrPos);
+
       int sPos = token.find(" ");
       if (sPos != string::npos) {
         token = token.substr(0, sPos);
@@ -100,12 +103,12 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
         return tplEndTokenFound;
       }
 
-
       iTemplateToken* pToken = NULL;
 
       int type = getType(token);
       if (block && allowCreateTokens && type != 0) {
         iTemplateToken* pToken = getToken(type, block);
+
         if (pToken) {
           pToken->parse(block, itTokenPos, itEnd, ("/" + token), itPos, true);
           itCurrPos = itPos;
@@ -115,8 +118,10 @@ TemplateParser::enParseRes TemplateParser::parse(iBlockToken* block, string::ite
       }
       itTokenPos = itCurrPos + 1;
       int pr = 0;
+
       if (!allow) {
-        pr = parse((pToken && (pToken->getType() & iBlockToken::T_BLOCK)) ? (iBlockToken*)pToken : block, itCurrPos, itEnd, ("/" + token), itPos, false);
+        pr = parse((pToken && (pToken->getType() & iBlockToken::T_BLOCK)) ? 
+          (iBlockToken*)pToken : block, itCurrPos, itEnd, ("/" + token), itPos, false);
         allow = false;
       }
 
@@ -303,7 +308,8 @@ void TemplateParser::parseVar(TemplateParam* param, enOperators oper, bool not, 
     do {
       newParam = new TemplateParam(this, param->getBlock());
       parseParam(newParam, itCurrPos + 1, itEnd, itCurrPos);
-      if ((lastComma ||(itCurrPos != itEnd && *itCurrPos == ','))&& !newParam->count()) {
+
+      if ((lastComma || (itCurrPos != itEnd && *itCurrPos == ',')) && !newParam->count()) {
         throw TemplateException("Syntax error. Too many comma signs in function: " + name);
       }
       if (newParam->count()) {
@@ -319,16 +325,20 @@ void TemplateParser::parseVar(TemplateParam* param, enOperators oper, bool not, 
     }
     itPos = itCurrPos + 1;
     return;
+
   } else if (isHash) {
+    itCurrPos++;
     string key;
-    while (itCurrPos != itEnd) {
+
+    do {
       if ((*itCurrPos >= '0' && *itCurrPos <= '9') || (*itCurrPos >= 'a' && *itCurrPos <= 'z') || (*itCurrPos >= 'A' && *itCurrPos <= 'Z') || *itCurrPos == '_') {
-        name += *itCurrPos;
+        key += *itCurrPos;
       } else {
         break;
       }
       itCurrPos++;
-    }
+    } while (itCurrPos != itEnd);
+
     if (key.empty()) {
       throw TemplateException("Syntax error. The hash value does not have key after full stop."); ///!!!??
     }
@@ -347,6 +357,7 @@ bool TemplateParser::parseArgument(TemplateParam* param, enOperators oper, bool 
   } else if (*itCurrPos == '(') {
     TemplateParam* newParam = new TemplateParam(this, param->getBlock());
     TemplateParser::parseParam(newParam, itCurrPos + 1, itEnd, itPos);
+
     if (itPos == itEnd && *itPos != ')') {
       delete newParam;
       throw TemplateException("Syntax error. Right bracked in block not found.");
@@ -408,8 +419,9 @@ enOperators TemplateParser::parseOperator(string::iterator itCurrPos, string::it
 TemplateParser::enParseParamRes TemplateParser::parseParam(TemplateParam* param, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   enOperators lastOperator = opNone;
   enOperators notOperator;
-  bool not = false;
+
   bool isArgument = true;
+  bool not = false;
 
   while (itCurrPos != itEnd) {
     if (*itCurrPos == ' ' || *itCurrPos == '\t' || *itCurrPos == '\n') {

@@ -15,11 +15,11 @@ public:
 
 public:
   // iBlockToken(iBlockToken* token);
-  iBlockToken(TemplateParser* parser, iBlockToken* parent): iSectionToken(parser, parent), iVariableManager(parent) { }
+  iBlockToken(TemplateParser* parser, iBlockToken* parent = NULL): iSectionToken(parser, parent), iVariableManager(parent) { }
   iBlockToken(TemplateParser* parser, iVariableManager* vm): iSectionToken(parser, NULL), iVariableManager(vm) { }
 
 public:
-  virtual int getType() {
+  virtual int getType() const {
     return T_BLOCK;
   }
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 

@@ -3,11 +3,12 @@
 #ifndef __ITEMPLATE_VAR_H__
 #define __ITEMPLATE_VAR_H__
 
-#include "TemplateValue.h"
-#include "iVariableManager.h"
+class iVariableManager;
+class TemplateValue;
+class TemplateParam;
 
 /* iTemplateVar */
-class iTemplateVar {
+class iTemplateVar : public SharedObject<iSharedObject> {
 public:
   iTemplateVar(const string& name): _name(name) { }
 
@@ -18,11 +19,13 @@ protected:
   string _name;
 };
 
+typedef SharedPtr<iTemplateVar> oTemplateVar;
+
 /* TemplateVariable */
 class TemplateVariable: public iTemplateVar {
 public:
+  TemplateVariable(const TemplateVariable& var): iTemplateVar(var._name), _vm(var._vm) { }
   TemplateVariable(const string& name, iVariableManager* lVM);
-  TemplateVariable(const TemplateVariable& var);
 
 public:
   virtual TemplateValue get();
@@ -36,7 +39,7 @@ class TemplateHashVariable: public TemplateVariable {
 
 public:
   TemplateHashVariable(const string& name, const string& key, iVariableManager* lVM): TemplateVariable(name, lVM), _key(key) { }
-  TemplateHashVariable(const TemplateHashVariable& var);
+  TemplateHashVariable(const TemplateHashVariable& var): TemplateVariable(var._name, var._vm), _key(var._key) { }
 
 public:
   virtual TemplateValue get();
@@ -56,12 +59,9 @@ public:
   ~TemplateFunction();
 
 public:
-  void addParam(TemplateParam* param);
-  void removeParam(UINT id);
-  UINT countParam();
-  void clearParam();
-
   TemplateValue get();
+
+  void addParam(TemplateParam* param);
 
 protected:
   tParams _params;

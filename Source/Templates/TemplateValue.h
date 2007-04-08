@@ -8,12 +8,11 @@
 #include <Stamina/Helpers.h>
 #include <Stamina/RegEx.h>
 
+#include "iTemplateVar.h"
+
 using namespace std;
 using namespace Stamina;
 
-class TemplateVariable;
-class TemplateFunction;
-class TemplateParam;
 class TemplateHash;
 
 class TemplateValue {
@@ -26,37 +25,35 @@ public:
     tBoolean,
     tDate64,
     tVar,
-    tFunction,
     tParam,
     tRegExp,
     tHash
   };
 
   union {
-    string* vString;
+    String* vString;
     int vInt;
     __int64 vInt64;
     bool vBool;
     Date64* vDate64;
-    TemplateVariable* vVar;
-    TemplateFunction* vFunction;
     TemplateParam* vParam;
     string* vRegExp;
     TemplateHash* vHash;
   };
+  oTemplateVar vVar;
 
 public:
   TemplateValue();
   TemplateValue(const char* value);
+  TemplateValue(const StringRef& value);
   TemplateValue(const string& value);
   TemplateValue(int value);
   TemplateValue(__int64 value);
   TemplateValue(const Date64& value);
   TemplateValue(bool value);
-  TemplateValue(TemplateVariable* value);
-  TemplateValue(TemplateFunction* value);
   TemplateValue(TemplateParam* value);
-  TemplateValue(TemplateHash* value);
+  TemplateValue(iTemplateVar* value);
+  TemplateValue(const TemplateHash& value);
   TemplateValue(const TemplateValue& value);
 
   ~TemplateValue();
@@ -72,7 +69,7 @@ public:
   }
 
   TemplateValue& operator = (TemplateValue& copy) {
-    if (this == (TemplateValue*)&copy) return *this;
+    if (this == &copy) return *this;
     this->clear();
     this->copy((TemplateValue&) copy);
     return *this;
@@ -99,6 +96,7 @@ public:
   TemplateValue operator || (TemplateValue& value) {
     return or(value);
   }
+  TemplateValue operator [] (const string& key);
 
 public:
   TemplateValue plus(TemplateValue& value);
@@ -115,7 +113,7 @@ public:
   int getInt();
   __int64 getInt64();
   Date64 getDate();
-  TemplateHash* getHash();
+  TemplateHash& getHash();
 
   void clear();
   void copy(TemplateValue& value);

@@ -75,13 +75,16 @@ TemplateParam::~TemplateParam() {
 }
 
 void TemplateHash::set(const string& name, TemplateValue value) {
-  _keys[name] = value;
+  _values[name] = value;
 }
 
 TemplateValue TemplateHash::get(const string& name) {
-  tKeys::iterator it = _keys.find(name);
-  if (it == _keys.end()) {
-    return TemplateValue();
+  tValues::iterator it = _values.find(name);
+  if (it == _values.end()) {
+    if (_values.find("default") == _values.end()) {
+      return TemplateValue();
+    }
+    return _values["default"];
   }
   return it->second;
 }

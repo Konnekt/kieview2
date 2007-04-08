@@ -44,16 +44,25 @@ protected:
 
 class TemplateHash {
 public:
-  typedef map<string, TemplateValue> tKeys;
+  typedef map<string, TemplateValue> tValues;
 
 public:
-  TemplateHash();
+  TemplateValue operator [] (const string& key) {
+    return get(key);
+  }
 
+public:
+  TemplateHash(TemplateValue defValue) {
+    set("default", defValue);
+  }
+  TemplateHash() { }
+
+public:
   void set(const string& name, TemplateValue value);
-  TemplateValue get(const string& name = "default");
+  TemplateValue get(const string& name);
 
-private:
-  tKeys _keys;
+protected:
+  tValues _values;
 };
 
 #endif // __TEMPLATE_PARAM_H__

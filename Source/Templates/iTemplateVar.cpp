@@ -1,15 +1,12 @@
 #include "stdafx.h"
+
 #include "iTemplateVar.h"
+#include "iVariableManager.h"
 #include "GlobalsManager.h"
 #include "TemplateParam.h"
 
-TemplateVariable::TemplateVariable(const TemplateVariable& var): iTemplateVar(var._name), _vm(var._vm) {
-}
-
 TemplateVariable::TemplateVariable(const string& name, iVariableManager* lVM): iTemplateVar(name), _vm(NULL) {
-  if (lVM) {
-    _vm = lVM->find(name);
-  }
+  if (lVM) _vm = lVM->find(name);
 }
 
 TemplateValue TemplateVariable::get() {
@@ -19,13 +16,10 @@ TemplateValue TemplateVariable::get() {
   return TemplateValue();
 }
 
-TemplateHashVariable::TemplateHashVariable(const TemplateHashVariable& var): TemplateVariable(var._name, var._vm), _key(var._key) {
-}
-
 TemplateValue TemplateHashVariable::get() {
   TemplateValue val = TemplateVariable::get();
   if (val.getType() == TemplateValue::tHash) {
-    return val.getHash()->get(_key);
+    return val.getHash().get(_key);
   }
   return TemplateValue();
 }
@@ -52,5 +46,4 @@ TemplateFunction::~TemplateFunction() {
   for (tParams::iterator it = _params.begin(); it != _params.end(); it++) {
     delete *it;
   }
-  _params.clear();
 }

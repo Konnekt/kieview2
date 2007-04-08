@@ -12,7 +12,7 @@ public:
   static const int T_NONE = 1;
 
 public:
-  iTemplateToken(TemplateParser* parser, iBlockToken* parent): _parser(parser), _parent(parent) { }
+  iTemplateToken(TemplateParser* parser, iBlockToken* parent = NULL): _parser(parser), _parent(parent) { }
 
 public:
   virtual TemplateParser* getParser() {
@@ -21,7 +21,7 @@ public:
   virtual iBlockToken* getParent() {
     return _parent;
   }
-  virtual int getType() {
+  virtual int getType() const {
     return T_NONE;
   }
 

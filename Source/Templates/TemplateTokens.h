@@ -6,6 +6,9 @@
 #include "iTemplateToken.h"
 #include "iBlockToken.h"
 
+/*
+ TextToken
+*/
 class TextToken: public iTemplateToken {
 public:
   static const int T_TEXT = 10;
@@ -14,28 +17,42 @@ public:
   TextToken(TemplateParser* parser, iBlockToken* parent): iTemplateToken(parser, parent) { }
 
 public:
-  virtual int getType() {
+  virtual int getType() const {
     return T_TEXT;
   }
-  virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
-    string::iterator& itPos, bool allowCreateTokens);
-  virtual String output();
-  virtual void clear();
+  virtual String output() {
+    return _text;
+  }
+  virtual void clear() {
+    _text.clear();
+  }
+  virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
+    _text = string(itCurrPos, itEnd);
+    itPos = itEnd;
+  }
 
 protected:
-  string _text;
+  String _text;
 };
 
+/*
+ IFToken
+*/
 class IFToken: public iBlockToken {
 public:
   static const int T_IF = T_BLOCK | 15;
 
 public:
-  IFToken(TemplateParser* parser, iBlockToken* parent);
-  virtual ~IFToken();
+  IFToken(TemplateParser* parser, iBlockToken* parent): iBlockToken(parser, parent), _ifBlock(NULL), _elseBlock(NULL) { }
+  virtual ~IFToken() {
+    if (_ifBlock)
+      delete _ifBlock;
+    if (_elseBlock)
+      delete _elseBlock;
+  }
 
 public:
-  virtual int getType() {
+  virtual int getType() const {
     return T_IF;
   }
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
@@ -62,7 +79,7 @@ public:
   UnLessToken(TemplateParser* parser, iBlockToken* parent): iBlockToken(parser, parent) { }
 
 public:
-  virtual int getType() {
+  virtual int getType() const {
     return T_UNLESS;
   }
   iSectionToken::enSectionType getSectionType();
@@ -80,7 +97,7 @@ public:
   virtual ~ArgumentToken();
 
 public:
-  virtual int getType() {
+  virtual int getType() const {
     return T_ARGUMENT;
   }
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
@@ -101,7 +118,7 @@ public:
   virtual ~IncludeToken();
 
 public:
-  virtual int getType() {
+  virtual int getType() const {
     return T_INCLUDE;
   }
   iSectionToken::enSectionType getSectionType();
@@ -122,7 +139,7 @@ public:
   SetToken(TemplateParser* parser, iBlockToken* parent): iSectionToken(parser, parent) { }
 
 public:
-  virtual int getType() {
+  virtual int getType() const {
     return T_SET;
   }
   iSectionToken::enSectionType getSectionType();

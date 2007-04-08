@@ -22,13 +22,18 @@ TemplateValue::TemplateValue(int value) {
   _type = tInteger;
 }
 
+TemplateValue::TemplateValue(const StringRef& value) {
+  vString = new String(value);
+  _type = tString;
+}
+
 TemplateValue::TemplateValue(const string& value) {
-  vString = new string(value);
+  vString = new String(value);
   _type = tString;
 }
 
 TemplateValue::TemplateValue(const char* value) {
-  vString = new string(value);
+  vString = new String(value);
   _type = tString;
 }
 
@@ -47,19 +52,14 @@ TemplateValue::TemplateValue(TemplateParam* value) {
   _type = tParam;
 }
 
-TemplateValue::TemplateValue(TemplateVariable* value) {
+TemplateValue::TemplateValue(iTemplateVar* value) {
   vVar = value;
   _type = tVar;
 }
 
-TemplateValue::TemplateValue(TemplateHash* value) {
-  vHash = value;
+TemplateValue::TemplateValue(const TemplateHash& value) {
+   vHash = new TemplateHash(value);
   _type = tHash;
-}
-
-TemplateValue::TemplateValue(TemplateFunction* value) {
-  vFunction = value;
-  _type = tFunction;
 }
 
 TemplateValue TemplateValue::regEx(const string& pattern) {
@@ -70,10 +70,17 @@ TemplateValue TemplateValue::regEx(const string& pattern) {
   return value;
 }
 
+TemplateValue TemplateValue::operator [] (const string& key) {
+  if (_type == tHash) {
+    return vHash->get(key);
+  }
+  return TemplateValue();
+}
+
 void TemplateValue::copy(TemplateValue& value) {
   _type = value._type;
   if (_type == tString) {
-    vString = new string(value.getString());
+    vString = new String(value.getString());
   } else if (_type == tBoolean) {
     vBool = value.getBool();
   } else if (_type == tInteger) {
@@ -83,15 +90,13 @@ void TemplateValue::copy(TemplateValue& value) {
   } else if (_type == tDate64) {
     vDate64 = new Date64(value.getDate());
   } else if (_type == tVar) {
-    vVar = new TemplateVariable(*(value.vVar));
-  } else if (_type == tFunction) {
-    vFunction = new TemplateFunction(*(value.vFunction));
+    vVar = value.vVar;
   } else if (_type == tParam) {
     vParam = new TemplateParam(*(value.vParam));
   } else if (_type == tRegExp) {
     vRegExp = new string(value.getString());
   } else if (_type == tHash) {
-    vHash = new TemplateHash(*(value.getHash()));
+    vHash = new TemplateHash(value.getHash());
   }
 }
 
@@ -103,11 +108,7 @@ void TemplateValue::clear() {
     if (vString)
       delete vString;
   } else if (_type == tVar) {
-    if (vVar)
-      delete vVar;
-  } else if (_type == tFunction) {
-    if (vFunction)
-      delete vFunction;
+    vVar = 0;
   } else if (_type == tParam) {
     if (vParam)
       delete vParam;
@@ -133,14 +134,12 @@ String TemplateValue::getString() {
     return stringf("%ll", vDate64->getInt64());
   } else if (_type == tVar) {
     return vVar->get().getString();
-  } else if (_type == tFunction) {
-    return vFunction->get().getString();
   } else if (_type == tParam) {
     return vParam->output().getString();
   } else if (_type == tRegExp) {
     return *vRegExp;
   } else if (_type == tHash) {
-    return vHash->get().getString();
+    //return vHash->get().getString();
   }
   return "";
 }
@@ -158,12 +157,10 @@ int TemplateValue::getInt() {
     return vDate64->getTime64();
   } else if (_type == tVar) {
     return vVar->get().getInt();
-  } else if (_type == tFunction) {
-    return vFunction->get().getInt();
   } else if (_type == tParam) {
     return vParam->output().getInt();
   } else if (_type == tHash) {
-    return vHash->get().getInt();
+    //return vHash->get().getInt();
   }
   return 0;
 }
@@ -177,8 +174,6 @@ __int64 TemplateValue::getInt64() {
     return vDate64->getInt64();
   } else if (_type == tVar) {
     return vVar->get().getInt64();
-  } else if (_type == tFunction) {
-    return vFunction->get().getInt64();
   } else if (_type == tParam) {
     return vParam->output().getInt64();
   }
@@ -199,21 +194,19 @@ bool TemplateValue::getBool() {
     return vString->size();
   } else if (_type == tVar) {
     return vVar->get().getBool();
-  } else if (_type == tFunction) {
-    return vFunction->get().getBool();
   } else if (_type == tParam) {
     return vParam->output().getBool();
   } else if (_type == tHash) {
-    return vHash->get().getBool();
+    //return vHash->get().getBool();
   }
   return getInt();
 }
 
-TemplateHash* TemplateValue::getHash() {
+TemplateHash& TemplateValue::getHash() {
   if (_type == tHash) {
-    return vHash;
+    return *vHash;
   }
-  return NULL;
+  throw new ExceptionString("TemplateValue is not a Hash");
 }
 
 TemplateValue::enTypes TemplateValue::getType() {
@@ -233,14 +226,12 @@ TemplateValue TemplateValue::plus(TemplateValue& value) {
     return Date64(Time64(getInt64() + value.getInt64()));
   } else if (_type == tVar) {
     return vVar->get() + value;
-  } else if (_type == tVar) {
-    return vFunction->get() + value;
   } else if (_type == tParam) {
     return vParam->output() + value;
   } else if (_type == tRegExp) {
     //err
   } else if (_type == tHash) {
-    return vHash->get() + value;
+    //return vHash->get() + value;
   }
   return TemplateValue();
 }
@@ -258,14 +249,12 @@ TemplateValue TemplateValue::minus(TemplateValue& value) {
     return Date64(Time64(getInt64() - value.getInt64()));
   } else if (_type == tVar) {
     return vVar->get() - value;
-  } else if (_type == tFunction) {
-    return vFunction->get() - value;
   } else if (_type == tParam) {
     return vParam->output() - value;
   } else if (_type == tRegExp) {
     //err
   } else if (_type == tHash) {
-    return vHash->get() - value;
+    //return vHash->get() - value;
   }
   return TemplateValue();
 }
@@ -287,12 +276,10 @@ TemplateValue TemplateValue::comp(TemplateValue& value) {
     return getInt64() == value.getInt64();
   } else if (_type == tVar) {
     return vVar->get() == value;
-  } else if (_type == tFunction) {
-    return vFunction->get() == value;
   } else if (_type == tParam) {
     return vParam->output() == value;
   } else if (_type == tHash) {
-    return vHash->get() == value;
+    //return vHash->get() == value;
   }
   return false;
 }

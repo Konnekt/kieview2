@@ -27,7 +27,7 @@ public:
   typedef vector<sSectionArg*> tSectionArgs;
 
 public:
-  iSectionToken(TemplateParser* parser, iBlockToken* parent): iTemplateToken(parser, parent) { }
+  iSectionToken(TemplateParser* parser, iBlockToken* parent = NULL): iTemplateToken(parser, parent) { }
   virtual ~iSectionToken();
 
 public:

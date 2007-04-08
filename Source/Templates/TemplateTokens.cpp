@@ -6,36 +6,8 @@
 #include "Template.h"
 
 /*
- TextToken
-*/
-
-void TextToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
-  itPos = itEnd;
-  _text = string(itCurrPos, itEnd);
-}
-
-String TextToken::output() {
-  return _text;
-}
-
-void TextToken::clear() {
-  _text.empty();
-}
-
-/*
  IFToken
 */
-IFToken::IFToken(TemplateParser* parser, iBlockToken* parent): iBlockToken(parser, parent), _ifBlock(NULL), _elseBlock(NULL) { }
-
-IFToken::~IFToken() {
-  if (_ifBlock) {
-    delete _ifBlock;
-  }
-  if (_elseBlock) {
-    delete _elseBlock;
-  }
-}
-
 void IFToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
   _ifBlock = new iBlockToken(getParser(), getParent());
 
