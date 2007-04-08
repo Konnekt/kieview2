@@ -244,8 +244,21 @@ string IncludeToken::output() {
       break;
     }
   }
-
-  _includeTpl = new FileTemplate((*it)->param->output().getString());
+  string path = (*it)->param->output().getString();
+  for (it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
+    if (*(*it)->name == "inherit") {
+      break;
+    }
+  }
+  bool inherit = (it != _sectionArgs.end()) ? (*it)->param->output().getBool() : true;
+  if (inherit) {
+    _includeTpl = new FileTemplate(path, getParent());
+  } else {
+    _includeTpl = new FileTemplate(path);
+  }
+  for (it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
+    _includeTpl->addVariable(*(*it)->name, (*it)->param->output(), false);
+  }
   getParser()->parse(_includeTpl);
   if (_includeTpl && _includeTpl->loaded()) {
     return _includeTpl->output();
@@ -280,8 +293,11 @@ void SetToken::parse(iBlockToken* block, string::iterator itCurrPos, string::ite
 }
 
 string SetToken::output() {
+  iVariableManager* vm;
   for (tSectionArgs::iterator it = _sectionArgs.begin(); it != _sectionArgs.end(); it++) {
-    //getTemplate()->setVariable(*(*it)->name, (*it)->param->output());
+    if (vm = getParent()->find(*(*it)->name)) {
+     // vm->setVariable(*(*it)->name, (*it)->param->output());
+    }
   }
   return "";
 }

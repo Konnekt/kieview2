@@ -8,6 +8,8 @@
 #include "Template.h"
 #include "iTemplateVar.h"
 
+#include "GlobalsManager.h"
+
 iTemplateToken* TemplateParser::getToken(int type, iBlockToken* token) {
   if (type == TextToken::T_TEXT) {
     return new TextToken(this, token);
@@ -46,7 +48,7 @@ int TemplateParser::getType(string& text) {
 void TemplateParser::parse(oTemplate& tpl) {
   tpl->clear();
   tpl->_parser = this;
-  tpl->_token = new iBlockToken(this, NULL);
+  tpl->_token = new iBlockToken(this, tpl.get());
   string::iterator it;
   try {
     parse(tpl->_token, tpl->_data.begin(), tpl->_data.end(), "", it, true);
@@ -311,7 +313,7 @@ void TemplateParser::parseVar(TemplateParam* param, enOperators oper, bool not, 
     itPos = itCurrPos + 1;
     return;
   } else if (!isFunc){
-    param->add(new TemplateVariable(name), oper, not);
+    param->add(new TemplateVariable(name, param->getBlock()), oper, not);
   } else {
     throw TemplateException("Syntax error. Wrong var/funcion declaration.");
   }

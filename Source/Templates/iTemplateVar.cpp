@@ -3,11 +3,20 @@
 #include "GlobalsManager.h"
 #include "TemplateParam.h"
 
-TemplateVariable::TemplateVariable(const TemplateVariable& var): iTemplateVar(var._name) {
+TemplateVariable::TemplateVariable(const TemplateVariable& var): iTemplateVar(var._name), _vm(var._vm) {
+}
+
+TemplateVariable::TemplateVariable(const string& name, iVariableManager* lVM): iTemplateVar(name), _vm(NULL) {
+  if (lVM) {
+    _vm = lVM->find(name);
+  }
 }
 
 TemplateValue TemplateVariable::get() {
-  return GlobalsManager::get()->getVariable(_name);
+  if (_vm) {
+    return _vm->getVariable(_name);
+  }
+  return TemplateValue();
 }
 
 TemplateValue TemplateFunction::get() {

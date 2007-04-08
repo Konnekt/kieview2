@@ -4,6 +4,7 @@
 #define __ITEMPLATE_VAR_H__
 
 #include "TemplateValue.h"
+#include "iVariableManager.h"
 
 /* iTemplateVar */
 class iTemplateVar {
@@ -20,11 +21,14 @@ protected:
 /* TemplateVariable */
 class TemplateVariable: public iTemplateVar {
 public:
-  TemplateVariable(const string& name): iTemplateVar(name) { }
+  TemplateVariable(const string& name, iVariableManager* lVM);
   TemplateVariable(const TemplateVariable& var);
 
 public:
   TemplateValue get();
+
+private:
+  iVariableManager* _vm;
 };
 
 /* TemplateFunction */

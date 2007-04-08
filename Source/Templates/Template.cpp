@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Template.h"
 
-FileTemplate::FileTemplate(const string& path) {
+FileTemplate::FileTemplate(const string& path, iVariableManager* vm): iTemplate(vm) {
   ifstream file(path.c_str());
   string buff;
 

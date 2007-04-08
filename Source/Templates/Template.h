@@ -7,6 +7,7 @@
 #include <Stamina/Exception.h>
 
 #include "iBlockToken.h"
+#include "GlobalsManager.h"
 
 class TemplateException: public ExceptionString {
 public:
@@ -21,6 +22,8 @@ public:
   friend class TemplateParser;
 
 public:
+  iTemplate(iVariableManager* vm = NULL): iVariableManager(vm ? vm : GlobalsManager::get()),
+    _loaded(false), _parser(NULL) { }
   virtual ~iTemplate() {
     clear();
   }
@@ -52,7 +55,7 @@ typedef SharedPtr<iTemplate> oTemplate;
 
 class FileTemplate : public iTemplate {
 public:
-  FileTemplate(const string& path);
+  FileTemplate(const string& path, iVariableManager* vm = NULL);
 };
 
 #endif // __TEMPLATE_H__
