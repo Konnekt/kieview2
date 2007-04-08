@@ -24,7 +24,7 @@ public:
   ~TemplateParam();
 
 public:
-  void add(TemplateValue& value, enOperators nextOperator, bool not);
+  void add(TemplateValue value, enOperators nextOperator, bool not);
   void clear();
   UINT count();
   TemplateValue output();

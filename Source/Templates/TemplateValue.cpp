@@ -8,46 +8,8 @@ TemplateValue::TemplateValue(const TemplateValue& value) {
   this->copy((TemplateValue&)value);
 }
 
-void TemplateValue::copy(TemplateValue& value) {
-  _type = value._type;
-  if(_type == tString) {
-    vString = new string(value.getString());
-  } else if (_type == tBoolean) {
-    vBool = value.getBool();
-  } else if (_type == tInteger) {
-    vInt= value.getInt();
-  } else if (_type == tInteger64) {
-    vInt64 = value.getInt64();
-  } else if (_type == tDate64) {
-    vDate64 = new Date64(value.getDate());
-  } else if (_type == tVar) {
-    vVar = new TemplateVariable(*(value.vVar));
-  } else if (_type == tFunction) {
-    vFunction = new TemplateFunction(*(value.vFunction));
-  } else if (_type == tParam) {
-    vParam = new TemplateParam(*(value.vParam));
-  } else if (_type == tRegExp) {
-    vRegExp = new sRegExpVal(value.vRegExp->pattern, value.vRegExp->regEx);
-  }
-}
-
-const TemplateValue& TemplateValue::operator = (const TemplateValue& copy) {
-  if (this == &copy) return *this;
-  clear();
-  this->copy((TemplateValue&) copy);
-  return *this;
-}
-
-TemplateValue& TemplateValue::operator = (TemplateValue& copy) {
-  if (this == (const TemplateValue*)&copy) return *this;
-  clear();
-  this->copy((TemplateValue&) copy);
-  return *this;
-}
-
 TemplateValue::TemplateValue() {
-  vBool = false;
-  _type = tBoolean;
+  _type = tVoid;
 }
 
 TemplateValue::TemplateValue(bool value) {
@@ -95,9 +57,32 @@ TemplateValue::TemplateValue(TemplateFunction* value) {
   _type = tFunction;
 }
 
-TemplateValue::TemplateValue(const string& pattern, RegEx value) {
+TemplateValue::TemplateValue(const string& pattern, const RegEx& value) {
   vRegExp = new sRegExpVal(pattern, value);
   _type = tRegExp;
+}
+
+void TemplateValue::copy(TemplateValue& value) {
+  _type = value._type;
+  if(_type == tString) {
+    vString = new string(value.getString());
+  } else if (_type == tBoolean) {
+    vBool = value.getBool();
+  } else if (_type == tInteger) {
+    vInt= value.getInt();
+  } else if (_type == tInteger64) {
+    vInt64 = value.getInt64();
+  } else if (_type == tDate64) {
+    vDate64 = new Date64(value.getDate());
+  } else if (_type == tVar) {
+    vVar = new TemplateVariable(*(value.vVar));
+  } else if (_type == tFunction) {
+    vFunction = new TemplateFunction(*(value.vFunction));
+  } else if (_type == tParam) {
+    vParam = new TemplateParam(*(value.vParam));
+  } else if (_type == tRegExp) {
+    vRegExp = new sRegExpVal(value.vRegExp->pattern, value.vRegExp->regEx);
+  }
 }
 
 void TemplateValue::clear() {
@@ -168,7 +153,7 @@ int TemplateValue::getInt() {
 
 __int64 TemplateValue::getInt64() {
   if(_type == tString) {
-    return _atoi64(vString->c_str());
+    // err
   } else if (_type == tInteger64) {
     return vInt64;
   } else if (_type == tDate64) {
@@ -186,8 +171,10 @@ __int64 TemplateValue::getInt64() {
 Date64 TemplateValue::getDate() {
   if (_type == tDate64) {
     return *vDate64;
+  } else if (_type == tInteger64) {
+    return getInt64();
   }
-  return getInt64();
+  return true;
 }
 
 bool TemplateValue::getBool() {
@@ -209,15 +196,15 @@ TemplateValue::enTypes TemplateValue::getType() {
 
 TemplateValue TemplateValue::plus(TemplateValue& value) {
   if (_type == tString || value._type == tString) {
-    return TemplateValue(getString() + value.getString());
+    return getString() + value.getString();
   } else if (_type == tBoolean) {
-    return TemplateValue(getBool() + value.getBool()); //err
+    //err
   } else if (_type == tInteger) {
-    return TemplateValue(getInt() + value.getInt());
+    return getInt() + value.getInt();
   } else if (_type == tInteger64) {
-    return TemplateValue(getInt64() + value.getInt64());
+    return getInt64() + value.getInt64();
   } else if (_type == tDate64) {
-    return TemplateValue(Date64(Time64(getInt64() + value.getInt64())));
+    return Date64(Time64(getInt64() + value.getInt64()));
   } else if (_type == tVar) {
     return vVar->get() + value;
   } else if (_type == tVar) {
@@ -232,15 +219,15 @@ TemplateValue TemplateValue::plus(TemplateValue& value) {
 
 TemplateValue TemplateValue::minus(TemplateValue& value) {
   if (_type == tString) {
-    //err
+    // todo: usuwanie znakow z value
   } else if (_type == tBoolean) {
     //err
   } else if (_type == tInteger) {
-    return TemplateValue(getInt() - value.getInt());
+    return getInt() - value.getInt();
   } else if (_type == tInteger64) {
-    return TemplateValue(getInt64() - value.getInt64());
+    return getInt64() - value.getInt64();
   } else if (_type == tDate64) {
-    return TemplateValue(Date64(Time64(getInt64() - value.getInt64())));
+    return Date64(Time64(getInt64() - value.getInt64()));
   } else if (_type == tVar) {
     return vVar->get() - value;
   } else if (_type == tFunction) {
@@ -255,15 +242,15 @@ TemplateValue TemplateValue::minus(TemplateValue& value) {
 
 TemplateValue TemplateValue::comp(TemplateValue& value) {
   if (_type == tString) {
-    return TemplateValue(getString() == value.getString());
+    return getString() == value.getString();
   } else if (_type == tBoolean) {
-    return TemplateValue(getBool() == value.getBool());
+    return getBool() == value.getBool();
   } else if (_type == tInteger) {
-    return TemplateValue(getInt() == value.getInt());
+    return getInt() == value.getInt();
   } else if (_type == tInteger64) {
-    return TemplateValue(getInt64() == value.getInt64());
+    return getInt64() == value.getInt64();
   } else if (_type == tDate64) {
-    return TemplateValue(getInt64() == value.getInt64());
+    return getInt64() == value.getInt64();
   } else if (_type == tVar) {
     return vVar->get() == value;
   } else if (_type == tFunction) {
@@ -278,15 +265,15 @@ TemplateValue TemplateValue::comp(TemplateValue& value) {
 
 TemplateValue TemplateValue::diff(TemplateValue& value) {
   if (_type == tString) {
-    return TemplateValue(getString() != value.getString());
+    return getString() != value.getString();
   } else if (_type == tBoolean) {
-    return TemplateValue(getBool() != value.getBool());
+    return getBool() != value.getBool();
   } else if (_type == tInteger) {
-    return TemplateValue(getInt() != value.getInt());
+    return getInt() != value.getInt();
   } else if (_type == tInteger64) {
-    return TemplateValue(getInt64() != value.getInt64());
+    return getInt64() != value.getInt64();
   } else if (_type == tDate64) {
-    return TemplateValue(getInt64() != value.getInt64());
+    return getInt64() != value.getInt64();
   } else if (_type == tVar) {
     return vVar->get() != value;
   } else if (_type == tFunction) {
@@ -296,19 +283,19 @@ TemplateValue TemplateValue::diff(TemplateValue& value) {
   } else if (_type == tRegExp) {
     return !vRegExp->regEx.match(value.getString().c_str());
   }
-  return TemplateValue(true);
+  return true;
 }
 
 TemplateValue TemplateValue::and(TemplateValue& value) {
-  return TemplateValue(getBool() && value.getBool());
+  return getBool() && value.getBool();
 }
 
 TemplateValue TemplateValue::or(TemplateValue& value) {
-  return TemplateValue(getBool() || value.getBool());
+  return getBool() || value.getBool();
 }
 
 TemplateValue TemplateValue::not() {
-  return TemplateValue(!getBool());
+  return !getBool();
 }
 
 TemplateValue::~TemplateValue() {

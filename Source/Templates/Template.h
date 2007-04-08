@@ -8,8 +8,6 @@
 
 #include "iBlockToken.h"
 
-typedef SharedPtr<class iTemplate> oTemplate;
-
 class TemplateException: public ExceptionString {
 public:
   TemplateException(const StringRef& reason): ExceptionString(reason) { }
@@ -23,7 +21,6 @@ public:
   friend class TemplateParser;
 
 public:
-  iTemplate() { }
   virtual ~iTemplate() {
     clear();
   }
@@ -50,6 +47,8 @@ protected:
   bool _loaded;
   string _data;
 };
+
+typedef SharedPtr<iTemplate> oTemplate;
 
 class FileTemplate : public iTemplate {
 public:

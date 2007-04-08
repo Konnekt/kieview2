@@ -13,7 +13,7 @@ TemplateParam::TemplateParam(const TemplateParam& param) {
   _block = param._block;
 }
 
-void TemplateParam::add(TemplateValue& value, enOperators nextOperator, bool not) {
+void TemplateParam::add(TemplateValue value, enOperators nextOperator, bool not) {
   _arguments.push_back(new sArgument(value, nextOperator, not));
 }
 
@@ -35,7 +35,7 @@ TemplateValue TemplateParam::output() {
 
   TemplateValue value;
   if (_arguments.size()) {
-    value = TemplateValue((*it)->not ? !(*it)->value : (*it)->value);
+    value = (*it)->not ? !(*it)->value : (*it)->value;
     it++;
     enOperators op;
     while (it != itEnd) {

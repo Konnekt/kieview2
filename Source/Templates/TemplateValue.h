@@ -18,6 +18,7 @@ class TemplateParam;
 class TemplateValue {
 public:
   enum enTypes {
+    tVoid = 0,
     tString = 1,
     tInteger = 2,
     tInteger64 = 3,
@@ -33,7 +34,7 @@ public:
     string pattern;
     RegEx regEx;
 
-    sRegExpVal(const string& pattern, RegEx regEx): pattern(pattern), regEx(regEx) { }
+    sRegExpVal(const string& pattern, const RegEx& regEx): pattern(pattern), regEx(regEx) { }
   };
 
   union {
@@ -59,14 +60,26 @@ public:
   TemplateValue(TemplateVariable* value);
   TemplateValue(TemplateFunction* value);
   TemplateValue(TemplateParam* value);
-  TemplateValue(const string& pattern, RegEx value);
+  TemplateValue(const string& pattern, const RegEx& value);
   TemplateValue(const TemplateValue& value);
-  const TemplateValue& operator = (const TemplateValue& copy);
-  TemplateValue& operator = (TemplateValue& copy);
 
   ~TemplateValue();
 
 public:
+  const TemplateValue& operator = (const TemplateValue& copy) {
+    if (this == &copy) return *this;
+    this->clear();
+    this->copy((TemplateValue&) copy);
+    return *this;
+  }
+
+  TemplateValue& operator = (TemplateValue& copy) {
+    if (this == (TemplateValue*)&copy) return *this;
+    this->clear();
+    this->copy((TemplateValue&) copy);
+    return *this;
+  }
+
   TemplateValue operator + (TemplateValue& value) {
     return plus(value);
   }

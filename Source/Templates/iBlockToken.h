@@ -21,7 +21,6 @@ public:
   virtual int getType() {
     return T_BLOCK;
   }
-
   virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
     string::iterator& itPos, bool allowCreateTokens);
   virtual iSectionToken::enSectionType getSectionType();
