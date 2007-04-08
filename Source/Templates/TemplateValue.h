@@ -30,16 +30,6 @@ public:
     tRegExp = 9
   };
 
-  struct sRegExpVal {
-    string pattern;
-    RegEx* regEx;
-
-    sRegExpVal(const string& pattern, RegEx* regEx): pattern(pattern), regEx(regEx) { }
-    ~sRegExpVal() {
-      delete regEx;
-    }
-  };
-
   union {
     string* vString;
     int vInt;
@@ -49,7 +39,7 @@ public:
     TemplateVariable* vVar;
     TemplateFunction* vFunction;
     TemplateParam* vParam;
-    sRegExpVal* vRegExp;
+    string* vRegExp;
   };
 
 public:
@@ -63,10 +53,11 @@ public:
   TemplateValue(TemplateVariable* value);
   TemplateValue(TemplateFunction* value);
   TemplateValue(TemplateParam* value);
-  TemplateValue(const string& pattern, RegEx* value);
   TemplateValue(const TemplateValue& value);
 
   ~TemplateValue();
+
+  static TemplateValue regEx(const string& pattern);
 
 public:
   const TemplateValue& operator = (const TemplateValue& copy) {
@@ -121,9 +112,9 @@ public:
   __int64 getInt64();
   Date64 getDate();
 
-  enTypes getType();
   void clear();
   void copy(TemplateValue& value);
+  enTypes getType();
 
 protected:
   enTypes _type;

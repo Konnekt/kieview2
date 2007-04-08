@@ -57,14 +57,17 @@ TemplateValue::TemplateValue(TemplateFunction* value) {
   _type = tFunction;
 }
 
-TemplateValue::TemplateValue(const string& pattern, RegEx* value) {
-  vRegExp = new sRegExpVal(pattern, value);
-  _type = tRegExp;
+TemplateValue TemplateValue::regEx(const string& pattern) {
+  TemplateValue value;
+  value.vRegExp = new string(pattern);
+  value._type = tRegExp;
+
+  return value;
 }
 
 void TemplateValue::copy(TemplateValue& value) {
   _type = value._type;
-  if(_type == tString) {
+  if (_type == tString) {
     vString = new string(value.getString());
   } else if (_type == tBoolean) {
     vBool = value.getBool();
@@ -81,9 +84,7 @@ void TemplateValue::copy(TemplateValue& value) {
   } else if (_type == tParam) {
     vParam = new TemplateParam(*(value.vParam));
   } else if (_type == tRegExp) {
-    RegEx* reg = new RegEx;
-    reg->setPattern(value.vRegExp->pattern);
-    vRegExp = new sRegExpVal(value.vRegExp->pattern, reg);
+    vRegExp = new string(value.getString());
   }
 }
 
@@ -110,7 +111,7 @@ void TemplateValue::clear() {
 }
 
 string TemplateValue::getString() {
-  if(_type == tString) {
+  if (_type == tString) {
     return *vString;
   } else if (_type == tBoolean) {
     return vBool ? "true" : "false";
@@ -127,13 +128,13 @@ string TemplateValue::getString() {
   } else if (_type == tParam) {
     return vParam->output().getString();
   } else if (_type == tRegExp) {
-    return vRegExp->pattern;
+    return *vRegExp;
   }
   return "";
 }
 
 int TemplateValue::getInt() {
-  if(_type == tString) {
+  if (_type == tString) {
     return atoi(vString->c_str());
   } else if (_type == tBoolean) {
     return vBool;
@@ -154,7 +155,7 @@ int TemplateValue::getInt() {
 }
 
 __int64 TemplateValue::getInt64() {
-  if(_type == tString) {
+  if (_type == tString) {
     // err
   } else if (_type == tInteger64) {
     return vInt64;
@@ -244,9 +245,9 @@ TemplateValue TemplateValue::minus(TemplateValue& value) {
 
 TemplateValue TemplateValue::comp(TemplateValue& value) {
   if (_type == tRegExp) {
-    return (bool)vRegExp->regEx->match(vRegExp->pattern.c_str(), value.getString().c_str());
+    return (bool) RegEx::doMatch(getString().c_str(), value.getString().c_str());
   } else if (value._type == tRegExp){
-    return (bool)value.vRegExp->regEx->match(value.vRegExp->pattern.c_str(), getString().c_str());
+    return (bool) RegEx::doMatch(value.getString().c_str(), getString().c_str());
   } else if (_type == tString) {
     return getString() == value.getString();
   } else if (_type == tBoolean) {
@@ -264,32 +265,11 @@ TemplateValue TemplateValue::comp(TemplateValue& value) {
   } else if (_type == tParam) {
     return vParam->output() == value;
   }
-  return TemplateValue();
+  return false;
 }
 
 TemplateValue TemplateValue::diff(TemplateValue& value) {
-  if (_type == tRegExp) {
-    return (bool)!vRegExp->regEx->match(vRegExp->pattern.c_str(), value.getString().c_str());
-  } else if (value._type == tRegExp){
-    return (bool)!value.vRegExp->regEx->match(value.vRegExp->pattern.c_str(), getString().c_str());
-  } else if (_type == tString) {
-    return getString() != value.getString();
-  } else if (_type == tBoolean) {
-    return getBool() != value.getBool();
-  } else if (_type == tInteger) {
-    return getInt() != value.getInt();
-  } else if (_type == tInteger64) {
-    return getInt64() != value.getInt64();
-  } else if (_type == tDate64) {
-    return getInt64() != value.getInt64();
-  } else if (_type == tVar) {
-    return vVar->get() != value;
-  } else if (_type == tFunction) {
-    return vFunction->get() != value;
-  } else if (_type == tParam) {
-    return vParam->output() != value;
-  }
-  return true;
+  return !comp(value);
 }
 
 TemplateValue TemplateValue::and(TemplateValue& value) {
@@ -309,5 +289,5 @@ TemplateValue::~TemplateValue() {
 }
 
 /* to do:
-konwersja int64 to stirng
+konwersja int64 to string
 */
