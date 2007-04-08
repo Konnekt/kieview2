@@ -57,7 +57,7 @@ TemplateValue::TemplateValue(TemplateFunction* value) {
   _type = tFunction;
 }
 
-TemplateValue::TemplateValue(const string& pattern, const RegEx& value) {
+TemplateValue::TemplateValue(const string& pattern, RegEx* value) {
   vRegExp = new sRegExpVal(pattern, value);
   _type = tRegExp;
 }
@@ -81,7 +81,9 @@ void TemplateValue::copy(TemplateValue& value) {
   } else if (_type == tParam) {
     vParam = new TemplateParam(*(value.vParam));
   } else if (_type == tRegExp) {
-    vRegExp = new sRegExpVal(value.vRegExp->pattern, value.vRegExp->regEx);
+    RegEx* reg = new RegEx;
+    reg->setPattern(value.vRegExp->pattern);
+    vRegExp = new sRegExpVal(value.vRegExp->pattern, reg);
   }
 }
 
@@ -241,7 +243,11 @@ TemplateValue TemplateValue::minus(TemplateValue& value) {
 }
 
 TemplateValue TemplateValue::comp(TemplateValue& value) {
-  if (_type == tString) {
+  if (_type == tRegExp) {
+    return (bool)vRegExp->regEx->match(vRegExp->pattern.c_str(), value.getString().c_str());
+  } else if (value._type == tRegExp){
+    return (bool)value.vRegExp->regEx->match(value.vRegExp->pattern.c_str(), getString().c_str());
+  } else if (_type == tString) {
     return getString() == value.getString();
   } else if (_type == tBoolean) {
     return getBool() == value.getBool();
@@ -257,14 +263,16 @@ TemplateValue TemplateValue::comp(TemplateValue& value) {
     return vFunction->get() == value;
   } else if (_type == tParam) {
     return vParam->output() == value;
-  } else if (_type == tRegExp) {
-    return vRegExp->regEx.match(value.getString().c_str());
   }
   return TemplateValue();
 }
 
 TemplateValue TemplateValue::diff(TemplateValue& value) {
-  if (_type == tString) {
+  if (_type == tRegExp) {
+    return (bool)!vRegExp->regEx->match(vRegExp->pattern.c_str(), value.getString().c_str());
+  } else if (value._type == tRegExp){
+    return (bool)!value.vRegExp->regEx->match(value.vRegExp->pattern.c_str(), getString().c_str());
+  } else if (_type == tString) {
     return getString() != value.getString();
   } else if (_type == tBoolean) {
     return getBool() != value.getBool();
@@ -280,8 +288,6 @@ TemplateValue TemplateValue::diff(TemplateValue& value) {
     return vFunction->get() != value;
   } else if (_type == tParam) {
     return vParam->output() != value;
-  } else if (_type == tRegExp) {
-    return !vRegExp->regEx.match(value.getString().c_str());
   }
   return true;
 }

@@ -219,10 +219,10 @@ void TemplateParser::parseRegExp(TemplateParam* param, enOperators oper, bool no
   if (itCurrPos == itEnd) {
     throw TemplateException("Syntax error. ....");
   }
-  RegEx reg;
-  reg.setPattern(text);
+  RegEx* reg = new RegEx;
+  reg->setPattern(text);
   param->add(TemplateValue(text, reg), oper, not);
-  itPos = itCurrPos + 1;
+  itPos = itCurrPos;
 }
 
 void TemplateParser::parseConst(TemplateParam* param, enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {

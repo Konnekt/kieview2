@@ -32,9 +32,12 @@ public:
 
   struct sRegExpVal {
     string pattern;
-    RegEx regEx;
+    RegEx* regEx;
 
-    sRegExpVal(const string& pattern, const RegEx& regEx): pattern(pattern), regEx(regEx) { }
+    sRegExpVal(const string& pattern, RegEx* regEx): pattern(pattern), regEx(regEx) { }
+    ~sRegExpVal() {
+      delete regEx;
+    }
   };
 
   union {
@@ -60,7 +63,7 @@ public:
   TemplateValue(TemplateVariable* value);
   TemplateValue(TemplateFunction* value);
   TemplateValue(TemplateParam* value);
-  TemplateValue(const string& pattern, const RegEx& value);
+  TemplateValue(const string& pattern, RegEx* value);
   TemplateValue(const TemplateValue& value);
 
   ~TemplateValue();
