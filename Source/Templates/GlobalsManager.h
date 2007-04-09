@@ -20,8 +20,8 @@ public:
   };
 
   typedef vector<TemplateValue> tFuncArguments;
-  typedef function<TemplateValue (const tFuncArguments& arguments)> fOnCallFunction;
-  typedef signal<TemplateValue (const tFuncArguments& arguments)> sigOnCallFunction;
+  typedef function<TemplateValue (const tFuncArguments&)> fOnCallFunction;
+  typedef signal<TemplateValue (const tFuncArguments&)> sigOnCallFunction;
 
   struct sFunction {
     sigOnCallFunction signal;

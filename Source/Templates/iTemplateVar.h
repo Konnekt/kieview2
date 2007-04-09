@@ -7,28 +7,28 @@ class iVariableManager;
 class TemplateValue;
 class TemplateParam;
 
-/* iTemplateVar */
-class iTemplateVar : public SharedObject<iSharedObject> {
+/* iValueProxy */
+class iValueProxy : public SharedObject<iSharedObject> {
 public:
-  iTemplateVar(const string& name): _name(name) { }
+  iValueProxy(const string& name): _name(name) { }
 
 public:
-  virtual TemplateValue get() = 0;
+  virtual TemplateValue getValue() = 0;
 
 protected:
   string _name;
 };
 
-typedef SharedPtr<iTemplateVar> oTemplateVar;
+typedef SharedPtr<iValueProxy> oValueProxy;
 
 /* TemplateVariable */
-class TemplateVariable: public iTemplateVar {
+class TemplateVariable: public iValueProxy {
 public:
-  TemplateVariable(const TemplateVariable& var): iTemplateVar(var._name), _vm(var._vm) { }
+  TemplateVariable(const TemplateVariable& var): iValueProxy(var._name), _vm(var._vm) { }
   TemplateVariable(const string& name, iVariableManager* lVM);
 
 public:
-  virtual TemplateValue get();
+  virtual TemplateValue getValue();
 
 protected:
   iVariableManager* _vm;
@@ -42,24 +42,24 @@ public:
   TemplateHashVariable(const TemplateHashVariable& var): TemplateVariable(var._name, var._vm), _key(var._key) { }
 
 public:
-  virtual TemplateValue get();
+  TemplateValue getValue();
 
 private:
   string _key;
 };
 
 /* TemplateFunction */
-class TemplateFunction: public iTemplateVar {
+class TemplateFunction: public iValueProxy {
 public:
   typedef vector<TemplateParam*> tParams;
 
 public:
-  TemplateFunction(const string& name): iTemplateVar(name) { }
+  TemplateFunction(const string& name): iValueProxy(name) { }
   TemplateFunction(const TemplateFunction& func);
   ~TemplateFunction();
 
 public:
-  TemplateValue get();
+  TemplateValue getValue();
 
   void addParam(TemplateParam* param);
 

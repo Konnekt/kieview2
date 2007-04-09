@@ -5,26 +5,26 @@
 #include "GlobalsManager.h"
 #include "TemplateParam.h"
 
-TemplateVariable::TemplateVariable(const string& name, iVariableManager* lVM): iTemplateVar(name), _vm(NULL) {
+TemplateVariable::TemplateVariable(const string& name, iVariableManager* lVM): iValueProxy(name), _vm(NULL) {
   if (lVM) _vm = lVM->find(name);
 }
 
-TemplateValue TemplateVariable::get() {
+TemplateValue TemplateVariable::getValue() {
   if (_vm) {
     return _vm->getVariable(_name);
   }
   return TemplateValue();
 }
 
-TemplateValue TemplateHashVariable::get() {
-  TemplateValue val = TemplateVariable::get();
+TemplateValue TemplateHashVariable::getValue() {
+  TemplateValue val = TemplateVariable::getValue();
   if (val.getType() == TemplateValue::tHash) {
     return val.getHash().get(_key);
   }
   return TemplateValue();
 }
 
-TemplateValue TemplateFunction::get() {
+TemplateValue TemplateFunction::getValue() {
   GlobalsManager::tFuncArguments arguments;
   for (tParams::iterator it = _params.begin(); it != _params.end(); it++) {
     arguments.push_back((*it)->output());
@@ -32,7 +32,7 @@ TemplateValue TemplateFunction::get() {
   return GlobalsManager::get()->callFunction(_name, arguments);
 }
 
-TemplateFunction::TemplateFunction(const TemplateFunction& func): iTemplateVar(func._name) {
+TemplateFunction::TemplateFunction(const TemplateFunction& func): iValueProxy(func._name) {
   for (tParams::const_iterator it = func._params.begin(); it != func._params.end(); it++) {
     addParam(new TemplateParam(*(*it)));
   }

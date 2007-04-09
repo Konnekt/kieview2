@@ -37,10 +37,10 @@ public:
     bool vBool;
     Date64* vDate64;
     TemplateParam* vParam;
-    string* vRegExp;
+    String* vRegExp;
     TemplateHash* vHash;
   };
-  oTemplateVar vVar;
+  oValueProxy vProxy;
 
 public:
   TemplateValue();
@@ -52,7 +52,7 @@ public:
   TemplateValue(const Date64& value);
   TemplateValue(bool value);
   TemplateValue(TemplateParam* value);
-  TemplateValue(iTemplateVar* value);
+  TemplateValue(iValueProxy* value);
   TemplateValue(const TemplateHash& value);
   TemplateValue(const TemplateValue& value);
 

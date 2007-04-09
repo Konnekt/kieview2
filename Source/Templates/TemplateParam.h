@@ -9,17 +9,18 @@
 class TemplateParam {
 public:
   struct sArgument {
-    bool not;
     TemplateValue value;
     enOperators nextOperator;
+    bool not;
 
-    sArgument(TemplateValue& value, enOperators nextOperator, bool not): value(value), nextOperator(nextOperator), not(not) { }
+    sArgument(TemplateValue& value, enOperators nextOperator, bool not): 
+      value(value), nextOperator(nextOperator), not(not) { }
   };
 
   typedef vector<sArgument*> tArguments;
 
 public:
-  TemplateParam(TemplateParser* parser, iBlockToken* parent);
+  TemplateParam(TemplateParser* parser, iBlockToken* parent): _parser(parser), _block(parent) { }
   TemplateParam(const TemplateParam& param);
   ~TemplateParam();
 
@@ -27,7 +28,6 @@ public:
   void add(TemplateValue value, enOperators nextOperator, bool not);
   void clear();
   UINT count();
-  TemplateValue output();
 
   TemplateParser* getParser() {
     return _parser;
@@ -35,6 +35,7 @@ public:
   iBlockToken* getBlock() {
     return _block;
   }
+  TemplateValue output();
 
 protected:
   tArguments _arguments;

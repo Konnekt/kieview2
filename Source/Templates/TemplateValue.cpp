@@ -52,8 +52,8 @@ TemplateValue::TemplateValue(TemplateParam* value) {
   _type = tParam;
 }
 
-TemplateValue::TemplateValue(iTemplateVar* value) {
-  vVar = value;
+TemplateValue::TemplateValue(iValueProxy* value) {
+  vProxy = value;
   _type = tVar;
 }
 
@@ -64,7 +64,7 @@ TemplateValue::TemplateValue(const TemplateHash& value) {
 
 TemplateValue TemplateValue::regEx(const string& pattern) {
   TemplateValue value;
-  value.vRegExp = new string(pattern);
+  value.vRegExp = new String(pattern);
   value._type = tRegExp;
 
   return value;
@@ -90,11 +90,11 @@ void TemplateValue::copy(TemplateValue& value) {
   } else if (_type == tDate64) {
     vDate64 = new Date64(value.getDate());
   } else if (_type == tVar) {
-    vVar = value.vVar;
+    vProxy = value.vProxy;
   } else if (_type == tParam) {
     vParam = new TemplateParam(*(value.vParam));
   } else if (_type == tRegExp) {
-    vRegExp = new string(value.getString());
+    vRegExp = new String(value.getString());
   } else if (_type == tHash) {
     vHash = new TemplateHash(value.getHash());
   }
@@ -108,7 +108,7 @@ void TemplateValue::clear() {
     if (vString)
       delete vString;
   } else if (_type == tVar) {
-    vVar = 0;
+    vProxy = 0;
   } else if (_type == tParam) {
     if (vParam)
       delete vParam;
@@ -133,7 +133,7 @@ String TemplateValue::getString() {
   } else if (_type == tDate64) {
     return stringf("%ll", vDate64->getInt64());
   } else if (_type == tVar) {
-    return vVar->get().getString();
+    return vProxy->getValue().getString();
   } else if (_type == tParam) {
     return vParam->output().getString();
   } else if (_type == tRegExp) {
@@ -156,7 +156,7 @@ int TemplateValue::getInt() {
   } else if (_type == tDate64) {
     return vDate64->getTime64();
   } else if (_type == tVar) {
-    return vVar->get().getInt();
+    return vProxy->getValue().getInt();
   } else if (_type == tParam) {
     return vParam->output().getInt();
   } else if (_type == tHash) {
@@ -173,7 +173,7 @@ __int64 TemplateValue::getInt64() {
   } else if (_type == tDate64) {
     return vDate64->getInt64();
   } else if (_type == tVar) {
-    return vVar->get().getInt64();
+    return vProxy->getValue().getInt64();
   } else if (_type == tParam) {
     return vParam->output().getInt64();
   }
@@ -193,7 +193,7 @@ bool TemplateValue::getBool() {
   if (_type == tString) {
     return vString->size();
   } else if (_type == tVar) {
-    return vVar->get().getBool();
+    return vProxy->getValue().getBool();
   } else if (_type == tParam) {
     return vParam->output().getBool();
   } else if (_type == tHash) {
@@ -225,7 +225,7 @@ TemplateValue TemplateValue::plus(TemplateValue& value) {
   } else if (_type == tDate64) {
     return Date64(Time64(getInt64() + value.getInt64()));
   } else if (_type == tVar) {
-    return vVar->get() + value;
+    return vProxy->getValue() + value;
   } else if (_type == tParam) {
     return vParam->output() + value;
   } else if (_type == tRegExp) {
@@ -248,7 +248,7 @@ TemplateValue TemplateValue::minus(TemplateValue& value) {
   } else if (_type == tDate64) {
     return Date64(Time64(getInt64() - value.getInt64()));
   } else if (_type == tVar) {
-    return vVar->get() - value;
+    return vProxy->getValue() - value;
   } else if (_type == tParam) {
     return vParam->output() - value;
   } else if (_type == tRegExp) {
@@ -275,7 +275,7 @@ TemplateValue TemplateValue::comp(TemplateValue& value) {
   } else if (_type == tDate64) {
     return getInt64() == value.getInt64();
   } else if (_type == tVar) {
-    return vVar->get() == value;
+    return vProxy->getValue() == value;
   } else if (_type == tParam) {
     return vParam->output() == value;
   } else if (_type == tHash) {

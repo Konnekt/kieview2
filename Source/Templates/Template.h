@@ -47,8 +47,9 @@ public:
 protected:
   TemplateParser* _parser;
   iBlockToken* _token;
-  bool _loaded;
+
   string _data;
+  bool _loaded;
 };
 
 typedef SharedPtr<iTemplate> oTemplate;

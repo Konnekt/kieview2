@@ -1,9 +1,5 @@
 #include "stdafx.h"
-
 #include "TemplateParam.h"
-
-TemplateParam::TemplateParam(TemplateParser* parser, iBlockToken* token): _parser(parser), _block(token) {
-}
 
 TemplateParam::TemplateParam(const TemplateParam& param) {
   for (tArguments::const_iterator it = param._arguments.begin(); it != param._arguments.end(); it++) {
@@ -19,7 +15,6 @@ void TemplateParam::add(TemplateValue value, enOperators nextOperator, bool not)
 
 void TemplateParam::clear() {
   for (tArguments::iterator it = _arguments.begin(); it != _arguments.end(); it++) {
-    //delete (*it)->value;
     delete *it;
   }
   _arguments.clear();
@@ -30,42 +25,44 @@ UINT TemplateParam::count() {
 }
 
 TemplateValue TemplateParam::output() {
+  if (!_arguments.size()) {
+    return TemplateValue();
+  }
+
   tArguments::iterator it = _arguments.begin();
   tArguments::iterator itEnd = _arguments.end();
 
-  TemplateValue value;
-  if (_arguments.size()) {
-    value = (*it)->not ? !(*it)->value : (*it)->value;
-    it++;
-    enOperators op;
-    while (it != itEnd) {
-      op = (*it)->nextOperator;
-      switch (op) {
-        case opNone:
-          break;
-        case opPlus:
-          value = value.plus((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opMinus:
-          value = value.minus((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opOr:
-          value = value.or((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opAnd:
-          value = value.and((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opDiff:
-        case opRegExDiff:
-          value = value.diff((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-        case opComp:
-        case opRegExComp:
-          value = value.comp((*it)->not ? !(*it)->value : (*it)->value);
-          break;
-      }
-      it++;
+  TemplateValue value = (*it)->not ? !(*it)->value : (*it)->value;
+  enOperators op;
+  it++;
+
+  while (it != itEnd) {
+    op = (*it)->nextOperator;
+    switch (op) {
+      case opNone:
+        break;
+      case opPlus:
+        value = value.plus((*it)->not ? !(*it)->value : (*it)->value);
+        break;
+      case opMinus:
+        value = value.minus((*it)->not ? !(*it)->value : (*it)->value);
+        break;
+      case opOr:
+        value = value.or((*it)->not ? !(*it)->value : (*it)->value);
+        break;
+      case opAnd:
+        value = value.and((*it)->not ? !(*it)->value : (*it)->value);
+        break;
+      case opDiff:
+      case opRegExDiff:
+        value = value.diff((*it)->not ? !(*it)->value : (*it)->value);
+        break;
+      case opComp:
+      case opRegExComp:
+        value = value.comp((*it)->not ? !(*it)->value : (*it)->value);
+        break;
     }
+    it++;
   }
   return value;
 }

@@ -54,7 +54,7 @@ void TemplateParser::parse(oTemplate& tpl) {
   string::iterator it;
   try {
     parse(tpl->_token, tpl->_data.begin(), tpl->_data.end(), "", it, true);
-  } catch (const TemplateException& ex) {
+  } catch (...) {
     throw;
   }
   if (it != tpl->_data.end()) {
