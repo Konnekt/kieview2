@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "TemplateValue.h"
+#include "TemplateValueTypes.h"
 #include "TemplateParam.h"
 #include "iTemplateVar.h"
 
@@ -62,6 +63,11 @@ TemplateValue::TemplateValue(const TemplateHash& value) {
   _type = tHash;
 }
 
+TemplateValue::TemplateValue(const TemplateArray& value) {
+   vArray = new TemplateArray(value);
+  _type = tArray;
+}
+
 TemplateValue TemplateValue::regEx(const string& pattern) {
   TemplateValue value;
   value.vRegExp = new String(pattern);
@@ -73,6 +79,13 @@ TemplateValue TemplateValue::regEx(const string& pattern) {
 TemplateValue TemplateValue::operator [] (const string& key) {
   if (_type == tHash) {
     return vHash->get(key);
+  }
+  return TemplateValue();
+}
+
+TemplateValue TemplateValue::operator [] (int id) {
+  if (_type == tArray) {
+    return vArray->get(id);
   }
   return TemplateValue();
 }
@@ -97,6 +110,8 @@ void TemplateValue::copy(TemplateValue& value) {
     vRegExp = new String(value.getString());
   } else if (_type == tHash) {
     vHash = new TemplateHash(value.getHash());
+  } else if (_type == tArray) {
+    vArray = new TemplateArray(value.getArray());
   }
 }
 
@@ -118,6 +133,9 @@ void TemplateValue::clear() {
   } else if (_type == tHash) {
     if (vHash)
       delete vHash;
+ } else if (_type == tArray) {
+    if (vArray)
+      delete vArray;
   }
 }
 
@@ -207,6 +225,13 @@ TemplateHash& TemplateValue::getHash() {
     return *vHash;
   }
   throw new ExceptionString("TemplateValue is not a Hash");
+}
+
+TemplateArray& TemplateValue::getArray() {
+  if (_type == tArray) {
+    return *vArray;
+  }
+  throw new ExceptionString("TemplateValue is not a Array");
 }
 
 TemplateValue::enTypes TemplateValue::getType() {

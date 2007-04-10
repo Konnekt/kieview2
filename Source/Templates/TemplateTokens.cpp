@@ -3,6 +3,7 @@
 #include "TemplateTokens.h"
 #include "TemplateParser.h"
 #include "TemplateParam.h"
+#include "TemplateValueTypes.h"
 #include "Template.h"
 
 /*
@@ -281,4 +282,46 @@ String SetToken::output() {
 }
 
 void SetToken::clear() {
+}
+
+/*
+ IterateToken
+*/
+
+iSectionToken::enSectionType IterateToken::getSectionType() {
+  return tUnnamed;
+}
+
+void IterateToken::parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, string::iterator& itPos, bool allowCreateTokens) {
+  string::iterator itData = itCurrPos;
+
+  itData += 8;
+
+  parseArguments(itData, itEnd, itData);
+
+  if (!_sectionArgs.size() || _sectionArgs.size() > 1) {
+    throw TemplateException("Syntax error. The Iterate token powinien miec jeden argument.");
+  }
+  if (itData == itEnd || *itData != '}') {
+    throw TemplateException("Syntax error. The Iterate token token bledne zakonczenie tokena.");
+  }
+  getParser()->parse(this, ++itData, itEnd, "/iterate", itPos, allowCreateTokens);
+  itPos = itData;
+}
+void IterateToken::clear() {
+}
+String IterateToken::output() {
+  TemplateValue& value = _sectionArgs[0]->param->output();
+  if (value.getType() != TemplateValue::tArray) {
+    throw TemplateException("Syntax error. The Iterate token argument is not array.");
+  }
+
+  TemplateHash* hash = new TemplateHash;
+  hash->set("first", false);
+  hash->set("last", false);
+  hash->set("index", 0);
+  hash->set("count", 0);
+  addVariable("it", hash, false);
+
+  removeVariable("it");
 }

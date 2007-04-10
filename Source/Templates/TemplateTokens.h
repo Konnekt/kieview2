@@ -149,4 +149,22 @@ public:
   virtual void clear();
 };
 
+class IterateToken: public iBlockToken {
+public:
+  static const int T_ITERATE = T_BLOCK | 45;
+
+public:
+  IterateToken(TemplateParser* parser, iBlockToken* parent): iBlockToken(parser, parent) { }
+
+public:
+  virtual int getType() const {
+    return T_ITERATE;
+  }
+  iSectionToken::enSectionType getSectionType();
+  virtual void parse(iBlockToken* block, string::iterator itCurrPos, string::iterator itEnd, const string& stopToken, 
+    string::iterator& itPos, bool allowCreateTokens);
+  virtual String output();
+  virtual void clear();
+};
+
 #endif // __TEMPLATE_TOKENS

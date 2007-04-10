@@ -24,6 +24,8 @@ iTemplateToken* TemplateParser::getToken(int type, iBlockToken* token) {
       return new IncludeToken(this, token);
     case SetToken::T_SET:
       return new SetToken(this, token);
+    case IterateToken::T_ITERATE:
+      return new IterateToken(this, token);
   }
   return NULL;
 }
@@ -37,6 +39,8 @@ int TemplateParser::getType(string& text) {
     return UnLessToken::T_UNLESS;
   } else if (text == "include") {
     return IncludeToken::T_INCLUDE;
+  } else if (text == "iterate") {
+    return IterateToken::T_ITERATE;
   } else if (text[0] == '$' || text[0] == '-' || text[0] == 'f' || text[0] == 't' || /*(text[0] >= 'a' && text[0] <= 'z') ||*/ text[0] == '!'
     || /*(text[0] >= 'A' && text[0] <= 'Z') || */(text[0] >= '0' && text[0] <= '9') || text[0] == '(' || text[0] == ')'
     || text[0] == '\"' || text[0] == '\'')
@@ -278,6 +282,7 @@ void TemplateParser::parseInt(TemplateParam* param, enOperators oper, bool not, 
 void TemplateParser::parseVar(TemplateParam* param, enOperators oper, bool not, string::iterator itCurrPos, string::iterator itEnd, string::iterator& itPos) {
   bool isFunc = false;
   bool isHash = false;
+  bool isArray = false;
   string name;
 
   while (itCurrPos != itEnd) {
@@ -286,7 +291,7 @@ void TemplateParser::parseVar(TemplateParam* param, enOperators oper, bool not, 
     } else if (*itCurrPos == '(') {
       isFunc = true;
       break;
-    } else if (*itCurrPos == '.'){
+    } else if (*itCurrPos == '[') {
       isHash = true;
       break;
     } else {
@@ -310,6 +315,7 @@ void TemplateParser::parseVar(TemplateParam* param, enOperators oper, bool not, 
       parseParam(newParam, itCurrPos + 1, itEnd, itCurrPos);
 
       if ((lastComma || (itCurrPos != itEnd && *itCurrPos == ',')) && !newParam->count()) {
+        delete newParam;
         throw TemplateException("Syntax error. Too many comma signs in function: " + name);
       }
       if (newParam->count()) {
@@ -322,6 +328,19 @@ void TemplateParser::parseVar(TemplateParam* param, enOperators oper, bool not, 
 
     if (itCurrPos == itEnd || *itCurrPos != ')') {
       throw TemplateException("Syntax error. Right bracked not found in function: " + name);
+    }
+    itPos = itCurrPos + 1;
+    return;
+
+  } else if (isArray) {
+    TemplateParam* indexParam = new TemplateParam(this, param->getBlock());
+    if (indexParam->count() != 1) {
+      delete indexParam;
+      throw TemplateException("Syntax error. Bad index in array: " + name);
+    }
+    //add index
+    if (itCurrPos == itEnd || *itCurrPos != ']') {
+      throw TemplateException("Syntax error. Right bracked not found in array: " + name);
     }
     itPos = itCurrPos + 1;
     return;

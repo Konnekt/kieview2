@@ -4,6 +4,7 @@
 #include "iVariableManager.h"
 #include "GlobalsManager.h"
 #include "TemplateParam.h"
+#include "TemplateValueTypes.h"
 
 TemplateVariable::TemplateVariable(const string& name, iVariableManager* lVM): iValueProxy(name), _vm(NULL) {
   if (lVM) _vm = lVM->find(name);

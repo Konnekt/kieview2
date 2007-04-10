@@ -14,6 +14,7 @@ using namespace std;
 using namespace Stamina;
 
 class TemplateHash;
+class TemplateArray;
 
 class TemplateValue {
 public:
@@ -27,7 +28,8 @@ public:
     tVar,
     tParam,
     tRegExp,
-    tHash
+    tHash,
+    tArray
   };
 
   union {
@@ -39,6 +41,7 @@ public:
     TemplateParam* vParam;
     String* vRegExp;
     TemplateHash* vHash;
+    TemplateArray* vArray;
   };
   oValueProxy vProxy;
 
@@ -54,6 +57,7 @@ public:
   TemplateValue(TemplateParam* value);
   TemplateValue(iValueProxy* value);
   TemplateValue(const TemplateHash& value);
+  TemplateValue(const TemplateArray& value);
   TemplateValue(const TemplateValue& value);
 
   ~TemplateValue();
@@ -97,7 +101,7 @@ public:
     return or(value);
   }
   TemplateValue operator [] (const string& key);
-
+  TemplateValue operator [] (int id);
 public:
   TemplateValue plus(TemplateValue& value);
   TemplateValue minus(TemplateValue& value);
@@ -114,6 +118,7 @@ public:
   __int64 getInt64();
   Date64 getDate();
   TemplateHash& getHash();
+  TemplateArray& getArray();
 
   void clear();
   void copy(TemplateValue& value);
