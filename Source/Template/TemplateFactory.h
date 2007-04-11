@@ -5,41 +5,41 @@
 
 class iTemplateToken;
 
-class TemplateFactory : public SharedObject<iSharedObject> {
+class TemplateTokenFactory : public SharedObject<iSharedObject> {
   /* Class version */
-  STAMINA_OBJECT_CLASS_VERSION(TemplateFactory, iSharedObject, Version(1,0,0,0));
+  STAMINA_OBJECT_CLASS_VERSION(TemplateTokenFactory, iSharedObject, Version(1,0,0,0));
 
 public:
-  typedef iTemplateToken* (__stdcall fFactoryTokensCallback*)(const String&);
-
-  typedef map<String, fFactoryTokensCallback*> tFactoryTokensCallbacks;
+  typedef iTemplateToken* (__stdcall fCallback*)(const StringRef&);
+  typedef map<String, fCallback*> tCallbacks;
 
 private:
-  TemplateFactory() { }
-  ~TemplateFactory() { }
+  TemplateTokenFactory() { }
+  ~TemplateTokenFactory() { }
 
 public:
-  static TemplateFactory* get() {
+  static TemplateTokenFactory* get() {
     if (!instance.isValid()) {
-      instance = new TemplateFactory;
+      instance = new TemplateTokenFactory;
     }
     return instance;
   }
 
 public:
-  bool registerToken(const String& name, fFactoryTokensCallback* callback);
-  bool unregisterToken(const String& name);
-  bool isHandlingToken(const String& name);
-  iTemplateToken* getInstanceOfToken(const String& name);
+  iTemplateToken* getInstance(const StringRef& name);
+  bool isHandled(const StringRef& name);
+
+  bool bind(const StringRef& name, fCallback* callback);
+  bool unbind(const StringRef& name);
+
+protected:
+  void clear();
+
+protected:
+  tCallbacks _callbacks;
 
 private:
-  void clearTokens();
-
-private:
-  tFactoryCallbacks _callbacks;
-
-private:
-  static SharedPtr<TemplateFactory> instance;
+  static SharedPtr<TemplateTokenFactory> instance;
 };
 
 #endif //__TEMPLATE_FACTORY_H__

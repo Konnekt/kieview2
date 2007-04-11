@@ -5,12 +5,12 @@
 
 #include "iVariableManager.h"
 
-class GlobalsManager: public SharedObject<iSharedObject>, public iVariableManager, public signals::trackable {
+class GlobalsManager: public public iVariableManager, SharedObject<iSharedObject>, public signals::trackable {
   /* Class version */
   STAMINA_OBJECT_CLASS_VERSION(GlobalsManager, iSharedObject, Version(0,0,0,1));
 
 public:
-  typedef vector<TemplateValue> tFunctionArguments;
+  typedef vector<TemplateValue> tFuncArguments;
   typedef function<TemplateValue (const tFuncArguments&)> fOnCallFunction;
   typedef signal<TemplateValue (const tFuncArguments&)> sigOnCallFunction;
 

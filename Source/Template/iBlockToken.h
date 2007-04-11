@@ -15,7 +15,7 @@ public:
   iBlockToken(iVariableManager* vm): iSectionToken(NULL), iVariableManager(vm) { }
 
 public:
-  virtual iSectionToken::enSectionType getSectionType() {
+  virtual enSectionType getSectionType() {
     return tUnnamed;
   }
 

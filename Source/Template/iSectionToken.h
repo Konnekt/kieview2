@@ -16,7 +16,7 @@ public:
     };
     TemplateParam* param;
 
-    sSectionArgument(const String& name, TemplateParam* param): name(new String(name)), param(param) { }
+    sSectionArgument(const StringRef& name, TemplateParam* param): name(new String(name)), param(param) { }
     sSectionArgument(UINT index, TemplateParam* param): index(index), param(param) { }
   };
 

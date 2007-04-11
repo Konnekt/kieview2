@@ -8,7 +8,9 @@
 class TextTemplateParser : public iTemplateParser {
 public:
   void parse(iBlockToken* token);
-  void parseTemplate(oTemplate& tpl);
+  void parse(oTemplate& tpl);
+
+protected:
   void parseToken(iBlockToken* parent, wstring::iterator itCurrPos, wstring::iterator itEnd, wstring::iterator& itPos);
   void parseBlock(iBlockToken* parent, wstring::iterator itCurrPos, wstring::iterator itEnd, wstring::iterator& itPos);
   void parseSection(iSectionToken* token, wstring::iterator itCurrPos, wstring::iterator itEnd, wstring::iterator& itPos);
@@ -30,7 +32,7 @@ public:
   void parseBracket(TemplateParam* param, enOperators operator_, bool not, wstring::iterator itCurrPos,
     wstring::iterator itEnd, wstring::iterator& itPos);
 
-private:
+protected:
   wstring _data;
 };
 
@@ -41,10 +43,9 @@ void TextTemplateParser::parse(iBlockToken* token) {
   while (itCurrPos != itEnd) {
     itCurrPos++;
   }
-
 }
 
-void TextTemplateParser::parseTemplate(oTemplate& tpl) {
+void TextTemplateParser::parse(oTemplate& tpl) {
   _data = tpl->getData().w_str();
   parse(tpl->getBlock());
 }

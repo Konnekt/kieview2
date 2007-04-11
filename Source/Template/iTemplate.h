@@ -7,7 +7,7 @@
 
 class iBlockToken;
 
-class iTemplate : public SharedObject<iSharedObject>, public iVarManager {
+class iTemplate : public SharedObject<iSharedObject>, public iVariableManager {
   /* Class version */
   STAMINA_OBJECT_CLASS_VERSION(iTemplate, iSharedObject, Version(1,0,0,0));
 
@@ -18,10 +18,10 @@ public:
   }
 
 public:
-  iBlockToken* getToken() {
+  virtual iBlockToken* getToken() {
     return _token;
   }
-  virtual String getData() = 0;
+  virtual String output() = 0;
 
 protected:
   iBlockToken* _token;

@@ -11,7 +11,7 @@ public:
     TemplateValue value;
     bool attrWrite;
 
-    sVariable(TemplateValue& value, bool attrWrite): value(value), attrWrite(attrWrite) { }
+    sVariable(const TemplateValue& value, bool attrWrite): value(value), attrWrite(attrWrite) { }
   };
 
   typedef map<string, TemplateValue> tVariableData;
@@ -24,15 +24,15 @@ public:
   }
 
 public:
-  virtual bool addVariable(const String& name, TemplateValue value, bool attrWrite = true);
-  virtual TemplateValue getVariable(const String& name);
-  virtual bool hasVariable(const String& name);
+  virtual bool addVariable(const StringRef& name, TemplateValue value, bool attrWrite = false);
+  virtual TemplateValue getVariable(const StringRef& name);
+  virtual bool hasVariable(const StringRef& name);
 
-  virtual iVariableManager* find(const String& name);
-  virtual bool isWritableVariable(const String& name);
-  virtual bool removeVariable(const String& name);
+  virtual iVariableManager* find(const StringRef& name);
+  virtual bool isWritableVariable(const StringRef& name);
+  virtual bool removeVariable(const StringRef& name);
 
-  virtual bool setVariable(const String& name, TemplateValue value, bool create = false);
+  virtual bool setVariable(const StringRef& name, TemplateValue value, bool create = true);
   virtual void setData(const tVariableData& data);
   virtual void clearVariables();
 

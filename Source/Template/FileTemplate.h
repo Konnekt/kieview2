@@ -8,16 +8,16 @@
 
 class FileTemplate : public iTemplate {
 public:
-  FileTemplate(const String& path, iVarManager* vm = NULL) : iTemplate(vm), isLoaded(false) { }
+  FileTemplate(const StringRef& path, iVarManager* vm = NULL) : iTemplate(vm), isLoaded(false) { }
 
 public:
   bool load();
   bool reload();
-  bool isLoaded();
+  bool loaded();
 
 private:
   String _path;
-  bool _isLoaded;
+  bool _loaded;
 };
 
 #endif //__FILETEMPLATE_H__
