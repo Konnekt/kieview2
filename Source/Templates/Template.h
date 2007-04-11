@@ -4,15 +4,10 @@
 #define __TEMPLATE_H__
 
 #include <fstream>
-#include <Stamina/Exception.h>
 
-#include "iBlockToken.h"
 #include "GlobalsManager.h"
-
-class TemplateException: public ExceptionString {
-public:
-  TemplateException(const StringRef& reason): ExceptionString(reason) { }
-};
+#include "TemplateException.h"
+#include "iBlockToken.h"
 
 class iTemplate: public SharedObject<iSharedObject>, public iVariableManager {
   /* Class version */

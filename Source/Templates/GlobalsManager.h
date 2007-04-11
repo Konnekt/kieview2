@@ -4,6 +4,7 @@
 #define __GLOBALSMANAGER_H__
 
 #include "iVariableManager.h"
+#include "TemplateException.h"
 
 class GlobalsManager: public SharedObject<iSharedObject>, public iVariableManager, public signals::trackable {
   /* Class version */

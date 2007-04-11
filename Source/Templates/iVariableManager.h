@@ -20,6 +20,14 @@ public:
 public:
   iVariableManager(iVariableManager* parent = NULL): _parent(parent) { }
 
+  /*
+  iVariableManager& operator << (TemplateHash& hash) {
+    for (tParams::iterator it = hash.values().begin(); it != hash.values().end(); it++) {
+      setVariable(it->first, it->second);
+    }
+  }
+  */
+
 public:
   virtual bool addVariable(const string& name, TemplateValue value, bool attrWrite = true);
   virtual TemplateValue getVariable(const string& name);

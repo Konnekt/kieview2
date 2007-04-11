@@ -13,7 +13,7 @@ bool GlobalsManager::addFunction(const string& name, GlobalsManager::fOnCallFunc
 
 TemplateValue GlobalsManager::callFunction(const string& name, const tFuncArguments& arguments) {
   if (!hasFunction(name)) {
-    return TemplateValue();
+    throw TemplateException("There's no function with name = " + name);
   }
   return functions[name]->signal(arguments);
 }
