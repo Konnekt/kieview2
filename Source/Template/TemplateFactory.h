@@ -10,7 +10,7 @@ class TemplateTokenFactory : public SharedObject<iSharedObject> {
   STAMINA_OBJECT_CLASS_VERSION(TemplateTokenFactory, iSharedObject, Version(1,0,0,0));
 
 public:
-  typedef iTemplateToken* (__stdcall fCallback*)(const StringRef&);
+  typedef iTemplateToken* (__stdcall fCallback*)(const string&);
   typedef map<String, fCallback*> tCallbacks;
 
 private:
@@ -26,11 +26,11 @@ public:
   }
 
 public:
-  iTemplateToken* getInstance(const StringRef& name);
-  bool isHandled(const StringRef& name);
+  iTemplateToken* getInstance(const string& name);
+  bool isHandled(const string& name);
 
-  bool bind(const StringRef& name, fCallback* callback);
-  bool unbind(const StringRef& name);
+  bool bind(const string& name, fCallback* callback);
+  bool unbind(const string& name);
 
 protected:
   void clear();

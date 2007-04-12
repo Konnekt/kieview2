@@ -22,7 +22,7 @@ public:
     }
   };
 
-  typedef map<String, sFunction*> tFunctions;
+  typedef map<string, sFunction*> tFunctions;
 
 private:
   GlobalsManager() { }
@@ -36,11 +36,11 @@ public:
     return instance;
   }
 
-  TemplateValue callFunction(const StringRef& name, const tFuncArguments& arguments);
+  TemplateValue callFunction(const string& name, const tFuncArguments& arguments);
 
-  bool addFunction(const StringRef& name, fOnCallFunction& func);
-  bool hasFunction(const StringRef& name);
-  bool removeFunction(const StringRef& name);
+  bool addFunction(const string& name, fOnCallFunction& func);
+  bool hasFunction(const string& name);
+  bool removeFunction(const string& name);
   void clearFunctions();
 
 protected:

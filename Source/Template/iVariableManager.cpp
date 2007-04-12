@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "iVariableManager.h"
 
-bool iVariableManager::addVariable(const StringRef& name, TemplateValue value, bool attrWrite) {
+bool iVariableManager::addVariable(const string& name, TemplateValue value, bool attrWrite) {
   if (hasVariable(name)) {
     return false;
   }
@@ -9,18 +9,18 @@ bool iVariableManager::addVariable(const StringRef& name, TemplateValue value, b
   return true;
 }
 
-bool iVariableManager::hasVariable(const StringRef& name) {
+bool iVariableManager::hasVariable(const string& name) {
   return !name.empty() && _variables.find(name) != _variables.end();
 }
 
-TemplateValue iVariableManager::getVariable(const StringRef& name) {
+TemplateValue iVariableManager::getVariable(const string& name) {
   if (!hasVariable(name)) {
     return TemplateValue();
   }
   return _variables[name]->value;
 }
 
-iVariableManager* iVariableManager::find(const StringRef& name) {
+iVariableManager* iVariableManager::find(const string& name) {
   iVariableManager *pVM = this;
   while (pVM != NULL && !pVM->hasVariable(name)) {
     pVM = pVM->_parent;
@@ -28,14 +28,14 @@ iVariableManager* iVariableManager::find(const StringRef& name) {
   return pVM;
 }
 
-bool iVariableManager::isWritableVariable(const StringRef& name) {
+bool iVariableManager::isWritableVariable(const string& name) {
   if (!hasVariable(name)) {
     return false;
   }
   return _variables[name]->attrWrite;
 }
 
-bool iVariableManager::setVariable(const StringRef& name, TemplateValue value, bool create) {
+bool iVariableManager::setVariable(const string& name, TemplateValue value, bool create) {
   if (!hasVariable(name) && !create) {
     return false;
   }
@@ -53,7 +53,7 @@ void iVariableManager::setData(const iVariableManager::tVariableData& data) {
   }
 }
 
-bool iVariableManager::removeVariable(const StringRef& name) {
+bool iVariableManager::removeVariable(const string& name) {
   if (!hasVariable(name)) {
     return false;
   }

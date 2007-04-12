@@ -3,7 +3,7 @@
 
 SharedPtr<GlobalsManager> GlobalsManager::instance = 0;
 
-bool GlobalsManager::addFunction(const StringRef& name, GlobalsManager::fOnCallFunction& func) {
+bool GlobalsManager::addFunction(const string& name, GlobalsManager::fOnCallFunction& func) {
   if (hasFunction(name)) {
     return false;
   }
@@ -11,14 +11,14 @@ bool GlobalsManager::addFunction(const StringRef& name, GlobalsManager::fOnCallF
   return true;
 }
 
-TemplateValue GlobalsManager::callFunction(const StringRef& name, const tFuncArguments& arguments) {
+TemplateValue GlobalsManager::callFunction(const string& name, const tFuncArguments& arguments) {
   if (!hasFunction(name)) {
     return TemplateValue();
   }
   return _functions[name]->signal(arguments);
 }
 
-bool GlobalsManager::hasFunction(const StringRef& name) {
+bool GlobalsManager::hasFunction(const string& name) {
   return !name.empty() && _functions.find(name) != _functions.end();
 }
 

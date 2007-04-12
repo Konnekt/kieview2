@@ -24,15 +24,15 @@ public:
   }
 
 public:
-  virtual bool addVariable(const StringRef& name, TemplateValue value, bool attrWrite = false);
-  virtual TemplateValue getVariable(const StringRef& name);
-  virtual bool hasVariable(const StringRef& name);
+  virtual bool addVariable(const string& name, TemplateValue value, bool attrWrite = false);
+  virtual TemplateValue getVariable(const string& name);
+  virtual bool hasVariable(const string& name);
 
-  virtual iVariableManager* find(const StringRef& name);
-  virtual bool isWritableVariable(const StringRef& name);
-  virtual bool removeVariable(const StringRef& name);
+  virtual iVariableManager* find(const string& name);
+  virtual bool isWritableVariable(const string& name);
+  virtual bool removeVariable(const string& name);
 
-  virtual bool setVariable(const StringRef& name, TemplateValue value, bool create = true);
+  virtual bool setVariable(const string& name, TemplateValue value, bool create = true);
   virtual void setData(const tVariableData& data);
   virtual void clearVariables();
 
