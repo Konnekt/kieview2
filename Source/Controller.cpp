@@ -20,28 +20,11 @@ namespace kIEview2 {
   namespace JS {
     bool UdfBridge::__call(const string& name, IECtrl::Var& args, IECtrl::Var& ret) {
       try {
-        udf_fn* func = ::Controller::getInstance()->getStyleHandler()->getUdfFactory()->get(name);
-        udf_fn::e_accept_params paramsCount = func->accept_params();
-
-        if (paramsCount == udf_fn::ANY_PARAMS) {
-          udf_fn_param params;
-          for (int i = 0; i < args.length(); i++) {
-            params.push_back(args[i]);
-          }
-          func->param(params);
-        } else {
-          if (args.length() < int(paramsCount)) {
-            throw IECtrl::JSException("Too few arguments provided");
-          }
-          switch (paramsCount) {
-            case udf_fn::NO_PARAMS: func->param(); break;
-            case udf_fn::ONE_PARAM: func->param(args[0]); break;
-            case udf_fn::TWO_PARAMS: func->param(args[0], args[1]); break;
-            case udf_fn::THREE_PARAMS: func->param(args[0], args[1], args[2]); break;
-          }
+        Globals::tFuncArguments funcArgs;
+        for (int i = 0; i < args.length(); i++) {
+          funcArgs.push_back(args[0].getStaminaString());
         }
-        func->handler();
-        ret = func->result();
+        ret = Globals::get()->callFunction(name, funcArgs) >> String();
         return true;
       } catch(const exception& e) {
         throw IECtrl::JSException(e.what());
@@ -454,10 +437,8 @@ namespace kIEview2 {
         bool autoScroll = an->_scroll && this->autoScroll(an, pCtrl);
         try {
           args[0] = _parseMsgTpl(an).a_str();
-        } catch(const exception& e) { 
+        } catch (const Exception& e) { 
           args[0] = styleHandler.parseException(e, wndCtrl).a_str();
-        } catch(const Exception& e) {
-          break;
         }
 
         pCtrl->waitTillLoaded();
@@ -478,10 +459,8 @@ namespace kIEview2 {
         bool autoScroll = this->autoScroll(an, pCtrl);
         try {
           args[0] = _parseStatusTpl(an).a_str();
-        } catch(const exception& e) { 
+        } catch(const Exception& e) { 
           args[0] = styleHandler.parseException(e, wndCtrl).a_str();
-        } catch(const Exception& e) {
-          break;
         }
 
         pCtrl->waitTillLoaded();
@@ -586,8 +565,8 @@ namespace kIEview2 {
 
         bool isHTML = text.find("</") != text.npos;
         if (!isHTML) {
-          text = styleHandler.runFunc("htmlUnescape", text);
-          text = styleHandler.runFunc("br2nl", text);
+          // text = Globals::get()->callFunction("html_unescape", text) >> String();
+          text = Globals::get()->callFunction("br2nl", text) >> String();
         }
         if (an->code == Konnekt::UI::Notify::getMessage) {
           Konnekt::UI::Notify::_getMessage* an = (Konnekt::UI::Notify::_getMessage*) getAN();
@@ -1013,11 +992,11 @@ namespace kIEview2 {
   }
 
   String Controller::htmlEscape(StringRef& txt) {
-    return styleHandler.runFunc("htmlEscape", txt);
+    return Globals::get()->callFunction("html_escape", txt) >> String();
   }
 
   String Controller::nl2br(StringRef& txt) {
-    return styleHandler.runFunc("nl2br", txt);
+    return Globals::get()->callFunction("nl2br", txt) >> String();
   }
 
   String Controller::getDisplayFromMsg(Konnekt::UI::Notify::_insertMsg* an) {
@@ -1063,27 +1042,27 @@ namespace kIEview2 {
   String Controller::_parseStatusTpl(Konnekt::UI::Notify::_insertStatus* an) {
     Date64 date(true);
 
-    // We create structure of the data
-    param_data data(param_data::HASH);
-    data.hash_insert_new_var("@time", i64tostr(date.getInt64()));
-    data.hash_insert_new_var("@status", inttostr(an->_status));
+    oWndController wndCtrl = getWndController(an);
+    sGroupedSt& lastSt = wndCtrl->lastSt;
 
-    data.hash_insert_new_var("display", strlen(config->getChar(CNT_DISPLAY, an->act.cnt)) ? 
+    // We create structure of the data
+    oTemplate tpl = styleHandler.getTpl("status", wndCtrl);
+    tpl->addVariable("@time", date.getInt64());
+    tpl->addVariable("@status", an->_status);
+
+    tpl->addVariable("display", strlen(config->getChar(CNT_DISPLAY, an->act.cnt)) ? 
       config->getChar(CNT_DISPLAY, an->act.cnt) : 
       config->getChar(CNT_UID, an->act.cnt)
     );
-    data.hash_insert_new_var("time", date.strftime("%H:%M"));
-    data.hash_insert_new_var("status", getStatusLabel(an->_status));
+    tpl->addVariable("time", date.strftime("%H:%M"));
+    tpl->addVariable("status", getStatusLabel(an->_status));
 
     if (an->_info) {
       String info = an->_info;
       info = parseBody(info, true, false, config->getInt(cfg::linkify), config->getInt(cfg::useEmots));
 
-      data.hash_insert_new_var("info", info);
+      tpl->addVariable("info", info);
     }
-
-    oWndController wndCtrl = getWndController(an);
-    sGroupedSt& lastSt = wndCtrl->lastSt;
 
     bool groupStatus = false;
     bool groupTime = false;
@@ -1102,30 +1081,29 @@ namespace kIEview2 {
         throw ExceptionString("Duplicated status change notification");
       }
 
-      if (groupStatus) data.hash_insert_new_var("groupStatus?", "1");
-      if (groupTime) data.hash_insert_new_var("groupTime?", "1");
-      if (groupInfo) data.hash_insert_new_var("groupInfo?", "1");
+      if (groupStatus) tpl->addVariable("groupStatus?", true);
+      if (groupTime) tpl->addVariable("groupTime?", true);
+      if (groupInfo) tpl->addVariable("groupInfo?", true);
 
       string timeFromLastStString;
       if (timeFromLastSt) {
-        timeFromLastStString = "<b>" + timeToString(timeFromLastSt) + "</b> póŸniej";
+        timeFromLastStString = stringf("<b>%s</b> póŸniej", timeToString(timeFromLastSt).c_str());
       }
       if (groupStatus && groupTime) {
-        data.hash_erase_var("time");
-        data.hash_insert_new_var("time", timeFromLastStString);
+        tpl->setVariable("time", timeFromLastStString);
       }
-      data.hash_insert_new_var("@lastStTime", i64tostr(lastSt.time.getInt64()));
-      data.hash_insert_new_var("timeFromLastSt", timeFromLastStString);
-      data.hash_insert_new_var("grouped?", "1");
+      tpl->addVariable("@lastStTime", lastSt.time.getInt64());
+      tpl->addVariable("timeFromLastSt", timeFromLastStString);
+      tpl->addVariable("grouped?", true);
     }
 
     wndCtrl->clearGroupedMsgs();
     lastSt = sGroupedSt(an->_status, date, an->_info);
 
     if (an->_status & ST_IGNORED) {
-      data.hash_insert_new_var("ignored?", "1");
+      tpl->addVariable("ignored?", true);
     }
-    return styleHandler.parseTpl(&data, "status", wndCtrl);
+    return styleHandler.parseTpl(tpl, wndCtrl);
   }
 
   String Controller::_parseMsgTpl(Konnekt::UI::Notify::_insertMsg* an) {
@@ -1149,19 +1127,20 @@ namespace kIEview2 {
       !leaveAsIs && config->getInt(cfg::useEmots) && (!inHistory || config->getInt(cfg::useEmotsInHistory)));
 
     // We create structure of the data
-    param_data data(param_data::HASH);
-    data.hash_insert_new_var("@time", i64tostr(date.getInt64()));
-    data.hash_insert_new_var("@id", inttostr(msg->id));
-    data.hash_insert_new_var("@cnt", inttostr(cnt));
+    oTemplate tpl = styleHandler.getTpl("content-types\\" + type, wndCtrl);
 
-    data.hash_insert_new_var("display", display);
-    data.hash_insert_new_var("type", type);
-    data.hash_insert_new_var("ext", msg->ext);
-    data.hash_insert_new_var("time", date.strftime(!inHistory ? "%H:%M" : "%A, %d.%m.%Y - %H:%M"));
-    data.hash_insert_new_var("body", body);
+    tpl->addVariable("@time", date.getInt64());
+    tpl->addVariable("@id", msg->id);
+    tpl->addVariable("@cnt", cnt);
+
+    tpl->addVariable("display", display);
+    tpl->addVariable("type", type);
+    tpl->addVariable("ext", msg->ext);
+    tpl->addVariable("time", date.strftime(!inHistory ? "%H:%M" : "%A, %d.%m.%Y - %H:%M"));
+    tpl->addVariable("body", body);
 
     if (msg->flag & MF_HIDE) {
-      data.hash_insert_new_var("hidden?", "1");
+      tpl->addVariable("hidden?", true);
     }
 
     tCntId senderID = !(msg->flag & MF_SEND) ? Ctrl->ICMessage(IMC_CNT_FIND, msg->net, (int) msg->fromUid) : 0;
@@ -1179,82 +1158,81 @@ namespace kIEview2 {
         groupDisplay = true;
       }
 
-      if (groupDisplay) data.hash_insert_new_var("grouped?", "1");
-      if (groupTime) data.hash_insert_new_var("groupTime?", "1");
+      if (groupDisplay) tpl->addVariable("grouped?", true);
+      if (groupTime) tpl->addVariable("groupTime?", true);
 
       string timeFromLastMsgString;
       if (timeFromLastMsg) {
-        timeFromLastMsgString = "<b>" + timeToString(timeFromLastMsg) + "</b> póŸniej";
+        timeFromLastMsgString = stringf("<b>%s</b> póŸniej", timeToString(timeFromLastMsg).c_str());
       }
       if (groupTime) {
-        data.hash_erase_var("time");
-        data.hash_insert_new_var("time", timeFromLastMsgString);
+        tpl->setVariable("time", timeFromLastMsgString);
       }
-      data.hash_insert_new_var("@lastMsgTime", i64tostr(lastMsg.time.getInt64()));
-      data.hash_insert_new_var("timeFromLastMsg", timeFromLastMsgString);
+      tpl->addVariable("@lastMsgTime", lastMsg.time.getInt64());
+      tpl->addVariable("timeFromLastMsg", timeFromLastMsgString);
     }
 
     if (msgHandlers.find(msg->type) != msgHandlers.end()) {
-      msgHandlers[msg->type]->signal(data, an);
+      msgHandlers[msg->type]->signal(tpl, an);
     }
 
     wndCtrl->clearGroupedMsgs();
     lastMsg = sGroupedMsg(senderID, msg->type, date, display);
 
-    return styleHandler.parseTpl(&data, ("content-types\\" + type).c_str(), wndCtrl);
+    return styleHandler.parseTpl(tpl, wndCtrl);
   }
 
   /*
    * Message types specific methods
    */
-  void Controller::_handleQuickEventTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
+  void Controller::_handleQuickEventTpl(oTemplate& tpl, Konnekt::UI::Notify::_insertMsg* an) {
     if (an->_message->flag & MF_QE_SHOWTIME) {
-      data.hash_insert_new_var("showTime?", "1");
+      tpl->addVariable("showTime?", true);
     }
     if (!(an->_message->flag & MF_QE_NORMAL)) {
-      data.hash_insert_new_var("warning?", "1");
+      tpl->addVariable("warning?", true);
     }
   }
 
-  void Controller::_handleStdMsgTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
+  void Controller::_handleStdMsgTpl(oTemplate& tpl, Konnekt::UI::Notify::_insertMsg* an) {
     cMessage* msg = an->_message;
     tCntId cnt = getCntFromMsg(msg);
 
     string extInfo = GetExtParam(msg->ext, MEX_ADDINFO);
     String title = GetExtParam(msg->ext, MEX_TITLE);
 
-    data.hash_insert_new_var("@net", inttostr(msg->net));
-    data.hash_insert_new_var("uid", config->getChar(CNT_UID, cnt));
-    data.hash_insert_new_var("nick", config->getChar(CNT_NICK, cnt));
-    data.hash_insert_new_var("name", config->getChar(CNT_NAME, cnt));
-    data.hash_insert_new_var("surname", config->getChar(CNT_SURNAME, cnt));
+    tpl->addVariable("@net", msg->net);
+    tpl->addVariable("uid", config->getChar(CNT_UID, cnt));
+    tpl->addVariable("nick", config->getChar(CNT_NICK, cnt));
+    tpl->addVariable("name", config->getChar(CNT_NAME, cnt));
+    tpl->addVariable("surname", config->getChar(CNT_SURNAME, cnt));
 
     if (extInfo.length()) {
-      data.hash_insert_new_var("extInfo", extInfo);
+      tpl->addVariable("extInfo", extInfo);
     }
     if (title.length()) {
-      data.hash_insert_new_var("title", title);
+      tpl->addVariable("title", title);
     }
     if (isMsgFromHistory(an)) {
-      data.hash_insert_new_var("inHistory?", "1");
+      tpl->addVariable("inHistory?", true);
     }
     if (msg->flag & MF_SEND) {
-      data.hash_insert_new_var("sent?", "1");
+      tpl->addVariable("sent?", true);
     }
   }
 
-  void Controller::_handleSmsTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
+  void Controller::_handleSmsTpl(oTemplate& tpl, Konnekt::UI::Notify::_insertMsg* an) {
     String from = GetExtParam(an->_message->ext, Sms::extFrom);
     string gate = GetExtParam(an->_message->ext, Sms::extGate);
 
     if (from.length()) {
-      data.hash_insert_new_var("from", from);
+      tpl->addVariable("from", from);
     }
-    data.hash_insert_new_var("to", an->_message->toUid);
-    data.hash_insert_new_var("gate", gate);
+    tpl->addVariable("to", an->_message->toUid);
+    tpl->addVariable("gate", gate);
   }
 
-  void Controller::_handleFileTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an) {
+  void Controller::_handleFileTpl(oTemplate& tpl, Konnekt::UI::Notify::_insertMsg* an) {
     int transferTime = atoi(GetExtParam(an->_message->ext, MEX_FILE_TRANSFER_TIME).c_str());
     double transfered = atoi(GetExtParam(an->_message->ext, MEX_FILE_TRANSFERED).c_str());
     double size = atoi(GetExtParam(an->_message->ext, MEX_FILE_SIZE).c_str());
@@ -1264,7 +1242,7 @@ namespace kIEview2 {
     String name = GetExtParam(an->_message->ext, MEX_TITLE);
 
     if (transferTime > 0) {
-      data.hash_insert_new_var("transferTime", timeToString(transferTime));
+      tpl->addVariable("transferTime", timeToString(transferTime));
     }
     if (transfered > 0) {
       char buff[20];
@@ -1273,33 +1251,33 @@ namespace kIEview2 {
       } else {
         sprintf(buff, "%.1f%%", (transfered / size) * 100);
       }
-      data.hash_insert_new_var("transferedP", buff);
-      data.hash_insert_new_var("transfered", bytesToString(transfered));
+      tpl->addVariable("transferedP", buff);
+      tpl->addVariable("transfered", bytesToString(transfered));
     }
     if (transferTime && transfered) {
-      data.hash_insert_new_var("avgSpeed", bytesToString(transfered / transferTime) + "/s");
+      tpl->addVariable("avgSpeed", bytesToString(transfered / transferTime) + "/s");
     }
     if (size > 0) {
-      data.hash_insert_new_var("size", bytesToString(size));
+      tpl->addVariable("size", bytesToString(size));
     }
     if (name.length()) {
-      data.hash_insert_new_var("name", name);
+      tpl->addVariable("name", name);
     }
     if (filePath.length()) {
       int pos = filePath.find_last_of('\\') + 1;
       if (pos > 0) {
-        data.hash_insert_new_var("fileName", filePath.substr(pos));
-        data.hash_insert_new_var("path", filePath.substr(0, pos));
+        tpl->addVariable("fileName", filePath.substr(pos));
+        tpl->addVariable("path", filePath.substr(0, pos));
       } else {
-        data.hash_insert_new_var("fileName", filePath);
+        tpl->addVariable("fileName", filePath);
       }
-      data.hash_insert_new_var("filePath", filePath);
+      tpl->addVariable("filePath", filePath);
     }
     if (error.length()) {
-      data.hash_insert_new_var("error", error);
+      tpl->addVariable("error", error);
     }
     if (an->_message->flag & MF_SEND) {
-      data.hash_insert_new_var("sent?", "1");
+      tpl->addVariable("sent?", true);
     }
   }
 }

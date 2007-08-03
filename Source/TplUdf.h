@@ -16,196 +16,141 @@
 #ifndef __TPLUDF_H__
 #define __TPLUDF_H__
 
-#include <ctpp/ctpp.hpp>
-#include <functions/std_fn_list.hpp>
-
 #include <boost/format.hpp>
 
 #include "Helpers.h"
 #include "Controller.h"
 
-#pragma comment(lib, "ctpp.lib")
-
-using namespace template_parser_ns;
 using namespace Stamina;
 using namespace boost;
 
-class udf_get_plugin_version: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return ONE_PARAM;
-  }
-  inline void param(const string& param) {
-    _buff = param;
+namespace kIEview2 { namespace funcs {
+  inline oValue html_escape(const Globals::tFuncArguments& args) {
+    string result, raw = args[0] >> String();
+
+	  for (string::const_iterator ch(raw.begin()); ch != raw.end(); ++ch) {
+		  switch (*ch) {
+		  case '&':
+			  result += "&amp;";
+			  break;
+		  case '<':
+			  result += "&lt;";
+			  break;
+		  case '>':
+			  result += "&gt;";
+			  break;
+		  case '"':
+			  result += "&quot;";
+			  break;
+		  case '\'':
+			  result += "&#039;";
+			  break;
+		  default:
+			  result += *ch;
+			  break;
+		  }
+	  }
+	  return result;
   }
 
-  inline void handler() {
+  inline oValue get_plugin_version(const Globals::tFuncArguments& args) {
+    oValue v = args[0];
     int plugID = 0;
-    if (RegEx::doMatch("/^\\d+$/", _buff.c_str())) {
-      plugID = Ctrl->ICMessage(IMC_FINDPLUG, atoi(_buff.c_str()), IMT_ALL);
-    } else {
-      plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) _buff.c_str());
-    }
 
+    if (v->isType<Values::Int>()) {
+      plugID = Ctrl->ICMessage(IMC_FINDPLUG, v >> int(), IMT_ALL);
+    } else {
+      plugID = Ctrl->ICMessage(IMC_FINDPLUG_BYNAME, (int) (v >> String()).c_str());
+    }
     if (plugID) {
       char ver[50] = {0};
       Ctrl->ICMessage(IMC_PLUG_VERSION, Ctrl->ICMessage(IMC_PLUGID_POS, plugID, 0), (int) ver);
       if (Ctrl->getError() != IMERROR_NORESULT) {
-        _buff = ver; return;
+        return ver;
       }
     }
-    throw exception("Plugin not found");
+    throw SwiftException("Plugin not found");
   }
-  inline string& result() {
-    return _buff;
-  }
-
-protected:
-  string _buff;
-};
-
-class udf_get_plugin_name: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return ONE_PARAM;
-  }
-  inline void param(const string& net) {
-    _net = atoi(net.c_str());
-    if (!_net && net != "0") {
-      throw exception("Conversion problem");
+  inline oValue get_plugin_name(const Globals::tFuncArguments& args) {
+    if (int plugID = pluginExists(args[0] >> int())) {
+      return getPlugName(plugID);
     }
+    throw SwiftException("Plugin not found");
   }
+  inline oValue get_cfg_setting(const Globals::tFuncArguments& args) {
+    string name = args[0] >> String();
+    String def;
 
-  inline void handler() {
-    if (int plugID = pluginExists(_net)) {
-      _result = getPlugName(plugID);
-    } else {
-      throw exception("Plugin not found");
+    if (args.size() > 1) {
+      args[1] >> def;
     }
-  }
-  inline string& result() {
-    return _result;
-  }
-
-protected:
-  string _result;
-  int _net;
-};
-
-class udf_get_cfg_setting: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return ANY_PARAMS;
-  }
-  inline void param(udf_fn_param& params) {
-    _def = params.size() > 1 ? params[1] : "";
-    _name = params[0];
-  }
-
-  inline void handler() {
-    if (_def != "!") {
+    if (def != "!") {
       try {
-        _result = Controller::getInstance()->getSettingStr(_name, tableConfig);
-      } catch(...) {
-        _result = _def;
+        return Controller::getInstance()->getSettingStr(name, tableConfig);
+      } catch (...) {
+        return def;
       }
-    } else {
-      _result = Controller::getInstance()->getSettingStr(_name, tableConfig);
     }
+    return Controller::getInstance()->getSettingStr(name, tableConfig);
   }
-  inline string& result() {
-    return _result;
-  }
+  inline oValue get_cnt_setting(const Globals::tFuncArguments& args) {
+    string name = args[0] >> String();
+    tCntId cnt = args[1] >> int();
+    String def;
 
-protected:
-  string _result;
-  string _name;
-  string _def;
-};
-
-class udf_get_cnt_setting: public udf_get_cfg_setting {
-public:
-  inline void param(udf_fn_param& params) {
-    if (params.size() < 2) {
-      throw logic_error("udf_get_cnt_setting: you didn't provided required arguments");
+    if (args.size() > 2) {
+      args[2] >> def;
     }
-    _cnt = atoi(params[1].c_str());
-    _def = params.size() > 2 ? params[2] : "";
-    _name = params[0];
-
-    if (!_cnt && (params[1] != "0")) {
-      throw logic_error("udf_get_cnt_setting: contact id conversion failed");
-    }
-  }
-
-  inline void handler() {
-    if (_def != "!") {
+    if (def != "!") {
       try {
-        _result = Controller::getInstance()->getSettingStr(_name, tableContacts, _cnt);
+        return Controller::getInstance()->getSettingStr(name, tableContacts, cnt);
       } catch(...) {
-        _result = _def;
+        return def;
       }
-    } else {
-      _result = Controller::getInstance()->getSettingStr(_name, tableContacts, _cnt);
     }
+    return Controller::getInstance()->getSettingStr(name, tableContacts, cnt);
   }
+  inline oValue nl2br(const Globals::tFuncArguments& args) {
+    return RegEx::doReplace("/\r?\n/m", "<br />\r\n", (args[0] >> String()).c_str());
+  }
+  inline oValue br2nl(const Globals::tFuncArguments& args) {
+    return RegEx::doReplace("#<br ?/?>#i", "\r\n", (args[0] >> String()).c_str());
+  }
+  inline oValue stringf(const Globals::tFuncArguments& args) {
+    boost::format formatter((args[0] >> String()).c_str());
 
-protected:
-  tCntId _cnt;
-};
+    Globals::tFuncArguments _args = args;
+    _args.erase(_args.begin());
 
-class udf_nl2br: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return ONE_PARAM;
+    for each (const oValue& arg in _args) {
+      formatter % (arg >> String()).c_str();
+    }
+    return formatter.str();
   }
-  inline void param(const string& str) {
-    _str = str;
-  }
+  inline oValue strftime(const Globals::tFuncArguments& args) {
+    __int64 _date = args[1] >> __int64();
+    if (!_date) {
+      throw SwiftException("Incorrect date format");
+    }
 
-  inline void handler() {
-    _str = RegEx::doReplace("/\r?\n/m", "<br />\r\n", _str.c_str());
-  }
-  inline string& result() {
-    return _str;
-  }
+    Date64 date;
+    date = _date;
 
-protected:
-  string _str;
-};
-
-class udf_br2nl: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return ONE_PARAM;
+    return date.strftime((args[0] >> String()).c_str());
   }
-  inline void param(const string& str) {
-    _str = str;
+  inline oValue get_ext_param(const Globals::tFuncArguments& args) {
+    return GetExtParam(args[0] >> String(), args[1] >> String());
   }
-
-  inline void handler() {
-    _str = RegEx::doReplace("#<br ?/?>#i", "\r\n", _str.c_str());
-  }
-  inline string& result() {
-    return _str;
-  }
-
-protected:
-  string _str;
-};
-
-class udf_htmlunescape: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return ONE_PARAM;
-  }
-  inline void param(const string& str) {
-    _str = str;
-  }
-
-  inline void handler() {
+  inline oValue replace(const Globals::tFuncArguments& args) {
     RegEx reg;
-    reg.setSubject(_str);
+    reg.setPattern(args[0] >> String());
+    reg.setSubject(args[2] >> String());
+
+    return reg.replace((args[1] >> String()).c_str());
+  }
+  inline oValue htmlunescape(const Globals::tFuncArguments& args) {
+    RegEx reg;
+    reg.setSubject(args[0] >> String());
 
     reg.replaceItself("/&amp;/", "&");
     reg.replaceItself("/&lt;/", "<");
@@ -213,140 +158,8 @@ public:
     reg.replaceItself("/&quot;/", "\"");
     reg.replaceItself("/&(apos|#0?39);/", "'");
 
-    _str = reg.getSubject();
+    return reg.getSubject();
   }
-  inline string& result() {
-    return _str;
-  }
-
-protected:
-  string _str;
-};
-
-class udf_stringf: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return ANY_PARAMS;
-  }
-  inline void param(udf_fn_param& params) {
-    _format = params[0];
-    _params = params;
-    _params.erase(_params.begin());
-  }
-
-  inline void handler() {
-    boost::format formatter(_format);
-    for (udf_fn_param::iterator it = _params.begin(); it != _params.end(); it++) {
-      formatter % *it;
-    }
-    _result = formatter.str();
-  }
-  inline string& result() {
-    return _result;
-  }
-
-protected:
-  udf_fn_param _params;
-  string _format;
-  string _result;
-};
-
-class udf_strftime: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return TWO_PARAMS;
-  }
-  inline void param(const string& param1, const string& param2) {
-    _date = _atoi64(param2.c_str());
-    _format = param1;
-  }
-
-  inline void handler() {
-    if (!_date) {
-      throw exception("udf_strftime: incorrect date format");
-    }
-    Date64 date;
-    date = _date;
-
-    _result = date.strftime(_format.c_str());
-  }
-  inline string& result() {
-    return _result;
-  }
-
-protected:
-  string _result;
-  string _format;
-  __int64 _date;
-};
-
-class udf_match: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return TWO_PARAMS;
-  }
-  inline void param(const string& param1, const string& param2) {
-    reg.match(param1.c_str(), param2.c_str());
-  }
-
-  inline void handler() {
-    _result = reg.isMatched() ? "1" : "";
-  }
-  inline string& result() {
-    return _result;
-  }
-
-protected:
-  string _result;
-  RegEx reg;
-};
-
-class udf_replace: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return THREE_PARAMS;
-  }
-  inline void param(const string& param1, const string& param2, const string& param3) {
-    reg.setPattern(param1);
-    reg.setSubject(param3);
-
-    _replace = param2;
-  }
-
-  inline void handler() {
-    _result = reg.replace(_replace.c_str());
-  }
-  inline string& result() {
-    return _result;
-  }
-
-protected:
-  string _replace;
-  string _result;
-  RegEx reg;
-};
-
-class udf_get_ext_param: public udf_fn {
-public:
-  inline e_accept_params accept_params() {
-    return TWO_PARAMS;
-  }
-  inline void param(const string& param1, const string& param2) {
-    _name = param2;
-    _ext = param1;
-  }
-
-  inline void handler() {
-    _result = GetExtParam(_ext, _name);
-  }
-  inline string& result() {
-    return _result;
-  }
-
-protected:
-  string _name;
-  string _ext;
-  string _result;
-};
+}}
 
 #endif // __TPLUDF_H__

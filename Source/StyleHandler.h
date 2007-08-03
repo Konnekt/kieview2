@@ -16,18 +16,12 @@
 #ifndef __TPLHANDLER_H__
 #define __TPLHANDLER_H__
 
-#include <ctpp/ctpp.hpp>
-#include <functions/std_fn_list.hpp>
-
 #include "kIEview2.h"
 #include "Helpers.h"
 
 #include "iPackageHandler.h"
 #include "WndController.h"
 
-#pragma comment(lib, "ctpp.lib")
-
-using namespace template_parser_ns;
 using namespace Stamina;
 using namespace boost;
 using namespace Helpers;
@@ -110,18 +104,6 @@ namespace kIEview2 {
     StyleHandler();
 
     /* CTPP helpers */
-    String runFunc(const string& name, udf_fn_param& params);
-    String runFunc(const string& name, const StringRef& param1);
-    String runFunc(const string& name, const StringRef& param1, const StringRef& param2);
-    String runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3);
-
-    /* CTPP related */
-    inline udf_fn_factory* getUdfFactory() {
-      return &_udfFactory;
-    }
-    inline void bindUdf(const string& name, udf_fn* function) {
-      getUdfFactory()->install_udf_fn(name, function);
-    }
     void bindStdFunctions();
 
     /* iPackageHandler derived methods */
@@ -142,18 +124,14 @@ namespace kIEview2 {
     StyleSet* getCurrentStyle();
 
     /* Styleset parsing */
-    String parseString(param_data* data, const StringRef& text, StyleSet* styleSet);
-    String parseTpl(param_data* data, const char* tplName, StyleSet* styleSet);
-    String parseException(const exception &e, StyleSet* styleSet);
+    String parseException(const Exception& e, StyleSet* styleSet);
+    String parseTpl(oTemplate& tpl, StyleSet* styleSet);
 
-    String parseString(param_data* data, const StringRef& text, oWndController wndCtrl) {
-      return parseString(data, text, wndCtrl->getStyleSet());
-    }
-    String parseTpl(param_data* data, const char* tplName, oWndController wndCtrl) {
-      return parseTpl(data, tplName, wndCtrl->getStyleSet());
-    }
-    String parseException(const exception &e, oWndController wndCtrl) {
+    inline String parseException(const Exception& e, oWndController wndCtrl) {
       return parseException(e, wndCtrl->getStyleSet());
+    }
+    inline String parseTpl(oTemplate& tpl, oWndController wndCtrl) {
+      return parseTpl(tpl, wndCtrl->getStyleSet());
     }
 
     /* directory paths obtaining related methods */
@@ -162,22 +140,15 @@ namespace kIEview2 {
     }
     string getSystemStylesDir();
 
-    inline void clearDirs() {
-      _includeDirs.clear();
+    inline oTemplate getTpl(const string& name, oWndController wndCtrl) {
+      return getTpl(name.c_str(), wndCtrl->getStyleSet());
     }
-    inline void addIncludeDir(const string& dir) {
-      _includeDirs.push_back(dir);
-    }
-
+    oTemplate getTpl(const char* tplName, StyleSet* styleSet);
     string getTplPath(const char* tplName, StyleSet* styleSet);
-    String getTpl(const char* tplName, StyleSet* styleSet);
 
   protected:
     static const char _sysStylesPath[];
     StyleSet _emptySet;
-
-    udf_fn_factory _udfFactory;
-    v_include_dir _includeDirs;
   };
 }
 

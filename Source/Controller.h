@@ -62,8 +62,8 @@ namespace kIEview2 {
     friend class WndController;
 
   public:
-    typedef function<void(param_data&, Konnekt::UI::Notify::_insertMsg*)> fMessageHandler;
-    typedef signal<void(param_data&, Konnekt::UI::Notify::_insertMsg*)> MessageHandlerSig;
+    typedef function<void(oTemplate&, Konnekt::UI::Notify::_insertMsg*)> fMessageHandler;
+    typedef signal<void(oTemplate&, Konnekt::UI::Notify::_insertMsg*)> MessageHandlerSig;
 
     struct sMessageHandler {
       tConnections connections;
@@ -169,10 +169,10 @@ namespace kIEview2 {
     /*
      * Message types specific methods
      */
-    void _handleQuickEventTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an);
-    void _handleStdMsgTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an);
-    void _handleSmsTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an);
-    void _handleFileTpl(param_data& data, Konnekt::UI::Notify::_insertMsg* an);
+    void _handleQuickEventTpl(oTemplate& data, Konnekt::UI::Notify::_insertMsg* an);
+    void _handleStdMsgTpl(oTemplate& data, Konnekt::UI::Notify::_insertMsg* an);
+    void _handleSmsTpl(oTemplate& data, Konnekt::UI::Notify::_insertMsg* an);
+    void _handleFileTpl(oTemplate& data, Konnekt::UI::Notify::_insertMsg* an);
 
   public:
     bool autoScroll(sUIActionNotify_base* an, IECtrl* pCtrl);

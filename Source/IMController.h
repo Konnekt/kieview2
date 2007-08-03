@@ -18,12 +18,16 @@
 #ifndef __IMESSAGECTRL_H__
 #define __IMESSAGECTRL_H__
 
+#include <string>
+#include <hash_map>
+
 #include <boost/signal.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
 using namespace Stamina;
 using namespace boost;
+using namespace std;
 
 namespace Konnekt {
   typedef void tIMCallback;
@@ -48,7 +52,7 @@ namespace Konnekt {
     typedef signal<tIMCallback(IMController*)> sigOnIMessage;
 
   public:
-    typedef std::map<string, signals::connection> tConnections;
+    typedef hash_map<string, signals::connection> tConnections;
 
     struct sObserver {
       tConnections connections;
@@ -91,16 +95,17 @@ namespace Konnekt {
         id(_id), parent(_parent), prevOwner(_prevOwner), autoForward(_autoForward) { }
     };
 
-    typedef std::deque<sSubclassedAction> tSubclassedActions;
-    typedef std::stack<sIMsgStackItem> tIMsgStack;
-    typedef std::map<int, sObserver*> tObservers;
-    typedef std::map<int, int> tStaticValues;
+    typedef deque<sSubclassedAction> tSubclassedActions;
+    typedef stack<sIMsgStackItem> tIMsgStack;
+    typedef hash_map<int, sObserver*> tObservers;
+    typedef hash_map<int, int> tStaticValues;
 
   public:
     inline IMController() {
       // setting/unsetting Ctrl global pointer
       registerObserver(IM_PLUG_INIT, bind(resolve_cast0(&IMController::_plugInit), this));
       registerObserver(IM_PLUG_DEINIT, bind(resolve_cast0(&IMController::_plugDeInit), this));
+
       // actions subclassing
       registerObserver(IM_UI_PREPARE, bind(resolve_cast0(&IMController::_subclass), this));
 
@@ -358,9 +363,9 @@ namespace Konnekt {
       try {
         _notifyObservers(type, _globalObservers);
         return true;
-      } catch (const Exception& e) {
+      } catch (const Stamina::Exception& e) {
         IMLOG("[IMController::notifyGlobalObservers()]: exception caught, reason = %s", e.getReason().a_str());
-      } catch (const exception& e) {
+      } catch (const std::exception& e) {
         IMLOG("[IMController::notifyGlobalObservers()]: exception caught, reason = %s", e.what());
       }
       return false;

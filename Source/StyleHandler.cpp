@@ -50,71 +50,43 @@ namespace kIEview2 {
   const char StyleHandler::_sysStylesPath[] = "data/templates";
 
   StyleHandler::StyleHandler() {
-    bindStdFunctions();
-    bindUdf("getExtParam", new udf_get_ext_param);
-
-    bindUdf("getPluginVersion", new udf_get_plugin_version);
-    bindUdf("getPluginName", new udf_get_plugin_name);
-
-    bindUdf("getCntSetting", new udf_get_cnt_setting);
-    bindUdf("getSetting", new udf_get_cfg_setting);
-
-    bindUdf("formatString", new udf_stringf);
-    bindUdf("formatTime", new udf_strftime);
-
-    bindUdf("htmlUnescape", new udf_htmlunescape);
-    bindUdf("nl2br", new udf_nl2br);
-    bindUdf("br2nl", new udf_br2nl);
-    bindUdf("replace", new udf_replace);
-    bindUdf("match?", new udf_match);
-
     *this << new StylePackageParser;
-  }
 
-  String StyleHandler::runFunc(const string& name, udf_fn_param& params) {
-    udf_fn* func = getUdfFactory()->get(name);
-    func->param(params);
-    func->handler();
-    return func->result();
-  }
-
-  String StyleHandler::runFunc(const string& name, const StringRef& param1) {
-    udf_fn* func = getUdfFactory()->get(name);
-    func->param(param1);
-    func->handler();
-    return func->result();
-  }
-
-  String StyleHandler::runFunc(const string& name, const StringRef& param1, const StringRef& param2) {
-    udf_fn* func = getUdfFactory()->get(name);
-    func->param(param1, param2);
-    func->handler();
-    return func->result();
-  }
-
-  String StyleHandler::runFunc(const string& name, const StringRef& param1, const StringRef& param2, const StringRef& param3) {
-    udf_fn* func = getUdfFactory()->get(name);
-    func->param(param1, param2, param3);
-    func->handler();
-    return func->result();
+    bindStdFunctions();
   }
 
   void StyleHandler::bindStdFunctions() {
-    using namespace template_parser_std_fn_ns;
+    // std
+    Globals::get()->addFunction("html_escape", &funcs::html_escape);
 
-    bindUdf("numFormat", new num_format);
-    bindUdf("urlEscape", new urlescape);
-    bindUdf("htmlEscape", new htmlescape);
-    bindUdf("hrefParam", new href_param);
-    bindUdf("formParam", new form_param);
+    /*
+    Globals::get()->addFunction("num_format", &funcs::num_format);
+    Globals::get()->addFunction("url_escape", &funcs::url_escape);
 
-    bindUdf("inSet?", new value_in_set);
-    bindUdf("isEmail?", new udf_is_email);
-    bindUdf("isAlpha?", new udf_is_alpha);
-    bindUdf("isAlphaNum?", new udf_is_alnum);
-    bindUdf("isNum?", new udf_is_num);
-    bindUdf("isInt?", new udf_is_int);
-    bindUdf("isFloat?", new udf_is_float);
+    Globals::get()->addFunction("in_set", &funcs::in_set);
+    Globals::get()->addFunction("is_email", &funcs::is_email);
+    Globals::get()->addFunction("is_alpha", &funcs::is_alpha);
+    Globals::get()->addFunction("is_alphanum", &funcs::is_alphanum);
+    Globals::get()->addFunction("is_num", &funcs::is_num);
+    Globals::get()->addFunction("is_int", &funcs::is_int);
+    Globals::get()->addFunction("is_float", &funcs::is_float);
+    */
+
+    // K related
+    Globals::get()->addFunction("get_ext_param", &funcs::get_ext_param);
+    Globals::get()->addFunction("get_plugin_version", &funcs::get_plugin_version);
+    Globals::get()->addFunction("get_plugin_name", &funcs::get_plugin_name);
+    Globals::get()->addFunction("get_cnt_setting", &funcs::get_cnt_setting);
+    Globals::get()->addFunction("get_cfg_setting", &funcs::get_cfg_setting);
+
+    Globals::get()->addFunction("stringf", &funcs::stringf);
+    Globals::get()->addFunction("timef", &funcs::strftime);
+
+    Globals::get()->addFunction("nl2br", &funcs::nl2br);
+    Globals::get()->addFunction("br2nl", &funcs::br2nl);
+
+    Globals::get()->addFunction("html_unescape", &funcs::htmlunescape);
+    Globals::get()->addFunction("replace", &funcs::replace);
   }
 
   void StyleHandler::fillLV(iLV* _lv) {
@@ -169,7 +141,7 @@ namespace kIEview2 {
     for (tPackages::iterator it = _packages.begin(); it != _packages.end(); it++) {
       if ((*it)->getID() == id) return (StyleSet*) *it;
     }
-    throw ExceptionString("Style set with id = '" + id + "' wasn't found");
+    throw ExceptionString(stringf("Style set with id = '%s' wasn't found", id.c_str()));
   }
 
   StyleSet* StyleHandler::getCurrentStyle() {
@@ -188,65 +160,49 @@ namespace kIEview2 {
   }
 
   string StyleHandler::getTplPath(const char* tplName, StyleSet* styleSet) {
-    string fullPath = styleSet->getDir() + "\\";
-
-    fullPath += tplName;
-    fullPath += ".";
-    fullPath += styleSet->getExt().length() ? styleSet->getExt() : "tpl";
-
-    return fullPath;
+    return stringf("%s\\%s.%s", styleSet->getDir().c_str(), 
+      tplName, styleSet->getExt().length() 
+        ? styleSet->getExt().c_str()
+        : "tpl");
   }
 
-  String StyleHandler::getTpl(const char* tplName, StyleSet* styleSet) {
-    loader_base loader;
-    loader.load_file(getTplPath(tplName, styleSet));
-
-    return loader.get_data();
+  oTemplate StyleHandler::getTpl(const char* tplName, StyleSet* styleSet) {
+    return new FileTemplate(getTplPath(tplName, styleSet), 0, CP_ANSI);
   }
 
-  String StyleHandler::parseException(const exception &e, StyleSet* styleSet) {
-    String result, exceptionString;
-
-    param_data data(param_data::HASH);
-    data.hash_insert_new_var("reason", e.what());
-
-    exceptionString = 
-      "<div class=\"exception\">"
-        "<b>Exception caught</b> ({$htmlEscape(reason)}) !"
-      "</div>";
+  String StyleHandler::parseException(const Exception& e, StyleSet* styleSet) {
+    oTemplate tpl;
+    String result;
 
     try {
-      result = parseTpl(&data, "exception", styleSet);
-    } catch(...) { 
+      tpl = getTpl("exception", styleSet);
+      tpl->addVariable("reason", e.getReason());
+    } catch (...) { 
       try {
-        result = parseString(&data, exceptionString, styleSet);
-      } catch(const exception &e2) {
-        result = "It can't be worse - exception caught while parsing exceptionString (";
-        result += e2.what();
-        result += ")<br/>";
+        tpl = new TextTemplate(
+          "<div class=\"exception\">"
+            "<b>Exception caught</b> ({html_escape($reason)}) !"
+          "</div>"
+        );
+        tpl->addVariable("reason", e.getReason());
+      } catch (const Exception& e2) {
+        return stringf("It can't be worse - multiple exception caught (%s)<br />", e2.getReason().c_str());
       }
     }
-    return result;
+    Parser parser;
+    parser.parse(tpl);
+
+    return tpl->output();
   }
 
-  String StyleHandler::parseString(param_data* data, const StringRef& text, StyleSet* styleSet) {
-    if (!text.length()) {
-      throw exception("No input text to parse");
+  String StyleHandler::parseTpl(oTemplate& tpl, StyleSet* styleSet) {
+    try {
+      Parser parser;
+      parser.parse(tpl);
+
+      return tpl->output();
+    } catch (Exception& e) {
+      return parseException(e, styleSet);
     }
-    template_text parser(getUdfFactory());
-
-    // Set allowed list of catalogs to include
-    parser.set_include_dir(_includeDirs);
-    // Parse the template
-    parser.parse(text);
-    // We impose parameters on a pattern
-    parser.param(data);
-
-    return parser.output();
-  }
-
-  String StyleHandler::parseTpl(param_data* data, const char* tplName, StyleSet* styleSet) {
-    data->hash_insert_new_var("tplPath", getTplPath(tplName, styleSet));
-    return parseString(data, getTpl(tplName, styleSet), styleSet);
   }
 }

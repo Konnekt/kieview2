@@ -49,7 +49,7 @@
 #include <richole.h>
 #include <shellapi.h>
 
-#include <map>
+#include <hash_map>
 #include <list>
 #include <deque>
 #include <stack>
@@ -63,39 +63,45 @@
 #pragma comment(lib, "DevIL.lib")
 #pragma comment(lib, "DevILU.lib")
 
+#pragma comment(lib, "glib-2.0.lib")
+#pragma comment(lib, "Swift.lib")
 #ifdef _DEBUG
   #pragma comment(lib, "stamina_d.lib")
   #pragma comment(lib, "stamina_ui_d.lib")
   #pragma comment(lib, "listwnd_d.lib")
   #pragma comment(lib, "datatable_d.lib")
+  #pragma comment(lib, "glibmm-2.4d.lib")
+  #pragma comment(lib, "xml++-2.6d.lib")
 #else
   #pragma comment(lib, "stamina.lib")
   #pragma comment(lib, "stamina_ui.lib")
   #pragma comment(lib, "listwnd.lib")
   #pragma comment(lib, "datatable.lib")
+  #pragma comment(lib, "glibmm-2.4.lib")
+  #pragma comment(lib, "xml++-2.6.lib")
 #endif
 
 #include <boost/signal.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
-#include <stamina/helpers.h>
-#include <stamina/object.h>
-#include <stamina/objectimpl.h>
-#include <stamina/exception.h>
-#include <stamina/criticalsection.h>
-#include <stamina/string.h>
-#include <stamina/time64.h>
-#include <stamina/regex.h>
-#include <stamina/timer.h>
-#include <stamina/findfile.h>
-#include <stamina/findfilefiltered.h>
-#include <stamina/simxml.h>
-#include <stamina/winhelper.h>
+#include <Stamina/Helpers.h>
+#include <Stamina/Object.h>
+#include <Stamina/ObjectImpl.h>
+#include <Stamina/Exception.h>
+#include <Stamina/CriticalSection.h>
+#include <Stamina/String.h>
+#include <Stamina/Time64.h>
+#include <Stamina/Regex.h>
+#include <Stamina/Timer.h>
+#include <Stamina/FindFile.h>
+#include <Stamina/FindFileFiltered.h>
+#include <Stamina/SimXML.h>
+#include <Stamina/WinHelper.h>
 
-#include <stamina/DataTable/DataTable.h>
-#include <stamina/DataTable/FileBin.h>
-#include <stamina/DataTable/Crypt.h>
+#include <Stamina/DataTable/DataTable.h>
+#include <Stamina/DataTable/FileBin.h>
+#include <Stamina/DataTable/Crypt.h>
 
 #include <Stamina/ListWnd/ListWnd.h>
 #include <Stamina/ListWnd/ListView.h>
@@ -105,6 +111,7 @@
 
 using namespace Stamina;
 using namespace std;
+using namespace boost;
 
 #include <konnekt/plug_export.h>
 #include <konnekt/ui.h>
@@ -117,17 +124,10 @@ using namespace std;
 #include <konnekt/lib.h>
 #include <konnekt/plugsNET.h>
 
-using namespace Konnekt;
-using namespace boost;
+#include <Swift/Swift.h>
 
-#pragma comment(lib, "glib-2.0.lib")
-#ifdef _DEBUG
-  #pragma comment(lib, "glibmm-2.4d.lib")
-  #pragma comment(lib, "xml++-2.6d.lib")
-#else
-  #pragma comment(lib, "glibmm-2.4.lib")
-  #pragma comment(lib, "xml++-2.6.lib")
-#endif
+using namespace Konnekt;
+using namespace Swift;
 
 #include <libxml++/libxml++.h>
 
