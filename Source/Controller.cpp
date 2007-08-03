@@ -992,7 +992,7 @@ namespace kIEview2 {
   }
 
   String Controller::htmlEscape(StringRef& txt) {
-    return Globals::get()->callFunction("html_escape", txt) >> String();
+    return Globals::get()->callFunction("htmlescape", txt) >> String();
   }
 
   String Controller::nl2br(StringRef& txt) {

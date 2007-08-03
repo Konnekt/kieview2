@@ -57,7 +57,7 @@ namespace kIEview2 {
 
   void StyleHandler::bindStdFunctions() {
     // std
-    Globals::get()->addFunction("html_escape", &funcs::html_escape);
+    Globals::get()->addFunction("htmlescape", &funcs::htmlescape);
 
     /*
     Globals::get()->addFunction("num_format", &funcs::num_format);
@@ -181,12 +181,12 @@ namespace kIEview2 {
       try {
         tpl = new TextTemplate(
           "<div class=\"exception\">"
-            "<b>Exception caught</b> ({html_escape($reason)}) !"
+            "<b>Exception caught</b> ({htmlescape($reason)}) !"
           "</div>"
         );
         tpl->addVariable("reason", e.getReason());
       } catch (const Exception& e2) {
-        return stringf("It can't be worse - multiple exception caught (%s)<br />", e2.getReason().c_str());
+        return stringf("<p>It can't be worse - multiple exception caught (%s)</p>", e2.getReason().c_str());
       }
     }
     Parser parser;

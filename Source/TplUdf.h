@@ -25,7 +25,7 @@ using namespace Stamina;
 using namespace boost;
 
 namespace kIEview2 { namespace funcs {
-  inline oValue html_escape(const Globals::tFuncArguments& args) {
+  inline oValue htmlescape(const Globals::tFuncArguments& args) {
     string result, raw = args[0] >> String();
 
 	  for (string::const_iterator ch(raw.begin()); ch != raw.end(); ++ch) {
@@ -53,6 +53,62 @@ namespace kIEview2 { namespace funcs {
 	  return result;
   }
 
+  inline oValue htmlunescape(const Globals::tFuncArguments& args) {
+    RegEx reg;
+    reg.setSubject(args[0] >> String());
+
+    reg.replaceItself("/&amp;/", "&");
+    reg.replaceItself("/&lt;/", "<");
+    reg.replaceItself("/&gt;/", ">");
+    reg.replaceItself("/&quot;/", "\"");
+    reg.replaceItself("/&(apos|#0?39);/", "'");
+
+    return reg.getSubject();
+  }
+
+  inline oValue nl2br(const Globals::tFuncArguments& args) {
+    return RegEx::doReplace("/\r?\n/m", "<br />\r\n", (args[0] >> String()).c_str());
+  }
+  inline oValue br2nl(const Globals::tFuncArguments& args) {
+    return RegEx::doReplace("#<br ?/?>#i", "\r\n", (args[0] >> String()).c_str());
+  }
+
+  inline oValue replace(const Globals::tFuncArguments& args) {
+    RegEx reg;
+    reg.setPattern(args[0] >> String());
+    reg.setSubject(args[2] >> String());
+
+    return reg.replace((args[1] >> String()).c_str());
+  }
+
+  inline oValue stringf(const Globals::tFuncArguments& args) {
+    boost::format formatter((args[0] >> String()).c_str());
+
+    Globals::tFuncArguments _args = args;
+    _args.erase(_args.begin());
+
+    for each (const oValue& arg in _args) {
+      if (arg->isType<Values::Int>()) {
+        formatter % (arg >> int());
+      } else {
+        formatter % (arg >> String()).c_str();
+      }
+    }
+    return formatter.str();
+  }
+
+  inline oValue strftime(const Globals::tFuncArguments& args) {
+    __int64 _date = args[1] >> __int64();
+
+    if (!_date) {
+      throw SwiftException("Incorrect date format");
+    }
+    Date64 date;
+    date = _date;
+
+    return date.strftime((args[0] >> String()).c_str());
+  }
+
   inline oValue get_plugin_version(const Globals::tFuncArguments& args) {
     oValue v = args[0];
     int plugID = 0;
@@ -71,12 +127,14 @@ namespace kIEview2 { namespace funcs {
     }
     throw SwiftException("Plugin not found");
   }
+
   inline oValue get_plugin_name(const Globals::tFuncArguments& args) {
     if (int plugID = pluginExists(args[0] >> int())) {
       return getPlugName(plugID);
     }
     throw SwiftException("Plugin not found");
   }
+
   inline oValue get_cfg_setting(const Globals::tFuncArguments& args) {
     string name = args[0] >> String();
     String def;
@@ -93,6 +151,7 @@ namespace kIEview2 { namespace funcs {
     }
     return Controller::getInstance()->getSettingStr(name, tableConfig);
   }
+
   inline oValue get_cnt_setting(const Globals::tFuncArguments& args) {
     string name = args[0] >> String();
     tCntId cnt = args[1] >> int();
@@ -104,61 +163,15 @@ namespace kIEview2 { namespace funcs {
     if (def != "!") {
       try {
         return Controller::getInstance()->getSettingStr(name, tableContacts, cnt);
-      } catch(...) {
+      } catch (...) {
         return def;
       }
     }
     return Controller::getInstance()->getSettingStr(name, tableContacts, cnt);
   }
-  inline oValue nl2br(const Globals::tFuncArguments& args) {
-    return RegEx::doReplace("/\r?\n/m", "<br />\r\n", (args[0] >> String()).c_str());
-  }
-  inline oValue br2nl(const Globals::tFuncArguments& args) {
-    return RegEx::doReplace("#<br ?/?>#i", "\r\n", (args[0] >> String()).c_str());
-  }
-  inline oValue stringf(const Globals::tFuncArguments& args) {
-    boost::format formatter((args[0] >> String()).c_str());
 
-    Globals::tFuncArguments _args = args;
-    _args.erase(_args.begin());
-
-    for each (const oValue& arg in _args) {
-      formatter % (arg >> String()).c_str();
-    }
-    return formatter.str();
-  }
-  inline oValue strftime(const Globals::tFuncArguments& args) {
-    __int64 _date = args[1] >> __int64();
-    if (!_date) {
-      throw SwiftException("Incorrect date format");
-    }
-
-    Date64 date;
-    date = _date;
-
-    return date.strftime((args[0] >> String()).c_str());
-  }
   inline oValue get_ext_param(const Globals::tFuncArguments& args) {
     return GetExtParam(args[0] >> String(), args[1] >> String());
-  }
-  inline oValue replace(const Globals::tFuncArguments& args) {
-    RegEx reg;
-    reg.setPattern(args[0] >> String());
-    reg.setSubject(args[2] >> String());
-
-    return reg.replace((args[1] >> String()).c_str());
-  }
-  inline oValue htmlunescape(const Globals::tFuncArguments& args) {
-    RegEx reg;
-    reg.setSubject(args[0] >> String());
-
-    reg.replaceItself("/&amp;/", "&");
-    reg.replaceItself("/&lt;/", "<");
-    reg.replaceItself("/&gt;/", ">");
-    reg.replaceItself("/&quot;/", "\"");
-    reg.replaceItself("/&(apos|#0?39);/", "'");
-
-    return reg.getSubject();
   }
 }}
 
