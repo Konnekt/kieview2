@@ -1,0 +1,8 @@
+
+# /Project/
+/Project/*.suo
+/Project/*.sln
+/Project/*.user
+/Project/*.ncb
+/Project/*.aps
+/Project/Release
