@@ -3,7 +3,7 @@ Konnekt kIEView2
 
 Wtyczka okna rozmowy.
 
-Autorami są Kuba Niegowski i Sija
+Autorami są Ursus, Dulek i Sija
 
 # Projekt KONNEKT
 
