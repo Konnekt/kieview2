@@ -5,7 +5,6 @@
   *
   *  @filesource
   *  @copyright    Copyright (c) 2006-2007 Sijawusz Pur Rahnama
-  *  @copyright    Copyright (c) 2004-2005 Kuba 'nix' Niegowski
   *  @link         svn://konnekt.info/kieview2/ kIEview2 plugin SVN Repo
   *  @version      $Revision$
   *  @modifiedby   $LastChangedBy$
